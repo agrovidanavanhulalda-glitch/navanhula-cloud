@@ -2,95 +2,84 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* NAVANHULA POS - Professional POS Design System */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
+    /* Core Brand Colors - Professional Blue */
+    --background: 222 47% 11%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222 47% 14%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 47% 14%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Primary - Trust Blue */
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    /* Secondary - Slate */
+    --secondary: 217 33% 22%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent - Cyan for highlights */
+    --accent: 199 89% 48%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 62.8% 30.6%;
+    /* Destructive - Error Red */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Success - Money Green */
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+
+    /* Warning - Alert Orange */
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 11%;
+
+    /* Profit - Emerald */
+    --profit: 160 84% 39%;
+    --profit-foreground: 210 40% 98%;
+
+    /* Loss - Rose */
+    --loss: 0 84% 60%;
+    --loss-foreground: 210 40% 98%;
+
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar */
+    --sidebar-background: 222 47% 9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 217 33% 18%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 18%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* Custom Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(199 89% 48%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(160 84% 39%) 100%);
+    --gradient-dark: linear-gradient(135deg, hsl(222 47% 14%) 0%, hsl(222 47% 9%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(222 47% 16%) 0%, hsl(222 47% 12%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --shadow-glow: 0 0 20px -5px hsl(217 91% 60% / 0.4);
   }
 }
 
@@ -100,6 +89,240 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+
+@layer components {
+  /* POS specific components */
+  .pos-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all duration-200;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+    @apply active:scale-[0.98];
+  }
+
+  .pos-button-primary {
+    @apply pos-button bg-primary text-primary-foreground hover:brightness-110;
+    box-shadow: var(--shadow-glow);
+  }
+
+  .pos-button-success {
+    @apply pos-button text-success-foreground;
+    background: var(--gradient-success);
+  }
+
+  .pos-button-secondary {
+    @apply pos-button bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  .pos-button-ghost {
+    @apply pos-button bg-transparent hover:bg-muted text-foreground;
+  }
+
+  /* Card styles */
+  .pos-card {
+    @apply rounded-xl border border-border p-4;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-md);
+  }
+
+  .pos-card-interactive {
+    @apply pos-card cursor-pointer transition-all duration-200;
+    @apply hover:border-primary/50 hover:shadow-lg;
+  }
+
+  /* Stats card */
+  .pos-stat {
+    @apply pos-card flex flex-col gap-2;
+  }
+
+  .pos-stat-label {
+    @apply text-sm font-medium text-muted-foreground uppercase tracking-wide;
+  }
+
+  .pos-stat-value {
+    @apply text-2xl font-bold text-foreground;
+  }
+
+  .pos-stat-trend-up {
+    @apply text-sm font-medium text-success flex items-center gap-1;
+  }
+
+  .pos-stat-trend-down {
+    @apply text-sm font-medium text-loss flex items-center gap-1;
+  }
+
+  /* Input styles */
+  .pos-input {
+    @apply w-full rounded-lg border border-border bg-muted/50 px-4 py-3;
+    @apply text-foreground placeholder:text-muted-foreground;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+    @apply transition-all duration-200;
+  }
+
+  .pos-search {
+    @apply pos-input pl-10;
+  }
+
+  /* Table styles */
+  .pos-table {
+    @apply w-full text-sm;
+  }
+
+  .pos-table thead {
+    @apply bg-muted/50;
+  }
+
+  .pos-table th {
+    @apply px-4 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wide text-xs;
+  }
+
+  .pos-table td {
+    @apply px-4 py-3 border-b border-border;
+  }
+
+  .pos-table tbody tr {
+    @apply hover:bg-muted/30 transition-colors;
+  }
+
+  /* Badge styles */
+  .pos-badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .pos-badge-success {
+    @apply pos-badge bg-success/20 text-success;
+  }
+
+  .pos-badge-warning {
+    @apply pos-badge bg-warning/20 text-warning;
+  }
+
+  .pos-badge-error {
+    @apply pos-badge bg-destructive/20 text-destructive;
+  }
+
+  .pos-badge-info {
+    @apply pos-badge bg-primary/20 text-primary;
+  }
+
+  /* Numeric display (money, quantities) */
+  .pos-money {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pos-money-positive {
+    @apply pos-money text-success;
+  }
+
+  .pos-money-negative {
+    @apply pos-money text-loss;
+  }
+
+  /* Touch-optimized buttons for tablet */
+  .pos-touch-button {
+    @apply min-h-[56px] min-w-[56px] rounded-xl;
+  }
+
+  /* Quick action grid */
+  .pos-quick-grid {
+    @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3;
+  }
+
+  /* Product card in POS */
+  .pos-product-card {
+    @apply pos-card-interactive flex flex-col items-center justify-center gap-2 p-4 min-h-[120px];
+  }
+
+  /* Cart item */
+  .pos-cart-item {
+    @apply flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-transparent;
+    @apply hover:border-border transition-all;
+  }
+
+  /* Sidebar navigation */
+  .pos-nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all;
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted;
+  }
+
+  .pos-nav-item-active {
+    @apply pos-nav-item bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground;
+  }
+
+  /* Animated pulse for alerts */
+  .pos-pulse {
+    animation: pos-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pos-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Loading skeleton */
+  .pos-skeleton {
+    @apply animate-pulse bg-muted rounded;
+  }
+}
+
+@layer utilities {
+  /* Gradient text */
+  .text-gradient-primary {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-success {
+    background: var(--gradient-success);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow effects */
+  .glow-primary {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glow-success {
+    box-shadow: 0 0 20px -5px hsl(142 76% 36% / 0.4);
+  }
+
+  /* Safe area for mobile */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
   }
 }
