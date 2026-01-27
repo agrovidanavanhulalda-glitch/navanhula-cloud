@@ -175,6 +175,7 @@ export interface AuthContextType {
   role: AppRole | null;
   store: Store | null;
   loading: boolean;
+  isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
