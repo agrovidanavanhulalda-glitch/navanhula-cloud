@@ -723,6 +723,7 @@ export type Database = {
       }
     }
     Functions: {
+      bootstrap_current_user: { Args: never; Returns: undefined }
       get_user_store: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {

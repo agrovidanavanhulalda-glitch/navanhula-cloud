@@ -9,8 +9,7 @@ import {
   DollarSign,
   Package,
   AlertTriangle,
-  Users,
-  Store,
+  Store as StoreIcon,
 } from 'lucide-react';
 
 interface Stats {
@@ -37,7 +36,11 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      if (!store) return;
+      // If store is still missing, show empty but valid state
+      if (!store?.id) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const today = new Date();
@@ -53,10 +56,11 @@ const DashboardPage: React.FC = () => {
 
         const todaySales = salesData?.length || 0;
         const todayRevenue = salesData?.reduce((sum, sale) => sum + Number(sale.total), 0) || 0;
-        const todayProfit = salesData?.reduce((sum, sale) => {
-          const itemsProfit = sale.sale_items?.reduce((p: number, item: any) => p + Number(item.profit), 0) || 0;
-          return sum + itemsProfit;
-        }, 0) || 0;
+        const todayProfit =
+          salesData?.reduce((sum, sale) => {
+            const itemsProfit = sale.sale_items?.reduce((p: number, item: any) => p + Number(item.profit), 0) || 0;
+            return sum + itemsProfit;
+          }, 0) || 0;
 
         // Fetch low stock products
         const { data: stockData } = await supabase
@@ -64,9 +68,8 @@ const DashboardPage: React.FC = () => {
           .select('quantity, product:products(low_stock_threshold)')
           .eq('store_id', store.id);
 
-        const lowStockCount = stockData?.filter(
-          (s: any) => s.quantity <= (s.product?.low_stock_threshold || 10)
-        ).length || 0;
+        const lowStockCount =
+          stockData?.filter((s: any) => s.quantity <= (s.product?.low_stock_threshold || 10)).length || 0;
 
         // Fetch total products
         const { count: productsCount } = await supabase
@@ -99,9 +102,15 @@ const DashboardPage: React.FC = () => {
     };
 
     fetchStats();
-  }, [store]);
+  }, [store?.id]);
 
-  const StatCard = ({ icon: Icon, label, value, trend, color }: {
+  const StatCard = ({
+    icon: Icon,
+    label,
+    value,
+    trend,
+    color,
+  }: {
     icon: any;
     label: string;
     value: string;
@@ -152,12 +161,12 @@ const DashboardPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">
-            Olá, {user?.full_name}! Bem-vindo ao NAVANHULA POS
+            Olá, {user?.full_name || 'Usuário'}! Bem-vindo ao NAVANHULA POS
           </p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted">
-          <Store className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">{store?.name}</span>
+          <StoreIcon className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium">{store?.name || 'Carregando loja...'}</span>
         </div>
       </div>
 
@@ -188,7 +197,7 @@ const DashboardPage: React.FC = () => {
           icon={AlertTriangle}
           label="Estoque Baixo"
           value={formatNumber(stats.lowStockCount)}
-          color={stats.lowStockCount > 0 ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground"}
+          color={stats.lowStockCount > 0 ? 'bg-warning/20 text-warning' : 'bg-muted text-muted-foreground'}
         />
       </div>
 
@@ -199,9 +208,7 @@ const DashboardPage: React.FC = () => {
           <h2 className="text-lg font-semibold mb-4">Vendas Recentes</h2>
           <div className="space-y-3">
             {recentSales.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                Nenhuma venda registrada hoje
-              </p>
+              <p className="text-muted-foreground text-center py-8">Nenhuma venda registrada hoje</p>
             ) : (
               recentSales.map((sale: any) => (
                 <div key={sale.id} className="pos-cart-item">
@@ -209,17 +216,11 @@ const DashboardPage: React.FC = () => {
                     <ShoppingCart className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">
-                      Venda #{sale.id.slice(0, 8)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {sale.profiles?.full_name || 'Vendedor'}
-                    </p>
+                    <p className="font-medium truncate">Venda #{sale.id.slice(0, 8)}</p>
+                    <p className="text-sm text-muted-foreground">{sale.profiles?.full_name || 'Vendedor'}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold pos-money text-success">
-                      {formatCurrency(sale.total)}
-                    </p>
+                    <p className="font-semibold pos-money text-success">{formatCurrency(sale.total)}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(sale.created_at).toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
                     </p>

@@ -54,7 +54,11 @@ const InventoryPage: React.FC = () => {
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
 
   const fetchProducts = async () => {
-    if (!store) return;
+    // Skip fetch if store not yet loaded — will retry on next render
+    if (!store?.id) {
+      setLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from('product_stock')
@@ -66,6 +70,7 @@ const InventoryPage: React.FC = () => {
 
     if (error) {
       console.error('Error fetching stock:', error);
+      setLoading(false);
       return;
     }
 
@@ -75,7 +80,7 @@ const InventoryPage: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [store]);
+  }, [store?.id]);
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = !searchTerm || 
