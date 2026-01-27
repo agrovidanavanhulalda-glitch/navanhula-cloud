@@ -66,7 +66,11 @@ const POSPage: React.FC = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      if (!store) return;
+      // Skip fetch if store not yet loaded — will retry on next render
+      if (!store?.id) {
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('products')
@@ -80,21 +84,23 @@ const POSPage: React.FC = () => {
 
       if (error) {
         console.error('Error fetching products:', error);
+        setLoading(false);
         return;
       }
 
       // Transform stock data
-      const productsWithStock = data?.map(p => ({
-        ...p,
-        stock: p.stock?.[0] || { quantity: 0 },
-      })) || [];
+      const productsWithStock =
+        data?.map((p) => ({
+          ...p,
+          stock: p.stock?.[0] || { quantity: 0 },
+        })) || [];
 
       setProducts(productsWithStock);
       setLoading(false);
     };
 
     fetchProducts();
-  }, [store]);
+  }, [store?.id]);
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm) return products;

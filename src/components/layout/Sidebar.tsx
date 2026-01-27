@@ -45,9 +45,11 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const location = useLocation();
   const { user, role, store, signOut } = useAuth();
 
-  const filteredNavItems = navItems.filter(item => {
-    if (!item.roles) return true;
-    return role && item.roles.includes(role);
+  // Always show Dashboard + PDV + Caixa; restrict others by role only if role exists
+  const filteredNavItems = navItems.filter((item) => {
+    if (!item.roles) return true; // No restriction
+    if (!role) return false; // Hide restricted items if role is unknown
+    return item.roles.includes(role);
   });
 
   return (
@@ -71,8 +73,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         )}
       </div>
 
-      {/* Store indicator */}
-      {!collapsed && store && (
+      {/* Store indicator – only if store is loaded */}
+      {!collapsed && store?.name && (
         <div className="px-4 py-3 border-b border-sidebar-border">
           <div className="flex items-center gap-2 text-sm">
             <Store className="w-4 h-4 text-primary" />
@@ -109,31 +111,24 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         })}
       </nav>
 
-      {/* User section */}
-      <div className={cn(
-        "p-4 border-t border-sidebar-border",
-        collapsed && "p-2"
-      )}>
-        {!collapsed && user && (
+      {/* User section – only render when user is available */}
+      <div className={cn('p-4 border-t border-sidebar-border', collapsed && 'p-2')}>
+        {!collapsed && user?.full_name && (
           <div className="mb-3 p-3 rounded-lg bg-sidebar-accent">
-            <p className="font-medium text-sm text-sidebar-accent-foreground truncate">
-              {user.full_name}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {role && getRoleLabel(role)}
-            </p>
+            <p className="font-medium text-sm text-sidebar-accent-foreground truncate">{user.full_name}</p>
+            <p className="text-xs text-muted-foreground">{role ? getRoleLabel(role) : 'Carregando...'}</p>
           </div>
         )}
         <Button
           variant="ghost"
           className={cn(
-            "w-full justify-start gap-3 text-muted-foreground hover:text-destructive",
-            collapsed && "justify-center px-2"
+            'w-full justify-start gap-3 text-muted-foreground hover:text-destructive',
+            collapsed && 'justify-center px-2'
           )}
           onClick={signOut}
         >
           <LogOut className="w-5 h-5" />
-          {!collapsed && "Sair"}
+          {!collapsed && 'Sair'}
         </Button>
       </div>
     </aside>

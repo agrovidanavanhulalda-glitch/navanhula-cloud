@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile, Store, AppRole, AuthContextType } from '@/types/pos';
 import { toast } from 'sonner';
@@ -20,9 +20,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
 
+  // Prevent duplicate bootstrap calls
+  const bootstrapRan = useRef(false);
+
+  /**
+   * Call the bootstrap function on the server to ensure profile/role/store exist.
+   * SECURITY DEFINER function so it can INSERT where RLS would block.
+   */
+  const callBootstrap = useCallback(async () => {
+    if (bootstrapRan.current) return;
+    bootstrapRan.current = true;
+    try {
+      const { error } = await supabase.rpc('bootstrap_current_user');
+      if (error) {
+        console.error('Bootstrap error:', error);
+        // Non-fatal – we'll continue and just fetch whatever data exists
+      }
+    } catch (e) {
+      console.error('Bootstrap exception:', e);
+    }
+  }, []);
+
   const fetchUserData = useCallback(async (userId: string): Promise<boolean> => {
     try {
-      // Fetch profile - use maybeSingle to handle missing profiles gracefully
+      // Fetch profile with store
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*, store:stores(*)')
@@ -31,11 +52,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (profileError) {
         console.error('Error fetching profile:', profileError);
-        // Don't logout - just log the error, keep the auth session
         return false;
       }
 
-      // Fetch role - use maybeSingle to handle missing roles gracefully
+      // Fetch role
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -44,20 +64,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (roleError) {
         console.error('Error fetching role:', roleError);
-        // Don't logout - continue with default role
       }
 
-      // Only update state if we have profile data
       if (profileData) {
         setUser(profileData as Profile);
         setRole((roleData?.role as AppRole) || 'seller');
-        setStore(profileData?.store as Store || null);
+        setStore((profileData as any)?.store as Store || null);
+      } else {
+        // Profile still missing after bootstrap – set minimal fallback
+        setRole((roleData?.role as AppRole) || 'seller');
       }
-      
+
       return true;
     } catch (error) {
       console.error('Error fetching user data:', error);
-      // Never logout due to fetch errors - maintain session
       return false;
     }
   }, []);
@@ -65,11 +85,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true;
 
-    // Check for existing session FIRST
     const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           console.error('Error getting session:', error);
           if (isMounted) setLoading(false);
@@ -79,10 +98,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           if (isMounted) {
             setAuthUserId(session.user.id);
+            // Ensure profile/role exist
+            await callBootstrap();
             await fetchUserData(session.user.id);
           }
         }
-        
+
         if (isMounted) setLoading(false);
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -92,15 +113,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // Set up auth state listener AFTER initial check
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
 
       console.log('Auth state change:', event, session?.user?.id);
 
       if (event === 'SIGNED_IN' && session?.user) {
+        bootstrapRan.current = false; // allow bootstrap for new sign-in
         setAuthUserId(session.user.id);
-        // Wait for profile data before completing
+        await callBootstrap();
         await fetchUserData(session.user.id);
         setLoading(false);
       } else if (event === 'SIGNED_OUT') {
@@ -108,9 +129,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRole(null);
         setStore(null);
         setAuthUserId(null);
+        bootstrapRan.current = false;
         setLoading(false);
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        // Token refreshed - session still valid, refresh user data
         setAuthUserId(session.user.id);
         await fetchUserData(session.user.id);
       }
@@ -120,10 +141,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserData]);
+  }, [fetchUserData, callBootstrap]);
 
-  // Determine if user is authenticated based on authUserId (from Supabase Auth)
-  // This ensures we don't redirect to login just because profile fetch failed
   const isAuthenticated = authUserId !== null;
 
   const signIn = async (email: string, password: string) => {
