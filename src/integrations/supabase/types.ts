@@ -168,6 +168,99 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_sellers: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          seller_id: string
+          store_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          seller_id: string
+          store_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          seller_id?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_sellers_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_sellers_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_sellers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          created_by: string
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_history: {
         Row: {
           changed_by: string | null
@@ -581,7 +674,53 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      customers_safe: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          notes: string | null
+          phone: string | null
+          store_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: never
+          full_name?: string | null
+          id?: string | null
+          notes?: string | null
+          phone?: never
+          store_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: never
+          full_name?: string | null
+          id?: string | null
+          notes?: string | null
+          phone?: never
+          store_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_user_store: { Args: { _user_id: string }; Returns: string }
