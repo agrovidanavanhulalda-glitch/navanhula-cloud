@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePOS } from '@/contexts/POSContext';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
@@ -25,6 +26,7 @@ import { toast } from 'sonner';
 import type { CashMovement } from '@/types/pos';
 
 const CashRegisterPage: React.FC = () => {
+  const navigate = useNavigate();
   const { store, user } = useAuth();
   const { cashRegister, openCashRegister, closeCashRegister, loadCashRegister } = usePOS();
   const [openModal, setOpenModal] = useState(false);
@@ -72,19 +74,59 @@ const CashRegisterPage: React.FC = () => {
     fetchMovements();
     fetchTodaySales();
   }, [cashRegister]);
+  // Quick open with 0 balance and redirect to POS
+  const handleQuickOpen = async () => {
+    setLoading(true);
+    
+    // Timeout fallback
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+      navigate('/pos');
+    }, 2000);
+
+    try {
+      const success = await openCashRegister(0);
+      clearTimeout(timeoutId);
+      if (success) {
+        navigate('/pos');
+      }
+    } catch {
+      clearTimeout(timeoutId);
+      navigate('/pos');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpen = async () => {
-    const amount = parseFloat(openingAmount);
-    if (isNaN(amount) || amount < 0) {
+    const amount = parseFloat(openingAmount) || 0;
+    if (amount < 0) {
       toast.error('Insira um valor válido');
       return;
     }
 
     setLoading(true);
-    try {
-      await openCashRegister(amount);
+    
+    // Timeout fallback - if it takes more than 2s, force continue
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
       setOpenModal(false);
       setOpeningAmount('');
+      navigate('/pos');
+    }, 2000);
+
+    try {
+      const success = await openCashRegister(amount);
+      clearTimeout(timeoutId);
+      setOpenModal(false);
+      setOpeningAmount('');
+      if (success) {
+        navigate('/pos');
+      }
+    } catch {
+      clearTimeout(timeoutId);
+      // Fallback: navigate anyway
+      navigate('/pos');
     } finally {
       setLoading(false);
     }
@@ -167,13 +209,24 @@ const CashRegisterPage: React.FC = () => {
               Fechar Caixa
             </Button>
           ) : (
-            <Button
-              className="pos-button-success pos-touch-button"
-              onClick={() => setOpenModal(true)}
-            >
-              <Unlock className="w-5 h-5 mr-2" />
-              Abrir Caixa
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                className="pos-button-success pos-touch-button"
+                onClick={handleQuickOpen}
+                disabled={loading}
+              >
+                <Unlock className="w-5 h-5 mr-2" />
+                {loading ? 'Abrindo...' : 'Abrir Rápido'}
+              </Button>
+              <Button
+                variant="outline"
+                className="pos-touch-button"
+                onClick={() => setOpenModal(true)}
+              >
+                <DollarSign className="w-5 h-5 mr-2" />
+                Com Saldo
+              </Button>
+            </div>
           )}
         </div>
       </div>
