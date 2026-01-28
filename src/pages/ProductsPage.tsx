@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatNumber, calculateMargin } from '@/lib/formatters';
+import { MOCK_PRODUCT, withTimeout } from '@/lib/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,36 +40,61 @@ const ProductsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
 
   const fetchProducts = async () => {
-    const { data, error } = await supabase
-      .from('products')
-      .select(`
-        *,
-        category:categories(*)
-      `)
-      .order('name');
+    try {
+      const result = await withTimeout(
+        supabase
+          .from('products')
+          .select(`
+            *,
+            category:categories(*)
+          `)
+          .order('name')
+          .then(r => r),
+        1000,
+        { data: null, error: null }
+      );
 
-    if (error) {
-      console.error('Error fetching products:', error);
-      return;
+      if (result.data && result.data.length > 0) {
+        setProducts(result.data as Product[]);
+      } else {
+        // Use mock product as fallback
+        setProducts([MOCK_PRODUCT]);
+      }
+    } catch (err) {
+      console.warn('Error fetching products:', err);
+      setProducts([MOCK_PRODUCT]);
+    } finally {
+      setLoading(false);
     }
-
-    setProducts(data as Product[] || []);
-    setLoading(false);
   };
 
   const fetchCategories = async () => {
-    const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('is_active', true)
-      .order('name');
+    try {
+      const result = await withTimeout(
+        supabase
+          .from('categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('name')
+          .then(r => r),
+        1000,
+        { data: null, error: null }
+      );
 
-    setCategories(data as Category[] || []);
+      setCategories((result.data as Category[]) || []);
+    } catch (err) {
+      console.warn('Error fetching categories:', err);
+    }
   };
 
   useEffect(() => {
+    // Force render after 1 second max
+    const timeout = setTimeout(() => setLoading(false), 1000);
+    
     fetchProducts();
     fetchCategories();
+
+    return () => clearTimeout(timeout);
   }, []);
 
   const filteredProducts = products.filter(p =>
@@ -84,8 +110,8 @@ const ProductsPage: React.FC = () => {
 
     setSaving(true);
     try {
-      if (editProduct.id) {
-        // Update
+      if (editProduct.id && !editProduct.id.startsWith('mock-')) {
+        // Update existing product
         const { error } = await supabase
           .from('products')
           .update({
@@ -102,7 +128,7 @@ const ProductsPage: React.FC = () => {
         if (error) throw error;
         toast.success('Produto atualizado!');
       } else {
-        // Create
+        // Create new product
         const { error } = await supabase
           .from('products')
           .insert({

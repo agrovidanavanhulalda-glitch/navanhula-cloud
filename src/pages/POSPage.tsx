@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePOS } from '@/contexts/POSContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/formatters';
+import { MOCK_PRODUCT, withTimeout } from '@/lib/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +18,7 @@ import {
   X,
   Percent,
   User,
-  AlertCircle,
+  Package,
 } from 'lucide-react';
 import type { Product, PaymentMethod } from '@/types/pos';
 import {
@@ -37,10 +38,11 @@ const paymentMethods: { method: PaymentMethod; label: string; icon: React.ReactN
 ];
 
 const POSPage: React.FC = () => {
-  const { store, user } = useAuth();
+  const { store } = useAuth();
   const {
     cart,
     cashRegister,
+    isReady,
     addToCart,
     removeFromCart,
     updateQuantity,
@@ -49,7 +51,7 @@ const POSPage: React.FC = () => {
     getTotal,
     getTotalDiscount,
     completeSale,
-    loadCashRegister,
+    ensureCashRegister,
   } = usePOS();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -60,43 +62,69 @@ const POSPage: React.FC = () => {
   const [customerName, setCustomerName] = useState('');
   const [processing, setProcessing] = useState(false);
 
+  // Auto-ensure cash register on mount
   useEffect(() => {
-    loadCashRegister();
-  }, [loadCashRegister]);
+    if (isReady && !cashRegister) {
+      ensureCashRegister();
+    }
+  }, [isReady, cashRegister, ensureCashRegister]);
 
+  // Fetch products with 1s timeout and fallback
   useEffect(() => {
     const fetchProducts = async () => {
-      // Skip fetch if store not yet loaded — will retry on next render
-      if (!store?.id) {
+      // Force render after 1s max
+      const timeout = setTimeout(() => {
+        if (products.length === 0) {
+          setProducts([MOCK_PRODUCT]);
+        }
+        setLoading(false);
+      }, 1000);
+
+      const storeId = store?.id;
+
+      // If no store, use mock product immediately
+      if (!storeId) {
+        clearTimeout(timeout);
+        setProducts([MOCK_PRODUCT]);
         setLoading(false);
         return;
       }
 
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          category:categories(*),
-          stock:product_stock!inner(quantity)
-        `)
-        .eq('is_active', true)
-        .eq('product_stock.store_id', store.id);
+      try {
+        const result = await withTimeout(
+          supabase
+            .from('products')
+            .select(`
+              *,
+              category:categories(*),
+              stock:product_stock!inner(quantity)
+            `)
+            .eq('is_active', true)
+            .eq('product_stock.store_id', storeId)
+            .then(r => r),
+          1000,
+          { data: null, error: null }
+        );
 
-      if (error) {
-        console.error('Error fetching products:', error);
+        clearTimeout(timeout);
+
+        if (result.data && result.data.length > 0) {
+          const productsWithStock = result.data.map((p: any) => ({
+            ...p,
+            stock: p.stock?.[0] || { quantity: 0 },
+          }));
+          setProducts(productsWithStock);
+        } else {
+          // No products found - use mock
+          setProducts([MOCK_PRODUCT]);
+        }
+      } catch (err) {
+        clearTimeout(timeout);
+        console.warn('Error fetching products:', err);
+        setProducts([MOCK_PRODUCT]);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      // Transform stock data
-      const productsWithStock =
-        data?.map((p) => ({
-          ...p,
-          stock: p.stock?.[0] || { quantity: 0 },
-        })) || [];
-
-      setProducts(productsWithStock);
-      setLoading(false);
     };
 
     fetchProducts();
@@ -112,11 +140,6 @@ const POSPage: React.FC = () => {
   }, [products, searchTerm]);
 
   const handleCompleteSale = async () => {
-    if (!cashRegister) {
-      toast.error('Abra o caixa antes de realizar vendas');
-      return;
-    }
-
     setProcessing(true);
     try {
       await completeSale(selectedPayment, customerName || undefined);
@@ -132,23 +155,6 @@ const POSPage: React.FC = () => {
   const subtotal = getSubtotal();
   const discount = getTotalDiscount();
   const total = getTotal();
-
-  if (!cashRegister) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="pos-card text-center max-w-md w-full p-8">
-          <AlertCircle className="w-16 h-16 text-warning mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Caixa Fechado</h2>
-          <p className="text-muted-foreground mb-6">
-            Você precisa abrir o caixa antes de realizar vendas.
-          </p>
-          <a href="/cash-register" className="pos-button-primary px-6 py-3 inline-block">
-            Abrir Caixa
-          </a>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col lg:flex-row h-screen max-h-screen overflow-hidden">
@@ -395,10 +401,3 @@ const POSPage: React.FC = () => {
 };
 
 export default POSPage;
-
-// Package icon for empty state
-const Package = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-  </svg>
-);

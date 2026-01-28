@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatNumber } from '@/lib/formatters';
+import { withTimeout } from '@/lib/mockData';
 import {
   TrendingUp,
   TrendingDown,
@@ -21,23 +22,28 @@ interface Stats {
   totalUsers: number;
 }
 
+const DEFAULT_STATS: Stats = {
+  todaySales: 0,
+  todayRevenue: 0,
+  todayProfit: 0,
+  lowStockCount: 0,
+  totalProducts: 0,
+  totalUsers: 0,
+};
+
 const DashboardPage: React.FC = () => {
   const { user, store, role } = useAuth();
-  const [stats, setStats] = useState<Stats>({
-    todaySales: 0,
-    todayRevenue: 0,
-    todayProfit: 0,
-    lowStockCount: 0,
-    totalProducts: 0,
-    totalUsers: 0,
-  });
+  const [stats, setStats] = useState<Stats>(DEFAULT_STATS);
   const [loading, setLoading] = useState(true);
   const [recentSales, setRecentSales] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
-      // If store is still missing, show empty but valid state
+      // Always render after 1 second max
+      const timeout = setTimeout(() => setLoading(false), 1000);
+
       if (!store?.id) {
+        clearTimeout(timeout);
         setLoading(false);
         return;
       }
@@ -46,57 +52,80 @@ const DashboardPage: React.FC = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Fetch today's sales
-        const { data: salesData } = await supabase
-          .from('sales')
-          .select('total, sale_items(profit)')
-          .eq('store_id', store.id)
-          .eq('status', 'completed')
-          .gte('created_at', today.toISOString());
+        // Fetch today's sales with timeout
+        const salesResult = await withTimeout(
+          supabase
+            .from('sales')
+            .select('total, sale_items(profit)')
+            .eq('store_id', store.id)
+            .eq('status', 'completed')
+            .gte('created_at', today.toISOString())
+            .then(r => r),
+          1000,
+          { data: null, error: null }
+        );
 
-        const todaySales = salesData?.length || 0;
-        const todayRevenue = salesData?.reduce((sum, sale) => sum + Number(sale.total), 0) || 0;
-        const todayProfit =
-          salesData?.reduce((sum, sale) => {
-            const itemsProfit = sale.sale_items?.reduce((p: number, item: any) => p + Number(item.profit), 0) || 0;
-            return sum + itemsProfit;
-          }, 0) || 0;
+        const salesData = salesResult.data || [];
+        const todaySales = salesData.length;
+        const todayRevenue = salesData.reduce((sum: number, sale: any) => sum + Number(sale.total), 0);
+        const todayProfit = salesData.reduce((sum: number, sale: any) => {
+          const itemsProfit = sale.sale_items?.reduce((p: number, item: any) => p + Number(item.profit || 0), 0) || 0;
+          return sum + itemsProfit;
+        }, 0);
 
         // Fetch low stock products
-        const { data: stockData } = await supabase
-          .from('product_stock')
-          .select('quantity, product:products(low_stock_threshold)')
-          .eq('store_id', store.id);
+        const stockResult = await withTimeout(
+          supabase
+            .from('product_stock')
+            .select('quantity, product:products(low_stock_threshold)')
+            .eq('store_id', store.id)
+            .then(r => r),
+          1000,
+          { data: null, error: null }
+        );
 
-        const lowStockCount =
-          stockData?.filter((s: any) => s.quantity <= (s.product?.low_stock_threshold || 10)).length || 0;
+        const stockData = stockResult.data || [];
+        const lowStockCount = stockData.filter((s: any) => 
+          s.quantity <= (s.product?.low_stock_threshold || 10)
+        ).length;
 
         // Fetch total products
-        const { count: productsCount } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_active', true);
+        const productsResult = await withTimeout(
+          supabase
+            .from('products')
+            .select('*', { count: 'exact', head: true })
+            .eq('is_active', true)
+            .then(r => r),
+          1000,
+          { count: 0, error: null }
+        );
 
         // Fetch recent sales
-        const { data: recent } = await supabase
-          .from('sales')
-          .select('*, profiles:user_id(full_name)')
-          .eq('store_id', store.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
+        const recentResult = await withTimeout(
+          supabase
+            .from('sales')
+            .select('*, profiles:user_id(full_name)')
+            .eq('store_id', store.id)
+            .order('created_at', { ascending: false })
+            .limit(5)
+            .then(r => r),
+          1000,
+          { data: null, error: null }
+        );
 
         setStats({
           todaySales,
           todayRevenue,
           todayProfit,
           lowStockCount,
-          totalProducts: productsCount || 0,
+          totalProducts: (productsResult as any).count || 0,
           totalUsers: 0,
         });
-        setRecentSales(recent || []);
+        setRecentSales(recentResult.data || []);
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.warn('Error fetching stats:', error);
       } finally {
+        clearTimeout(timeout);
         setLoading(false);
       }
     };
@@ -136,6 +165,7 @@ const DashboardPage: React.FC = () => {
     </div>
   );
 
+  // Show skeleton for max 1 second, then render content
   if (loading) {
     return (
       <div className="p-6 space-y-6">
@@ -166,7 +196,7 @@ const DashboardPage: React.FC = () => {
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted">
           <StoreIcon className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">{store?.name || 'Carregando loja...'}</span>
+          <span className="text-sm font-medium">{store?.name || 'Loja'}</span>
         </div>
       </div>
 
