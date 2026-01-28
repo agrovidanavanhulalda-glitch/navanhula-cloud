@@ -1,12 +1,14 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { CartItem, Product, PaymentMethod, CashRegister } from '@/types/pos';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
+import { createMockCashRegister, withTimeout } from '@/lib/mockData';
 
 interface POSContextType {
   cart: CartItem[];
   cashRegister: CashRegister | null;
+  isReady: boolean;
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -19,6 +21,7 @@ interface POSContextType {
   openCashRegister: (openingAmount?: number) => Promise<boolean>;
   closeCashRegister: (closingAmount: number, notes?: string) => Promise<void>;
   loadCashRegister: () => Promise<void>;
+  ensureCashRegister: () => Promise<CashRegister>;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -34,7 +37,46 @@ export const usePOS = () => {
 export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cashRegister, setCashRegister] = useState<CashRegister | null>(null);
+  const [isReady, setIsReady] = useState(false);
   const { user, store } = useAuth();
+
+  // Auto-load cash register on mount with 1s timeout
+  useEffect(() => {
+    const init = async () => {
+      if (!user?.id || !store?.id) {
+        // No user/store yet, mark ready anyway to avoid blocking
+        setIsReady(true);
+        return;
+      }
+
+      try {
+        const result = await withTimeout(
+          supabase
+            .from('cash_registers')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('store_id', store.id)
+            .eq('status', 'open')
+            .order('opened_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+            .then(r => r),
+          1000,
+          { data: null, error: null }
+        );
+
+        if (result.data) {
+          setCashRegister(result.data as CashRegister);
+        }
+      } catch (err) {
+        console.warn('Error loading cash register:', err);
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    init();
+  }, [user?.id, store?.id]);
 
   const addToCart = useCallback((product: Product) => {
     setCart(prev => {
@@ -96,117 +138,171 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [cart]);
 
   const loadCashRegister = useCallback(async () => {
-    if (!user || !store) return;
+    if (!user?.id || !store?.id) return;
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const result = await withTimeout(
+        supabase
+          .from('cash_registers')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('store_id', store.id)
+          .eq('status', 'open')
+          .order('opened_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+          .then(r => r),
+        1000,
+        { data: null, error: null }
+      );
 
-      const { data, error } = await supabase
-        .from('cash_registers')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('store_id', store.id)
-        .eq('status', 'open')
-        .order('opened_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      clearTimeout(timeoutId);
-
-      if (error) {
-        console.error('Error loading cash register:', error);
-        return;
+      if (result.data) {
+        setCashRegister(result.data as CashRegister);
       }
-
-      setCashRegister(data as CashRegister | null);
     } catch (err) {
-      console.error('Timeout or error loading cash register:', err);
+      console.warn('Timeout loading cash register:', err);
     }
-  }, [user, store]);
+  }, [user?.id, store?.id]);
+
+  // Ensure a cash register exists - creates one if needed
+  const ensureCashRegister = useCallback(async (): Promise<CashRegister> => {
+    // If we already have one, return it
+    if (cashRegister) return cashRegister;
+
+    const storeId = store?.id || 'local-store';
+    const userId = user?.id || 'local-user';
+
+    // Try to find existing open register with 1s timeout
+    try {
+      const result = await withTimeout(
+        supabase
+          .from('cash_registers')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('store_id', storeId)
+          .eq('status', 'open')
+          .limit(1)
+          .maybeSingle()
+          .then(r => r),
+        1000,
+        { data: null, error: null }
+      );
+
+      if (result.data) {
+        setCashRegister(result.data as CashRegister);
+        return result.data as CashRegister;
+      }
+    } catch (err) {
+      console.warn('Error checking existing register:', err);
+    }
+
+    // Try to create a new one with 1s timeout
+    try {
+      const result = await withTimeout(
+        supabase
+          .from('cash_registers')
+          .insert({
+            store_id: storeId,
+            user_id: userId,
+            opening_amount: 0,
+            status: 'open',
+          })
+          .select()
+          .single()
+          .then(r => r),
+        1000,
+        { data: null, error: null }
+      );
+
+      if (result.data) {
+        setCashRegister(result.data as CashRegister);
+        toast.success('Caixa aberto automaticamente');
+        return result.data as CashRegister;
+      }
+    } catch (err) {
+      console.warn('Error creating register:', err);
+    }
+
+    // Fallback: create local mock register
+    const mockRegister = createMockCashRegister(storeId, userId);
+    setCashRegister(mockRegister);
+    toast.warning('Caixa aberto em modo offline');
+    return mockRegister;
+  }, [cashRegister, store?.id, user?.id]);
 
   const openCashRegister = useCallback(async (openingAmount: number = 0): Promise<boolean> => {
-    if (!user || !store) {
-      console.warn('User or store not found, creating fallback register');
-    }
-
     const storeId = store?.id;
     const userId = user?.id;
 
     if (!storeId || !userId) {
-      toast.error('Usuário ou loja não encontrada');
-      return false;
+      // Create local fallback
+      const mockRegister = createMockCashRegister('local-store', 'local-user');
+      mockRegister.opening_amount = openingAmount;
+      setCashRegister(mockRegister);
+      toast.warning('Caixa aberto em modo local');
+      return true;
     }
 
     try {
-      // First check if there's already an open register
-      const { data: existingRegister } = await supabase
-        .from('cash_registers')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('store_id', storeId)
-        .eq('status', 'open')
-        .limit(1)
-        .maybeSingle();
+      // Check for existing open register
+      const existingResult = await withTimeout(
+        supabase
+          .from('cash_registers')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('store_id', storeId)
+          .eq('status', 'open')
+          .limit(1)
+          .maybeSingle()
+          .then(r => r),
+        1000,
+        { data: null, error: null }
+      );
 
-      if (existingRegister) {
-        setCashRegister(existingRegister as CashRegister);
+      if (existingResult.data) {
+        setCashRegister(existingResult.data as CashRegister);
         toast.success('Caixa já estava aberto!');
         return true;
       }
 
-      // Create new register with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      // Create new register
+      const createResult = await withTimeout(
+        supabase
+          .from('cash_registers')
+          .insert({
+            store_id: storeId,
+            user_id: userId,
+            opening_amount: openingAmount,
+            status: 'open',
+          })
+          .select()
+          .single()
+          .then(r => r),
+        1000,
+        { data: null, error: null }
+      );
 
-      const { data, error } = await supabase
-        .from('cash_registers')
-        .insert({
-          store_id: storeId,
-          user_id: userId,
-          opening_amount: openingAmount,
-          status: 'open',
-        })
-        .select()
-        .single();
-
-      clearTimeout(timeoutId);
-
-      if (error) {
-        console.error('Error opening cash register:', error);
-        // Fallback: create local register state to allow operations
-        const fallbackRegister: CashRegister = {
-          id: crypto.randomUUID(),
-          store_id: storeId,
-          user_id: userId,
-          status: 'open',
-          opening_amount: openingAmount,
-          opened_at: new Date().toISOString(),
-        };
-        setCashRegister(fallbackRegister);
-        toast.warning('Caixa aberto em modo offline');
+      if (createResult.data) {
+        setCashRegister(createResult.data as CashRegister);
+        toast.success('Caixa aberto com sucesso!');
         return true;
       }
 
-      setCashRegister(data as CashRegister);
-      toast.success('Caixa aberto com sucesso!');
+      // Fallback on timeout/error
+      const fallbackRegister = createMockCashRegister(storeId, userId);
+      fallbackRegister.opening_amount = openingAmount;
+      setCashRegister(fallbackRegister);
+      toast.warning('Caixa aberto em modo offline');
       return true;
     } catch (err) {
-      console.error('Timeout opening cash register:', err);
-      // Fallback on timeout
-      const fallbackRegister: CashRegister = {
-        id: crypto.randomUUID(),
-        store_id: storeId,
-        user_id: userId,
-        status: 'open',
-        opening_amount: openingAmount,
-        opened_at: new Date().toISOString(),
-      };
+      console.warn('Error opening cash register:', err);
+      const fallbackRegister = createMockCashRegister(storeId, userId);
+      fallbackRegister.opening_amount = openingAmount;
       setCashRegister(fallbackRegister);
-      toast.warning('Caixa aberto (timeout - modo offline)');
+      toast.warning('Caixa aberto (timeout)');
       return true;
     }
-  }, [user, store]);
+  }, [user?.id, store?.id]);
 
   const closeCashRegister = useCallback(async (closingAmount: number, notes?: string) => {
     if (!cashRegister) {
@@ -214,36 +310,49 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    const { error } = await supabase
-      .from('cash_registers')
-      .update({
-        status: 'closed',
-        closing_amount: closingAmount,
-        expected_amount: cashRegister.opening_amount, // Will be calculated properly with sales
-        difference: closingAmount - cashRegister.opening_amount,
-        notes,
-        closed_at: new Date().toISOString(),
-      })
-      .eq('id', cashRegister.id);
-
-    if (error) {
-      toast.error('Erro ao fechar caixa: ' + error.message);
-      throw error;
+    // If it's a local/mock register, just clear it
+    if (cashRegister.id.startsWith('local-')) {
+      setCashRegister(null);
+      toast.success('Caixa fechado!');
+      return;
     }
 
-    setCashRegister(null);
-    toast.success('Caixa fechado com sucesso!');
+    try {
+      await supabase
+        .from('cash_registers')
+        .update({
+          status: 'closed',
+          closing_amount: closingAmount,
+          expected_amount: cashRegister.opening_amount,
+          difference: closingAmount - cashRegister.opening_amount,
+          notes,
+          closed_at: new Date().toISOString(),
+        })
+        .eq('id', cashRegister.id);
+
+      setCashRegister(null);
+      toast.success('Caixa fechado com sucesso!');
+    } catch (error) {
+      console.error('Error closing cash register:', error);
+      // Force close locally anyway
+      setCashRegister(null);
+      toast.warning('Caixa fechado localmente');
+    }
   }, [cashRegister]);
 
   const completeSale = useCallback(async (paymentMethod: PaymentMethod, customerName?: string, notes?: string) => {
-    if (!user || !store) {
-      toast.error('Usuário ou loja não encontrada');
-      return;
-    }
-
     if (cart.length === 0) {
       toast.error('Carrinho vazio');
       return;
+    }
+
+    const storeId = store?.id || 'local-store';
+    const userId = user?.id || 'local-user';
+
+    // Ensure we have a cash register
+    let register = cashRegister;
+    if (!register) {
+      register = await ensureCashRegister();
     }
 
     const subtotal = getSubtotal();
@@ -255,9 +364,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const { data: saleData, error: saleError } = await supabase
         .from('sales')
         .insert({
-          store_id: store.id,
-          user_id: user.id,
-          cash_register_id: cashRegister?.id,
+          store_id: storeId,
+          user_id: userId,
+          cash_register_id: register.id.startsWith('local-') ? null : register.id,
           subtotal,
           discount_amount: totalDiscount,
           discount_percent: subtotal > 0 ? (totalDiscount / subtotal) * 100 : 0,
@@ -296,12 +405,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       toast.error('Erro ao concluir venda: ' + error.message);
       throw error;
     }
-  }, [user, store, cart, cashRegister, getSubtotal, getTotalDiscount, getTotal, clearCart]);
+  }, [user?.id, store?.id, cart, cashRegister, ensureCashRegister, getSubtotal, getTotalDiscount, getTotal, clearCart]);
 
   return (
     <POSContext.Provider value={{
       cart,
       cashRegister,
+      isReady,
       addToCart,
       removeFromCart,
       updateQuantity,
@@ -314,6 +424,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       openCashRegister,
       closeCashRegister,
       loadCashRegister,
+      ensureCashRegister,
     }}>
       {children}
     </POSContext.Provider>

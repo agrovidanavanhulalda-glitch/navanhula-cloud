@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePOS } from '@/contexts/POSContext';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { supabase } from '@/integrations/supabase/client';
+import { withTimeout } from '@/lib/mockData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -28,7 +29,7 @@ import type { CashMovement } from '@/types/pos';
 const CashRegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { store, user } = useAuth();
-  const { cashRegister, openCashRegister, closeCashRegister, loadCashRegister } = usePOS();
+  const { cashRegister, openCashRegister, closeCashRegister, loadCashRegister, isReady } = usePOS();
   const [openModal, setOpenModal] = useState(false);
   const [closeModal, setCloseModal] = useState(false);
   const [openingAmount, setOpeningAmount] = useState('');
@@ -39,57 +40,66 @@ const CashRegisterPage: React.FC = () => {
   const [todaySales, setTodaySales] = useState({ total: 0, count: 0, cash: 0 });
 
   useEffect(() => {
-    loadCashRegister();
-  }, [loadCashRegister]);
+    if (isReady) {
+      loadCashRegister();
+    }
+  }, [isReady, loadCashRegister]);
 
   useEffect(() => {
-    const fetchMovements = async () => {
+    const fetchData = async () => {
       if (!cashRegister) return;
 
-      const { data } = await supabase
-        .from('cash_movements')
-        .select('*')
-        .eq('cash_register_id', cashRegister.id)
-        .order('created_at', { ascending: false });
+      // Fetch movements with timeout
+      const movementsResult = await withTimeout(
+        supabase
+          .from('cash_movements')
+          .select('*')
+          .eq('cash_register_id', cashRegister.id)
+          .order('created_at', { ascending: false })
+          .then(r => r),
+        1000,
+        { data: null, error: null }
+      );
 
-      setMovements(data as CashMovement[] || []);
+      setMovements((movementsResult.data as CashMovement[]) || []);
+
+      // Fetch today's sales with timeout
+      const salesResult = await withTimeout(
+        supabase
+          .from('sales')
+          .select('total, payment_method')
+          .eq('cash_register_id', cashRegister.id)
+          .eq('status', 'completed')
+          .then(r => r),
+        1000,
+        { data: null, error: null }
+      );
+
+      const salesData = salesResult.data || [];
+      const total = salesData.reduce((sum: number, sale: any) => sum + Number(sale.total), 0);
+      const cash = salesData.filter((s: any) => s.payment_method === 'cash')
+        .reduce((sum: number, sale: any) => sum + Number(sale.total), 0);
+
+      setTodaySales({ total, count: salesData.length, cash });
     };
 
-    const fetchTodaySales = async () => {
-      if (!cashRegister) return;
-
-      const { data } = await supabase
-        .from('sales')
-        .select('total, payment_method')
-        .eq('cash_register_id', cashRegister.id)
-        .eq('status', 'completed');
-
-      const total = data?.reduce((sum, sale) => sum + Number(sale.total), 0) || 0;
-      const cash = data?.filter(s => s.payment_method === 'cash')
-        .reduce((sum, sale) => sum + Number(sale.total), 0) || 0;
-
-      setTodaySales({ total, count: data?.length || 0, cash });
-    };
-
-    fetchMovements();
-    fetchTodaySales();
+    fetchData();
   }, [cashRegister]);
+
   // Quick open with 0 balance and redirect to POS
   const handleQuickOpen = async () => {
     setLoading(true);
     
-    // Timeout fallback
+    // Timeout fallback - always navigate after 1s
     const timeoutId = setTimeout(() => {
       setLoading(false);
       navigate('/pos');
-    }, 2000);
+    }, 1000);
 
     try {
-      const success = await openCashRegister(0);
+      await openCashRegister(0);
       clearTimeout(timeoutId);
-      if (success) {
-        navigate('/pos');
-      }
+      navigate('/pos');
     } catch {
       clearTimeout(timeoutId);
       navigate('/pos');
@@ -107,25 +117,22 @@ const CashRegisterPage: React.FC = () => {
 
     setLoading(true);
     
-    // Timeout fallback - if it takes more than 2s, force continue
+    // Timeout fallback - always navigate after 1s
     const timeoutId = setTimeout(() => {
       setLoading(false);
       setOpenModal(false);
       setOpeningAmount('');
       navigate('/pos');
-    }, 2000);
+    }, 1000);
 
     try {
-      const success = await openCashRegister(amount);
+      await openCashRegister(amount);
       clearTimeout(timeoutId);
       setOpenModal(false);
       setOpeningAmount('');
-      if (success) {
-        navigate('/pos');
-      }
+      navigate('/pos');
     } catch {
       clearTimeout(timeoutId);
-      // Fallback: navigate anyway
       navigate('/pos');
     } finally {
       setLoading(false);
