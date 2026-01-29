@@ -1,6 +1,6 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocalPOS } from '@/contexts/LocalPOSContext';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -16,24 +16,24 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getRoleLabel } from '@/lib/formatters';
+
+// 100% LOCAL - NO AUTH CONTEXT, NO ASYNC
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
-  roles?: string[];
 }
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { label: 'PDV', href: '/pos', icon: <ShoppingCart className="w-5 h-5" /> },
-  { label: 'Produtos', href: '/products', icon: <Package className="w-5 h-5" />, roles: ['admin', 'manager'] },
+  { label: 'Produtos', href: '/products', icon: <Package className="w-5 h-5" /> },
   { label: 'Caixa', href: '/cash-register', icon: <DollarSign className="w-5 h-5" /> },
-  { label: 'Estoque', href: '/inventory', icon: <AlertTriangle className="w-5 h-5" />, roles: ['admin', 'manager'] },
-  { label: 'Relatórios', href: '/reports', icon: <FileText className="w-5 h-5" />, roles: ['admin', 'manager'] },
-  { label: 'Usuários', href: '/users', icon: <Users className="w-5 h-5" />, roles: ['admin'] },
-  { label: 'Lojas', href: '/stores', icon: <Store className="w-5 h-5" />, roles: ['admin'] },
+  { label: 'Estoque', href: '/inventory', icon: <AlertTriangle className="w-5 h-5" /> },
+  { label: 'Relatórios', href: '/reports', icon: <FileText className="w-5 h-5" /> },
+  { label: 'Usuários', href: '/users', icon: <Users className="w-5 h-5" /> },
+  { label: 'Lojas', href: '/stores', icon: <Store className="w-5 h-5" /> },
   { label: 'Configurações', href: '/settings', icon: <Settings className="w-5 h-5" /> },
 ];
 
@@ -43,14 +43,13 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const location = useLocation();
-  const { user, role, store, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { user, store } = useLocalPOS();
 
-  // Always show Dashboard + PDV + Caixa; restrict others by role only if role exists
-  const filteredNavItems = navItems.filter((item) => {
-    if (!item.roles) return true; // No restriction
-    if (!role) return false; // Hide restricted items if role is unknown
-    return item.roles.includes(role);
-  });
+  // Handle logout - just navigate, no async
+  const handleLogout = () => {
+    navigate('/dashboard');
+  };
 
   return (
     <aside className={cn(
@@ -73,8 +72,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         )}
       </div>
 
-      {/* Store indicator – only if store is loaded */}
-      {!collapsed && store?.name && (
+      {/* Store indicator */}
+      {!collapsed && (
         <div className="px-4 py-3 border-b border-sidebar-border">
           <div className="flex items-center gap-2 text-sm">
             <Store className="w-4 h-4 text-primary" />
@@ -85,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-        {filteredNavItems.map((item) => {
+        {navItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
             <Link
@@ -111,12 +110,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         })}
       </nav>
 
-      {/* User section – only render when user is available */}
+      {/* User section */}
       <div className={cn('p-4 border-t border-sidebar-border', collapsed && 'p-2')}>
-        {!collapsed && user?.full_name && (
+        {!collapsed && (
           <div className="mb-3 p-3 rounded-lg bg-sidebar-accent">
-            <p className="font-medium text-sm text-sidebar-accent-foreground truncate">{user.full_name}</p>
-            <p className="text-xs text-muted-foreground">{role ? getRoleLabel(role) : 'Carregando...'}</p>
+            <p className="font-medium text-sm text-sidebar-accent-foreground truncate">{user.name}</p>
+            <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
           </div>
         )}
         <Button
@@ -125,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
             'w-full justify-start gap-3 text-muted-foreground hover:text-destructive',
             collapsed && 'justify-center px-2'
           )}
-          onClick={signOut}
+          onClick={handleLogout}
         >
           <LogOut className="w-5 h-5" />
           {!collapsed && 'Sair'}
