@@ -1,40 +1,34 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
+import { useLocalAuth } from '@/contexts/LocalAuthContext';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   ShoppingCart,
   Package,
-  Users,
-  FileText,
   Settings,
   Store,
   DollarSign,
   LogOut,
   ChevronRight,
-  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// 100% LOCAL - NO AUTH CONTEXT, NO ASYNC
+// 100% LOCAL - NO ASYNC
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
+  adminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-  { label: 'PDV', href: '/pos', icon: <ShoppingCart className="w-5 h-5" /> },
-  { label: 'Produtos', href: '/products', icon: <Package className="w-5 h-5" /> },
-  { label: 'Caixa', href: '/cash-register', icon: <DollarSign className="w-5 h-5" /> },
-  { label: 'Estoque', href: '/inventory', icon: <AlertTriangle className="w-5 h-5" /> },
-  { label: 'Relatórios', href: '/reports', icon: <FileText className="w-5 h-5" /> },
-  { label: 'Usuários', href: '/users', icon: <Users className="w-5 h-5" /> },
-  { label: 'Lojas', href: '/stores', icon: <Store className="w-5 h-5" /> },
-  { label: 'Configurações', href: '/settings', icon: <Settings className="w-5 h-5" /> },
+  { label: 'Dashboard', href: '/', icon: <LayoutDashboard className="w-5 h-5" /> },
+  { label: 'PDV', href: '/pdv', icon: <ShoppingCart className="w-5 h-5" /> },
+  { label: 'Produtos', href: '/produtos', icon: <Package className="w-5 h-5" />, adminOnly: true },
+  { label: 'Configurações', href: '/configuracoes', icon: <Settings className="w-5 h-5" />, adminOnly: true },
 ];
 
 interface SidebarProps {
@@ -44,12 +38,19 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, store } = useLocalPOS();
+  const { store } = useLocalPOS();
+  const { user, logout, hasAccess } = useLocalAuth();
 
-  // Handle logout - just navigate, no async
+  const isAdmin = hasAccess(['admin']);
+
+  // Handle logout
   const handleLogout = () => {
-    navigate('/dashboard');
+    logout();
+    navigate('/login');
   };
+
+  // Filter nav items based on role
+  const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <aside className={cn(
@@ -84,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
             <Link
@@ -112,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
       {/* User section */}
       <div className={cn('p-4 border-t border-sidebar-border', collapsed && 'p-2')}>
-        {!collapsed && (
+        {!collapsed && user && (
           <div className="mb-3 p-3 rounded-lg bg-sidebar-accent">
             <p className="font-medium text-sm text-sidebar-accent-foreground truncate">{user.name}</p>
             <p className="text-xs text-muted-foreground capitalize">{user.role}</p>

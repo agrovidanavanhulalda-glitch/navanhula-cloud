@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useLocalPOS } from '@/contexts/LocalPOSContext';
+import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
+import { useLocalAuth } from '@/contexts/LocalAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -13,10 +14,12 @@ import {
   Banknote,
   Smartphone,
   Search,
-  X
+  X,
+  Printer
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
+import Receipt from '@/components/pos/Receipt';
 
 // 100% LOCAL - NO ASYNC, NO BACKEND, NO LOADING
 
@@ -24,7 +27,6 @@ const LocalPOSPage: React.FC = () => {
   const {
     cart,
     products,
-    user,
     store,
     cashRegisterOpen,
     addToCart,
@@ -36,23 +38,29 @@ const LocalPOSPage: React.FC = () => {
     getSubtotal,
     getTotal,
     getTotalDiscount,
+    getLastSale,
   } = useLocalPOS();
+
+  const { user } = useLocalAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualName, setManualName] = useState('');
   const [manualPrice, setManualPrice] = useState('');
   const [showPayment, setShowPayment] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
 
-  // Filter products - SYNCHRONOUS
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter active products - SYNCHRONOUS
+  const filteredProducts = products
+    .filter(p => p.isActive)
+    .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   // Handle add to cart - SYNCHRONOUS
-  const handleAddToCart = (product: typeof products[0]) => {
-    addToCart(product);
-    toast.success(`${product.name} adicionado`);
+  const handleAddToCart = (product: LocalProduct) => {
+    const success = addToCart(product);
+    if (success) {
+      toast.success(`${product.name} adicionado`);
+    }
   };
 
   // Handle manual item - SYNCHRONOUS
@@ -79,10 +87,15 @@ const LocalPOSPage: React.FC = () => {
       toast.error('Carrinho vazio');
       return;
     }
-    completeSale(method);
-    toast.success('Venda concluída!');
-    setShowPayment(false);
+    const sale = completeSale(method);
+    if (sale) {
+      toast.success('Venda concluída!');
+      setShowPayment(false);
+      setShowReceipt(true);
+    }
   };
+
+  const lastSale = getLastSale();
 
   return (
     <div className="h-[calc(100vh-4rem)] flex">
@@ -92,7 +105,7 @@ const LocalPOSPage: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold">PDV - {store.name}</h1>
-            <p className="text-sm text-muted-foreground">Operador: {user.name}</p>
+            <p className="text-sm text-muted-foreground">Operador: {user?.name || 'N/A'}</p>
           </div>
           <Badge variant={cashRegisterOpen ? 'default' : 'destructive'}>
             Caixa {cashRegisterOpen ? 'Aberto' : 'Fechado'}
@@ -161,8 +174,10 @@ const LocalPOSPage: React.FC = () => {
           {filteredProducts.map((product) => (
             <Card
               key={product.id}
-              className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
-              onClick={() => handleAddToCart(product)}
+              className={`p-4 cursor-pointer hover:bg-accent/50 transition-colors ${
+                product.stock <= 0 ? 'opacity-50' : ''
+              }`}
+              onClick={() => product.stock > 0 && handleAddToCart(product)}
             >
               <div className="text-center">
                 <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
@@ -170,9 +185,9 @@ const LocalPOSPage: React.FC = () => {
                 </div>
                 <h3 className="font-medium text-sm truncate">{product.name}</h3>
                 <p className="text-lg font-bold text-primary mt-1">
-                  {formatCurrency(product.price)}
+                  {formatCurrency(product.salePrice)}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className={`text-xs ${product.stock <= 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
                   Estoque: {product.stock}
                 </p>
               </div>
@@ -347,8 +362,31 @@ const LocalPOSPage: React.FC = () => {
               Finalizar Venda
             </Button>
           )}
+
+          {/* Last sale receipt button */}
+          {lastSale && !showReceipt && (
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => setShowReceipt(true)}
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Ver Último Recibo
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Receipt Modal */}
+      {showReceipt && lastSale && (
+        <Receipt
+          sale={lastSale}
+          storeName={store.name}
+          storeAddress={store.address}
+          storePhone={store.phone}
+          onClose={() => setShowReceipt(false)}
+        />
+      )}
     </div>
   );
 };
