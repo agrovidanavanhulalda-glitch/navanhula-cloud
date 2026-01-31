@@ -12,6 +12,11 @@ import LocalPOSPage from "./pages/LocalPOSPage";
 import LocalProductsPage from "./pages/LocalProductsPage";
 import LocalLoginPage from "./pages/LocalLoginPage";
 import LocalSettingsPage from "./pages/LocalSettingsPage";
+import LocalStoresPage from "./pages/LocalStoresPage";
+import LocalSellersPage from "./pages/LocalSellersPage";
+import LocalCashRegisterPage from "./pages/LocalCashRegisterPage";
+import LocalInventoryPage from "./pages/LocalInventoryPage";
+import LocalReportsPage from "./pages/LocalReportsPage";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
 
@@ -48,7 +53,12 @@ const AppRoutes = () => {
       }>
         <Route path="/" element={<LocalDashboardPage />} />
         <Route path="/pdv" element={<LocalPOSPage />} />
+        <Route path="/caixa" element={<LocalCashRegisterPage />} />
         <Route path="/produtos" element={<LocalProductsPage />} />
+        <Route path="/estoque" element={<LocalInventoryPage />} />
+        <Route path="/vendedores" element={<LocalSellersPage />} />
+        <Route path="/lojas" element={<LocalStoresPage />} />
+        <Route path="/relatorios" element={<LocalReportsPage />} />
         <Route path="/configuracoes" element={<LocalSettingsPage />} />
       </Route>
       
