@@ -9,9 +9,12 @@ import {
   Package,
   Settings,
   Store,
-  DollarSign,
   LogOut,
   ChevronRight,
+  Wallet,
+  Users,
+  BarChart3,
+  Boxes,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -21,14 +24,18 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
-  adminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: <LayoutDashboard className="w-5 h-5" /> },
   { label: 'PDV', href: '/pdv', icon: <ShoppingCart className="w-5 h-5" /> },
-  { label: 'Produtos', href: '/produtos', icon: <Package className="w-5 h-5" />, adminOnly: true },
-  { label: 'Configurações', href: '/configuracoes', icon: <Settings className="w-5 h-5" />, adminOnly: true },
+  { label: 'Caixa', href: '/caixa', icon: <Wallet className="w-5 h-5" /> },
+  { label: 'Produtos', href: '/produtos', icon: <Package className="w-5 h-5" /> },
+  { label: 'Estoque', href: '/estoque', icon: <Boxes className="w-5 h-5" /> },
+  { label: 'Vendedores', href: '/vendedores', icon: <Users className="w-5 h-5" /> },
+  { label: 'Lojas', href: '/lojas', icon: <Store className="w-5 h-5" /> },
+  { label: 'Relatórios', href: '/relatorios', icon: <BarChart3 className="w-5 h-5" /> },
+  { label: 'Configurações', href: '/configuracoes', icon: <Settings className="w-5 h-5" /> },
 ];
 
 interface SidebarProps {
@@ -38,19 +45,14 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { store } = useLocalPOS();
-  const { user, logout, hasAccess } = useLocalAuth();
-
-  const isAdmin = hasAccess(['admin']);
+  const { currentStore } = useLocalPOS();
+  const { user, logout } = useLocalAuth();
 
   // Handle logout
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-
-  // Filter nav items based on role
-  const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <aside className={cn(
@@ -78,14 +80,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         <div className="px-4 py-3 border-b border-sidebar-border">
           <div className="flex items-center gap-2 text-sm">
             <Store className="w-4 h-4 text-primary" />
-            <span className="text-sidebar-foreground truncate">{store.name}</span>
+            <span className="text-sidebar-foreground truncate">{currentStore.name}</span>
           </div>
         </div>
       )}
 
-      {/* Navigation */}
+      {/* Navigation - ALL MENUS VISIBLE */}
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-        {visibleNavItems.map((item) => {
+        {navItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
             <Link

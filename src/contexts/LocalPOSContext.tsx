@@ -28,6 +28,9 @@ export interface LocalSale {
   status: 'open' | 'completed' | 'cancelled';
   paymentMethod?: string;
   createdAt: Date;
+  storeId: string;
+  sellerId?: string;
+  sellerName?: string;
 }
 
 export interface LocalStore {
@@ -35,11 +38,40 @@ export interface LocalStore {
   name: string;
   address: string;
   phone: string;
+  isActive: boolean;
+}
+
+export interface LocalSeller {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'vendedor';
+  storeId: string;
+  isActive: boolean;
+  password: string;
+}
+
+export interface LocalCashRegister {
+  id: string;
+  storeId: string;
+  sellerId: string;
+  sellerName: string;
+  openingAmount: number;
+  closingAmount?: number;
+  expectedAmount?: number;
+  status: 'open' | 'closed';
+  openedAt: Date;
+  closedAt?: Date;
+  salesTotal: number;
+  salesCount: number;
 }
 
 interface LocalPOSState {
-  store: LocalStore;
-  cashRegisterOpen: boolean;
+  stores: LocalStore[];
+  currentStore: LocalStore;
+  sellers: LocalSeller[];
+  cashRegisters: LocalCashRegister[];
+  currentCashRegister: LocalCashRegister | null;
   currentSale: LocalSale | null;
   cart: LocalCartItem[];
   products: LocalProduct[];
@@ -61,22 +93,39 @@ interface LocalPOSContextType extends LocalPOSState {
   cancelSale: () => void;
   
   // Cash register - ALL SYNCHRONOUS
-  openCashRegister: () => void;
-  closeCashRegister: () => void;
+  openCashRegister: (sellerId: string, sellerName: string, openingAmount: number) => LocalCashRegister;
+  closeCashRegister: (closingAmount: number, notes?: string) => void;
+  getCashRegisterHistory: () => LocalCashRegister[];
+  
+  // Store management - ALL SYNCHRONOUS
+  addStore: (store: Omit<LocalStore, 'id'>) => void;
+  updateStore: (id: string, store: Partial<LocalStore>) => void;
+  deleteStore: (id: string) => void;
+  setCurrentStore: (storeId: string) => void;
+  
+  // Seller management - ALL SYNCHRONOUS
+  addSeller: (seller: Omit<LocalSeller, 'id'>) => void;
+  updateSeller: (id: string, seller: Partial<LocalSeller>) => void;
+  deleteSeller: (id: string) => void;
+  getSellersByStore: (storeId: string) => LocalSeller[];
   
   // Product management - ALL SYNCHRONOUS
   addProduct: (product: Omit<LocalProduct, 'id'>) => void;
   updateProduct: (id: string, product: Partial<LocalProduct>) => void;
   deleteProduct: (id: string) => void;
   
-  // Store management
-  updateStore: (store: Partial<LocalStore>) => void;
-  
   // Getters
   getSubtotal: () => number;
   getTotal: () => number;
   getTotalDiscount: () => number;
   getLastSale: () => LocalSale | null;
+  getSalesByStore: (storeId: string) => LocalSale[];
+  getSalesBySeller: (sellerId: string) => LocalSale[];
+  getSalesByPeriod: (startDate: Date, endDate: Date) => LocalSale[];
+  
+  // Legacy compatibility
+  store: LocalStore;
+  cashRegisterOpen: boolean;
 }
 
 const LocalPOSContext = createContext<LocalPOSContextType | undefined>(undefined);
@@ -85,7 +134,10 @@ const LocalPOSContext = createContext<LocalPOSContextType | undefined>(undefined
 const STORAGE_KEYS = {
   products: 'navanhula_products',
   sales: 'navanhula_sales',
-  store: 'navanhula_store',
+  stores: 'navanhula_stores',
+  currentStoreId: 'navanhula_current_store',
+  sellers: 'navanhula_sellers',
+  cashRegisters: 'navanhula_cash_registers',
 };
 
 // Default products with cost and sale price
@@ -105,7 +157,29 @@ const DEFAULT_STORE: LocalStore = {
   name: 'NAVANHULA – Loja Principal',
   address: 'Maputo, Moçambique',
   phone: '+258 84 000 0000',
+  isActive: true,
 };
+
+const DEFAULT_SELLERS: LocalSeller[] = [
+  {
+    id: 'seller-admin',
+    name: 'Administrador',
+    email: 'admin@navanhula.local',
+    role: 'admin',
+    storeId: 'store-1',
+    isActive: true,
+    password: '1234',
+  },
+  {
+    id: 'seller-caixa',
+    name: 'Operador de Caixa',
+    email: 'caixa@navanhula.local',
+    role: 'vendedor',
+    storeId: 'store-1',
+    isActive: true,
+    password: '1234',
+  },
+];
 
 // Load from localStorage
 const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
@@ -130,14 +204,23 @@ const saveToStorage = <T,>(key: string, value: T): void => {
 };
 
 // Initial state - loaded from localStorage or defaults
-const getInitialState = (): LocalPOSState => ({
-  store: loadFromStorage(STORAGE_KEYS.store, DEFAULT_STORE),
-  cashRegisterOpen: true,
-  currentSale: null,
-  cart: [],
-  products: loadFromStorage(STORAGE_KEYS.products, DEFAULT_PRODUCTS),
-  sales: loadFromStorage(STORAGE_KEYS.sales, []),
-});
+const getInitialState = (): LocalPOSState => {
+  const stores = loadFromStorage<LocalStore[]>(STORAGE_KEYS.stores, [DEFAULT_STORE]);
+  const currentStoreId = loadFromStorage<string>(STORAGE_KEYS.currentStoreId, 'store-1');
+  const currentStore = stores.find(s => s.id === currentStoreId) || stores[0] || DEFAULT_STORE;
+  
+  return {
+    stores,
+    currentStore,
+    sellers: loadFromStorage(STORAGE_KEYS.sellers, DEFAULT_SELLERS),
+    cashRegisters: loadFromStorage(STORAGE_KEYS.cashRegisters, []),
+    currentCashRegister: null,
+    currentSale: null,
+    cart: [],
+    products: loadFromStorage(STORAGE_KEYS.products, DEFAULT_PRODUCTS),
+    sales: loadFromStorage(STORAGE_KEYS.sales, []),
+  };
+};
 
 export const useLocalPOS = () => {
   const context = useContext(LocalPOSContext);
@@ -151,27 +234,37 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [state, setState] = useState<LocalPOSState>(getInitialState);
   const [lastSale, setLastSale] = useState<LocalSale | null>(null);
 
-  // Persist products to localStorage
+  // Persist to localStorage
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.products, state.products);
   }, [state.products]);
 
-  // Persist sales to localStorage
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.sales, state.sales);
   }, [state.sales]);
 
-  // Persist store to localStorage
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.store, state.store);
-  }, [state.store]);
+    saveToStorage(STORAGE_KEYS.stores, state.stores);
+  }, [state.stores]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.currentStoreId, state.currentStore.id);
+  }, [state.currentStore]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.sellers, state.sellers);
+  }, [state.sellers]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.cashRegisters, state.cashRegisters);
+  }, [state.cashRegisters]);
 
   // Generate simple ID - NO ASYNC
   const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // ADD TO CART - SYNCHRONOUS with stock check
+  // ============ CART ACTIONS ============
+
   const addToCart = useCallback((product: LocalProduct): boolean => {
-    // Check if product is active
     if (!product.isActive) {
       toast.error('Produto inativo');
       return false;
@@ -184,7 +277,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const currentQty = existingIndex >= 0 ? prev.cart[existingIndex].quantity : 0;
       const newQty = currentQty + 1;
 
-      // Check stock
       if (newQty > product.stock) {
         success = false;
         return prev;
@@ -216,7 +308,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return success;
   }, []);
 
-  // ADD MANUAL ITEM - SYNCHRONOUS
   const addManualItem = useCallback((name: string, price: number) => {
     const manualProduct: LocalProduct = {
       id: generateId(),
@@ -238,7 +329,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, []);
 
-  // REMOVE FROM CART - SYNCHRONOUS
   const removeFromCart = useCallback((productId: string) => {
     setState(prev => ({
       ...prev,
@@ -246,7 +336,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, []);
 
-  // UPDATE QUANTITY - SYNCHRONOUS with stock check
   const updateQuantity = useCallback((productId: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(productId);
@@ -271,7 +360,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   }, [removeFromCart]);
 
-  // APPLY ITEM DISCOUNT - SYNCHRONOUS
   const applyItemDiscount = useCallback((productId: string, discount: number) => {
     setState(prev => ({
       ...prev,
@@ -283,12 +371,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, []);
 
-  // CLEAR CART - SYNCHRONOUS
   const clearCart = useCallback(() => {
     setState(prev => ({ ...prev, cart: [] }));
   }, []);
 
-  // START NEW SALE - SYNCHRONOUS
+  // ============ SALE ACTIONS ============
+
   const startNewSale = useCallback(() => {
     const newSale: LocalSale = {
       id: generateId(),
@@ -298,6 +386,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       total: 0,
       status: 'open',
       createdAt: new Date(),
+      storeId: state.currentStore.id,
     };
     
     setState(prev => ({
@@ -305,9 +394,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       currentSale: newSale,
       cart: [],
     }));
-  }, []);
+  }, [state.currentStore.id]);
 
-  // COMPLETE SALE - SYNCHRONOUS with stock deduction
   const completeSale = useCallback((paymentMethod: string): LocalSale | null => {
     let completedSale: LocalSale | null = null;
 
@@ -329,6 +417,9 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         status: 'completed',
         paymentMethod,
         createdAt: new Date(),
+        storeId: prev.currentStore.id,
+        sellerId: prev.currentCashRegister?.sellerId,
+        sellerName: prev.currentCashRegister?.sellerName,
       };
 
       // Deduct stock from products
@@ -342,6 +433,20 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
         return product;
       });
+
+      // Update cash register if open
+      let updatedCashRegisters = prev.cashRegisters;
+      let updatedCurrentCashRegister = prev.currentCashRegister;
+      if (prev.currentCashRegister) {
+        updatedCurrentCashRegister = {
+          ...prev.currentCashRegister,
+          salesTotal: prev.currentCashRegister.salesTotal + total,
+          salesCount: prev.currentCashRegister.salesCount + 1,
+        };
+        updatedCashRegisters = prev.cashRegisters.map(cr =>
+          cr.id === prev.currentCashRegister!.id ? updatedCurrentCashRegister! : cr
+        );
+      }
       
       return {
         ...prev,
@@ -349,6 +454,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         sales: [...prev.sales, completedSale!],
         currentSale: null,
         cart: [],
+        cashRegisters: updatedCashRegisters,
+        currentCashRegister: updatedCurrentCashRegister,
       };
     });
 
@@ -359,7 +466,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return completedSale;
   }, []);
 
-  // CANCEL SALE - SYNCHRONOUS
   const cancelSale = useCallback(() => {
     setState(prev => ({
       ...prev,
@@ -368,17 +474,128 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, []);
 
-  // OPEN CASH REGISTER - SYNCHRONOUS
-  const openCashRegister = useCallback(() => {
-    setState(prev => ({ ...prev, cashRegisterOpen: true }));
+  // ============ CASH REGISTER ACTIONS ============
+
+  const openCashRegister = useCallback((sellerId: string, sellerName: string, openingAmount: number): LocalCashRegister => {
+    const newRegister: LocalCashRegister = {
+      id: generateId(),
+      storeId: state.currentStore.id,
+      sellerId,
+      sellerName,
+      openingAmount,
+      status: 'open',
+      openedAt: new Date(),
+      salesTotal: 0,
+      salesCount: 0,
+    };
+
+    setState(prev => ({
+      ...prev,
+      cashRegisters: [...prev.cashRegisters, newRegister],
+      currentCashRegister: newRegister,
+    }));
+
+    return newRegister;
+  }, [state.currentStore.id]);
+
+  const closeCashRegister = useCallback((closingAmount: number) => {
+    setState(prev => {
+      if (!prev.currentCashRegister) return prev;
+
+      const expectedAmount = prev.currentCashRegister.openingAmount + prev.currentCashRegister.salesTotal;
+      const closedRegister: LocalCashRegister = {
+        ...prev.currentCashRegister,
+        closingAmount,
+        expectedAmount,
+        status: 'closed',
+        closedAt: new Date(),
+      };
+
+      return {
+        ...prev,
+        cashRegisters: prev.cashRegisters.map(cr =>
+          cr.id === closedRegister.id ? closedRegister : cr
+        ),
+        currentCashRegister: null,
+      };
+    });
   }, []);
 
-  // CLOSE CASH REGISTER - SYNCHRONOUS
-  const closeCashRegister = useCallback(() => {
-    setState(prev => ({ ...prev, cashRegisterOpen: false }));
+  const getCashRegisterHistory = useCallback(() => {
+    return state.cashRegisters;
+  }, [state.cashRegisters]);
+
+  // ============ STORE ACTIONS ============
+
+  const addStore = useCallback((store: Omit<LocalStore, 'id'>) => {
+    setState(prev => ({
+      ...prev,
+      stores: [...prev.stores, { ...store, id: generateId() }],
+    }));
   }, []);
 
-  // ADD PRODUCT - SYNCHRONOUS
+  const updateStore = useCallback((id: string, updates: Partial<LocalStore>) => {
+    setState(prev => {
+      const updatedStores = prev.stores.map(s =>
+        s.id === id ? { ...s, ...updates } : s
+      );
+      const currentStore = prev.currentStore.id === id 
+        ? { ...prev.currentStore, ...updates }
+        : prev.currentStore;
+      return {
+        ...prev,
+        stores: updatedStores,
+        currentStore,
+      };
+    });
+  }, []);
+
+  const deleteStore = useCallback((id: string) => {
+    setState(prev => ({
+      ...prev,
+      stores: prev.stores.filter(s => s.id !== id),
+    }));
+  }, []);
+
+  const setCurrentStore = useCallback((storeId: string) => {
+    setState(prev => {
+      const store = prev.stores.find(s => s.id === storeId);
+      if (!store) return prev;
+      return { ...prev, currentStore: store };
+    });
+  }, []);
+
+  // ============ SELLER ACTIONS ============
+
+  const addSeller = useCallback((seller: Omit<LocalSeller, 'id'>) => {
+    setState(prev => ({
+      ...prev,
+      sellers: [...prev.sellers, { ...seller, id: generateId() }],
+    }));
+  }, []);
+
+  const updateSeller = useCallback((id: string, updates: Partial<LocalSeller>) => {
+    setState(prev => ({
+      ...prev,
+      sellers: prev.sellers.map(s =>
+        s.id === id ? { ...s, ...updates } : s
+      ),
+    }));
+  }, []);
+
+  const deleteSeller = useCallback((id: string) => {
+    setState(prev => ({
+      ...prev,
+      sellers: prev.sellers.filter(s => s.id !== id),
+    }));
+  }, []);
+
+  const getSellersByStore = useCallback((storeId: string) => {
+    return state.sellers.filter(s => s.storeId === storeId);
+  }, [state.sellers]);
+
+  // ============ PRODUCT ACTIONS ============
+
   const addProduct = useCallback((product: Omit<LocalProduct, 'id'>) => {
     setState(prev => ({
       ...prev,
@@ -386,7 +603,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, []);
 
-  // UPDATE PRODUCT - SYNCHRONOUS
   const updateProduct = useCallback((id: string, updates: Partial<LocalProduct>) => {
     setState(prev => ({
       ...prev,
@@ -396,7 +612,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, []);
 
-  // DELETE PRODUCT - SYNCHRONOUS
   const deleteProduct = useCallback((id: string) => {
     setState(prev => ({
       ...prev,
@@ -404,15 +619,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, []);
 
-  // UPDATE STORE - SYNCHRONOUS
-  const updateStore = useCallback((updates: Partial<LocalStore>) => {
-    setState(prev => ({
-      ...prev,
-      store: { ...prev.store, ...updates },
-    }));
-  }, []);
+  // ============ GETTERS ============
 
-  // GETTERS - SYNCHRONOUS
   const getSubtotal = useCallback(() => {
     return state.cart.reduce((acc, item) => acc + item.quantity * item.product.salePrice, 0);
   }, [state.cart]);
@@ -427,27 +635,63 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const getLastSale = useCallback(() => lastSale, [lastSale]);
 
+  const getSalesByStore = useCallback((storeId: string) => {
+    return state.sales.filter(s => s.storeId === storeId);
+  }, [state.sales]);
+
+  const getSalesBySeller = useCallback((sellerId: string) => {
+    return state.sales.filter(s => s.sellerId === sellerId);
+  }, [state.sales]);
+
+  const getSalesByPeriod = useCallback((startDate: Date, endDate: Date) => {
+    return state.sales.filter(s => {
+      const saleDate = new Date(s.createdAt);
+      return saleDate >= startDate && saleDate <= endDate;
+    });
+  }, [state.sales]);
+
   const value: LocalPOSContextType = {
     ...state,
+    // Legacy compatibility
+    store: state.currentStore,
+    cashRegisterOpen: state.currentCashRegister?.status === 'open',
+    // Cart
     addToCart,
     addManualItem,
     removeFromCart,
     updateQuantity,
     applyItemDiscount,
     clearCart,
+    // Sales
     startNewSale,
     completeSale,
     cancelSale,
+    // Cash Register
     openCashRegister,
     closeCashRegister,
+    getCashRegisterHistory,
+    // Stores
+    addStore,
+    updateStore,
+    deleteStore,
+    setCurrentStore,
+    // Sellers
+    addSeller,
+    updateSeller,
+    deleteSeller,
+    getSellersByStore,
+    // Products
     addProduct,
     updateProduct,
     deleteProduct,
-    updateStore,
+    // Getters
     getSubtotal,
     getTotal,
     getTotalDiscount,
     getLastSale,
+    getSalesByStore,
+    getSalesBySeller,
+    getSalesByPeriod,
   };
 
   return (

@@ -33,7 +33,7 @@ const LocalSettingsPage: React.FC = () => {
       return;
     }
 
-    updateStore({
+    updateStore(store.id, {
       name: formData.name.trim(),
       address: formData.address.trim(),
       phone: formData.phone.trim(),
