@@ -3,14 +3,19 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SaaSAuthProvider, useAuth } from "@/contexts/SaaSAuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
-import { LocalAuthProvider, useLocalAuth } from "@/contexts/LocalAuthContext";
+import { Loader2 } from "lucide-react";
 
-// LOCAL PAGES - 100% SYNCHRONOUS, NO BACKEND
+// Auth pages
+import AuthLoginPage from "./pages/AuthLoginPage";
+import AuthSignupPage from "./pages/AuthSignupPage";
+import OnboardingPage from "./pages/OnboardingPage";
+
+// Main app pages
 import LocalDashboardPage from "./pages/LocalDashboardPage";
 import LocalPOSPage from "./pages/LocalPOSPage";
 import LocalProductsPage from "./pages/LocalProductsPage";
-import LocalLoginPage from "./pages/LocalLoginPage";
 import LocalSettingsPage from "./pages/LocalSettingsPage";
 import LocalStoresPage from "./pages/LocalStoresPage";
 import LocalSellersPage from "./pages/LocalSellersPage";
@@ -22,33 +27,109 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Protected Route Component
+// Loading spinner component
+const LoadingScreen = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+  </div>
+);
+
+// Protected Route - requires authentication AND completed onboarding
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useLocalAuth();
+  const { isAuthenticated, onboardingCompleted, loading } = useAuth();
+  
+  if (loading) {
+    return <LoadingScreen />;
+  }
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
+  if (!onboardingCompleted) {
+    return <Navigate to="/onboarding" replace />;
+  }
+  
   return <>{children}</>;
 };
 
-// App Routes with Auth
-const AppRoutes = () => {
-  const { isAuthenticated } = useLocalAuth();
+// Onboarding Route - requires authentication but NOT completed onboarding
+const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, onboardingCompleted, loading } = useAuth();
+  
+  if (loading) {
+    return <LoadingScreen />;
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // If already completed onboarding, go to dashboard
+  if (onboardingCompleted) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
 
+// Public Route - redirects authenticated users appropriately
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, onboardingCompleted, loading } = useAuth();
+  
+  if (loading) {
+    return <LoadingScreen />;
+  }
+  
+  if (isAuthenticated) {
+    if (onboardingCompleted) {
+      return <Navigate to="/" replace />;
+    } else {
+      return <Navigate to="/onboarding" replace />;
+    }
+  }
+  
+  return <>{children}</>;
+};
+
+// App Routes with proper guards
+const AppRoutes = () => {
   return (
     <Routes>
-      {/* Login - redirect to dashboard if already authenticated */}
+      {/* Public routes - Login and Signup */}
       <Route 
         path="/login" 
-        element={isAuthenticated ? <Navigate to="/" replace /> : <LocalLoginPage />} 
+        element={
+          <PublicRoute>
+            <AuthLoginPage />
+          </PublicRoute>
+        } 
+      />
+      <Route 
+        path="/signup" 
+        element={
+          <PublicRoute>
+            <AuthSignupPage />
+          </PublicRoute>
+        } 
       />
       
-      {/* Protected Routes */}
+      {/* Onboarding route - authenticated but no company yet */}
+      <Route 
+        path="/onboarding" 
+        element={
+          <OnboardingRoute>
+            <OnboardingPage />
+          </OnboardingRoute>
+        } 
+      />
+      
+      {/* Protected Routes - authenticated AND onboarding completed */}
       <Route element={
         <ProtectedRoute>
-          <MainLayout />
+          <LocalPOSProvider>
+            <MainLayout />
+          </LocalPOSProvider>
         </ProtectedRoute>
       }>
         <Route path="/" element={<LocalDashboardPage />} />
@@ -74,11 +155,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <LocalAuthProvider>
-          <LocalPOSProvider>
-            <AppRoutes />
-          </LocalPOSProvider>
-        </LocalAuthProvider>
+        <SaaSAuthProvider>
+          <AppRoutes />
+        </SaaSAuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

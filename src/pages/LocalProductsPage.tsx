@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
-import { useLocalAuth } from '@/contexts/LocalAuthContext';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,11 +25,11 @@ import {
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 
-// 100% LOCAL - NO ASYNC, NO BACKEND
+// HYBRID: Local POS data + SaaS Auth
 
 const LocalProductsPage: React.FC = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useLocalPOS();
-  const { hasAccess } = useLocalAuth();
+  const { role } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -45,7 +45,7 @@ const LocalProductsPage: React.FC = () => {
     isActive: true,
   });
 
-  const isAdmin = hasAccess(['admin']);
+  const isAdmin = role === 'admin' || role === 'manager';
 
   // Filter products
   const filteredProducts = products.filter(p =>

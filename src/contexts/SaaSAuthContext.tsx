@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Profile, Store, AppRole, AuthContextType } from '@/types/pos';
+import type { Profile, Store, Company, AppRole, AuthContextType, OnboardingData } from '@/types/pos';
 import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -13,10 +13,11 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [store, setStore] = useState<Store | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
 
@@ -24,8 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const bootstrapRan = useRef(false);
 
   /**
-   * Call the bootstrap function on the server to ensure profile/role/store exist.
-   * SECURITY DEFINER function so it can INSERT where RLS would block.
+   * Call the bootstrap function on the server to ensure profile/role exist.
    */
   const callBootstrap = useCallback(async () => {
     if (bootstrapRan.current) return;
@@ -34,7 +34,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.rpc('bootstrap_current_user');
       if (error) {
         console.error('Bootstrap error:', error);
-        // Non-fatal – we'll continue and just fetch whatever data exists
       }
     } catch (e) {
       console.error('Bootstrap exception:', e);
@@ -43,10 +42,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserData = useCallback(async (userId: string): Promise<boolean> => {
     try {
-      // Fetch profile with store
+      // Fetch profile with store and company
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*, store:stores(*)')
+        .select('*')
         .eq('id', userId)
         .maybeSingle();
 
@@ -66,12 +65,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Error fetching role:', roleError);
       }
 
+      // Fetch store if store_id exists
+      let storeData: Store | null = null;
+      if (profileData?.store_id) {
+        const { data: fetchedStore } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('id', profileData.store_id)
+          .maybeSingle();
+        storeData = fetchedStore as Store | null;
+      }
+
+      // Fetch company if company_id exists
+      let companyData: Company | null = null;
+      if (profileData?.company_id) {
+        const { data: fetchedCompany } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('id', profileData.company_id)
+          .maybeSingle();
+        companyData = fetchedCompany as Company | null;
+      }
+
       if (profileData) {
         setUser(profileData as Profile);
         setRole((roleData?.role as AppRole) || 'seller');
-        setStore((profileData as any)?.store as Store || null);
+        setStore(storeData);
+        setCompany(companyData);
       } else {
-        // Profile still missing after bootstrap – set minimal fallback
         setRole((roleData?.role as AppRole) || 'seller');
       }
 
@@ -81,6 +102,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
   }, []);
+
+  const refreshUserData = useCallback(async () => {
+    if (authUserId) {
+      await fetchUserData(authUserId);
+    }
+  }, [authUserId, fetchUserData]);
 
   useEffect(() => {
     let isMounted = true;
@@ -98,7 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           if (isMounted) {
             setAuthUserId(session.user.id);
-            // Ensure profile/role exist
             await callBootstrap();
             await fetchUserData(session.user.id);
           }
@@ -119,7 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Auth state change:', event, session?.user?.id);
 
       if (event === 'SIGNED_IN' && session?.user) {
-        bootstrapRan.current = false; // allow bootstrap for new sign-in
+        bootstrapRan.current = false;
         setAuthUserId(session.user.id);
         await callBootstrap();
         await fetchUserData(session.user.id);
@@ -128,6 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setRole(null);
         setStore(null);
+        setCompany(null);
         setAuthUserId(null);
         bootstrapRan.current = false;
         setLoading(false);
@@ -144,6 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [fetchUserData, callBootstrap]);
 
   const isAuthenticated = authUserId !== null;
+  const onboardingCompleted = user?.onboarding_completed === true;
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -152,6 +180,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
     toast.success('Login realizado com sucesso!');
+  };
+
+  const signUp = async (email: string, password: string, fullName: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: {
+          full_name: fullName,
+        },
+      },
+    });
+    if (error) {
+      toast.error('Erro ao criar conta: ' + error.message);
+      throw error;
+    }
+    toast.success('Conta criada! Verifique seu email para confirmar.');
   };
 
   const signOut = async () => {
@@ -163,8 +209,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success('Sessão encerrada');
   };
 
+  const completeOnboarding = async (data: OnboardingData) => {
+    try {
+      const { data: result, error } = await supabase.rpc('complete_onboarding', {
+        p_company_name: data.companyName,
+        p_company_nif: data.companyNif || null,
+        p_company_phone: data.companyPhone || null,
+        p_company_address: data.companyAddress || null,
+      });
+
+      if (error) {
+        console.error('Onboarding error:', error);
+        toast.error('Erro ao criar empresa: ' + error.message);
+        throw error;
+      }
+
+      // Refresh user data to get updated profile
+      if (authUserId) {
+        await fetchUserData(authUserId);
+      }
+
+      const message = (result as any)?.message || 'Empresa criada com sucesso!';
+      toast.success(message);
+    } catch (error) {
+      console.error('Complete onboarding error:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, role, store, loading, isAuthenticated, signIn, signOut }}>
+    <AuthContext.Provider value={{
+      user,
+      role,
+      store,
+      company,
+      loading,
+      isAuthenticated,
+      onboardingCompleted,
+      signIn,
+      signUp,
+      signOut,
+      completeOnboarding,
+      refreshUserData,
+    }}>
       {children}
     </AuthContext.Provider>
   );

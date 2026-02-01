@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
-import { useLocalAuth } from '@/contexts/LocalAuthContext';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 
-// 100% LOCAL - NO ASYNC, NO BACKEND, NO LOADING
+// HYBRID: Local POS data + SaaS Auth
 
 const LocalDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const LocalDashboardPage: React.FC = () => {
     cashRegisterOpen,
     startNewSale 
   } = useLocalPOS();
-  const { user } = useLocalAuth();
+  const { user } = useAuth();
 
   // Calculate stats - SYNCHRONOUS
   const todaySales = sales.filter(s => {
@@ -58,7 +58,7 @@ const LocalDashboardPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Bem-vindo, {user?.name || 'Usuário'}!</h1>
+          <h1 className="text-3xl font-bold">Bem-vindo, {user?.full_name || 'Usuário'}!</h1>
           <p className="text-muted-foreground">{store.name}</p>
         </div>
         <div className="flex items-center gap-4">

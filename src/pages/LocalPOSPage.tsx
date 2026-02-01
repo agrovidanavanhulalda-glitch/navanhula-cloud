@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
-import { useLocalAuth } from '@/contexts/LocalAuthContext';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -21,7 +21,7 @@ import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import Receipt from '@/components/pos/Receipt';
 
-// 100% LOCAL - NO ASYNC, NO BACKEND, NO LOADING
+// HYBRID: Local POS data + SaaS Auth
 
 const LocalPOSPage: React.FC = () => {
   const {
@@ -41,7 +41,7 @@ const LocalPOSPage: React.FC = () => {
     getLastSale,
   } = useLocalPOS();
 
-  const { user } = useLocalAuth();
+  const { user } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showManualEntry, setShowManualEntry] = useState(false);
@@ -105,7 +105,7 @@ const LocalPOSPage: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold">PDV - {store.name}</h1>
-            <p className="text-sm text-muted-foreground">Operador: {user?.name || 'N/A'}</p>
+            <p className="text-sm text-muted-foreground">Operador: {user?.full_name || 'N/A'}</p>
           </div>
           <Badge variant={cashRegisterOpen ? 'default' : 'destructive'}>
             Caixa {cashRegisterOpen ? 'Aberto' : 'Fechado'}
