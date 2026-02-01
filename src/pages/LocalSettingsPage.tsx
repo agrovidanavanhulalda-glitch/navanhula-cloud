@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
-import { useLocalAuth } from '@/contexts/LocalAuthContext';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,11 +13,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// 100% LOCAL - NO ASYNC, NO BACKEND
+// HYBRID: Local POS data + SaaS Auth
 
 const LocalSettingsPage: React.FC = () => {
   const { store, updateStore } = useLocalPOS();
-  const { hasAccess } = useLocalAuth();
+  const { role, company } = useAuth();
 
   const [formData, setFormData] = useState({
     name: store.name,
@@ -25,7 +25,7 @@ const LocalSettingsPage: React.FC = () => {
     phone: store.phone,
   });
 
-  const isAdmin = hasAccess(['admin']);
+  const isAdmin = role === 'admin' || role === 'manager';
 
   const handleSave = () => {
     if (!formData.name.trim()) {

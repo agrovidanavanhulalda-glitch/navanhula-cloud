@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useLocalPOS } from '@/contexts/LocalPOSContext';
-import { useLocalAuth } from '@/contexts/LocalAuthContext';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -15,10 +14,9 @@ import {
   Users,
   BarChart3,
   Boxes,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-// 100% LOCAL - NO ASYNC
 
 interface NavItem {
   label: string;
@@ -45,12 +43,11 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentStore } = useLocalPOS();
-  const { user, logout } = useLocalAuth();
+  const { user, company, store, signOut, role } = useAuth();
 
   // Handle logout
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate('/login');
   };
 
@@ -75,13 +72,21 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         )}
       </div>
 
-      {/* Store indicator */}
+      {/* Company and Store indicator */}
       {!collapsed && (
-        <div className="px-4 py-3 border-b border-sidebar-border">
-          <div className="flex items-center gap-2 text-sm">
-            <Store className="w-4 h-4 text-primary" />
-            <span className="text-sidebar-foreground truncate">{currentStore.name}</span>
-          </div>
+        <div className="px-4 py-3 border-b border-sidebar-border space-y-2">
+          {company && (
+            <div className="flex items-center gap-2 text-sm">
+              <Building2 className="w-4 h-4 text-primary" />
+              <span className="text-sidebar-foreground truncate font-medium">{company.name}</span>
+            </div>
+          )}
+          {store && (
+            <div className="flex items-center gap-2 text-xs">
+              <Store className="w-3 h-3 text-muted-foreground" />
+              <span className="text-muted-foreground truncate">{store.name}</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -117,8 +122,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
       <div className={cn('p-4 border-t border-sidebar-border', collapsed && 'p-2')}>
         {!collapsed && user && (
           <div className="mb-3 p-3 rounded-lg bg-sidebar-accent">
-            <p className="font-medium text-sm text-sidebar-accent-foreground truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+            <p className="font-medium text-sm text-sidebar-accent-foreground truncate">
+              {user.full_name}
+            </p>
+            <p className="text-xs text-muted-foreground capitalize">{role || 'Usuário'}</p>
           </div>
         )}
         <Button

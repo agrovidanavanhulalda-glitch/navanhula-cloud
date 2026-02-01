@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocalPOS, LocalStore } from '@/contexts/LocalPOSContext';
-import { useLocalAuth } from '@/contexts/LocalAuthContext';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,11 +26,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// 100% LOCAL - NO ASYNC, NO BACKEND
+// HYBRID: Local POS data + SaaS Auth
 
 const LocalStoresPage: React.FC = () => {
   const { stores, currentStore, addStore, updateStore, deleteStore, setCurrentStore } = useLocalPOS();
-  const { hasAccess } = useLocalAuth();
+  const { role } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -45,7 +45,7 @@ const LocalStoresPage: React.FC = () => {
     isActive: true,
   });
 
-  const isAdmin = hasAccess(['admin']);
+  const isAdmin = role === 'admin' || role === 'manager';
 
   // Filter stores
   const filteredStores = stores.filter(s =>

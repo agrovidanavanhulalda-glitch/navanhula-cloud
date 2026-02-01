@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShoppingCart, Store } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { ShoppingCart, Store, LogIn, Loader2 } from 'lucide-react';
 
-const LoginPage: React.FC = () => {
+const AuthLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  
+  const { signIn, isAuthenticated, onboardingCompleted, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect based on auth state
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      if (onboardingCompleted) {
+        navigate('/', { replace: true });
+      } else {
+        navigate('/onboarding', { replace: true });
+      }
+    }
+  }, [loading, isAuthenticated, onboardingCompleted, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       await signIn(email, password);
+      // Navigation handled by useEffect
     } catch {
       // Error handled in context
     } finally {
@@ -23,21 +39,29 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       {/* Logo and branding */}
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center glow-primary">
+          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center">
             <ShoppingCart className="w-8 h-8 text-primary-foreground" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-gradient-primary">NAVANHULA POS</h1>
+        <h1 className="text-3xl font-bold text-primary">NAVANHULA POS</h1>
         <p className="text-muted-foreground mt-2">Sistema de Ponto de Venda</p>
       </div>
 
       {/* Login card */}
-      <div className="w-full max-w-md pos-card p-8">
+      <Card className="w-full max-w-md p-8">
         <div className="flex items-center gap-2 mb-6">
           <Store className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-semibold">Entrar no Sistema</h2>
@@ -52,8 +76,8 @@ const LoginPage: React.FC = () => {
               placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pos-input"
               required
+              autoComplete="email"
             />
           </div>
 
@@ -65,31 +89,39 @@ const LoginPage: React.FC = () => {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pos-input"
               required
+              autoComplete="current-password"
             />
           </div>
 
           <Button
             type="submit"
-            className="w-full pos-button-primary h-12 text-lg"
+            className="w-full h-12 text-lg"
             disabled={isLoading}
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
                 Entrando...
               </>
             ) : (
-              'Entrar'
+              <>
+                <LogIn className="w-5 h-5 mr-2" />
+                Entrar
+              </>
             )}
           </Button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Contacte o administrador para obter acesso
-        </p>
-      </div>
+        <div className="mt-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            Ainda não tem conta?{' '}
+            <Link to="/signup" className="text-primary hover:underline font-medium">
+              Criar conta
+            </Link>
+          </p>
+        </div>
+      </Card>
 
       {/* Footer */}
       <p className="text-sm text-muted-foreground mt-8">
@@ -99,4 +131,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default AuthLoginPage;

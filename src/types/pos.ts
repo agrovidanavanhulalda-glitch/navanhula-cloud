@@ -1,4 +1,4 @@
-// NAVANHULA POS Types
+// NAVANHULA POS Types - SaaS Multi-tenant
 
 export type AppRole = 'admin' | 'manager' | 'seller';
 export type PaymentMethod = 'cash' | 'mpesa' | 'emola' | 'card';
@@ -6,9 +6,22 @@ export type SaleStatus = 'pending' | 'completed' | 'cancelled' | 'refunded';
 export type CashRegisterStatus = 'open' | 'closed';
 export type StockAdjustmentReason = 'loss' | 'theft' | 'breakage' | 'admin_adjustment' | 'inventory_correction';
 
+// Company (multi-tenant root entity)
+export interface Company {
+  id: string;
+  name: string;
+  nif?: string;
+  phone?: string;
+  address?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Store {
   id: string;
   name: string;
+  company_id?: string;
   address?: string;
   phone?: string;
   email?: string;
@@ -22,12 +35,15 @@ export interface Profile {
   full_name: string;
   email: string;
   phone?: string;
+  company_id?: string;
   store_id?: string;
   avatar_url?: string;
   is_active: boolean;
+  onboarding_completed?: boolean;
   created_at: string;
   updated_at: string;
   store?: Store;
+  company?: Company;
 }
 
 export interface UserRole {
@@ -169,13 +185,26 @@ export interface DashboardStats {
   activeRegisters: number;
 }
 
-// Auth context
+// Auth context - SaaS version
 export interface AuthContextType {
   user: Profile | null;
   role: AppRole | null;
   store: Store | null;
+  company: Company | null;
   loading: boolean;
   isAuthenticated: boolean;
+  onboardingCompleted: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  completeOnboarding: (companyData: OnboardingData) => Promise<void>;
+  refreshUserData: () => Promise<void>;
+}
+
+// Onboarding data
+export interface OnboardingData {
+  companyName: string;
+  companyNif?: string;
+  companyPhone?: string;
+  companyAddress?: string;
 }

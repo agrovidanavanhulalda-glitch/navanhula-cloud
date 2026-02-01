@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalPOS, LocalCashRegister } from '@/contexts/LocalPOSContext';
-import { useLocalAuth } from '@/contexts/LocalAuthContext';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +28,7 @@ import {
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 
-// 100% LOCAL - NO ASYNC, NO BACKEND
+// HYBRID: Local POS data + SaaS Auth
 
 const LocalCashRegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const LocalCashRegisterPage: React.FC = () => {
     openCashRegister,
     closeCashRegister,
   } = useLocalPOS();
-  const { user } = useLocalAuth();
+  const { user } = useAuth();
 
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
@@ -58,7 +58,7 @@ const LocalCashRegisterPage: React.FC = () => {
       toast.error('Usuário não identificado');
       return;
     }
-    openCashRegister(user.id, user.name, amount);
+    openCashRegister(user.id, user.full_name, amount);
     toast.success('Caixa aberto com sucesso!');
     setShowOpenDialog(false);
     setOpeningAmount('');

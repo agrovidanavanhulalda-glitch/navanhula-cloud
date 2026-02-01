@@ -168,6 +168,39 @@ export type Database = {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          nif: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          nif?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          nif?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       customer_sellers: {
         Row: {
           created_at: string
@@ -400,38 +433,51 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          company_id: string | null
           created_at: string | null
           email: string
           full_name: string
           id: string
           is_active: boolean | null
+          onboarding_completed: boolean | null
           phone: string | null
           store_id: string | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string | null
           email: string
           full_name: string
           id: string
           is_active?: boolean | null
+          onboarding_completed?: boolean | null
           phone?: string | null
           store_id?: string | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string | null
           email?: string
           full_name?: string
           id?: string
           is_active?: boolean | null
+          onboarding_completed?: boolean | null
           phone?: string | null
           store_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_store_id_fkey"
             columns: ["store_id"]
@@ -621,6 +667,7 @@ export type Database = {
       stores: {
         Row: {
           address: string | null
+          company_id: string | null
           created_at: string | null
           email: string | null
           id: string
@@ -631,6 +678,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          company_id?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -641,6 +689,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          company_id?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -649,7 +698,15 @@ export type Database = {
           phone?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stores_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -724,7 +781,18 @@ export type Database = {
     }
     Functions: {
       bootstrap_current_user: { Args: never; Returns: undefined }
+      complete_onboarding: {
+        Args: {
+          p_company_address?: string
+          p_company_name: string
+          p_company_nif?: string
+          p_company_phone?: string
+        }
+        Returns: Json
+      }
+      get_user_company: { Args: { _user_id: string }; Returns: string }
       get_user_store: { Args: { _user_id: string }; Returns: string }
+      has_completed_onboarding: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
