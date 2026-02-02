@@ -18,7 +18,8 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [role, setRole] = useState<AppRole | null>(null);
   const [store, setStore] = useState<Store | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
-  const [loading, setLoading] = useState(true);
+  // IMPORTANT: authLoading must start true and MUST be set false in ALL scenarios.
+  const [authLoading, setAuthLoading] = useState(true);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
 
   // Prevent duplicate bootstrap calls
@@ -116,44 +117,11 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const failSafeTimeout = setTimeout(() => {
       if (isMounted) {
         console.warn('Auth loading fail-safe triggered - forcing loading to false');
-        setLoading(false);
+        setAuthLoading(false);
       }
     }, 8000);
 
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error('Error getting session:', error);
-          if (isMounted) setLoading(false);
-          return;
-        }
-
-        if (session?.user) {
-          if (isMounted) {
-            setAuthUserId(session.user.id);
-            try {
-              await callBootstrap();
-              await fetchUserData(session.user.id);
-            } catch (dataError) {
-              console.error('Error fetching user data:', dataError);
-              // Continue anyway - allow access to onboarding
-            }
-          }
-        }
-
-        // ALWAYS set loading to false
-        if (isMounted) setLoading(false);
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        // ALWAYS set loading to false even on error
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    initializeAuth();
-
+    // IMPORTANT: subscribe FIRST, then fetch session (avoids missing initial events)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
 
@@ -169,7 +137,7 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           } catch (dataError) {
             console.error('Error in SIGNED_IN handler:', dataError);
           }
-          setLoading(false);
+          setAuthLoading(false);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setRole(null);
@@ -177,7 +145,7 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setCompany(null);
           setAuthUserId(null);
           bootstrapRan.current = false;
-          setLoading(false);
+          setAuthLoading(false);
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
           setAuthUserId(session.user.id);
           try {
@@ -187,16 +155,49 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
           // Don't change loading state on token refresh
         } else if (event === 'INITIAL_SESSION') {
-          // Handle initial session - already processed above
+          // If there's no session, resolve authLoading.
           if (!session) {
-            setLoading(false);
+            setAuthLoading(false);
           }
         }
       } catch (error) {
         console.error('Auth state change error:', error);
-        setLoading(false);
+        // Fail-safe: never block the app with infinite loading
+        setAuthLoading(false);
       }
     });
+
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error('Error getting session:', error);
+          if (isMounted) setAuthLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          if (isMounted) {
+            setAuthUserId(session.user.id);
+            try {
+              await callBootstrap();
+              await fetchUserData(session.user.id);
+            } catch (dataError) {
+              console.error('Error fetching user data:', dataError);
+              // Continue anyway - allow access to onboarding
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        // ALWAYS resolve authLoading (success, error, or no data)
+        if (isMounted) setAuthLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     return () => {
       isMounted = false;
@@ -278,7 +279,7 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       role,
       store,
       company,
-      loading,
+      loading: authLoading,
       isAuthenticated,
       onboardingCompleted,
       signIn,
