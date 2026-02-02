@@ -112,88 +112,109 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     let isMounted = true;
+    let initComplete = false;
 
-    // FAIL-SAFE: Maximum loading time of 8 seconds
+    // FAIL-SAFE: Maximum loading time of 5 seconds (reduced from 8)
     const failSafeTimeout = setTimeout(() => {
-      if (isMounted) {
-        console.warn('Auth loading fail-safe triggered - forcing loading to false');
+      if (isMounted && !initComplete) {
+        console.warn('[Auth] Fail-safe triggered after 5s - forcing loading to false');
         setAuthLoading(false);
       }
-    }, 8000);
+    }, 5000);
 
-    // IMPORTANT: subscribe FIRST, then fetch session (avoids missing initial events)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const handleSession = async (session: any, source: string) => {
       if (!isMounted) return;
+      
+      console.log(`[Auth] ${source}:`, session?.user?.id || 'no user');
+      
+      if (session?.user) {
+        setAuthUserId(session.user.id);
+        try {
+          await callBootstrap();
+          await fetchUserData(session.user.id);
+          console.log('[Auth] User data loaded successfully');
+        } catch (dataError) {
+          console.error(`[Auth] Error loading user data from ${source}:`, dataError);
+          // Don't throw - allow app to continue with partial data
+        }
+      } else {
+        // Clear state when no session
+        setUser(null);
+        setRole(null);
+        setStore(null);
+        setCompany(null);
+        setAuthUserId(null);
+        bootstrapRan.current = false;
+      }
+      
+      // ALWAYS set loading to false after handling session
+      if (isMounted) {
+        initComplete = true;
+        setAuthLoading(false);
+      }
+    };
 
-      console.log('Auth state change:', event, session?.user?.id);
-
+    // Subscribe to auth changes FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[Auth] Event:', event);
+      
       try {
-        if (event === 'SIGNED_IN' && session?.user) {
+        if (event === 'SIGNED_IN') {
           bootstrapRan.current = false;
-          setAuthUserId(session.user.id);
-          try {
-            await callBootstrap();
-            await fetchUserData(session.user.id);
-          } catch (dataError) {
-            console.error('Error in SIGNED_IN handler:', dataError);
-          }
-          setAuthLoading(false);
+          await handleSession(session, 'SIGNED_IN');
         } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setRole(null);
-          setStore(null);
-          setCompany(null);
-          setAuthUserId(null);
-          bootstrapRan.current = false;
-          setAuthLoading(false);
+          await handleSession(null, 'SIGNED_OUT');
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          // Just refresh data, don't change loading state if already loaded
           setAuthUserId(session.user.id);
           try {
             await fetchUserData(session.user.id);
-          } catch (dataError) {
-            console.error('Error refreshing user data:', dataError);
+          } catch (e) {
+            console.error('[Auth] Token refresh data error:', e);
           }
-          // Don't change loading state on token refresh
         } else if (event === 'INITIAL_SESSION') {
-          // If there's no session, resolve authLoading.
-          if (!session) {
-            setAuthLoading(false);
-          }
+          // Handle initial session - this covers both logged in and logged out states
+          await handleSession(session, 'INITIAL_SESSION');
         }
       } catch (error) {
-        console.error('Auth state change error:', error);
-        // Fail-safe: never block the app with infinite loading
-        setAuthLoading(false);
+        console.error('[Auth] State change error:', error);
+        if (isMounted) {
+          initComplete = true;
+          setAuthLoading(false);
+        }
       }
     });
 
+    // Also try getSession as backup (handles cases where INITIAL_SESSION doesn't fire)
     const initializeAuth = async () => {
+      // Small delay to let INITIAL_SESSION fire first
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (initComplete) {
+        console.log('[Auth] Init already complete from subscription');
+        return;
+      }
+
       try {
+        console.log('[Auth] Fallback: calling getSession');
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('[Auth] getSession error:', error);
           if (isMounted) setAuthLoading(false);
           return;
         }
 
-        if (session?.user) {
-          if (isMounted) {
-            setAuthUserId(session.user.id);
-            try {
-              await callBootstrap();
-              await fetchUserData(session.user.id);
-            } catch (dataError) {
-              console.error('Error fetching user data:', dataError);
-              // Continue anyway - allow access to onboarding
-            }
-          }
+        // Only handle if subscription didn't already handle it
+        if (!initComplete) {
+          await handleSession(session, 'getSession-fallback');
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
-      } finally {
-        // ALWAYS resolve authLoading (success, error, or no data)
-        if (isMounted) setAuthLoading(false);
+        console.error('[Auth] Init error:', error);
+        if (isMounted) {
+          initComplete = true;
+          setAuthLoading(false);
+        }
       }
     };
 
