@@ -1,3 +1,4 @@
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,12 +28,13 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Loading spinner component
-const LoadingScreen = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center">
+// Loading spinner component (forwardRef avoids React Router ref warning)
+const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
+  <div ref={ref} className="min-h-screen bg-background flex items-center justify-center">
     <Loader2 className="w-8 h-8 animate-spin text-primary" />
   </div>
-);
+));
+LoadingScreen.displayName = "LoadingScreen";
 
 // Protected Route - requires authentication AND completed onboarding
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
