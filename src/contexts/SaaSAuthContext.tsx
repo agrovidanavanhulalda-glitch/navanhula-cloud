@@ -112,6 +112,14 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     let isMounted = true;
 
+    // FAIL-SAFE: Maximum loading time of 8 seconds
+    const failSafeTimeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn('Auth loading fail-safe triggered - forcing loading to false');
+        setLoading(false);
+      }
+    }, 8000);
+
     const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -125,14 +133,21 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (session?.user) {
           if (isMounted) {
             setAuthUserId(session.user.id);
-            await callBootstrap();
-            await fetchUserData(session.user.id);
+            try {
+              await callBootstrap();
+              await fetchUserData(session.user.id);
+            } catch (dataError) {
+              console.error('Error fetching user data:', dataError);
+              // Continue anyway - allow access to onboarding
+            }
           }
         }
 
+        // ALWAYS set loading to false
         if (isMounted) setLoading(false);
       } catch (error) {
         console.error('Error initializing auth:', error);
+        // ALWAYS set loading to false even on error
         if (isMounted) setLoading(false);
       }
     };
@@ -144,28 +159,48 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       console.log('Auth state change:', event, session?.user?.id);
 
-      if (event === 'SIGNED_IN' && session?.user) {
-        bootstrapRan.current = false;
-        setAuthUserId(session.user.id);
-        await callBootstrap();
-        await fetchUserData(session.user.id);
+      try {
+        if (event === 'SIGNED_IN' && session?.user) {
+          bootstrapRan.current = false;
+          setAuthUserId(session.user.id);
+          try {
+            await callBootstrap();
+            await fetchUserData(session.user.id);
+          } catch (dataError) {
+            console.error('Error in SIGNED_IN handler:', dataError);
+          }
+          setLoading(false);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setRole(null);
+          setStore(null);
+          setCompany(null);
+          setAuthUserId(null);
+          bootstrapRan.current = false;
+          setLoading(false);
+        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          setAuthUserId(session.user.id);
+          try {
+            await fetchUserData(session.user.id);
+          } catch (dataError) {
+            console.error('Error refreshing user data:', dataError);
+          }
+          // Don't change loading state on token refresh
+        } else if (event === 'INITIAL_SESSION') {
+          // Handle initial session - already processed above
+          if (!session) {
+            setLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error('Auth state change error:', error);
         setLoading(false);
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setRole(null);
-        setStore(null);
-        setCompany(null);
-        setAuthUserId(null);
-        bootstrapRan.current = false;
-        setLoading(false);
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        setAuthUserId(session.user.id);
-        await fetchUserData(session.user.id);
       }
     });
 
     return () => {
       isMounted = false;
+      clearTimeout(failSafeTimeout);
       subscription.unsubscribe();
     };
   }, [fetchUserData, callBootstrap]);
