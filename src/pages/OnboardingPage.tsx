@@ -6,8 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ShoppingCart, Building2, Loader2, ArrowRight, CheckCircle } from 'lucide-react';
+import { ShoppingCart, Building2, Loader2, ArrowRight, CheckCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+
+/**
+ * OnboardingPage - Creates company for new users
+ * 
+ * REGRAS:
+ * 1. Formulário simples e direto
+ * 2. Botão desabilitado durante submit
+ * 3. Erro = mensagem clara + parar spinner
+ * 4. Sucesso = navegação explícita para /
+ */
 
 const OnboardingPage: React.FC = () => {
   const [companyName, setCompanyName] = useState('');
@@ -15,13 +25,15 @@ const OnboardingPage: React.FC = () => {
   const [companyPhone, setCompanyPhone] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  const { completeOnboarding, onboardingCompleted, isAuthenticated, loading, user } = useAuth();
+  const { completeOnboarding, onboardingCompleted, isAuthenticated, loading, user, refreshUserData } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already completed onboarding
   useEffect(() => {
     if (!loading && isAuthenticated && onboardingCompleted) {
+      console.log('[Onboarding] Already completed, redirecting to /');
       navigate('/', { replace: true });
     }
   }, [loading, isAuthenticated, onboardingCompleted, navigate]);
@@ -29,6 +41,7 @@ const OnboardingPage: React.FC = () => {
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated) {
+      console.log('[Onboarding] Not authenticated, redirecting to /login');
       navigate('/login', { replace: true });
     }
   }, [loading, isAuthenticated, navigate]);
@@ -36,29 +49,47 @@ const OnboardingPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!companyName.trim()) {
+    // Validation
+    const trimmedName = companyName.trim();
+    if (!trimmedName) {
+      setError('Nome da empresa é obrigatório');
       toast.error('Nome da empresa é obrigatório');
       return;
     }
 
     setIsSubmitting(true);
+    setError(null);
+    
+    console.log('[Onboarding] Submitting company:', trimmedName);
+
     try {
       await completeOnboarding({
-        companyName: companyName.trim(),
+        companyName: trimmedName,
         companyNif: companyNif.trim() || undefined,
         companyPhone: companyPhone.trim() || undefined,
         companyAddress: companyAddress.trim() || undefined,
       });
       
-      // Navigate to dashboard after successful onboarding
+      console.log('[Onboarding] Company created successfully');
+      
+      // Refresh to confirm onboarding completed
+      await refreshUserData();
+      
+      // Explicit navigation to dashboard
+      console.log('[Onboarding] Navigating to dashboard');
       navigate('/', { replace: true });
-    } catch (error) {
-      // Error already handled in context
+      
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Erro desconhecido ao criar empresa';
+      console.error('[Onboarding] Error:', errorMessage);
+      setError(errorMessage);
+      // Toast is already shown in completeOnboarding
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Show loading only briefly
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -118,6 +149,14 @@ const OnboardingPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+            <span className="text-sm">{error}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="companyName">Nome da Empresa *</Label>
@@ -126,9 +165,13 @@ const OnboardingPage: React.FC = () => {
               type="text"
               placeholder="Ex: Loja do João"
               value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
+              onChange={(e) => {
+                setCompanyName(e.target.value);
+                setError(null);
+              }}
               required
               autoFocus
+              disabled={isSubmitting}
             />
           </div>
 
@@ -140,6 +183,7 @@ const OnboardingPage: React.FC = () => {
               placeholder="Número de identificação fiscal"
               value={companyNif}
               onChange={(e) => setCompanyNif(e.target.value)}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -151,6 +195,7 @@ const OnboardingPage: React.FC = () => {
               placeholder="Ex: +258 84 123 4567"
               value={companyPhone}
               onChange={(e) => setCompanyPhone(e.target.value)}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -162,6 +207,7 @@ const OnboardingPage: React.FC = () => {
               value={companyAddress}
               onChange={(e) => setCompanyAddress(e.target.value)}
               rows={2}
+              disabled={isSubmitting}
             />
           </div>
 

@@ -3,6 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Profile, Store, Company, AppRole, AuthContextType, OnboardingData } from '@/types/pos';
 import { toast } from 'sonner';
 
+/**
+ * NAVANHULA POS - Bulletproof Auth Context
+ * 
+ * REGRAS FUNDAMENTAIS:
+ * 1. loading SEMPRE fica false após max 3 segundos
+ * 2. NUNCA loop infinito
+ * 3. Console logs para debug rápido
+ * 4. Erro = mostrar mensagem + parar loading
+ */
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
@@ -13,226 +23,236 @@ export const useAuth = () => {
   return context;
 };
 
+// Maximum loading time (3 seconds)
+const MAX_LOADING_TIME = 3000;
+
 export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [store, setStore] = useState<Store | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
-  // IMPORTANT: authLoading must start true and MUST be set false in ALL scenarios.
-  const [authLoading, setAuthLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
 
-  // Prevent duplicate bootstrap calls
+  // Refs to prevent race conditions
   const bootstrapRan = useRef(false);
+  const initComplete = useRef(false);
 
-  /**
-   * Call the bootstrap function on the server to ensure profile/role exist.
-   */
-  const callBootstrap = useCallback(async () => {
-    if (bootstrapRan.current) return;
-    bootstrapRan.current = true;
-    try {
-      const { error } = await supabase.rpc('bootstrap_current_user');
-      if (error) {
-        console.error('Bootstrap error:', error);
-      }
-    } catch (e) {
-      console.error('Bootstrap exception:', e);
+  // Force loading false
+  const forceLoadingComplete = useCallback(() => {
+    if (!initComplete.current) {
+      console.log('[Auth] ⚠️ Force loading complete');
+      initComplete.current = true;
+      setLoading(false);
     }
   }, []);
 
-  const fetchUserData = useCallback(async (userId: string): Promise<boolean> => {
+  // Bootstrap user on server (creates profile if missing)
+  const callBootstrap = useCallback(async () => {
+    if (bootstrapRan.current) return;
+    bootstrapRan.current = true;
+    
     try {
-      // Fetch profile with store and company
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+      console.log('[Auth] 🔧 Running bootstrap...');
+      const { error } = await supabase.rpc('bootstrap_current_user');
+      if (error) {
+        console.error('[Auth] Bootstrap error:', error.message);
+      } else {
+        console.log('[Auth] ✅ Bootstrap complete');
+      }
+    } catch (e) {
+      console.error('[Auth] Bootstrap exception:', e);
+    }
+  }, []);
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
+  // Fetch user profile and related data
+  const fetchUserData = useCallback(async (userId: string): Promise<boolean> => {
+    console.log('[Auth] 📥 Fetching user data for:', userId);
+    
+    try {
+      // Parallel fetch for speed
+      const [profileResult, roleResult] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+      ]);
+
+      if (profileResult.error) {
+        console.error('[Auth] Profile fetch error:', profileResult.error.message);
         return false;
       }
 
-      // Fetch role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
+      const profileData = profileResult.data;
+      const userRole = roleResult.data?.role as AppRole || 'seller';
 
-      if (roleError) {
-        console.error('Error fetching role:', roleError);
-      }
+      console.log('[Auth] Profile:', profileData ? 'Found' : 'Not found');
+      console.log('[Auth] Role:', userRole);
+      console.log('[Auth] Onboarding completed:', profileData?.onboarding_completed);
 
-      // Fetch store if store_id exists
+      // Fetch store and company if IDs exist
       let storeData: Store | null = null;
+      let companyData: Company | null = null;
+
       if (profileData?.store_id) {
-        const { data: fetchedStore } = await supabase
+        const { data } = await supabase
           .from('stores')
           .select('*')
           .eq('id', profileData.store_id)
           .maybeSingle();
-        storeData = fetchedStore as Store | null;
+        storeData = data as Store | null;
+        console.log('[Auth] Store:', storeData?.name || 'Not found');
       }
 
-      // Fetch company if company_id exists
-      let companyData: Company | null = null;
       if (profileData?.company_id) {
-        const { data: fetchedCompany } = await supabase
+        const { data } = await supabase
           .from('companies')
           .select('*')
           .eq('id', profileData.company_id)
           .maybeSingle();
-        companyData = fetchedCompany as Company | null;
+        companyData = data as Company | null;
+        console.log('[Auth] Company:', companyData?.name || 'Not found');
       }
 
+      // Update state
       if (profileData) {
         setUser(profileData as Profile);
-        setRole((roleData?.role as AppRole) || 'seller');
-        setStore(storeData);
-        setCompany(companyData);
-      } else {
-        setRole((roleData?.role as AppRole) || 'seller');
       }
+      setRole(userRole);
+      setStore(storeData);
+      setCompany(companyData);
 
       return true;
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('[Auth] fetchUserData exception:', error);
       return false;
     }
   }, []);
 
+  // Refresh user data (public method)
   const refreshUserData = useCallback(async () => {
     if (authUserId) {
+      console.log('[Auth] 🔄 Refreshing user data...');
       await fetchUserData(authUserId);
     }
   }, [authUserId, fetchUserData]);
 
+  // Handle authenticated session
+  const handleAuthenticatedUser = useCallback(async (userId: string) => {
+    console.log('[Auth] 🔐 Handling authenticated user:', userId);
+    setAuthUserId(userId);
+    
+    try {
+      await callBootstrap();
+      await fetchUserData(userId);
+    } catch (error) {
+      console.error('[Auth] Error handling auth:', error);
+    }
+    
+    // ALWAYS complete loading
+    initComplete.current = true;
+    setLoading(false);
+    console.log('[Auth] ✅ Auth initialization complete');
+  }, [callBootstrap, fetchUserData]);
+
+  // Handle no session
+  const handleNoSession = useCallback(() => {
+    console.log('[Auth] 👤 No session - clearing state');
+    setUser(null);
+    setRole(null);
+    setStore(null);
+    setCompany(null);
+    setAuthUserId(null);
+    bootstrapRan.current = false;
+    initComplete.current = true;
+    setLoading(false);
+  }, []);
+
+  // Initialize auth
   useEffect(() => {
-    let isMounted = true;
-    let initComplete = false;
+    let mounted = true;
 
-    // FAIL-SAFE: Maximum loading time of 5 seconds (reduced from 8)
-    const failSafeTimeout = setTimeout(() => {
-      if (isMounted && !initComplete) {
-        console.warn('[Auth] Fail-safe triggered after 5s - forcing loading to false');
-        setAuthLoading(false);
+    // FAIL-SAFE: Force loading to false after MAX_LOADING_TIME
+    const failSafeTimer = setTimeout(() => {
+      if (mounted && !initComplete.current) {
+        console.warn(`[Auth] ⚠️ Fail-safe: forcing loading=false after ${MAX_LOADING_TIME}ms`);
+        forceLoadingComplete();
       }
-    }, 5000);
+    }, MAX_LOADING_TIME);
 
-    const handleSession = async (session: any, source: string) => {
-      if (!isMounted) return;
-      
-      console.log(`[Auth] ${source}:`, session?.user?.id || 'no user');
-      
-      if (session?.user) {
-        setAuthUserId(session.user.id);
-        try {
-          await callBootstrap();
-          await fetchUserData(session.user.id);
-          console.log('[Auth] User data loaded successfully');
-        } catch (dataError) {
-          console.error(`[Auth] Error loading user data from ${source}:`, dataError);
-          // Don't throw - allow app to continue with partial data
-        }
-      } else {
-        // Clear state when no session
-        setUser(null);
-        setRole(null);
-        setStore(null);
-        setCompany(null);
-        setAuthUserId(null);
-        bootstrapRan.current = false;
-      }
-      
-      // ALWAYS set loading to false after handling session
-      if (isMounted) {
-        initComplete = true;
-        setAuthLoading(false);
-      }
-    };
+    console.log('[Auth] 🚀 Initializing auth...');
 
-    // Subscribe to auth changes FIRST
+    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[Auth] Event:', event);
-      
-      try {
-        if (event === 'SIGNED_IN') {
-          bootstrapRan.current = false;
-          await handleSession(session, 'SIGNED_IN');
-        } else if (event === 'SIGNED_OUT') {
-          await handleSession(null, 'SIGNED_OUT');
-        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-          // Just refresh data, don't change loading state if already loaded
-          setAuthUserId(session.user.id);
-          try {
-            await fetchUserData(session.user.id);
-          } catch (e) {
-            console.error('[Auth] Token refresh data error:', e);
+      if (!mounted) return;
+
+      console.log('[Auth] 📢 Auth event:', event);
+
+      switch (event) {
+        case 'INITIAL_SESSION':
+          if (session?.user) {
+            await handleAuthenticatedUser(session.user.id);
+          } else {
+            handleNoSession();
           }
-        } else if (event === 'INITIAL_SESSION') {
-          // Handle initial session - this covers both logged in and logged out states
-          await handleSession(session, 'INITIAL_SESSION');
-        }
-      } catch (error) {
-        console.error('[Auth] State change error:', error);
-        if (isMounted) {
-          initComplete = true;
-          setAuthLoading(false);
-        }
+          break;
+
+        case 'SIGNED_IN':
+          if (session?.user) {
+            bootstrapRan.current = false; // Allow new bootstrap
+            await handleAuthenticatedUser(session.user.id);
+          }
+          break;
+
+        case 'SIGNED_OUT':
+          handleNoSession();
+          break;
+
+        case 'TOKEN_REFRESHED':
+          if (session?.user) {
+            setAuthUserId(session.user.id);
+            await fetchUserData(session.user.id);
+          }
+          break;
       }
     });
 
-    // Also try getSession as backup (handles cases where INITIAL_SESSION doesn't fire)
-    const initializeAuth = async () => {
-      // Small delay to let INITIAL_SESSION fire first
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      if (initComplete) {
-        console.log('[Auth] Init already complete from subscription');
-        return;
-      }
-
-      try {
-        console.log('[Auth] Fallback: calling getSession');
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
+    // Backup: getSession after a short delay if INITIAL_SESSION didn't fire
+    const backupTimer = setTimeout(async () => {
+      if (mounted && !initComplete.current) {
+        console.log('[Auth] 🔄 Backup: calling getSession...');
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!initComplete.current) {
+            if (session?.user) {
+              await handleAuthenticatedUser(session.user.id);
+            } else {
+              handleNoSession();
+            }
+          }
+        } catch (error) {
           console.error('[Auth] getSession error:', error);
-          if (isMounted) setAuthLoading(false);
-          return;
-        }
-
-        // Only handle if subscription didn't already handle it
-        if (!initComplete) {
-          await handleSession(session, 'getSession-fallback');
-        }
-      } catch (error) {
-        console.error('[Auth] Init error:', error);
-        if (isMounted) {
-          initComplete = true;
-          setAuthLoading(false);
+          forceLoadingComplete();
         }
       }
-    };
-
-    initializeAuth();
+    }, 200);
 
     return () => {
-      isMounted = false;
-      clearTimeout(failSafeTimeout);
+      mounted = false;
+      clearTimeout(failSafeTimer);
+      clearTimeout(backupTimer);
       subscription.unsubscribe();
     };
-  }, [fetchUserData, callBootstrap]);
+  }, [handleAuthenticatedUser, handleNoSession, fetchUserData, forceLoadingComplete]);
 
+  // Computed values
   const isAuthenticated = authUserId !== null;
   const onboardingCompleted = user?.onboarding_completed === true;
 
+  // Auth methods
   const signIn = async (email: string, password: string) => {
+    console.log('[Auth] 🔑 Signing in:', email);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      console.error('[Auth] Sign in error:', error.message);
       toast.error('Erro ao fazer login: ' + error.message);
       throw error;
     }
@@ -240,17 +260,17 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    console.log('[Auth] 📝 Signing up:', email);
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: {
-          full_name: fullName,
-        },
+        data: { full_name: fullName },
       },
     });
     if (error) {
+      console.error('[Auth] Sign up error:', error.message);
       toast.error('Erro ao criar conta: ' + error.message);
       throw error;
     }
@@ -258,8 +278,10 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const signOut = async () => {
+    console.log('[Auth] 🚪 Signing out...');
     const { error } = await supabase.auth.signOut();
     if (error) {
+      console.error('[Auth] Sign out error:', error.message);
       toast.error('Erro ao sair: ' + error.message);
       throw error;
     }
@@ -267,6 +289,8 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const completeOnboarding = async (data: OnboardingData) => {
+    console.log('[Auth] 🏢 Completing onboarding:', data.companyName);
+    
     try {
       const { data: result, error } = await supabase.rpc('complete_onboarding', {
         p_company_name: data.companyName,
@@ -276,12 +300,14 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
 
       if (error) {
-        console.error('Onboarding error:', error);
+        console.error('[Auth] Onboarding error:', error.message);
         toast.error('Erro ao criar empresa: ' + error.message);
         throw error;
       }
 
-      // Refresh user data to get updated profile
+      console.log('[Auth] ✅ Onboarding complete:', result);
+
+      // Refresh user data to get updated profile with company/store
       if (authUserId) {
         await fetchUserData(authUserId);
       }
@@ -289,10 +315,22 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const message = (result as any)?.message || 'Empresa criada com sucesso!';
       toast.success(message);
     } catch (error) {
-      console.error('Complete onboarding error:', error);
+      console.error('[Auth] completeOnboarding exception:', error);
       throw error;
     }
   };
+
+  // Debug log current state
+  useEffect(() => {
+    console.log('[Auth] 📊 State:', {
+      loading,
+      isAuthenticated,
+      onboardingCompleted,
+      userId: authUserId,
+      company: company?.name || null,
+      store: store?.name || null,
+    });
+  }, [loading, isAuthenticated, onboardingCompleted, authUserId, company, store]);
 
   return (
     <AuthContext.Provider value={{
@@ -300,7 +338,7 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       role,
       store,
       company,
-      loading: authLoading,
+      loading,
       isAuthenticated,
       onboardingCompleted,
       signIn,
