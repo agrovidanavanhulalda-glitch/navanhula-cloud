@@ -26,58 +26,88 @@ import LocalReportsPage from "./pages/LocalReportsPage";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30000,
+    },
+  },
+});
 
-// Loading spinner component (forwardRef avoids React Router ref warning)
+/**
+ * Loading Screen - shows for max 3 seconds
+ * Uses forwardRef to avoid React Router ref warning
+ */
 const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
-  <div ref={ref} className="min-h-screen bg-background flex items-center justify-center">
-    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+  <div 
+    ref={ref} 
+    className="min-h-screen bg-background flex flex-col items-center justify-center gap-4"
+  >
+    <Loader2 className="w-10 h-10 animate-spin text-primary" />
+    <p className="text-sm text-muted-foreground">Carregando NAVANHULA POS...</p>
   </div>
 ));
 LoadingScreen.displayName = "LoadingScreen";
 
-// Protected Route - requires authentication AND completed onboarding
+/**
+ * Protected Route - requires authentication AND completed onboarding
+ */
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, onboardingCompleted, loading } = useAuth();
+  
+  console.log('[Route] Protected check:', { loading, isAuthenticated, onboardingCompleted });
   
   if (loading) {
     return <LoadingScreen />;
   }
   
   if (!isAuthenticated) {
+    console.log('[Route] Not authenticated → /login');
     return <Navigate to="/login" replace />;
   }
   
   if (!onboardingCompleted) {
+    console.log('[Route] No onboarding → /onboarding');
     return <Navigate to="/onboarding" replace />;
   }
   
   return <>{children}</>;
 };
 
-// Onboarding Route - requires authentication but NOT completed onboarding
+/**
+ * Onboarding Route - requires authentication but NOT completed onboarding
+ */
 const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, onboardingCompleted, loading } = useAuth();
+  
+  console.log('[Route] Onboarding check:', { loading, isAuthenticated, onboardingCompleted });
   
   if (loading) {
     return <LoadingScreen />;
   }
   
   if (!isAuthenticated) {
+    console.log('[Route] Not authenticated → /login');
     return <Navigate to="/login" replace />;
   }
   
   // If already completed onboarding, go to dashboard
   if (onboardingCompleted) {
+    console.log('[Route] Already onboarded → /');
     return <Navigate to="/" replace />;
   }
   
   return <>{children}</>;
 };
 
-// Public Route - redirects authenticated users appropriately
+/**
+ * Public Route - redirects authenticated users appropriately
+ */
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, onboardingCompleted, loading } = useAuth();
+  
+  console.log('[Route] Public check:', { loading, isAuthenticated, onboardingCompleted });
   
   if (loading) {
     return <LoadingScreen />;
@@ -85,8 +115,10 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   
   if (isAuthenticated) {
     if (onboardingCompleted) {
+      console.log('[Route] Authenticated + onboarded → /');
       return <Navigate to="/" replace />;
     } else {
+      console.log('[Route] Authenticated, no onboarding → /onboarding');
       return <Navigate to="/onboarding" replace />;
     }
   }
@@ -94,7 +126,9 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
-// App Routes with proper guards
+/**
+ * App Routes with proper guards
+ */
 const AppRoutes = () => {
   return (
     <Routes>

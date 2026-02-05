@@ -5,8 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { ShoppingCart, UserPlus, Loader2 } from 'lucide-react';
+import { ShoppingCart, UserPlus, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+
+/**
+ * AuthSignupPage - Signup with proper validation and error handling
+ */
 
 const AuthSignupPage: React.FC = () => {
   const [fullName, setFullName] = useState('');
@@ -14,6 +18,7 @@ const AuthSignupPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const { signUp, isAuthenticated, onboardingCompleted, loading } = useAuth();
   const navigate = useNavigate();
@@ -21,6 +26,7 @@ const AuthSignupPage: React.FC = () => {
   // Redirect based on auth state
   useEffect(() => {
     if (!loading && isAuthenticated) {
+      console.log('[Signup] User authenticated, redirecting...');
       if (onboardingCompleted) {
         navigate('/', { replace: true });
       } else {
@@ -31,24 +37,40 @@ const AuthSignupPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
-    if (password !== confirmPassword) {
-      toast.error('As senhas não coincidem');
+    // Validations
+    if (!fullName.trim()) {
+      setError('Nome completo é obrigatório');
+      return;
+    }
+
+    if (!email.trim()) {
+      setError('Email é obrigatório');
       return;
     }
 
     if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setError('As senhas não coincidem');
       return;
     }
 
     setIsLoading(true);
+    console.log('[Signup] Creating account for:', email);
+    
     try {
       await signUp(email, password, fullName);
       // User needs to verify email, show message
       toast.info('Verifique seu email para ativar sua conta.');
-    } catch {
-      // Error handled in context
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Erro ao criar conta';
+      console.error('[Signup] Error:', errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -56,8 +78,9 @@ const AuthSignupPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Verificando sessão...</p>
       </div>
     );
   }
@@ -82,6 +105,14 @@ const AuthSignupPage: React.FC = () => {
           <h2 className="text-xl font-semibold">Criar Conta</h2>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+            <span className="text-sm">{error}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName">Nome Completo</Label>
@@ -90,9 +121,13 @@ const AuthSignupPage: React.FC = () => {
               type="text"
               placeholder="Seu nome completo"
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              onChange={(e) => {
+                setFullName(e.target.value);
+                setError(null);
+              }}
               required
               autoComplete="name"
+              disabled={isLoading}
             />
           </div>
 
@@ -103,9 +138,13 @@ const AuthSignupPage: React.FC = () => {
               type="email"
               placeholder="seu@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError(null);
+              }}
               required
               autoComplete="email"
+              disabled={isLoading}
             />
           </div>
 
@@ -116,9 +155,13 @@ const AuthSignupPage: React.FC = () => {
               type="password"
               placeholder="Mínimo 6 caracteres"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError(null);
+              }}
               required
               autoComplete="new-password"
+              disabled={isLoading}
             />
           </div>
 
@@ -129,9 +172,13 @@ const AuthSignupPage: React.FC = () => {
               type="password"
               placeholder="Digite a senha novamente"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setError(null);
+              }}
               required
               autoComplete="new-password"
+              disabled={isLoading}
             />
           </div>
 
