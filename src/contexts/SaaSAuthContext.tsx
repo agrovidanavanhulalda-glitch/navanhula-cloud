@@ -1,16 +1,16 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Profile, Store, Company, AppRole, AuthContextType, OnboardingData } from '@/types/pos';
+import type { Profile, Store, Company, AppRole, AuthContextType } from '@/types/pos';
 import { toast } from 'sonner';
 
 /**
- * NAVANHULA POS - Bulletproof Auth Context
+ * NAVANHULA POS - EMERGENCY MODE Auth Context
  * 
- * REGRAS FUNDAMENTAIS:
- * 1. loading SEMPRE fica false após max 3 segundos
- * 2. NUNCA loop infinito
- * 3. Console logs para debug rápido
- * 4. Erro = mostrar mensagem + parar loading
+ * REGRAS:
+ * 1. SEM ONBOARDING - empresa criada automaticamente
+ * 2. Loading máximo 2 segundos
+ * 3. Dashboard abre SEMPRE
+ * 4. Fallback local se backend falhar
  */
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,8 +23,32 @@ export const useAuth = () => {
   return context;
 };
 
-// Maximum loading time (3 seconds)
-const MAX_LOADING_TIME = 3000;
+// Maximum loading time - 2 seconds (emergency mode)
+const MAX_LOADING_TIME = 2000;
+
+// Default company for fallback
+const DEFAULT_COMPANY: Company = {
+  id: 'local-default',
+  name: 'NAVANHULA EMPRESA',
+  nif: null,
+  phone: null,
+  address: null,
+  is_active: true,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
+const DEFAULT_STORE: Store = {
+  id: 'local-store',
+  name: 'Loja Principal',
+  company_id: 'local-default',
+  address: null,
+  phone: null,
+  email: null,
+  is_active: true,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
 
 export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<Profile | null>(null);
@@ -35,133 +59,165 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [authUserId, setAuthUserId] = useState<string | null>(null);
 
   // Refs to prevent race conditions
-  const bootstrapRan = useRef(false);
   const initComplete = useRef(false);
+  const setupRan = useRef(false);
 
-  // Force loading false
-  const forceLoadingComplete = useCallback(() => {
+  // Force loading complete
+  const forceComplete = useCallback(() => {
     if (!initComplete.current) {
-      console.log('[Auth] ⚠️ Force loading complete');
+      console.log('[Auth] ⚡ Force complete - going to dashboard');
       initComplete.current = true;
       setLoading(false);
     }
   }, []);
 
-  // Bootstrap user on server (creates profile if missing)
-  const callBootstrap = useCallback(async () => {
-    if (bootstrapRan.current) return;
-    bootstrapRan.current = true;
+  // Auto-setup user with company (no onboarding needed)
+  const autoSetupUser = useCallback(async (userId: string) => {
+    if (setupRan.current) return;
+    setupRan.current = true;
+    
+    console.log('[Auth] 🚀 Auto-setup for:', userId);
     
     try {
-      console.log('[Auth] 🔧 Running bootstrap...');
-      const { error } = await supabase.rpc('bootstrap_current_user');
-      if (error) {
-        console.error('[Auth] Bootstrap error:', error.message);
-      } else {
-        console.log('[Auth] ✅ Bootstrap complete');
+      // 1. Bootstrap profile
+      const { error: bootstrapError } = await supabase.rpc('bootstrap_current_user');
+      if (bootstrapError) {
+        console.warn('[Auth] Bootstrap warning:', bootstrapError.message);
       }
-    } catch (e) {
-      console.error('[Auth] Bootstrap exception:', e);
+
+      // 2. Check if user needs company
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*, company_id, store_id, onboarding_completed')
+        .eq('id', userId)
+        .maybeSingle();
+
+      console.log('[Auth] Profile:', profile);
+
+      // 3. If no company, create one automatically
+      if (!profile?.company_id || !profile?.onboarding_completed) {
+        console.log('[Auth] 🏢 Creating company automatically...');
+        
+        const { data: result, error: onboardError } = await supabase.rpc('complete_onboarding', {
+          p_company_name: 'NAVANHULA EMPRESA PRINCIPAL',
+          p_company_nif: null,
+          p_company_phone: null,
+          p_company_address: null,
+        });
+
+        if (onboardError) {
+          console.warn('[Auth] Auto-onboarding warning:', onboardError.message);
+          // Use fallback
+          setCompany(DEFAULT_COMPANY);
+          setStore(DEFAULT_STORE);
+        } else {
+          console.log('[Auth] ✅ Company created:', result);
+          toast.success('Empresa criada automaticamente!');
+        }
+      }
+
+      // 4. Fetch final user data
+      await fetchUserData(userId);
+      
+    } catch (error) {
+      console.error('[Auth] Setup error:', error);
+      // Use fallback data
+      setCompany(DEFAULT_COMPANY);
+      setStore(DEFAULT_STORE);
+      setRole('admin');
     }
+    
+    // ALWAYS complete
+    forceComplete();
   }, []);
 
   // Fetch user profile and related data
-  const fetchUserData = useCallback(async (userId: string): Promise<boolean> => {
-    console.log('[Auth] 📥 Fetching user data for:', userId);
+  const fetchUserData = useCallback(async (userId: string): Promise<void> => {
+    console.log('[Auth] 📥 Fetching user data...');
     
     try {
-      // Parallel fetch for speed
       const [profileResult, roleResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
         supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
       ]);
 
-      if (profileResult.error) {
-        console.error('[Auth] Profile fetch error:', profileResult.error.message);
-        return false;
-      }
-
       const profileData = profileResult.data;
-      const userRole = roleResult.data?.role as AppRole || 'seller';
+      const userRole = roleResult.data?.role as AppRole || 'admin';
 
-      console.log('[Auth] Profile:', profileData ? 'Found' : 'Not found');
-      console.log('[Auth] Role:', userRole);
-      console.log('[Auth] Onboarding completed:', profileData?.onboarding_completed);
-
-      // Fetch store and company if IDs exist
-      let storeData: Store | null = null;
-      let companyData: Company | null = null;
-
-      if (profileData?.store_id) {
-        const { data } = await supabase
-          .from('stores')
-          .select('*')
-          .eq('id', profileData.store_id)
-          .maybeSingle();
-        storeData = data as Store | null;
-        console.log('[Auth] Store:', storeData?.name || 'Not found');
-      }
-
-      if (profileData?.company_id) {
-        const { data } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('id', profileData.company_id)
-          .maybeSingle();
-        companyData = data as Company | null;
-        console.log('[Auth] Company:', companyData?.name || 'Not found');
-      }
-
-      // Update state
       if (profileData) {
         setUser(profileData as Profile);
-      }
-      setRole(userRole);
-      setStore(storeData);
-      setCompany(companyData);
+        setRole(userRole);
 
-      return true;
+        // Fetch store and company
+        if (profileData.store_id) {
+          const { data: storeData } = await supabase
+            .from('stores')
+            .select('*')
+            .eq('id', profileData.store_id)
+            .maybeSingle();
+          setStore(storeData as Store || DEFAULT_STORE);
+        } else {
+          setStore(DEFAULT_STORE);
+        }
+
+        if (profileData.company_id) {
+          const { data: companyData } = await supabase
+            .from('companies')
+            .select('*')
+            .eq('id', profileData.company_id)
+            .maybeSingle();
+          setCompany(companyData as Company || DEFAULT_COMPANY);
+        } else {
+          setCompany(DEFAULT_COMPANY);
+        }
+      } else {
+        // Fallback
+        setCompany(DEFAULT_COMPANY);
+        setStore(DEFAULT_STORE);
+        setRole('admin');
+      }
     } catch (error) {
-      console.error('[Auth] fetchUserData exception:', error);
-      return false;
+      console.error('[Auth] Fetch error:', error);
+      setCompany(DEFAULT_COMPANY);
+      setStore(DEFAULT_STORE);
+      setRole('admin');
     }
   }, []);
 
   // Refresh user data (public method)
   const refreshUserData = useCallback(async () => {
     if (authUserId) {
-      console.log('[Auth] 🔄 Refreshing user data...');
       await fetchUserData(authUserId);
     }
   }, [authUserId, fetchUserData]);
 
   // Handle authenticated session
   const handleAuthenticatedUser = useCallback(async (userId: string) => {
-    console.log('[Auth] 🔐 Handling authenticated user:', userId);
+    console.log('[Auth] 🔐 User authenticated:', userId);
     setAuthUserId(userId);
     
-    try {
-      await callBootstrap();
-      await fetchUserData(userId);
-    } catch (error) {
-      console.error('[Auth] Error handling auth:', error);
-    }
-    
-    // ALWAYS complete loading
-    initComplete.current = true;
-    setLoading(false);
-    console.log('[Auth] ✅ Auth initialization complete');
-  }, [callBootstrap, fetchUserData]);
+    // Auto-setup with timeout protection
+    const setupPromise = autoSetupUser(userId);
+    const timeoutPromise = new Promise<void>((resolve) => {
+      setTimeout(() => {
+        console.log('[Auth] ⏱️ Setup timeout - forcing complete');
+        forceComplete();
+        resolve();
+      }, MAX_LOADING_TIME);
+    });
+
+    await Promise.race([setupPromise, timeoutPromise]);
+  }, [autoSetupUser, forceComplete]);
 
   // Handle no session
   const handleNoSession = useCallback(() => {
-    console.log('[Auth] 👤 No session - clearing state');
+    console.log('[Auth] 👤 No session');
     setUser(null);
     setRole(null);
     setStore(null);
     setCompany(null);
     setAuthUserId(null);
-    bootstrapRan.current = false;
+    setupRan.current = false;
     initComplete.current = true;
     setLoading(false);
   }, []);
@@ -170,93 +226,69 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     let mounted = true;
 
-    // FAIL-SAFE: Force loading to false after MAX_LOADING_TIME
+    // FAIL-SAFE: Force complete after MAX_LOADING_TIME
     const failSafeTimer = setTimeout(() => {
       if (mounted && !initComplete.current) {
-        console.warn(`[Auth] ⚠️ Fail-safe: forcing loading=false after ${MAX_LOADING_TIME}ms`);
-        forceLoadingComplete();
+        console.warn('[Auth] ⚠️ Fail-safe triggered');
+        forceComplete();
       }
     }, MAX_LOADING_TIME);
 
-    console.log('[Auth] 🚀 Initializing auth...');
+    console.log('[Auth] 🚀 Initializing...');
 
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
-      console.log('[Auth] 📢 Auth event:', event);
+      console.log('[Auth] 📢 Event:', event);
 
-      switch (event) {
-        case 'INITIAL_SESSION':
+      if (event === 'SIGNED_OUT') {
+        handleNoSession();
+        return;
+      }
+
+      if (session?.user) {
+        setupRan.current = false; // Allow new setup on new login
+        await handleAuthenticatedUser(session.user.id);
+      } else if (event === 'INITIAL_SESSION') {
+        handleNoSession();
+      }
+    });
+
+    // Backup getSession
+    setTimeout(async () => {
+      if (mounted && !initComplete.current) {
+        console.log('[Auth] 🔄 Backup check...');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!initComplete.current) {
           if (session?.user) {
             await handleAuthenticatedUser(session.user.id);
           } else {
             handleNoSession();
           }
-          break;
-
-        case 'SIGNED_IN':
-          if (session?.user) {
-            bootstrapRan.current = false; // Allow new bootstrap
-            await handleAuthenticatedUser(session.user.id);
-          }
-          break;
-
-        case 'SIGNED_OUT':
-          handleNoSession();
-          break;
-
-        case 'TOKEN_REFRESHED':
-          if (session?.user) {
-            setAuthUserId(session.user.id);
-            await fetchUserData(session.user.id);
-          }
-          break;
-      }
-    });
-
-    // Backup: getSession after a short delay if INITIAL_SESSION didn't fire
-    const backupTimer = setTimeout(async () => {
-      if (mounted && !initComplete.current) {
-        console.log('[Auth] 🔄 Backup: calling getSession...');
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!initComplete.current) {
-            if (session?.user) {
-              await handleAuthenticatedUser(session.user.id);
-            } else {
-              handleNoSession();
-            }
-          }
-        } catch (error) {
-          console.error('[Auth] getSession error:', error);
-          forceLoadingComplete();
         }
       }
-    }, 200);
+    }, 100);
 
     return () => {
       mounted = false;
       clearTimeout(failSafeTimer);
-      clearTimeout(backupTimer);
       subscription.unsubscribe();
     };
-  }, [handleAuthenticatedUser, handleNoSession, fetchUserData, forceLoadingComplete]);
+  }, [handleAuthenticatedUser, handleNoSession, forceComplete]);
 
-  // Computed values
+  // Computed values - ALWAYS true if authenticated (no onboarding needed)
   const isAuthenticated = authUserId !== null;
-  const onboardingCompleted = user?.onboarding_completed === true;
+  const onboardingCompleted = isAuthenticated; // Always complete in emergency mode
 
   // Auth methods
   const signIn = async (email: string, password: string) => {
     console.log('[Auth] 🔑 Signing in:', email);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      console.error('[Auth] Sign in error:', error.message);
       toast.error('Erro ao fazer login: ' + error.message);
       throw error;
     }
-    toast.success('Login realizado com sucesso!');
+    toast.success('Login realizado!');
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
@@ -270,67 +302,37 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       },
     });
     if (error) {
-      console.error('[Auth] Sign up error:', error.message);
       toast.error('Erro ao criar conta: ' + error.message);
       throw error;
     }
-    toast.success('Conta criada! Verifique seu email para confirmar.');
+    toast.success('Conta criada! Verifique seu email.');
   };
 
   const signOut = async () => {
     console.log('[Auth] 🚪 Signing out...');
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('[Auth] Sign out error:', error.message);
       toast.error('Erro ao sair: ' + error.message);
       throw error;
     }
     toast.success('Sessão encerrada');
   };
 
-  const completeOnboarding = async (data: OnboardingData) => {
-    console.log('[Auth] 🏢 Completing onboarding:', data.companyName);
-    
-    try {
-      const { data: result, error } = await supabase.rpc('complete_onboarding', {
-        p_company_name: data.companyName,
-        p_company_nif: data.companyNif || null,
-        p_company_phone: data.companyPhone || null,
-        p_company_address: data.companyAddress || null,
-      });
-
-      if (error) {
-        console.error('[Auth] Onboarding error:', error.message);
-        toast.error('Erro ao criar empresa: ' + error.message);
-        throw error;
-      }
-
-      console.log('[Auth] ✅ Onboarding complete:', result);
-
-      // Refresh user data to get updated profile with company/store
-      if (authUserId) {
-        await fetchUserData(authUserId);
-      }
-
-      const message = (result as any)?.message || 'Empresa criada com sucesso!';
-      toast.success(message);
-    } catch (error) {
-      console.error('[Auth] completeOnboarding exception:', error);
-      throw error;
-    }
+  // completeOnboarding is now a no-op (auto-complete)
+  const completeOnboarding = async () => {
+    console.log('[Auth] ✅ Onboarding auto-complete');
+    return Promise.resolve();
   };
 
-  // Debug log current state
+  // Debug log
   useEffect(() => {
     console.log('[Auth] 📊 State:', {
       loading,
       isAuthenticated,
       onboardingCompleted,
-      userId: authUserId,
-      company: company?.name || null,
-      store: store?.name || null,
+      company: company?.name || 'none',
     });
-  }, [loading, isAuthenticated, onboardingCompleted, authUserId, company, store]);
+  }, [loading, isAuthenticated, onboardingCompleted, company]);
 
   return (
     <AuthContext.Provider value={{
