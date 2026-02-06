@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
-import Receipt from '@/components/pos/Receipt';
+import ThermalReceipt from '@/components/reports/ThermalReceipt';
 
 // HYBRID: Local POS data + SaaS Auth
 
@@ -377,9 +377,9 @@ const LocalPOSPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Receipt Modal */}
+      {/* Thermal Receipt Modal */}
       {showReceipt && lastSale && (
-        <Receipt
+        <ThermalReceipt
           sale={lastSale}
           storeName={store.name}
           storeAddress={store.address}

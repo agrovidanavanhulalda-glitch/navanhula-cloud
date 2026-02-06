@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/select';
 import { 
   BarChart3, 
-  Download,
   Calendar,
   Store,
   Users,
@@ -22,11 +21,13 @@ import {
   DollarSign,
   ShoppingCart,
   FileSpreadsheet,
-  FileText
+  FileText,
+  Eye
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
+import PDFReportPreview, { exportPDFReport, exportExcelReport } from '@/components/reports/PDFReport';
 
-// 100% LOCAL - NO ASYNC, NO BACKEND
+// 100% LOCAL - Relatórios profissionais com templates separados
 
 const LocalReportsPage: React.FC = () => {
   const { sales, stores, currentStore } = useLocalPOS();
@@ -39,6 +40,7 @@ const LocalReportsPage: React.FC = () => {
     return date.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
 
   // Filtered sales
   const filteredSales = useMemo(() => {
@@ -68,7 +70,7 @@ const LocalReportsPage: React.FC = () => {
     // By payment method
     const byPaymentMethod: Record<string, { count: number; total: number }> = {};
     filteredSales.forEach(sale => {
-      const method = sale.paymentMethod || 'unknown';
+      const method = sale.paymentMethod || 'cash';
       if (!byPaymentMethod[method]) {
         byPaymentMethod[method] = { count: 0, total: 0 };
       }
@@ -80,7 +82,7 @@ const LocalReportsPage: React.FC = () => {
     const byStore: Record<string, { count: number; total: number; name: string }> = {};
     filteredSales.forEach(sale => {
       const store = stores.find(s => s.id === sale.storeId);
-      const storeName = store?.name || 'Desconhecida';
+      const storeName = store?.name || 'Loja Principal';
       if (!byStore[sale.storeId]) {
         byStore[sale.storeId] = { count: 0, total: 0, name: storeName };
       }
@@ -92,7 +94,7 @@ const LocalReportsPage: React.FC = () => {
     const bySeller: Record<string, { count: number; total: number; name: string }> = {};
     filteredSales.forEach(sale => {
       const sellerId = sale.sellerId || 'unknown';
-      const sellerName = sale.sellerName || 'Desconhecido';
+      const sellerName = sale.sellerName || 'Operador';
       if (!bySeller[sellerId]) {
         bySeller[sellerId] = { count: 0, total: 0, name: sellerName };
       }
@@ -129,87 +131,38 @@ const LocalReportsPage: React.FC = () => {
     };
   }, [filteredSales, stores]);
 
-  // Export to CSV
-  const exportCSV = () => {
-    const headers = ['Data', 'ID Venda', 'Loja', 'Vendedor', 'Pagamento', 'Subtotal', 'Desconto', 'Total'];
-    const rows = filteredSales.map(sale => {
-      const store = stores.find(s => s.id === sale.storeId);
-      return [
-        new Date(sale.createdAt).toLocaleString('pt-MZ'),
-        sale.id,
-        store?.name || 'N/A',
-        sale.sellerName || 'N/A',
-        sale.paymentMethod || 'N/A',
-        sale.subtotal.toFixed(2),
-        sale.discount.toFixed(2),
-        sale.total.toFixed(2),
-      ];
-    });
-
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `relatorio_vendas_${startDate}_${endDate}.csv`;
-    link.click();
-  };
-
-  // Export to PDF (simple text format)
-  const exportPDF = () => {
-    const content = `
-RELATÓRIO DE VENDAS - NAVANHULA POS
-========================================
-
-Período: ${new Date(startDate).toLocaleDateString('pt-MZ')} a ${new Date(endDate).toLocaleDateString('pt-MZ')}
-Loja: ${selectedStore === 'all' ? 'Todas' : stores.find(s => s.id === selectedStore)?.name}
-
-RESUMO
-----------------------------------------
-Total de Vendas: ${stats.salesCount}
-Receita Total: ${formatCurrency(stats.totalRevenue)}
-Lucro Total: ${formatCurrency(stats.totalProfit)}
-Ticket Médio: ${formatCurrency(stats.averageTicket)}
-
-POR FORMA DE PAGAMENTO
-----------------------------------------
-${Object.entries(stats.byPaymentMethod).map(([method, data]) => 
-  `${method.toUpperCase()}: ${data.count} vendas - ${formatCurrency(data.total)}`
-).join('\n')}
-
-POR LOJA
-----------------------------------------
-${Object.values(stats.byStore).map(store => 
-  `${store.name}: ${store.count} vendas - ${formatCurrency(store.total)}`
-).join('\n')}
-
-TOP 10 PRODUTOS
-----------------------------------------
-${stats.topProducts.map((p, i) => 
-  `${i + 1}. ${p.name}: ${p.qty} un. - ${formatCurrency(p.total)}`
-).join('\n')}
-
-----------------------------------------
-Gerado em: ${new Date().toLocaleString('pt-MZ')}
-    `.trim();
-
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `relatorio_vendas_${startDate}_${endDate}.txt`;
-    link.click();
-  };
-
-  // Payment method label
+  // Payment method label - human readable
   const getPaymentLabel = (method: string) => {
     switch (method) {
       case 'cash': return 'Dinheiro';
       case 'card': return 'Cartão';
       case 'mpesa': return 'M-Pesa';
       case 'emola': return 'E-Mola';
-      default: return method;
+      default: return 'Outro';
     }
+  };
+
+  // Export handlers
+  const handleExportExcel = () => {
+    exportExcelReport({
+      sales,
+      stores,
+      startDate,
+      endDate,
+      selectedStore,
+      companyName: 'NAVANHULA POS',
+    });
+  };
+
+  const handleExportPDF = () => {
+    exportPDFReport({
+      sales,
+      stores,
+      startDate,
+      endDate,
+      selectedStore,
+      companyName: 'NAVANHULA POS',
+    });
   };
 
   return (
@@ -226,13 +179,17 @@ Gerado em: ${new Date().toLocaleString('pt-MZ')}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={exportCSV}>
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
-            Excel/CSV
+          <Button variant="outline" onClick={() => setShowPDFPreview(true)}>
+            <Eye className="w-4 h-4 mr-2" />
+            Visualizar
           </Button>
-          <Button variant="outline" onClick={exportPDF}>
+          <Button variant="outline" onClick={handleExportExcel}>
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            Excel
+          </Button>
+          <Button onClick={handleExportPDF}>
             <FileText className="w-4 h-4 mr-2" />
-            PDF
+            Relatório
           </Button>
         </div>
       </div>
@@ -330,7 +287,7 @@ Gerado em: ${new Date().toLocaleString('pt-MZ')}
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-              <Download className="w-5 h-5 text-orange-500" />
+              <Calendar className="w-5 h-5 text-orange-500" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Descontos</p>
@@ -424,7 +381,7 @@ Gerado em: ${new Date().toLocaleString('pt-MZ')}
                 <tr>
                   <th className="text-left p-3 font-medium">#</th>
                   <th className="text-left p-3 font-medium">Produto</th>
-                  <th className="text-right p-3 font-medium">Qtd.</th>
+                  <th className="text-right p-3 font-medium">Quantidade</th>
                   <th className="text-right p-3 font-medium">Total</th>
                 </tr>
               </thead>
@@ -444,6 +401,19 @@ Gerado em: ${new Date().toLocaleString('pt-MZ')}
           </div>
         )}
       </Card>
+
+      {/* PDF Preview Modal */}
+      {showPDFPreview && (
+        <PDFReportPreview
+          sales={sales}
+          stores={stores}
+          startDate={startDate}
+          endDate={endDate}
+          selectedStore={selectedStore}
+          companyName="NAVANHULA POS"
+          onClose={() => setShowPDFPreview(false)}
+        />
+      )}
     </div>
   );
 };
