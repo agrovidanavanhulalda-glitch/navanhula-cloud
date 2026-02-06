@@ -11,7 +11,6 @@ import { Loader2 } from "lucide-react";
 // Auth pages
 import AuthLoginPage from "./pages/AuthLoginPage";
 import AuthSignupPage from "./pages/AuthSignupPage";
-import OnboardingPage from "./pages/OnboardingPage";
 
 // Main app pages
 import LocalDashboardPage from "./pages/LocalDashboardPage";
@@ -36,8 +35,7 @@ const queryClient = new QueryClient({
 });
 
 /**
- * Loading Screen - shows for max 3 seconds
- * Uses forwardRef to avoid React Router ref warning
+ * Loading Screen - shows for max 2 seconds
  */
 const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
   <div 
@@ -45,56 +43,45 @@ const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
     className="min-h-screen bg-background flex flex-col items-center justify-center gap-4"
   >
     <Loader2 className="w-10 h-10 animate-spin text-primary" />
-    <p className="text-sm text-muted-foreground">Carregando NAVANHULA POS...</p>
+    <p className="text-sm text-muted-foreground">NAVANHULA POS...</p>
   </div>
 ));
 LoadingScreen.displayName = "LoadingScreen";
 
 /**
- * Protected Route - requires authentication AND completed onboarding
+ * Protected Route - requires authentication only (NO onboarding check)
  */
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, onboardingCompleted, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   
-  console.log('[Route] Protected check:', { loading, isAuthenticated, onboardingCompleted });
+  console.log('[Route] Protected:', { loading, isAuthenticated });
   
   if (loading) {
     return <LoadingScreen />;
   }
   
   if (!isAuthenticated) {
-    console.log('[Route] Not authenticated → /login');
+    console.log('[Route] → /login');
     return <Navigate to="/login" replace />;
-  }
-  
-  if (!onboardingCompleted) {
-    console.log('[Route] No onboarding → /onboarding');
-    return <Navigate to="/onboarding" replace />;
   }
   
   return <>{children}</>;
 };
 
 /**
- * Onboarding Route - requires authentication but NOT completed onboarding
+ * Public Route - redirects authenticated users to dashboard
  */
-const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, onboardingCompleted, loading } = useAuth();
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
   
-  console.log('[Route] Onboarding check:', { loading, isAuthenticated, onboardingCompleted });
+  console.log('[Route] Public:', { loading, isAuthenticated });
   
   if (loading) {
     return <LoadingScreen />;
   }
   
-  if (!isAuthenticated) {
-    console.log('[Route] Not authenticated → /login');
-    return <Navigate to="/login" replace />;
-  }
-  
-  // If already completed onboarding, go to dashboard
-  if (onboardingCompleted) {
-    console.log('[Route] Already onboarded → /');
+  if (isAuthenticated) {
+    console.log('[Route] Authenticated → /');
     return <Navigate to="/" replace />;
   }
   
@@ -102,37 +89,12 @@ const OnboardingRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 };
 
 /**
- * Public Route - redirects authenticated users appropriately
- */
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, onboardingCompleted, loading } = useAuth();
-  
-  console.log('[Route] Public check:', { loading, isAuthenticated, onboardingCompleted });
-  
-  if (loading) {
-    return <LoadingScreen />;
-  }
-  
-  if (isAuthenticated) {
-    if (onboardingCompleted) {
-      console.log('[Route] Authenticated + onboarded → /');
-      return <Navigate to="/" replace />;
-    } else {
-      console.log('[Route] Authenticated, no onboarding → /onboarding');
-      return <Navigate to="/onboarding" replace />;
-    }
-  }
-  
-  return <>{children}</>;
-};
-
-/**
- * App Routes with proper guards
+ * App Routes - SIMPLIFIED (no onboarding)
  */
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public routes - Login and Signup */}
+      {/* Public routes */}
       <Route 
         path="/login" 
         element={
@@ -150,17 +112,10 @@ const AppRoutes = () => {
         } 
       />
       
-      {/* Onboarding route - authenticated but no company yet */}
-      <Route 
-        path="/onboarding" 
-        element={
-          <OnboardingRoute>
-            <OnboardingPage />
-          </OnboardingRoute>
-        } 
-      />
+      {/* Onboarding route - redirect to dashboard */}
+      <Route path="/onboarding" element={<Navigate to="/" replace />} />
       
-      {/* Protected Routes - authenticated AND onboarding completed */}
+      {/* Protected Routes */}
       <Route element={
         <ProtectedRoute>
           <LocalPOSProvider>
