@@ -31,6 +31,11 @@ export interface LocalSale {
   storeId: string;
   sellerId?: string;
   sellerName?: string;
+  // Cancellation tracking
+  cancelledAt?: Date;
+  cancelledBy?: string;
+  cancelledByName?: string;
+  cancellationReason?: string;
 }
 
 export interface LocalStore {
@@ -66,6 +71,17 @@ export interface LocalCashRegister {
   salesCount: number;
 }
 
+export interface SaleCancellation {
+  id: string;
+  saleId: string;
+  saleTotal: number;
+  reason: string;
+  cancelledBy: string;
+  cancelledByName: string;
+  cancelledAt: Date;
+  itemsRestored: number;
+}
+
 interface LocalPOSState {
   stores: LocalStore[];
   currentStore: LocalStore;
@@ -76,6 +92,7 @@ interface LocalPOSState {
   cart: LocalCartItem[];
   products: LocalProduct[];
   sales: LocalSale[];
+  cancellations: SaleCancellation[];
 }
 
 interface LocalPOSContextType extends LocalPOSState {
@@ -91,6 +108,7 @@ interface LocalPOSContextType extends LocalPOSState {
   startNewSale: () => void;
   completeSale: (paymentMethod: string) => LocalSale | null;
   cancelSale: () => void;
+  cancelCompletedSale: (saleId: string, reason: string, cancelledBy: string, cancelledByName: string) => boolean;
   
   // Cash register - ALL SYNCHRONOUS
   openCashRegister: (sellerId: string, sellerName: string, openingAmount: number) => LocalCashRegister;
@@ -122,6 +140,8 @@ interface LocalPOSContextType extends LocalPOSState {
   getSalesByStore: (storeId: string) => LocalSale[];
   getSalesBySeller: (sellerId: string) => LocalSale[];
   getSalesByPeriod: (startDate: Date, endDate: Date) => LocalSale[];
+  getCancelledSales: () => LocalSale[];
+  getCancellationHistory: () => SaleCancellation[];
   
   // Legacy compatibility
   store: LocalStore;
@@ -138,6 +158,7 @@ const STORAGE_KEYS = {
   currentStoreId: 'navanhula_current_store',
   sellers: 'navanhula_sellers',
   cashRegisters: 'navanhula_cash_registers',
+  cancellations: 'navanhula_cancellations',
 };
 
 // Default products with cost and sale price
@@ -219,6 +240,7 @@ const getInitialState = (): LocalPOSState => {
     cart: [],
     products: loadFromStorage(STORAGE_KEYS.products, DEFAULT_PRODUCTS),
     sales: loadFromStorage(STORAGE_KEYS.sales, []),
+    cancellations: loadFromStorage(STORAGE_KEYS.cancellations, []),
   };
 };
 
@@ -258,6 +280,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.cashRegisters, state.cashRegisters);
   }, [state.cashRegisters]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.cancellations, state.cancellations);
+  }, [state.cancellations]);
 
   // Generate simple ID - NO ASYNC
   const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -474,6 +500,79 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, []);
 
+  // ============ CANCEL COMPLETED SALE (ADMIN ONLY) ============
+  const cancelCompletedSale = useCallback((
+    saleId: string, 
+    reason: string, 
+    cancelledBy: string, 
+    cancelledByName: string
+  ): boolean => {
+    let success = false;
+
+    setState(prev => {
+      const saleIndex = prev.sales.findIndex(s => s.id === saleId);
+      if (saleIndex === -1) {
+        toast.error('Venda não encontrada');
+        return prev;
+      }
+
+      const sale = prev.sales[saleIndex];
+      if (sale.status === 'cancelled') {
+        toast.error('Venda já foi cancelada');
+        return prev;
+      }
+
+      // Restore stock for all items
+      const updatedProducts = prev.products.map(product => {
+        const saleItem = sale.items.find(item => item.product.id === product.id);
+        if (saleItem) {
+          return {
+            ...product,
+            stock: product.stock + saleItem.quantity,
+          };
+        }
+        return product;
+      });
+
+      // Update sale status
+      const cancelledSale: LocalSale = {
+        ...sale,
+        status: 'cancelled',
+        cancelledAt: new Date(),
+        cancelledBy,
+        cancelledByName,
+        cancellationReason: reason,
+      };
+
+      // Create cancellation record
+      const cancellation: SaleCancellation = {
+        id: generateId(),
+        saleId: sale.id,
+        saleTotal: sale.total,
+        reason,
+        cancelledBy,
+        cancelledByName,
+        cancelledAt: new Date(),
+        itemsRestored: sale.items.reduce((acc, item) => acc + item.quantity, 0),
+      };
+
+      success = true;
+
+      return {
+        ...prev,
+        sales: prev.sales.map(s => s.id === saleId ? cancelledSale : s),
+        products: updatedProducts,
+        cancellations: [...prev.cancellations, cancellation],
+      };
+    });
+
+    if (success) {
+      toast.success('Venda cancelada com sucesso! Estoque restaurado.');
+    }
+
+    return success;
+  }, []);
+
   // ============ CASH REGISTER ACTIONS ============
 
   const openCashRegister = useCallback((sellerId: string, sellerName: string, openingAmount: number): LocalCashRegister => {
@@ -650,6 +749,14 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   }, [state.sales]);
 
+  const getCancelledSales = useCallback(() => {
+    return state.sales.filter(s => s.status === 'cancelled');
+  }, [state.sales]);
+
+  const getCancellationHistory = useCallback(() => {
+    return state.cancellations;
+  }, [state.cancellations]);
+
   const value: LocalPOSContextType = {
     ...state,
     // Legacy compatibility
@@ -666,6 +773,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     startNewSale,
     completeSale,
     cancelSale,
+    cancelCompletedSale,
     // Cash Register
     openCashRegister,
     closeCashRegister,
@@ -692,6 +800,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     getSalesByStore,
     getSalesBySeller,
     getSalesByPeriod,
+    getCancelledSales,
+    getCancellationHistory,
   };
 
   return (
