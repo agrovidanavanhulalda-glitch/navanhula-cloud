@@ -92,8 +92,8 @@ const LocalDashboardPage: React.FC = () => {
               <p className="text-sm text-muted-foreground">Receita Hoje</p>
               <p className="text-3xl font-bold">{formatCurrency(totalRevenue)}</p>
             </div>
-            <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-500" />
+            <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-success" />
             </div>
           </div>
         </Card>
@@ -102,10 +102,10 @@ const LocalDashboardPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Lucro Hoje</p>
-              <p className="text-3xl font-bold text-green-600">{formatCurrency(totalProfit)}</p>
+              <p className="text-3xl font-bold text-profit">{formatCurrency(totalProfit)}</p>
             </div>
-            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 rounded-full bg-profit/10 flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-profit" />
             </div>
           </div>
         </Card>
@@ -121,8 +121,8 @@ const LocalDashboardPage: React.FC = () => {
                 }
               </p>
             </div>
-            <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
-              <Package className="w-6 h-6 text-purple-500" />
+            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+              <Package className="w-6 h-6 text-accent" />
             </div>
           </div>
         </Card>
@@ -172,8 +172,8 @@ const LocalDashboardPage: React.FC = () => {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center">
-                <Package className="w-7 h-7 text-blue-500" />
+              <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center">
+                <Package className="w-7 h-7 text-primary" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold">Produtos</h3>
