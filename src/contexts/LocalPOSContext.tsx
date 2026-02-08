@@ -19,6 +19,17 @@ export interface LocalCartItem {
   total: number;
 }
 
+export interface PaymentDetails {
+  method: 'cash' | 'mpesa' | 'emola' | 'card' | 'split';
+  amountReceived: number;
+  change: number;
+  splitDetails?: {
+    cashAmount: number;
+    electronicAmount: number;
+    electronicMethod: 'mpesa' | 'emola' | 'card';
+  };
+}
+
 export interface LocalSale {
   id: string;
   items: LocalCartItem[];
@@ -27,6 +38,9 @@ export interface LocalSale {
   total: number;
   status: 'open' | 'completed' | 'cancelled';
   paymentMethod?: string;
+  paymentDetails?: PaymentDetails;
+  amountReceived?: number;
+  changeGiven?: number;
   createdAt: Date;
   storeId: string;
   sellerId?: string;
@@ -106,7 +120,7 @@ interface LocalPOSContextType extends LocalPOSState {
   
   // Sale actions - ALL SYNCHRONOUS
   startNewSale: () => void;
-  completeSale: (paymentMethod: string) => LocalSale | null;
+  completeSale: (paymentDetails: PaymentDetails) => LocalSale | null;
   cancelSale: () => void;
   cancelCompletedSale: (saleId: string, reason: string, cancelledBy: string, cancelledByName: string) => boolean;
   
@@ -422,7 +436,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, [state.currentStore.id]);
 
-  const completeSale = useCallback((paymentMethod: string): LocalSale | null => {
+  const completeSale = useCallback((paymentDetails: PaymentDetails): LocalSale | null => {
     let completedSale: LocalSale | null = null;
 
     setState(prev => {
@@ -434,6 +448,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const discount = prev.cart.reduce((acc, item) => acc + item.discount, 0);
       const total = subtotal - discount;
 
+      // Determine payment method label
+      let paymentMethodLabel = paymentDetails.method;
+      if (paymentDetails.method === 'split' && paymentDetails.splitDetails) {
+        paymentMethodLabel = `split:cash+${paymentDetails.splitDetails.electronicMethod}` as any;
+      }
+
       completedSale = {
         id: prev.currentSale?.id || generateId(),
         items: [...prev.cart],
@@ -441,7 +461,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         discount,
         total,
         status: 'completed',
-        paymentMethod,
+        paymentMethod: paymentMethodLabel,
+        paymentDetails,
+        amountReceived: paymentDetails.amountReceived,
+        changeGiven: paymentDetails.change,
         createdAt: new Date(),
         storeId: prev.currentStore.id,
         sellerId: prev.currentCashRegister?.sellerId,

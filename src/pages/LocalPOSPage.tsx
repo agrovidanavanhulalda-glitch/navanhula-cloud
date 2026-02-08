@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
+import { useLocalPOS, LocalProduct, PaymentDetails } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,6 @@ import {
   Minus, 
   Trash2, 
   CreditCard, 
-  Banknote,
-  Smartphone,
   Search,
   X,
   Printer
@@ -20,6 +18,7 @@ import {
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import ThermalReceipt from '@/components/reports/ThermalReceipt';
+import PaymentModal from '@/components/pos/PaymentModal';
 
 // HYBRID: Local POS data + SaaS Auth
 
@@ -47,7 +46,7 @@ const LocalPOSPage: React.FC = () => {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualName, setManualName] = useState('');
   const [manualPrice, setManualPrice] = useState('');
-  const [showPayment, setShowPayment] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
 
   // Filter active products - SYNCHRONOUS
@@ -81,16 +80,19 @@ const LocalPOSPage: React.FC = () => {
     setShowManualEntry(false);
   };
 
-  // Handle payment - SYNCHRONOUS
-  const handlePayment = (method: string) => {
+  // Handle payment confirmation with full details
+  const handlePaymentConfirm = (paymentDetails: PaymentDetails) => {
     if (cart.length === 0) {
       toast.error('Carrinho vazio');
       return;
     }
-    const sale = completeSale(method);
+    const sale = completeSale(paymentDetails);
     if (sale) {
-      toast.success('Venda concluída!');
-      setShowPayment(false);
+      const changeMsg = paymentDetails.change > 0 
+        ? ` | Troco: ${formatCurrency(paymentDetails.change)}`
+        : '';
+      toast.success(`Venda concluída!${changeMsg}`);
+      setShowPaymentModal(false);
       setShowReceipt(true);
     }
   };
@@ -306,62 +308,15 @@ const LocalPOSPage: React.FC = () => {
             </Button>
           )}
 
-          {/* Payment Buttons */}
-          {showPayment ? (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-center">Selecione a forma de pagamento:</p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button 
-                  onClick={() => handlePayment('cash')}
-                  className="flex flex-col h-16"
-                  variant="outline"
-                >
-                  <Banknote className="w-5 h-5 mb-1" />
-                  <span className="text-xs">Dinheiro</span>
-                </Button>
-                <Button 
-                  onClick={() => handlePayment('card')}
-                  className="flex flex-col h-16"
-                  variant="outline"
-                >
-                  <CreditCard className="w-5 h-5 mb-1" />
-                  <span className="text-xs">Cartão</span>
-                </Button>
-                <Button 
-                  onClick={() => handlePayment('mpesa')}
-                  className="flex flex-col h-16"
-                  variant="outline"
-                >
-                  <Smartphone className="w-5 h-5 mb-1" />
-                  <span className="text-xs">M-Pesa</span>
-                </Button>
-                <Button 
-                  onClick={() => handlePayment('emola')}
-                  className="flex flex-col h-16"
-                  variant="outline"
-                >
-                  <Smartphone className="w-5 h-5 mb-1" />
-                  <span className="text-xs">E-Mola</span>
-                </Button>
-              </div>
-              <Button 
-                variant="ghost" 
-                className="w-full"
-                onClick={() => setShowPayment(false)}
-              >
-                Cancelar
-              </Button>
-            </div>
-          ) : (
-            <Button 
-              className="w-full h-14 text-lg"
-              disabled={cart.length === 0}
-              onClick={() => setShowPayment(true)}
-            >
-              <CreditCard className="w-5 h-5 mr-2" />
-              Finalizar Venda
-            </Button>
-          )}
+          {/* Payment Button - Opens Modal */}
+          <Button 
+            className="w-full h-14 text-lg"
+            disabled={cart.length === 0}
+            onClick={() => setShowPaymentModal(true)}
+          >
+            <CreditCard className="w-5 h-5 mr-2" />
+            Finalizar Venda
+          </Button>
 
           {/* Last sale receipt button */}
           {lastSale && !showReceipt && (
@@ -376,6 +331,14 @@ const LocalPOSPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Payment Modal with change calculation and split payment */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        total={getTotal()}
+        onConfirm={handlePaymentConfirm}
+      />
 
       {/* Thermal Receipt Modal */}
       {showReceipt && lastSale && (
