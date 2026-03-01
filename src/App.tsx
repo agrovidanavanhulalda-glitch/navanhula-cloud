@@ -23,6 +23,7 @@ import LocalCashRegisterPage from "./pages/LocalCashRegisterPage";
 import LocalInventoryPage from "./pages/LocalInventoryPage";
 import LocalReportsPage from "./pages/LocalReportsPage";
 import LocalSalesHistoryPage from "./pages/LocalSalesHistoryPage";
+import SubscriptionPage from "./pages/SubscriptionPage";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
 
@@ -134,6 +135,7 @@ const AppRoutes = () => {
         <Route path="/relatorios" element={<LocalReportsPage />} />
         <Route path="/historico" element={<LocalSalesHistoryPage />} />
         <Route path="/configuracoes" element={<LocalSettingsPage />} />
+        <Route path="/assinatura" element={<SubscriptionPage />} />
       </Route>
       
       {/* Catch all */}
