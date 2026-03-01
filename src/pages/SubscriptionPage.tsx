@@ -1,17 +1,62 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/formatters';
-import { CreditCard, AlertTriangle, CheckCircle2, XCircle, Clock, Phone } from 'lucide-react';
+import { CreditCard, AlertTriangle, CheckCircle2, XCircle, Clock, Phone, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const SubscriptionPage: React.FC = () => {
   const { company, role } = useAuth();
-  const { subscription, payments, status, daysRemaining, loading } = useSubscription();
+  const { subscription, payments, status, daysRemaining, loading, refresh } = useSubscription();
+  const [showPayDialog, setShowPayDialog] = useState(false);
+  const [payMethod, setPayMethod] = useState<'mpesa' | 'emola'>('mpesa');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [processing, setProcessing] = useState(false);
 
   const isAdmin = role === 'admin' || role === 'manager';
+
+  const handlePayment = async () => {
+    if (!subscription || !phoneNumber) {
+      toast.error('Informe o número de telefone');
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const functionName = payMethod === 'mpesa' ? 'process-mpesa-payment' : 'process-emola-payment';
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: {
+          subscription_id: subscription.id,
+          phone_number: phoneNumber,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success(data.message || 'Pagamento processado!');
+        if (data.test_mode) {
+          toast.info('Modo de teste: credenciais da API não configuradas.');
+        }
+        setShowPayDialog(false);
+        setPhoneNumber('');
+        refresh();
+      } else {
+        toast.error(data?.error || 'Erro no pagamento');
+      }
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      toast.error(err.message || 'Erro ao processar pagamento');
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   if (!isAdmin) {
     return (
@@ -47,6 +92,7 @@ const SubscriptionPage: React.FC = () => {
   const StatusIcon = cfg.icon;
 
   return (
+    <>
     <div className="p-4 md:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Assinatura</h1>
@@ -117,35 +163,33 @@ const SubscriptionPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Payment Info */}
+      {/* Payment Actions */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="w-5 h-5" />
-            Como Pagar
+            Pagar Assinatura
           </CardTitle>
-          <CardDescription>Métodos de pagamento aceites</CardDescription>
+          <CardDescription>Pague via M-Pesa ou E-mola automaticamente</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border rounded-lg p-4 space-y-2">
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5 text-primary" />
-                <span className="font-medium">M-Pesa</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Envie {formatCurrency(1000)} para o número de pagamento M-Pesa e informe a referência.
-              </p>
-            </div>
-            <div className="border rounded-lg p-4 space-y-2">
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5 text-green-600" />
-                <span className="font-medium">E-mola</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Envie {formatCurrency(1000)} via E-mola e informe a referência da transação.
-              </p>
-            </div>
+            <Button
+              className="h-16 flex flex-col gap-1"
+              variant="outline"
+              onClick={() => { setPayMethod('mpesa'); setShowPayDialog(true); }}
+            >
+              <Phone className="w-5 h-5 text-primary" />
+              <span>Pagar com M-Pesa</span>
+            </Button>
+            <Button
+              className="h-16 flex flex-col gap-1"
+              variant="outline"
+              onClick={() => { setPayMethod('emola'); setShowPayDialog(true); }}
+            >
+              <Phone className="w-5 h-5 text-primary" />
+              <span>Pagar com E-mola</span>
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -195,6 +239,55 @@ const SubscriptionPage: React.FC = () => {
         </CardContent>
       </Card>
     </div>
+
+      {/* Payment Dialog */}
+      <Dialog open={showPayDialog} onOpenChange={setShowPayDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Pagar com {payMethod === 'mpesa' ? 'M-Pesa' : 'E-mola'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-primary/10 rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">Valor</p>
+              <p className="text-3xl font-bold text-primary">{formatCurrency(subscription?.price_monthly || 1000)}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Número de telefone {payMethod === 'mpesa' ? '(84/85)' : '(86/87)'}
+              </label>
+              <Input
+                placeholder={payMethod === 'mpesa' ? '84XXXXXXX' : '86XXXXXXX'}
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="text-lg h-12"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Ao confirmar, será enviada uma solicitação de pagamento para o seu telefone. Confirme no seu dispositivo.
+            </p>
+            <Button
+              className="w-full h-12"
+              onClick={handlePayment}
+              disabled={processing || !phoneNumber}
+            >
+              {processing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <Phone className="w-4 h-4 mr-2" />
+                  Confirmar Pagamento
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

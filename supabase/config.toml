@@ -1,1 +1,10 @@
 project_id = "evkypmrihrgmvqejqxfe"
+
+[functions.process-mpesa-payment]
+verify_jwt = false
+
+[functions.process-emola-payment]
+verify_jwt = false
+
+[functions.payment-webhook]
+verify_jwt = false
