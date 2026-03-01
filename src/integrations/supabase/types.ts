@@ -294,6 +294,63 @@ export type Database = {
           },
         ]
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          id: string
+          paid_at: string | null
+          payment_method: Database["public"]["Enums"]["billing_payment_method"]
+          phone_number: string | null
+          reference_id: string | null
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_method: Database["public"]["Enums"]["billing_payment_method"]
+          phone_number?: string | null
+          reference_id?: string | null
+          status?: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_method?: Database["public"]["Enums"]["billing_payment_method"]
+          phone_number?: string | null
+          reference_id?: string | null
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_history: {
         Row: {
           changed_by: string | null
@@ -708,6 +765,66 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          blocked_at: string | null
+          company_id: string
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          grace_period_days: number
+          id: string
+          notes: string | null
+          price_monthly: number
+          status: Database["public"]["Enums"]["subscription_status"]
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          blocked_at?: string | null
+          company_id: string
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          grace_period_days?: number
+          id?: string
+          notes?: string | null
+          price_monthly?: number
+          status?: Database["public"]["Enums"]["subscription_status"]
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          blocked_at?: string | null
+          company_id?: string
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          grace_period_days?: number
+          id?: string
+          notes?: string | null
+          price_monthly?: number
+          status?: Database["public"]["Enums"]["subscription_status"]
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -781,6 +898,10 @@ export type Database = {
     }
     Functions: {
       bootstrap_current_user: { Args: never; Returns: undefined }
+      check_subscription_status: {
+        Args: { p_store_id: string }
+        Returns: Database["public"]["Enums"]["subscription_status"]
+      }
       complete_onboarding: {
         Args: {
           p_company_address?: string
@@ -802,9 +923,19 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      process_subscription_payment: {
+        Args: {
+          p_payment_method: Database["public"]["Enums"]["billing_payment_method"]
+          p_phone_number?: string
+          p_reference_id?: string
+          p_subscription_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "manager" | "seller"
+      billing_payment_method: "mpesa" | "emola" | "manual"
       cash_register_status: "open" | "closed"
       payment_method: "cash" | "mpesa" | "emola" | "card"
       sale_status: "pending" | "completed" | "cancelled" | "refunded"
@@ -814,6 +945,7 @@ export type Database = {
         | "breakage"
         | "admin_adjustment"
         | "inventory_correction"
+      subscription_status: "active" | "warning" | "blocked" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -942,6 +1074,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "manager", "seller"],
+      billing_payment_method: ["mpesa", "emola", "manual"],
       cash_register_status: ["open", "closed"],
       payment_method: ["cash", "mpesa", "emola", "card"],
       sale_status: ["pending", "completed", "cancelled", "refunded"],
@@ -952,6 +1085,7 @@ export const Constants = {
         "admin_adjustment",
         "inventory_correction",
       ],
+      subscription_status: ["active", "warning", "blocked", "cancelled"],
     },
   },
 } as const

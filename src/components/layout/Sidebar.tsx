@@ -19,6 +19,7 @@ import {
   Shield,
   User,
   History,
+  CreditCard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
   { label: 'Lojas', href: '/lojas', icon: <Store className="w-5 h-5" />, adminOnly: true },
   { label: 'Relatórios', href: '/relatorios', icon: <BarChart3 className="w-5 h-5" />, adminOnly: true },
   { label: 'Configurações', href: '/configuracoes', icon: <Settings className="w-5 h-5" />, adminOnly: true },
+  { label: 'Assinatura', href: '/assinatura', icon: <CreditCard className="w-5 h-5" />, adminOnly: true },
 ];
 
 interface SidebarProps {
