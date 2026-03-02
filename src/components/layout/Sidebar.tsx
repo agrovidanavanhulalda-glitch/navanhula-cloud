@@ -20,6 +20,8 @@ import {
   User,
   History,
   CreditCard,
+  Crown,
+  Calculator,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
@@ -29,10 +31,12 @@ interface NavItem {
   href: string;
   icon: React.ReactNode;
   adminOnly: boolean;
+  ceoOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: <LayoutDashboard className="w-5 h-5" />, adminOnly: false },
+  { label: 'Painel CEO', href: '/ceo', icon: <Crown className="w-5 h-5" />, adminOnly: true, ceoOnly: true },
   { label: 'PDV', href: '/pdv', icon: <ShoppingCart className="w-5 h-5" />, adminOnly: false },
   { label: 'Caixa', href: '/caixa', icon: <Wallet className="w-5 h-5" />, adminOnly: false },
   { label: 'Histórico', href: '/historico', icon: <History className="w-5 h-5" />, adminOnly: false },
@@ -41,6 +45,7 @@ const navItems: NavItem[] = [
   { label: 'Vendedores', href: '/vendedores', icon: <Users className="w-5 h-5" />, adminOnly: true },
   { label: 'Lojas', href: '/lojas', icon: <Store className="w-5 h-5" />, adminOnly: true },
   { label: 'Relatórios', href: '/relatorios', icon: <BarChart3 className="w-5 h-5" />, adminOnly: true },
+  { label: 'Fiscal', href: '/fiscal', icon: <Calculator className="w-5 h-5" />, adminOnly: true },
   { label: 'Configurações', href: '/configuracoes', icon: <Settings className="w-5 h-5" />, adminOnly: true },
   { label: 'Assinatura', href: '/assinatura', icon: <CreditCard className="w-5 h-5" />, adminOnly: true },
 ];
@@ -57,11 +62,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
   // Determine if current user is admin based on local seller context
   // For now, use the SaaS role or assume admin if no specific role
-  const isAdmin = role === 'admin' || role === 'manager';
-
+  const isAdmin = role === 'admin' || role === 'manager' || (role as string) === 'ceo';
+  const isCEO = (role as string) === 'ceo' || role === 'admin';
   // Get current operator name from cash register
   const currentOperator = currentCashRegister?.sellerName || user?.full_name || 'Operador';
-  const currentOperatorRole = currentCashRegister?.sellerId?.includes('admin') ? 'Administrador' : 
+  const currentOperatorRole = (role as string) === 'ceo' ? 'CEO' :
+                              currentCashRegister?.sellerId?.includes('admin') ? 'Administrador' : 
                               isAdmin ? 'Administrador' : 'Vendedor';
 
   // Handle logout
@@ -72,6 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
   // Filter nav items based on role
   const visibleNavItems = navItems.filter(item => {
+    if (item.ceoOnly && !isCEO) return false;
     if (!item.adminOnly) return true;
     return isAdmin;
   });
