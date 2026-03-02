@@ -171,9 +171,13 @@ export type Database = {
       companies: {
         Row: {
           address: string | null
+          city: string | null
           created_at: string | null
+          fiscal_rate: number | null
+          fiscal_regime: string | null
           id: string
           is_active: boolean | null
+          logo_url: string | null
           name: string
           nif: string | null
           phone: string | null
@@ -181,9 +185,13 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          city?: string | null
           created_at?: string | null
+          fiscal_rate?: number | null
+          fiscal_regime?: string | null
           id?: string
           is_active?: boolean | null
+          logo_url?: string | null
           name: string
           nif?: string | null
           phone?: string | null
@@ -191,9 +199,13 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          city?: string | null
           created_at?: string | null
+          fiscal_rate?: number | null
+          fiscal_regime?: string | null
           id?: string
           is_active?: boolean | null
+          logo_url?: string | null
           name?: string
           nif?: string | null
           phone?: string | null
@@ -724,33 +736,45 @@ export type Database = {
       stores: {
         Row: {
           address: string | null
+          city: string | null
           company_id: string | null
           created_at: string | null
           email: string | null
           id: string
           is_active: boolean | null
+          last_online_at: string | null
+          latitude: number | null
+          longitude: number | null
           name: string
           phone: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
+          city?: string | null
           company_id?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
+          last_online_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name: string
           phone?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
+          city?: string | null
           company_id?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
+          last_online_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           phone?: string | null
           updated_at?: string | null
@@ -911,6 +935,9 @@ export type Database = {
         }
         Returns: Json
       }
+      get_ceo_dashboard_stats: { Args: never; Returns: Json }
+      get_sales_by_store: { Args: { p_period?: string }; Returns: Json }
+      get_top_products_national: { Args: { p_limit?: number }; Returns: Json }
       get_user_company: { Args: { _user_id: string }; Returns: string }
       get_user_store: { Args: { _user_id: string }; Returns: string }
       has_completed_onboarding: { Args: { _user_id: string }; Returns: boolean }
@@ -934,7 +961,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "manager" | "seller"
+      app_role: "admin" | "manager" | "seller" | "ceo"
       billing_payment_method: "mpesa" | "emola" | "manual"
       cash_register_status: "open" | "closed"
       payment_method: "cash" | "mpesa" | "emola" | "card"
@@ -1073,7 +1100,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "manager", "seller"],
+      app_role: ["admin", "manager", "seller", "ceo"],
       billing_payment_method: ["mpesa", "emola", "manual"],
       cash_register_status: ["open", "closed"],
       payment_method: ["cash", "mpesa", "emola", "card"],

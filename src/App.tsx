@@ -24,6 +24,8 @@ import LocalInventoryPage from "./pages/LocalInventoryPage";
 import LocalReportsPage from "./pages/LocalReportsPage";
 import LocalSalesHistoryPage from "./pages/LocalSalesHistoryPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
+import CEODashboardPage from "./pages/CEODashboardPage";
+import FiscalPage from "./pages/FiscalPage";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
 
@@ -136,6 +138,8 @@ const AppRoutes = () => {
         <Route path="/historico" element={<LocalSalesHistoryPage />} />
         <Route path="/configuracoes" element={<LocalSettingsPage />} />
         <Route path="/assinatura" element={<SubscriptionPage />} />
+        <Route path="/ceo" element={<CEODashboardPage />} />
+        <Route path="/fiscal" element={<FiscalPage />} />
       </Route>
       
       {/* Catch all */}

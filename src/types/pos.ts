@@ -1,6 +1,6 @@
 // NAVANHULA POS Types - SaaS Multi-tenant
 
-export type AppRole = 'admin' | 'manager' | 'seller';
+export type AppRole = 'admin' | 'manager' | 'seller' | 'ceo';
 export type PaymentMethod = 'cash' | 'mpesa' | 'emola' | 'card';
 export type SaleStatus = 'pending' | 'completed' | 'cancelled' | 'refunded';
 export type CashRegisterStatus = 'open' | 'closed';
