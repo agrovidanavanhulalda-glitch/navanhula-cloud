@@ -1,7 +1,17 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 
-// 100% LOCAL - NO ASYNC, NO BACKEND, NO LOADING
+/**
+ * NAVANHULA POS Context - SUPABASE BACKED
+ * 
+ * - Products, sales, stores, cash registers → Supabase
+ * - Cart → in-memory only (ephemeral)
+ * - Optimistic updates: local state updated immediately, Supabase in background
+ */
+
+// ============ TYPES (kept for backward compat) ============
 
 export interface LocalProduct {
   id: string;
@@ -10,6 +20,8 @@ export interface LocalProduct {
   salePrice: number;
   stock: number;
   isActive: boolean;
+  code?: string;
+  barcode?: string;
 }
 
 export interface LocalCartItem {
@@ -52,7 +64,6 @@ export interface LocalSale {
   storeId: string;
   sellerId?: string;
   sellerName?: string;
-  // Cancellation tracking
   cancelledAt?: Date;
   cancelledBy?: string;
   cancelledByName?: string;
@@ -114,46 +125,34 @@ interface LocalPOSState {
   products: LocalProduct[];
   sales: LocalSale[];
   cancellations: SaleCancellation[];
+  loading: boolean;
 }
 
 interface LocalPOSContextType extends LocalPOSState {
-  // Cart actions - ALL SYNCHRONOUS
   addToCart: (product: LocalProduct) => boolean;
   addManualItem: (name: string, price: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   applyItemDiscount: (productId: string, discount: number) => void;
   clearCart: () => void;
-  
-  // Sale actions - ALL SYNCHRONOUS
   startNewSale: () => void;
   completeSale: (paymentDetails: PaymentDetails) => LocalSale | null;
   cancelSale: () => void;
   cancelCompletedSale: (saleId: string, reason: string, cancelledBy: string, cancelledByName: string) => boolean;
-  
-  // Cash register - ALL SYNCHRONOUS
   openCashRegister: (sellerId: string, sellerName: string, openingAmount: number) => LocalCashRegister;
   closeCashRegister: (closingAmount: number, notes?: string) => void;
   getCashRegisterHistory: () => LocalCashRegister[];
-  
-  // Store management - ALL SYNCHRONOUS
   addStore: (store: Omit<LocalStore, 'id'>) => void;
   updateStore: (id: string, store: Partial<LocalStore>) => void;
   deleteStore: (id: string) => void;
   setCurrentStore: (storeId: string) => void;
-  
-  // Seller management - ALL SYNCHRONOUS
   addSeller: (seller: Omit<LocalSeller, 'id'>) => void;
   updateSeller: (id: string, seller: Partial<LocalSeller>) => void;
   deleteSeller: (id: string) => void;
   getSellersByStore: (storeId: string) => LocalSeller[];
-  
-  // Product management - ALL SYNCHRONOUS
   addProduct: (product: Omit<LocalProduct, 'id'>) => void;
   updateProduct: (id: string, product: Partial<LocalProduct>) => void;
   deleteProduct: (id: string) => void;
-  
-  // Getters
   getSubtotal: () => number;
   getTotal: () => number;
   getTotalDiscount: () => number;
@@ -163,106 +162,18 @@ interface LocalPOSContextType extends LocalPOSState {
   getSalesByPeriod: (startDate: Date, endDate: Date) => LocalSale[];
   getCancelledSales: () => LocalSale[];
   getCancellationHistory: () => SaleCancellation[];
-  
-  // Legacy compatibility
   store: LocalStore;
   cashRegisterOpen: boolean;
 }
 
 const LocalPOSContext = createContext<LocalPOSContextType | undefined>(undefined);
 
-// Storage keys
-const STORAGE_KEYS = {
-  products: 'navanhula_products',
-  sales: 'navanhula_sales',
-  stores: 'navanhula_stores',
-  currentStoreId: 'navanhula_current_store',
-  sellers: 'navanhula_sellers',
-  cashRegisters: 'navanhula_cash_registers',
-  cancellations: 'navanhula_cancellations',
-};
-
-// Default products with cost and sale price
-const DEFAULT_PRODUCTS: LocalProduct[] = [
-  { id: 'prod-1', name: 'Coca-Cola 350ml', costPrice: 30, salePrice: 50, stock: 100, isActive: true },
-  { id: 'prod-2', name: 'Pão Francês', costPrice: 8, salePrice: 15, stock: 200, isActive: true },
-  { id: 'prod-3', name: 'Arroz 1kg', costPrice: 55, salePrice: 85, stock: 50, isActive: true },
-  { id: 'prod-4', name: 'Feijão 1kg', costPrice: 60, salePrice: 95, stock: 50, isActive: true },
-  { id: 'prod-5', name: 'Óleo de Cozinha 900ml', costPrice: 80, salePrice: 120, stock: 30, isActive: true },
-  { id: 'prod-6', name: 'Açúcar 1kg', costPrice: 40, salePrice: 65, stock: 40, isActive: true },
-  { id: 'prod-7', name: 'Sal 1kg', costPrice: 15, salePrice: 25, stock: 60, isActive: true },
-  { id: 'prod-8', name: 'Leite 1L', costPrice: 30, salePrice: 45, stock: 80, isActive: true },
-];
-
-const DEFAULT_STORE: LocalStore = {
-  id: 'store-1',
+const FALLBACK_STORE: LocalStore = {
+  id: 'fallback',
   name: 'NAVANHULA – Loja Principal',
   address: 'Maputo, Moçambique',
   phone: '+258 84 000 0000',
   isActive: true,
-};
-
-const DEFAULT_SELLERS: LocalSeller[] = [
-  {
-    id: 'seller-admin',
-    name: 'Administrador',
-    email: 'admin@navanhula.local',
-    role: 'admin',
-    storeId: 'store-1',
-    isActive: true,
-    password: '1234',
-  },
-  {
-    id: 'seller-caixa',
-    name: 'Operador de Caixa',
-    email: 'caixa@navanhula.local',
-    role: 'vendedor',
-    storeId: 'store-1',
-    isActive: true,
-    password: '1234',
-  },
-];
-
-// Load from localStorage
-const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
-  try {
-    const stored = localStorage.getItem(key);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch {
-    // Ignore errors
-  }
-  return defaultValue;
-};
-
-// Save to localStorage
-const saveToStorage = <T,>(key: string, value: T): void => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Ignore errors
-  }
-};
-
-// Initial state - loaded from localStorage or defaults
-const getInitialState = (): LocalPOSState => {
-  const stores = loadFromStorage<LocalStore[]>(STORAGE_KEYS.stores, [DEFAULT_STORE]);
-  const currentStoreId = loadFromStorage<string>(STORAGE_KEYS.currentStoreId, 'store-1');
-  const currentStore = stores.find(s => s.id === currentStoreId) || stores[0] || DEFAULT_STORE;
-  
-  return {
-    stores,
-    currentStore,
-    sellers: loadFromStorage(STORAGE_KEYS.sellers, DEFAULT_SELLERS),
-    cashRegisters: loadFromStorage(STORAGE_KEYS.cashRegisters, []),
-    currentCashRegister: null,
-    currentSale: null,
-    cart: [],
-    products: loadFromStorage(STORAGE_KEYS.products, DEFAULT_PRODUCTS),
-    sales: loadFromStorage(STORAGE_KEYS.sales, []),
-    cancellations: loadFromStorage(STORAGE_KEYS.cancellations, []),
-  };
 };
 
 export const useLocalPOS = () => {
@@ -273,114 +184,221 @@ export const useLocalPOS = () => {
   return context;
 };
 
+// ============ MAPPERS ============
+
+const mapDbProductToLocal = (p: any, stockQty: number): LocalProduct => ({
+  id: p.id,
+  name: p.name,
+  costPrice: p.cost_price || 0,
+  salePrice: p.sale_price || 0,
+  stock: stockQty,
+  isActive: p.is_active ?? true,
+  code: p.code,
+  barcode: p.barcode,
+});
+
+const mapDbStoreToLocal = (s: any): LocalStore => ({
+  id: s.id,
+  name: s.name,
+  address: s.address || '',
+  phone: s.phone || '',
+  isActive: s.is_active ?? true,
+});
+
+const mapDbCashRegisterToLocal = (cr: any): LocalCashRegister => ({
+  id: cr.id,
+  storeId: cr.store_id,
+  sellerId: cr.user_id,
+  sellerName: '',
+  openingAmount: cr.opening_amount || 0,
+  closingAmount: cr.closing_amount,
+  expectedAmount: cr.expected_amount,
+  status: cr.status || 'open',
+  openedAt: new Date(cr.opened_at),
+  closedAt: cr.closed_at ? new Date(cr.closed_at) : undefined,
+  salesTotal: 0,
+  salesCount: 0,
+});
+
+const mapDbSaleToLocal = (s: any, items: any[]): LocalSale => ({
+  id: s.id,
+  items: items.map(si => ({
+    product: {
+      id: si.product_id,
+      name: si.product_name,
+      costPrice: si.cost_price || 0,
+      salePrice: si.unit_price,
+      stock: 0,
+      isActive: true,
+    },
+    quantity: si.quantity,
+    discount: si.discount_amount || 0,
+    total: si.total,
+  })),
+  subtotal: s.subtotal || 0,
+  discount: s.discount_amount || 0,
+  total: s.total || 0,
+  status: s.status === 'cancelled' ? 'cancelled' : 'completed',
+  paymentMethod: s.payment_method,
+  createdAt: new Date(s.created_at),
+  storeId: s.store_id,
+  sellerId: s.user_id,
+});
+
+// ============ PROVIDER ============
+
 export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<LocalPOSState>(getInitialState);
+  const { user, store: authStore, company } = useAuth();
+
+  const [state, setState] = useState<LocalPOSState>({
+    stores: [],
+    currentStore: FALLBACK_STORE,
+    sellers: [],
+    cashRegisters: [],
+    currentCashRegister: null,
+    currentSale: null,
+    cart: [],
+    products: [],
+    sales: [],
+    cancellations: [],
+    loading: true,
+  });
+
   const [lastSale, setLastSale] = useState<LocalSale | null>(null);
+  const dataLoaded = useRef(false);
 
-  // Persist to localStorage
+  // ============ LOAD DATA FROM SUPABASE ============
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.products, state.products);
-  }, [state.products]);
+    if (!user?.id || dataLoaded.current) return;
 
+    const loadData = async () => {
+      try {
+        const storeId = authStore?.id || user.store_id;
+        if (!storeId) {
+          setState(prev => ({ ...prev, loading: false }));
+          return;
+        }
+
+        // Fetch all data in parallel
+        const [
+          productsRes,
+          stockRes,
+          storesRes,
+          cashRegistersRes,
+          salesRes,
+        ] = await Promise.all([
+          supabase.from('products').select('*').eq('is_active', true),
+          supabase.from('product_stock').select('*').eq('store_id', storeId),
+          supabase.from('stores').select('*'),
+          supabase.from('cash_registers').select('*').eq('store_id', storeId).order('opened_at', { ascending: false }).limit(50),
+          supabase.from('sales').select('*, sale_items(*)').eq('store_id', storeId).order('created_at', { ascending: false }).limit(200),
+        ]);
+
+        // Map products with stock
+        const stockMap = new Map<string, number>();
+        (stockRes.data || []).forEach((s: any) => {
+          stockMap.set(s.product_id, s.quantity || 0);
+        });
+
+        const products: LocalProduct[] = (productsRes.data || []).map((p: any) =>
+          mapDbProductToLocal(p, stockMap.get(p.id) || 0)
+        );
+
+        // Map stores
+        const stores: LocalStore[] = (storesRes.data || []).map(mapDbStoreToLocal);
+        const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : FALLBACK_STORE);
+
+        // Map cash registers
+        const cashRegisters = (cashRegistersRes.data || []).map(mapDbCashRegisterToLocal);
+        const openRegister = cashRegisters.find(cr => cr.status === 'open') || null;
+
+        // Map sales
+        const sales: LocalSale[] = (salesRes.data || []).map((s: any) =>
+          mapDbSaleToLocal(s, s.sale_items || [])
+        );
+
+        dataLoaded.current = true;
+
+        setState(prev => ({
+          ...prev,
+          products,
+          stores,
+          currentStore,
+          cashRegisters,
+          currentCashRegister: openRegister,
+          sales,
+          loading: false,
+        }));
+      } catch (error) {
+        console.error('[POS] Load error:', error);
+        setState(prev => ({ ...prev, loading: false }));
+      }
+    };
+
+    loadData();
+  }, [user?.id, authStore?.id]);
+
+  // Reload when store changes in auth
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.sales, state.sales);
-  }, [state.sales]);
+    if (authStore?.id && authStore.id !== state.currentStore.id && dataLoaded.current) {
+      dataLoaded.current = false;
+    }
+  }, [authStore?.id]);
 
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.stores, state.stores);
-  }, [state.stores]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.currentStoreId, state.currentStore.id);
-  }, [state.currentStore]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.sellers, state.sellers);
-  }, [state.sellers]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.cashRegisters, state.cashRegisters);
-  }, [state.cashRegisters]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.cancellations, state.cancellations);
-  }, [state.cancellations]);
-
-  // Generate simple ID - NO ASYNC
   const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // ============ CART ACTIONS ============
+  // ============ CART ACTIONS (in-memory only) ============
 
   const addToCart = useCallback((product: LocalProduct): boolean => {
     if (!product.isActive) {
       toast.error('Produto inativo');
       return false;
     }
-
     let success = true;
-
     setState(prev => {
       const existingIndex = prev.cart.findIndex(item => item.product.id === product.id);
       const currentQty = existingIndex >= 0 ? prev.cart[existingIndex].quantity : 0;
       const newQty = currentQty + 1;
-
       if (newQty > product.stock) {
         success = false;
         return prev;
       }
-      
       if (existingIndex >= 0) {
         const newCart = [...prev.cart];
-        const item = newCart[existingIndex];
+        const item = { ...newCart[existingIndex] };
         item.quantity = newQty;
         item.total = item.quantity * item.product.salePrice - item.discount;
+        newCart[existingIndex] = item;
         return { ...prev, cart: newCart };
       }
-      
       return {
         ...prev,
-        cart: [...prev.cart, {
-          product,
-          quantity: 1,
-          discount: 0,
-          total: product.salePrice,
-        }],
+        cart: [...prev.cart, { product, quantity: 1, discount: 0, total: product.salePrice }],
       };
     });
-
     if (!success) {
       toast.error(`Estoque insuficiente! Disponível: ${product.stock}`);
     }
-
     return success;
   }, []);
 
   const addManualItem = useCallback((name: string, price: number) => {
     const manualProduct: LocalProduct = {
-      id: generateId(),
+      id: `manual-${generateId()}`,
       name,
       costPrice: 0,
       salePrice: price,
       stock: 999,
       isActive: true,
     };
-    
     setState(prev => ({
       ...prev,
-      cart: [...prev.cart, {
-        product: manualProduct,
-        quantity: 1,
-        discount: 0,
-        total: price,
-      }],
+      cart: [...prev.cart, { product: manualProduct, quantity: 1, discount: 0, total: price }],
     }));
   }, []);
 
   const removeFromCart = useCallback((productId: string) => {
-    setState(prev => ({
-      ...prev,
-      cart: prev.cart.filter(item => item.product.id !== productId),
-    }));
+    setState(prev => ({ ...prev, cart: prev.cart.filter(item => item.product.id !== productId) }));
   }, []);
 
   const updateQuantity = useCallback((productId: string, quantity: number) => {
@@ -388,14 +406,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       removeFromCart(productId);
       return;
     }
-    
     setState(prev => {
       const item = prev.cart.find(i => i.product.id === productId);
       if (item && quantity > item.product.stock) {
         toast.error(`Estoque insuficiente! Disponível: ${item.product.stock}`);
         return prev;
       }
-
       return {
         ...prev,
         cart: prev.cart.map(item =>
@@ -435,34 +451,28 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       createdAt: new Date(),
       storeId: state.currentStore.id,
     };
-    
-    setState(prev => ({
-      ...prev,
-      currentSale: newSale,
-      cart: [],
-    }));
+    setState(prev => ({ ...prev, currentSale: newSale, cart: [] }));
   }, [state.currentStore.id]);
 
   const completeSale = useCallback((paymentDetails: PaymentDetails): LocalSale | null => {
     let completedSale: LocalSale | null = null;
 
     setState(prev => {
-      if (prev.cart.length === 0) {
-        return prev;
-      }
+      if (prev.cart.length === 0) return prev;
 
       const subtotal = prev.cart.reduce((acc, item) => acc + item.quantity * item.product.salePrice, 0);
       const discount = prev.cart.reduce((acc, item) => acc + item.discount, 0);
       const total = subtotal - discount;
 
-      // Determine payment method label
       let paymentMethodLabel = paymentDetails.method;
       if (paymentDetails.method === 'split' && paymentDetails.splitDetails) {
         paymentMethodLabel = `split:cash+${paymentDetails.splitDetails.electronicMethod}` as any;
       }
 
+      const saleId = crypto.randomUUID();
+
       completedSale = {
-        id: prev.currentSale?.id || generateId(),
+        id: saleId,
         items: [...prev.cart],
         subtotal,
         discount,
@@ -478,19 +488,16 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         sellerName: prev.currentCashRegister?.sellerName,
       };
 
-      // Deduct stock from products
+      // Update local stock optimistically
       const updatedProducts = prev.products.map(product => {
         const cartItem = prev.cart.find(item => item.product.id === product.id);
         if (cartItem) {
-          return {
-            ...product,
-            stock: Math.max(0, product.stock - cartItem.quantity),
-          };
+          return { ...product, stock: Math.max(0, product.stock - cartItem.quantity) };
         }
         return product;
       });
 
-      // Update cash register if open
+      // Update cash register
       let updatedCashRegisters = prev.cashRegisters;
       let updatedCurrentCashRegister = prev.currentCashRegister;
       if (prev.currentCashRegister) {
@@ -503,11 +510,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           cr.id === prev.currentCashRegister!.id ? updatedCurrentCashRegister! : cr
         );
       }
-      
+
       return {
         ...prev,
         products: updatedProducts,
-        sales: [...prev.sales, completedSale!],
+        sales: [completedSale!, ...prev.sales],
         currentSale: null,
         cart: [],
         cashRegisters: updatedCashRegisters,
@@ -515,26 +522,121 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
     });
 
+    // Write to Supabase in background
+    if (completedSale && user?.id) {
+      const sale = completedSale;
+      const storeId = state.currentStore.id;
+
+      // Determine valid payment method for DB enum
+      const validMethods = ['cash', 'mpesa', 'emola', 'card', 'voucher'];
+      let dbPaymentMethod = sale.paymentMethod || 'cash';
+      if (!validMethods.includes(dbPaymentMethod)) {
+        dbPaymentMethod = 'cash';
+      }
+
+      (async () => {
+        try {
+          // Insert sale
+          const { error: saleError } = await supabase.from('sales').insert({
+            id: sale.id,
+            store_id: storeId,
+            user_id: user.id,
+            cash_register_id: state.currentCashRegister?.id || null,
+            subtotal: sale.subtotal,
+            discount_amount: sale.discount,
+            total: sale.total,
+            payment_method: dbPaymentMethod as any,
+            status: 'completed',
+            customer_name: sale.paymentDetails?.voucherDetails?.customerName || null,
+            customer_phone: sale.paymentDetails?.voucherDetails?.phoneNumber || null,
+          });
+
+          if (saleError) {
+            console.error('[POS] Sale insert error:', saleError);
+            return;
+          }
+
+          // Insert sale items
+          const saleItems = sale.items
+            .filter(item => !item.product.id.startsWith('manual-'))
+            .map(item => ({
+              sale_id: sale.id,
+              product_id: item.product.id,
+              product_name: item.product.name,
+              quantity: item.quantity,
+              unit_price: item.product.salePrice,
+              cost_price: item.product.costPrice,
+              discount_amount: item.discount,
+              total: item.total,
+              profit: (item.product.salePrice - item.product.costPrice) * item.quantity - item.discount,
+            }));
+
+          // Also include manual items with a generated product reference
+          const manualItems = sale.items
+            .filter(item => item.product.id.startsWith('manual-'))
+            .map(item => ({
+              sale_id: sale.id,
+              product_id: item.product.id,
+              product_name: item.product.name,
+              quantity: item.quantity,
+              unit_price: item.product.salePrice,
+              cost_price: 0,
+              discount_amount: item.discount,
+              total: item.total,
+              profit: item.total,
+            }));
+
+          const allItems = [...saleItems, ...manualItems];
+          // Only insert items that have valid product_id (non-manual ones need to exist in products table)
+          // For manual items, we skip sale_items insert since product_id FK would fail
+          if (saleItems.length > 0) {
+            const { error: itemsError } = await supabase.from('sale_items').insert(saleItems);
+            if (itemsError) {
+              console.error('[POS] Sale items insert error:', itemsError);
+            }
+          }
+
+          // Update stock in Supabase for non-manual items
+          for (const item of sale.items.filter(i => !i.product.id.startsWith('manual-'))) {
+            await supabase
+              .from('product_stock')
+              .update({ quantity: item.product.stock - item.quantity, updated_at: new Date().toISOString() })
+              .eq('product_id', item.product.id)
+              .eq('store_id', storeId);
+          }
+
+          // Credit wallet
+          if (dbPaymentMethod !== 'cash') {
+            await supabase.rpc('credit_wallet_from_sale', {
+              p_store_id: storeId,
+              p_payment_method: dbPaymentMethod,
+              p_amount: sale.total,
+              p_sale_id: sale.id,
+            });
+          }
+
+          console.log('[POS] ✅ Sale synced to backend:', sale.id);
+        } catch (error) {
+          console.error('[POS] Sync error:', error);
+        }
+      })();
+    }
+
     if (completedSale) {
       setLastSale(completedSale);
     }
 
     return completedSale;
-  }, []);
+  }, [user?.id, state.currentStore.id, state.currentCashRegister?.id]);
 
   const cancelSale = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      currentSale: null,
-      cart: [],
-    }));
+    setState(prev => ({ ...prev, currentSale: null, cart: [] }));
   }, []);
 
-  // ============ CANCEL COMPLETED SALE (ADMIN ONLY) ============
   const cancelCompletedSale = useCallback((
-    saleId: string, 
-    reason: string, 
-    cancelledBy: string, 
+    saleId: string,
+    reason: string,
+    cancelledBy: string,
     cancelledByName: string
   ): boolean => {
     let success = false;
@@ -552,19 +654,14 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return prev;
       }
 
-      // Restore stock for all items
       const updatedProducts = prev.products.map(product => {
         const saleItem = sale.items.find(item => item.product.id === product.id);
         if (saleItem) {
-          return {
-            ...product,
-            stock: product.stock + saleItem.quantity,
-          };
+          return { ...product, stock: product.stock + saleItem.quantity };
         }
         return product;
       });
 
-      // Update sale status
       const cancelledSale: LocalSale = {
         ...sale,
         status: 'cancelled',
@@ -574,7 +671,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         cancellationReason: reason,
       };
 
-      // Create cancellation record
       const cancellation: SaleCancellation = {
         id: generateId(),
         saleId: sale.id,
@@ -596,18 +692,23 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
     });
 
+    // Sync cancellation to Supabase
     if (success) {
+      (async () => {
+        await supabase.from('sales').update({ status: 'cancelled', notes: reason }).eq('id', saleId);
+      })();
       toast.success('Venda cancelada com sucesso! Estoque restaurado.');
     }
 
     return success;
   }, []);
 
-  // ============ CASH REGISTER ACTIONS ============
+  // ============ CASH REGISTER ============
 
   const openCashRegister = useCallback((sellerId: string, sellerName: string, openingAmount: number): LocalCashRegister => {
+    const registerId = crypto.randomUUID();
     const newRegister: LocalCashRegister = {
-      id: generateId(),
+      id: registerId,
       storeId: state.currentStore.id,
       sellerId,
       sellerName,
@@ -620,17 +721,29 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     setState(prev => ({
       ...prev,
-      cashRegisters: [...prev.cashRegisters, newRegister],
+      cashRegisters: [newRegister, ...prev.cashRegisters],
       currentCashRegister: newRegister,
     }));
 
+    // Sync to Supabase
+    if (user?.id) {
+      (async () => {
+        await supabase.from('cash_registers').insert({
+          id: registerId,
+          store_id: state.currentStore.id,
+          user_id: user.id,
+          opening_amount: openingAmount,
+          status: 'open',
+        });
+      })();
+    }
+
     return newRegister;
-  }, [state.currentStore.id]);
+  }, [state.currentStore.id, user?.id]);
 
   const closeCashRegister = useCallback((closingAmount: number) => {
     setState(prev => {
       if (!prev.currentCashRegister) return prev;
-
       const expectedAmount = prev.currentCashRegister.openingAmount + prev.currentCashRegister.salesTotal;
       const closedRegister: LocalCashRegister = {
         ...prev.currentCashRegister,
@@ -640,50 +753,72 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         closedAt: new Date(),
       };
 
+      // Sync to Supabase
+      (async () => {
+        await supabase.from('cash_registers').update({
+          closing_amount: closingAmount,
+          expected_amount: expectedAmount,
+          difference: closingAmount - expectedAmount,
+          status: 'closed',
+          closed_at: new Date().toISOString(),
+        }).eq('id', closedRegister.id);
+      })();
+
       return {
         ...prev,
-        cashRegisters: prev.cashRegisters.map(cr =>
-          cr.id === closedRegister.id ? closedRegister : cr
-        ),
+        cashRegisters: prev.cashRegisters.map(cr => cr.id === closedRegister.id ? closedRegister : cr),
         currentCashRegister: null,
       };
     });
   }, []);
 
-  const getCashRegisterHistory = useCallback(() => {
-    return state.cashRegisters;
-  }, [state.cashRegisters]);
+  const getCashRegisterHistory = useCallback(() => state.cashRegisters, [state.cashRegisters]);
 
   // ============ STORE ACTIONS ============
 
   const addStore = useCallback((store: Omit<LocalStore, 'id'>) => {
+    const storeId = crypto.randomUUID();
     setState(prev => ({
       ...prev,
-      stores: [...prev.stores, { ...store, id: generateId() }],
+      stores: [...prev.stores, { ...store, id: storeId }],
     }));
-  }, []);
+
+    if (company?.id) {
+      (async () => {
+        await supabase.from('stores').insert({
+          id: storeId,
+          name: store.name,
+          address: store.address || null,
+          phone: store.phone || null,
+          company_id: company.id,
+          is_active: store.isActive,
+        });
+      })();
+    }
+  }, [company?.id]);
 
   const updateStore = useCallback((id: string, updates: Partial<LocalStore>) => {
     setState(prev => {
-      const updatedStores = prev.stores.map(s =>
-        s.id === id ? { ...s, ...updates } : s
-      );
-      const currentStore = prev.currentStore.id === id 
-        ? { ...prev.currentStore, ...updates }
-        : prev.currentStore;
-      return {
-        ...prev,
-        stores: updatedStores,
-        currentStore,
-      };
+      const updatedStores = prev.stores.map(s => s.id === id ? { ...s, ...updates } : s);
+      const currentStore = prev.currentStore.id === id ? { ...prev.currentStore, ...updates } : prev.currentStore;
+      return { ...prev, stores: updatedStores, currentStore };
     });
+
+    (async () => {
+      const dbUpdates: any = {};
+      if (updates.name !== undefined) dbUpdates.name = updates.name;
+      if (updates.address !== undefined) dbUpdates.address = updates.address;
+      if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
+      if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
+      await supabase.from('stores').update(dbUpdates).eq('id', id);
+    })();
   }, []);
 
   const deleteStore = useCallback((id: string) => {
-    setState(prev => ({
-      ...prev,
-      stores: prev.stores.filter(s => s.id !== id),
-    }));
+    setState(prev => ({ ...prev, stores: prev.stores.filter(s => s.id !== id) }));
+    (async () => {
+      await supabase.from('stores').update({ is_active: false }).eq('id', id);
+    })();
   }, []);
 
   const setCurrentStore = useCallback((storeId: string) => {
@@ -692,31 +827,36 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!store) return prev;
       return { ...prev, currentStore: store };
     });
+
+    // Persist active store in Supabase
+    (async () => {
+      await supabase.rpc('set_active_store', { p_store_id: storeId });
+    })();
+
+    // Reload data for new store
+    dataLoaded.current = false;
   }, []);
 
   // ============ SELLER ACTIONS ============
+  // Sellers now map to profiles in Supabase but we keep local interface
 
   const addSeller = useCallback((seller: Omit<LocalSeller, 'id'>) => {
+    const sellerId = generateId();
     setState(prev => ({
       ...prev,
-      sellers: [...prev.sellers, { ...seller, id: generateId() }],
+      sellers: [...prev.sellers, { ...seller, id: sellerId }],
     }));
   }, []);
 
   const updateSeller = useCallback((id: string, updates: Partial<LocalSeller>) => {
     setState(prev => ({
       ...prev,
-      sellers: prev.sellers.map(s =>
-        s.id === id ? { ...s, ...updates } : s
-      ),
+      sellers: prev.sellers.map(s => s.id === id ? { ...s, ...updates } : s),
     }));
   }, []);
 
   const deleteSeller = useCallback((id: string) => {
-    setState(prev => ({
-      ...prev,
-      sellers: prev.sellers.filter(s => s.id !== id),
-    }));
+    setState(prev => ({ ...prev, sellers: prev.sellers.filter(s => s.id !== id) }));
   }, []);
 
   const getSellersByStore = useCallback((storeId: string) => {
@@ -726,26 +866,63 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ============ PRODUCT ACTIONS ============
 
   const addProduct = useCallback((product: Omit<LocalProduct, 'id'>) => {
+    const productId = crypto.randomUUID();
     setState(prev => ({
       ...prev,
-      products: [...prev.products, { ...product, id: generateId() }],
+      products: [...prev.products, { ...product, id: productId }],
     }));
-  }, []);
+
+    (async () => {
+      const code = `P-${Date.now().toString(36).toUpperCase()}`;
+      await supabase.from('products').insert({
+        id: productId,
+        code,
+        name: product.name,
+        cost_price: product.costPrice,
+        sale_price: product.salePrice,
+        is_active: product.isActive,
+      });
+      // Create stock entry
+      if (state.currentStore.id) {
+        await supabase.from('product_stock').insert({
+          product_id: productId,
+          store_id: state.currentStore.id,
+          quantity: product.stock,
+        });
+      }
+    })();
+  }, [state.currentStore.id]);
 
   const updateProduct = useCallback((id: string, updates: Partial<LocalProduct>) => {
     setState(prev => ({
       ...prev,
-      products: prev.products.map(p =>
-        p.id === id ? { ...p, ...updates } : p
-      ),
+      products: prev.products.map(p => p.id === id ? { ...p, ...updates } : p),
     }));
-  }, []);
+
+    (async () => {
+      const dbUpdates: any = {};
+      if (updates.name !== undefined) dbUpdates.name = updates.name;
+      if (updates.costPrice !== undefined) dbUpdates.cost_price = updates.costPrice;
+      if (updates.salePrice !== undefined) dbUpdates.sale_price = updates.salePrice;
+      if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
+      if (Object.keys(dbUpdates).length > 0) {
+        await supabase.from('products').update(dbUpdates).eq('id', id);
+      }
+      if (updates.stock !== undefined && state.currentStore.id) {
+        await supabase.from('product_stock').upsert({
+          product_id: id,
+          store_id: state.currentStore.id,
+          quantity: updates.stock,
+        }, { onConflict: 'product_id,store_id' });
+      }
+    })();
+  }, [state.currentStore.id]);
 
   const deleteProduct = useCallback((id: string) => {
-    setState(prev => ({
-      ...prev,
-      products: prev.products.filter(p => p.id !== id),
-    }));
+    setState(prev => ({ ...prev, products: prev.products.filter(p => p.id !== id) }));
+    (async () => {
+      await supabase.from('products').update({ is_active: false }).eq('id', id);
+    })();
   }, []);
 
   // ============ GETTERS ============
@@ -789,40 +966,32 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const value: LocalPOSContextType = {
     ...state,
-    // Legacy compatibility
     store: state.currentStore,
     cashRegisterOpen: state.currentCashRegister?.status === 'open',
-    // Cart
     addToCart,
     addManualItem,
     removeFromCart,
     updateQuantity,
     applyItemDiscount,
     clearCart,
-    // Sales
     startNewSale,
     completeSale,
     cancelSale,
     cancelCompletedSale,
-    // Cash Register
     openCashRegister,
     closeCashRegister,
     getCashRegisterHistory,
-    // Stores
     addStore,
     updateStore,
     deleteStore,
     setCurrentStore,
-    // Sellers
     addSeller,
     updateSeller,
     deleteSeller,
     getSellersByStore,
-    // Products
     addProduct,
     updateProduct,
     deleteProduct,
-    // Getters
     getSubtotal,
     getTotal,
     getTotalDiscount,
