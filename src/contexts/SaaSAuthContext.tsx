@@ -65,7 +65,6 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Force loading complete
   const forceComplete = useCallback(() => {
     if (!initComplete.current) {
-      console.log('[Auth] ⚡ Force complete - going to dashboard');
       initComplete.current = true;
       setLoading(false);
     }
@@ -76,15 +75,12 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (setupRan.current) return;
     setupRan.current = true;
     
-    console.log('[Auth] 🚀 Auto-setup for:', userId);
-    
     try {
       // 1. Bootstrap profile
       const { error: bootstrapError } = await supabase.rpc('bootstrap_current_user');
       if (bootstrapError) {
-        console.warn('[Auth] Bootstrap warning:', bootstrapError.message);
+        // Bootstrap warning - non-critical
       }
-
       // 2. Check if user needs company
       const { data: profile } = await supabase
         .from('profiles')
@@ -92,11 +88,8 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .eq('id', userId)
         .maybeSingle();
 
-      console.log('[Auth] Profile:', profile);
-
       // 3. If no company, create one automatically
       if (!profile?.company_id || !profile?.onboarding_completed) {
-        console.log('[Auth] 🏢 Creating company automatically...');
         
         const { data: result, error: onboardError } = await supabase.rpc('complete_onboarding', {
           p_company_name: 'NAVANHULA EMPRESA PRINCIPAL',
@@ -106,35 +99,25 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
 
         if (onboardError) {
-          console.warn('[Auth] Auto-onboarding warning:', onboardError.message);
-          // Use fallback
           setCompany(DEFAULT_COMPANY);
           setStore(DEFAULT_STORE);
         } else {
-          console.log('[Auth] ✅ Company created:', result);
           toast.success('Empresa criada automaticamente!');
         }
       }
 
       // 4. Fetch final user data
       await fetchUserData(userId);
-      
     } catch (error) {
-      console.error('[Auth] Setup error:', error);
-      // Use fallback data
       setCompany(DEFAULT_COMPANY);
       setStore(DEFAULT_STORE);
       setRole('admin');
     }
-    
-    // ALWAYS complete
     forceComplete();
   }, []);
 
   // Fetch user profile and related data
   const fetchUserData = useCallback(async (userId: string): Promise<void> => {
-    console.log('[Auth] 📥 Fetching user data...');
-    
     try {
       const [profileResult, roleResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
@@ -177,7 +160,6 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setRole('admin');
       }
     } catch (error) {
-      console.error('[Auth] Fetch error:', error);
       setCompany(DEFAULT_COMPANY);
       setStore(DEFAULT_STORE);
       setRole('admin');
@@ -193,14 +175,12 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Handle authenticated session
   const handleAuthenticatedUser = useCallback(async (userId: string) => {
-    console.log('[Auth] 🔐 User authenticated:', userId);
     setAuthUserId(userId);
     
     // Auto-setup with timeout protection
     const setupPromise = autoSetupUser(userId);
     const timeoutPromise = new Promise<void>((resolve) => {
       setTimeout(() => {
-        console.log('[Auth] ⏱️ Setup timeout - forcing complete');
         forceComplete();
         resolve();
       }, MAX_LOADING_TIME);
@@ -211,7 +191,6 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Handle no session
   const handleNoSession = useCallback(() => {
-    console.log('[Auth] 👤 No session');
     setUser(null);
     setRole(null);
     setStore(null);
@@ -229,17 +208,12 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // FAIL-SAFE: Force complete after MAX_LOADING_TIME
     const failSafeTimer = setTimeout(() => {
       if (mounted && !initComplete.current) {
-        console.warn('[Auth] ⚠️ Fail-safe triggered');
         forceComplete();
       }
     }, MAX_LOADING_TIME);
 
-    console.log('[Auth] 🚀 Initializing...');
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-
-      console.log('[Auth] 📢 Event:', event);
 
       if (event === 'SIGNED_OUT') {
         handleNoSession();
@@ -254,10 +228,8 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     });
 
-    // Backup getSession
     setTimeout(async () => {
       if (mounted && !initComplete.current) {
-        console.log('[Auth] 🔄 Backup check...');
         const { data: { session } } = await supabase.auth.getSession();
         if (!initComplete.current) {
           if (session?.user) {
@@ -282,7 +254,6 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Auth methods
   const signIn = async (email: string, password: string) => {
-    console.log('[Auth] 🔑 Signing in:', email);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast.error('Erro ao fazer login: ' + error.message);
@@ -292,7 +263,6 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    console.log('[Auth] 📝 Signing up:', email);
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -309,7 +279,6 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const signOut = async () => {
-    console.log('[Auth] 🚪 Signing out...');
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast.error('Erro ao sair: ' + error.message);
@@ -320,19 +289,8 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // completeOnboarding is now a no-op (auto-complete)
   const completeOnboarding = async () => {
-    console.log('[Auth] ✅ Onboarding auto-complete');
     return Promise.resolve();
   };
-
-  // Debug log
-  useEffect(() => {
-    console.log('[Auth] 📊 State:', {
-      loading,
-      isAuthenticated,
-      onboardingCompleted,
-      company: company?.name || 'none',
-    });
-  }, [loading, isAuthenticated, onboardingCompleted, company]);
 
   return (
     <AuthContext.Provider value={{
