@@ -936,6 +936,112 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          sale_id: string | null
+          store_id: string
+          type: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          sale_id?: string | null
+          store_id: string
+          type: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          sale_id?: string | null
+          store_id?: string
+          type?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance: number
+          company_id: string
+          created_at: string
+          id: string
+          payment_method: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          payment_method: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          payment_method?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallets_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       customers_safe: {
@@ -1001,6 +1107,15 @@ export type Database = {
         }
         Returns: Json
       }
+      credit_wallet_from_sale: {
+        Args: {
+          p_amount: number
+          p_payment_method: string
+          p_sale_id?: string
+          p_store_id: string
+        }
+        Returns: Json
+      }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
       get_sales_by_store: { Args: { p_period?: string }; Returns: Json }
       get_top_products_national: { Args: { p_limit?: number }; Returns: Json }
@@ -1022,6 +1137,15 @@ export type Database = {
           p_phone_number?: string
           p_reference_id?: string
           p_subscription_id: string
+        }
+        Returns: Json
+      }
+      transfer_between_stores: {
+        Args: {
+          p_amount: number
+          p_from_store_id: string
+          p_payment_method: string
+          p_to_store_id: string
         }
         Returns: Json
       }
