@@ -133,15 +133,15 @@ const CEODashboardPage: React.FC = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {[
-          { icon: Store, label: 'Lojas Ativas', value: stats?.total_stores ?? 0, sub: <><Wifi className="w-3 h-3 text-green-500" /> <span className="text-green-500">{stats?.stores_online ?? 0} online</span></> },
+          { icon: Store, label: 'Lojas Ativas', value: stats?.total_stores ?? 0, sub: <><Wifi className="w-3 h-3 text-success" /> <span className="text-success">{stats?.stores_online ?? 0} online</span></> },
           { icon: ShoppingCart, label: 'Vendas Hoje', value: stats?.total_sales_today ?? 0, sub: `${stats?.active_registers ?? 0} caixas abertos` },
           { icon: DollarSign, label: 'Receita Hoje', value: formatCurrency(stats?.revenue_today ?? 0), highlight: true },
-          { icon: TrendingUp, label: 'Receita Mês', value: formatCurrency(stats?.revenue_month ?? 0), sub: <span className="text-green-500">Lucro: {formatCurrency(stats?.profit_month ?? 0)}</span> },
+          { icon: TrendingUp, label: 'Receita Mês', value: formatCurrency(stats?.revenue_month ?? 0), sub: <span className="text-success">Lucro: {formatCurrency(stats?.profit_month ?? 0)}</span> },
           { icon: Package, label: 'Estoque Baixo', value: stats?.low_stock_count ?? 0, warn: (stats?.low_stock_count ?? 0) > 0, sub: `${stats?.total_products ?? 0} produtos total` },
         ].map((kpi, i) => (
           <Card key={i} className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm"><kpi.icon className="w-4 h-4" /> {kpi.label}</div>
-            <p className={`text-2xl font-bold mt-1 ${kpi.highlight ? 'text-primary' : ''} ${kpi.warn ? 'text-orange-500' : ''}`}>{kpi.value}</p>
+            <p className={`text-2xl font-bold mt-1 ${kpi.highlight ? 'text-primary' : ''} ${kpi.warn ? 'text-warning' : ''}`}>{kpi.value}</p>
             {kpi.sub && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">{kpi.sub}</p>}
           </Card>
         ))}
@@ -162,12 +162,16 @@ const CEODashboardPage: React.FC = () => {
               <CardContent>
                 {storeData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={storeData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis dataKey="store_name" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
-                      <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" />
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Bar dataKey="total_revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Receita" />
+                     <BarChart data={storeData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(217, 33%, 25%)" />
+                      <XAxis dataKey="store_name" tick={{ fontSize: 12, fill: 'hsl(215, 20%, 65%)' }} />
+                      <YAxis tick={{ fontSize: 12, fill: 'hsl(215, 20%, 65%)' }} />
+                      <Tooltip 
+                        formatter={(value: number) => formatCurrency(value)} 
+                        contentStyle={{ backgroundColor: 'hsl(222, 47%, 14%)', border: '1px solid hsl(217, 33%, 25%)', borderRadius: '8px', color: 'hsl(210, 40%, 98%)' }}
+                        labelStyle={{ color: 'hsl(210, 40%, 98%)' }}
+                      />
+                      <Bar dataKey="total_revenue" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} name="Receita" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -181,11 +185,14 @@ const CEODashboardPage: React.FC = () => {
               <CardContent>
                 {paymentPieData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie data={paymentPieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                     <PieChart>
+                      <Pie data={paymentPieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={{ stroke: 'hsl(215, 20%, 65%)' }}>
                         {paymentPieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                       </Pie>
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Tooltip 
+                        formatter={(value: number) => formatCurrency(value)} 
+                        contentStyle={{ backgroundColor: 'hsl(222, 47%, 14%)', border: '1px solid hsl(217, 33%, 25%)', borderRadius: '8px', color: 'hsl(210, 40%, 98%)' }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -205,13 +212,13 @@ const CEODashboardPage: React.FC = () => {
                     return (
                       <div key={store.store_id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                         <div className="flex items-center gap-3">
-                          {isOnline ? <Wifi className="w-4 h-4 text-green-500" /> : <WifiOff className="w-4 h-4 text-destructive" />}
-                          <div>
-                            <p className="font-medium text-sm">{store.store_name}</p>
+                          {isOnline ? <Wifi className="w-4 h-4 text-success" /> : <WifiOff className="w-4 h-4 text-destructive" />}
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">{store.store_name}</p>
                             <p className="text-xs text-muted-foreground">{store.city || 'Sem cidade'}</p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0">
                           <p className="font-bold text-sm">{formatCurrency(store.total_revenue)}</p>
                           <p className="text-xs text-muted-foreground">{store.total_sales} vendas</p>
                         </div>
@@ -238,7 +245,7 @@ const CEODashboardPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-sm">{formatCurrency(product.total_revenue)}</p>
-                        <p className="text-xs text-green-500">Lucro: {formatCurrency(product.total_profit ?? 0)}</p>
+                        <p className="text-xs text-profit">Lucro: {formatCurrency(product.total_profit ?? 0)}</p>
                       </div>
                     </div>
                   ))}

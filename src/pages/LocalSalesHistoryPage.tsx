@@ -23,6 +23,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
+import { UI_LABELS } from '@/lib/uiLabels';
 import ThermalReceipt from '@/components/reports/ThermalReceipt';
 import CancelSaleDialog from '@/components/pos/CancelSaleDialog';
 import { toast } from 'sonner';
@@ -152,13 +153,14 @@ const LocalSalesHistoryPage: React.FC = () => {
 
   // Get payment label
   const getPaymentLabel = (method?: string) => {
-    switch (method) {
-      case 'cash': return 'Dinheiro';
-      case 'card': return 'Cartão';
-      case 'mpesa': return 'M-Pesa';
-      case 'emola': return 'E-Mola';
-      default: return 'N/A';
-    }
+    return UI_LABELS.payment[method || ''] || 'N/A';
+  };
+
+  // Calculate profit for a sale
+  const getSaleProfit = (sale: LocalSale) => {
+    return sale.items.reduce((acc, item) => {
+      return acc + (item.product.salePrice - item.product.costPrice) * item.quantity - item.discount;
+    }, 0);
   };
 
   return (
@@ -278,7 +280,12 @@ const LocalSalesHistoryPage: React.FC = () => {
                     <p className={`text-xl font-bold ${sale.status === 'cancelled' ? 'line-through text-muted-foreground' : 'text-primary'}`}>
                       {formatCurrency(sale.total)}
                     </p>
-                    <Badge variant="outline" className="text-xs">
+                    {sale.status === 'completed' && (
+                      <p className={`text-xs font-medium ${getSaleProfit(sale) >= 0 ? 'text-profit' : 'text-loss'}`}>
+                        Lucro: {formatCurrency(getSaleProfit(sale))}
+                      </p>
+                    )}
+                    <Badge variant="outline" className="text-xs mt-1">
                       {getPaymentLabel(sale.paymentMethod)}
                     </Badge>
                   </div>
