@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
+import NotificationBell from './NotificationBell';
 
 interface NavItem {
   label: string;
@@ -112,8 +113,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
       {/* Network Status */}
       {!collapsed && (
-        <div className="px-4 py-2 border-b border-sidebar-border">
+        <div className="px-4 py-2 border-b border-sidebar-border flex items-center justify-between">
           <NetworkIndicator />
+          <NotificationBell />
         </div>
       )}
 
