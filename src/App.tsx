@@ -29,6 +29,10 @@ import FiscalPage from "./pages/FiscalPage";
 import WalletPage from "./pages/WalletPage";
 import CommunityPage from "./pages/CommunityPage";
 import FinancialReportsPage from "./pages/FinancialReportsPage";
+import CRMPage from "./pages/CRMPage";
+import AccountingPage from "./pages/AccountingPage";
+import SuppliersPage from "./pages/SuppliersPage";
+import BIDashboardPage from "./pages/BIDashboardPage";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
 
@@ -146,6 +150,10 @@ const AppRoutes = () => {
         <Route path="/carteira" element={<WalletPage />} />
         <Route path="/comunidade" element={<CommunityPage />} />
         <Route path="/financeiro" element={<FinancialReportsPage />} />
+        <Route path="/contabilidade" element={<AccountingPage />} />
+        <Route path="/crm" element={<CRMPage />} />
+        <Route path="/fornecedores" element={<SuppliersPage />} />
+        <Route path="/bi" element={<BIDashboardPage />} />
       </Route>
       
       {/* Catch all */}

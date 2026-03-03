@@ -25,6 +25,10 @@ import {
   Crown,
   Calculator,
   MessageSquare,
+  UserCheck,
+  BookOpen,
+  Truck,
+  PieChart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
@@ -51,6 +55,10 @@ const navItems: NavItem[] = [
   { label: 'Relatórios', href: '/relatorios', icon: <BarChart3 className="w-5 h-5" />, adminOnly: true },
   { label: 'Fiscal', href: '/fiscal', icon: <Calculator className="w-5 h-5" />, adminOnly: true },
   { label: 'Financeiro', href: '/financeiro', icon: <TrendingUp className="w-5 h-5" />, adminOnly: true },
+  { label: 'Contabilidade', href: '/contabilidade', icon: <BookOpen className="w-5 h-5" />, adminOnly: true },
+  { label: 'CRM', href: '/crm', icon: <UserCheck className="w-5 h-5" />, adminOnly: true },
+  { label: 'Fornecedores', href: '/fornecedores', icon: <Truck className="w-5 h-5" />, adminOnly: true },
+  { label: 'BI', href: '/bi', icon: <PieChart className="w-5 h-5" />, adminOnly: true, ceoOnly: true },
   { label: 'Carteira', href: '/carteira', icon: <WalletCards className="w-5 h-5" />, adminOnly: false },
   { label: 'Configurações', href: '/configuracoes', icon: <Settings className="w-5 h-5" />, adminOnly: true },
   { label: 'Comunidade', href: '/comunidade', icon: <MessageSquare className="w-5 h-5" />, adminOnly: false },

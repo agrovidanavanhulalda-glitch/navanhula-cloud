@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_entries: {
+        Row: {
+          amount: number
+          category: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          reference_id: string | null
+          reference_type: string | null
+          store_id: string | null
+          type: Database["public"]["Enums"]["accounting_entry_type"]
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          store_id?: string | null
+          type: Database["public"]["Enums"]["accounting_entry_type"]
+        }
+        Update: {
+          amount?: number
+          category?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          store_id?: string | null
+          type?: Database["public"]["Enums"]["accounting_entry_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_entries_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_entries_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -167,6 +224,57 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      commissions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          paid_at: string | null
+          rate: number
+          sale_id: string | null
+          status: string | null
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          paid_at?: string | null
+          rate?: number
+          sale_id?: string | null
+          status?: string | null
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          paid_at?: string | null
+          rate?: number
+          sale_id?: string | null
+          status?: string | null
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commissions_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       community_comments: {
         Row: {
@@ -378,10 +486,14 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          last_purchase_at: string | null
           notes: string | null
           phone: string | null
           store_id: string | null
+          total_purchases: number | null
+          total_spent: number | null
           updated_at: string
+          vip_level: string | null
         }
         Insert: {
           address?: string | null
@@ -390,10 +502,14 @@ export type Database = {
           email?: string | null
           full_name: string
           id?: string
+          last_purchase_at?: string | null
           notes?: string | null
           phone?: string | null
           store_id?: string | null
+          total_purchases?: number | null
+          total_spent?: number | null
           updated_at?: string
+          vip_level?: string | null
         }
         Update: {
           address?: string | null
@@ -402,10 +518,14 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          last_purchase_at?: string | null
           notes?: string | null
           phone?: string | null
           store_id?: string | null
+          total_purchases?: number | null
+          total_spent?: number | null
           updated_at?: string
+          vip_level?: string | null
         }
         Relationships: [
           {
@@ -715,6 +835,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          commission_rate: number | null
           company_id: string | null
           created_at: string | null
           email: string
@@ -723,11 +844,14 @@ export type Database = {
           is_active: boolean | null
           onboarding_completed: boolean | null
           phone: string | null
+          shift_end: string | null
+          shift_start: string | null
           store_id: string | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          commission_rate?: number | null
           company_id?: string | null
           created_at?: string | null
           email: string
@@ -736,11 +860,14 @@ export type Database = {
           is_active?: boolean | null
           onboarding_completed?: boolean | null
           phone?: string | null
+          shift_end?: string | null
+          shift_start?: string | null
           store_id?: string | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          commission_rate?: number | null
           company_id?: string | null
           created_at?: string | null
           email?: string
@@ -749,6 +876,8 @@ export type Database = {
           is_active?: boolean | null
           onboarding_completed?: boolean | null
           phone?: string | null
+          shift_end?: string | null
+          shift_start?: string | null
           store_id?: string | null
           updated_at?: string | null
         }
@@ -765,6 +894,121 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_order_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          received_quantity: number | null
+          total: number
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id: string
+          product_id: string
+          quantity?: number
+          received_quantity?: number | null
+          total?: number
+          unit_cost?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          received_quantity?: number | null
+          total?: number
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          approved_by: string | null
+          company_id: string
+          created_at: string | null
+          id: string
+          notes: string | null
+          ordered_by: string
+          received_at: string | null
+          status: Database["public"]["Enums"]["purchase_order_status"] | null
+          store_id: string
+          supplier_id: string
+          total: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          approved_by?: string | null
+          company_id: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          ordered_by: string
+          received_at?: string | null
+          status?: Database["public"]["Enums"]["purchase_order_status"] | null
+          store_id: string
+          supplier_id: string
+          total?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          ordered_by?: string
+          received_at?: string | null
+          status?: Database["public"]["Enums"]["purchase_order_status"] | null
+          store_id?: string
+          supplier_id?: string
+          total?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
         ]
@@ -1062,6 +1306,59 @@ export type Database = {
           },
         ]
       }
+      suppliers: {
+        Row: {
+          address: string | null
+          company_id: string
+          contact_name: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          phone: string | null
+          total_debt: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          company_id: string
+          contact_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          total_debt?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          company_id?: string
+          contact_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          total_debt?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1329,10 +1626,17 @@ export type Database = {
       }
     }
     Enums: {
+      accounting_entry_type: "revenue" | "expense" | "tax" | "transfer"
       app_role: "admin" | "manager" | "seller" | "ceo"
       billing_payment_method: "mpesa" | "emola" | "manual"
       cash_register_status: "open" | "closed"
       payment_method: "cash" | "mpesa" | "emola" | "card" | "voucher"
+      purchase_order_status:
+        | "draft"
+        | "pending"
+        | "approved"
+        | "received"
+        | "cancelled"
       sale_status: "pending" | "completed" | "cancelled" | "refunded"
       stock_adjustment_reason:
         | "loss"
@@ -1469,10 +1773,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      accounting_entry_type: ["revenue", "expense", "tax", "transfer"],
       app_role: ["admin", "manager", "seller", "ceo"],
       billing_payment_method: ["mpesa", "emola", "manual"],
       cash_register_status: ["open", "closed"],
       payment_method: ["cash", "mpesa", "emola", "card", "voucher"],
+      purchase_order_status: [
+        "draft",
+        "pending",
+        "approved",
+        "received",
+        "cancelled",
+      ],
       sale_status: ["pending", "completed", "cancelled", "refunded"],
       stock_adjustment_reason: [
         "loss",
