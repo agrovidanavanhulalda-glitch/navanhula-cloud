@@ -33,6 +33,8 @@ import CRMPage from "./pages/CRMPage";
 import AccountingPage from "./pages/AccountingPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import BIDashboardPage from "./pages/BIDashboardPage";
+import AgriculturePage from "./pages/AgriculturePage";
+import PoultryPage from "./pages/PoultryPage";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
 
@@ -154,6 +156,8 @@ const AppRoutes = () => {
         <Route path="/crm" element={<CRMPage />} />
         <Route path="/fornecedores" element={<SuppliersPage />} />
         <Route path="/bi" element={<BIDashboardPage />} />
+        <Route path="/agricultura" element={<AgriculturePage />} />
+        <Route path="/avicultura" element={<PoultryPage />} />
       </Route>
       
       {/* Catch all */}
