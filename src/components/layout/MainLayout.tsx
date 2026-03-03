@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Menu, ShoppingCart } from 'lucide-react';
 import NetworkIndicator from './NetworkIndicator';
+import NotificationBell from './NotificationBell';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
@@ -35,7 +36,10 @@ const MainLayout: React.FC = () => {
             <span className="font-bold text-gradient-primary">NAVANHULA</span>
           </div>
           
-          <NetworkIndicator />
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <NetworkIndicator />
+          </div>
         </header>
 
         {/* Mobile content */}
