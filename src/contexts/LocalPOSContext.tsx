@@ -20,13 +20,20 @@ export interface LocalCartItem {
 }
 
 export interface PaymentDetails {
-  method: 'cash' | 'mpesa' | 'emola' | 'card' | 'split';
+  method: 'cash' | 'mpesa' | 'emola' | 'card' | 'split' | 'voucher';
   amountReceived: number;
   change: number;
   splitDetails?: {
     cashAmount: number;
     electronicAmount: number;
     electronicMethod: 'mpesa' | 'emola' | 'card';
+  };
+  voucherDetails?: {
+    code: string;
+    voucherId: string;
+    originalMethod: string;
+    customerName?: string;
+    phoneNumber?: string;
   };
 }
 

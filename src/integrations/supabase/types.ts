@@ -363,6 +363,72 @@ export type Database = {
           },
         ]
       }
+      payment_vouchers: {
+        Row: {
+          amount: number
+          code: string
+          created_at: string
+          customer_name: string | null
+          expires_at: string
+          id: string
+          payment_method: string
+          phone_number: string | null
+          redeemed_at: string | null
+          redeemed_by: string | null
+          sale_id: string | null
+          status: Database["public"]["Enums"]["voucher_status"]
+          store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          code: string
+          created_at?: string
+          customer_name?: string | null
+          expires_at?: string
+          id?: string
+          payment_method: string
+          phone_number?: string | null
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          sale_id?: string | null
+          status?: Database["public"]["Enums"]["voucher_status"]
+          store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          code?: string
+          created_at?: string
+          customer_name?: string | null
+          expires_at?: string
+          id?: string
+          payment_method?: string
+          phone_number?: string | null
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          sale_id?: string | null
+          status?: Database["public"]["Enums"]["voucher_status"]
+          store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_vouchers_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_vouchers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_history: {
         Row: {
           changed_by: string | null
@@ -959,12 +1025,16 @@ export type Database = {
         }
         Returns: Json
       }
+      validate_and_redeem_voucher: {
+        Args: { p_code: string; p_store_id?: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "manager" | "seller" | "ceo"
       billing_payment_method: "mpesa" | "emola" | "manual"
       cash_register_status: "open" | "closed"
-      payment_method: "cash" | "mpesa" | "emola" | "card"
+      payment_method: "cash" | "mpesa" | "emola" | "card" | "voucher"
       sale_status: "pending" | "completed" | "cancelled" | "refunded"
       stock_adjustment_reason:
         | "loss"
@@ -973,6 +1043,7 @@ export type Database = {
         | "admin_adjustment"
         | "inventory_correction"
       subscription_status: "active" | "warning" | "blocked" | "cancelled"
+      voucher_status: "pending" | "redeemed" | "expired" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1103,7 +1174,7 @@ export const Constants = {
       app_role: ["admin", "manager", "seller", "ceo"],
       billing_payment_method: ["mpesa", "emola", "manual"],
       cash_register_status: ["open", "closed"],
-      payment_method: ["cash", "mpesa", "emola", "card"],
+      payment_method: ["cash", "mpesa", "emola", "card", "voucher"],
       sale_status: ["pending", "completed", "cancelled", "refunded"],
       stock_adjustment_reason: [
         "loss",
@@ -1113,6 +1184,7 @@ export const Constants = {
         "inventory_correction",
       ],
       subscription_status: ["active", "warning", "blocked", "cancelled"],
+      voucher_status: ["pending", "redeemed", "expired", "cancelled"],
     },
   },
 } as const
