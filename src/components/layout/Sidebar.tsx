@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -29,6 +30,8 @@ import {
   BookOpen,
   Truck,
   PieChart,
+  Sprout,
+  Bird,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
@@ -40,6 +43,7 @@ interface NavItem {
   icon: React.ReactNode;
   adminOnly: boolean;
   ceoOnly?: boolean;
+  module?: 'agricultura' | 'avicultura';
 }
 
 const navItems: NavItem[] = [
@@ -50,6 +54,8 @@ const navItems: NavItem[] = [
   { label: 'Histórico', href: '/historico', icon: <History className="w-5 h-5" />, adminOnly: false },
   { label: 'Produtos', href: '/produtos', icon: <Package className="w-5 h-5" />, adminOnly: true },
   { label: 'Estoque', href: '/estoque', icon: <Boxes className="w-5 h-5" />, adminOnly: true },
+  { label: 'Agricultura', href: '/agricultura', icon: <Sprout className="w-5 h-5" />, adminOnly: true, module: 'agricultura' },
+  { label: 'Avicultura', href: '/avicultura', icon: <Bird className="w-5 h-5" />, adminOnly: true, module: 'avicultura' },
   { label: 'Vendedores', href: '/vendedores', icon: <Users className="w-5 h-5" />, adminOnly: true },
   { label: 'Lojas', href: '/lojas', icon: <Store className="w-5 h-5" />, adminOnly: true },
   { label: 'Relatórios', href: '/relatorios', icon: <BarChart3 className="w-5 h-5" />, adminOnly: true },
@@ -74,26 +80,33 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const navigate = useNavigate();
   const { user, company, store, signOut, role } = useAuth();
   const { currentCashRegister } = useLocalPOS();
+  const [modules, setModules] = useState<{ agricultura: boolean; avicultura: boolean }>({ agricultura: false, avicultura: false });
 
-  // Determine if current user is admin based on local seller context
-  // For now, use the SaaS role or assume admin if no specific role
+  // Fetch business modules for this company
+  useEffect(() => {
+    if (!company?.id) return;
+    supabase.from('business_modules').select('agricultura, avicultura').eq('company_id', company.id).single()
+      .then(({ data }) => {
+        if (data) setModules({ agricultura: !!(data as any).agricultura, avicultura: !!(data as any).avicultura });
+      });
+  }, [company?.id]);
+
   const isAdmin = role === 'admin' || role === 'manager' || (role as string) === 'ceo';
   const isCEO = (role as string) === 'ceo' || role === 'admin';
-  // Get current operator name from cash register
   const currentOperator = currentCashRegister?.sellerName || user?.full_name || 'Operador';
   const currentOperatorRole = (role as string) === 'ceo' ? 'CEO' :
                               currentCashRegister?.sellerId?.includes('admin') ? 'Administrador' : 
                               isAdmin ? 'Administrador' : 'Vendedor';
 
-  // Handle logout
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
   };
 
-  // Filter nav items based on role
   const visibleNavItems = navItems.filter(item => {
     if (item.ceoOnly && !isCEO) return false;
+    if (item.module === 'agricultura' && !modules.agricultura && !isCEO) return false;
+    if (item.module === 'avicultura' && !modules.avicultura && !isCEO) return false;
     if (!item.adminOnly) return true;
     return isAdmin;
   });
