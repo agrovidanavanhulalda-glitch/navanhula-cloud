@@ -71,6 +71,35 @@ export type Database = {
           },
         ]
       }
+      active_store: {
+        Row: {
+          id: string
+          store_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          store_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          store_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_store_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -339,6 +368,7 @@ export type Database = {
       }
       community_posts: {
         Row: {
+          audio_url: string | null
           category: string
           comments_count: number
           company_id: string | null
@@ -350,8 +380,10 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          video_url: string | null
         }
         Insert: {
+          audio_url?: string | null
           category?: string
           comments_count?: number
           company_id?: string | null
@@ -363,8 +395,10 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          video_url?: string | null
         }
         Update: {
+          audio_url?: string | null
           category?: string
           comments_count?: number
           company_id?: string | null
@@ -376,6 +410,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -1193,47 +1228,62 @@ export type Database = {
       stores: {
         Row: {
           address: string | null
+          business_type: string | null
           city: string | null
           company_id: string | null
           created_at: string | null
+          default_min_stock: number | null
           email: string | null
+          fiscal_regime: string | null
           id: string
           is_active: boolean | null
           last_online_at: string | null
           latitude: number | null
           longitude: number | null
           name: string
+          nuit: string | null
           phone: string | null
+          plan: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
+          business_type?: string | null
           city?: string | null
           company_id?: string | null
           created_at?: string | null
+          default_min_stock?: number | null
           email?: string | null
+          fiscal_regime?: string | null
           id?: string
           is_active?: boolean | null
           last_online_at?: string | null
           latitude?: number | null
           longitude?: number | null
           name: string
+          nuit?: string | null
           phone?: string | null
+          plan?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
+          business_type?: string | null
           city?: string | null
           company_id?: string | null
           created_at?: string | null
+          default_min_stock?: number | null
           email?: string | null
+          fiscal_regime?: string | null
           id?: string
           is_active?: boolean | null
           last_online_at?: string | null
           latitude?: number | null
           longitude?: number | null
           name?: string
+          nuit?: string | null
           phone?: string | null
+          plan?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -1610,6 +1660,7 @@ export type Database = {
         }
         Returns: Json
       }
+      set_active_store: { Args: { p_store_id: string }; Returns: Json }
       toggle_post_like: { Args: { p_post_id: string }; Returns: Json }
       transfer_between_stores: {
         Args: {

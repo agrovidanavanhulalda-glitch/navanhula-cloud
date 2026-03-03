@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,7 +50,7 @@ interface TopProduct {
 }
 
 const CHART_COLORS = [
-  'hsl(217, 91%, 60%)', 'hsl(142, 76%, 36%)', 'hsl(38, 92%, 50%)',
+  'hsl(var(--primary))', 'hsl(142, 76%, 36%)', 'hsl(38, 92%, 50%)',
   'hsl(199, 89%, 48%)', 'hsl(0, 84%, 60%)', 'hsl(160, 84%, 39%)',
 ];
 
@@ -64,7 +64,7 @@ const CEODashboardPage: React.FC = () => {
 
   const isCEO = (role as string) === 'ceo' || role === 'admin';
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [statsRes, storesRes, productsRes] = await Promise.all([
@@ -81,9 +81,21 @@ const CEODashboardPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
 
-  useEffect(() => { fetchData(); }, [period]);
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Realtime subscription on sales
+  useEffect(() => {
+    const channel = supabase
+      .channel('ceo-sales-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchData]);
 
   if (!isCEO) {
     return (
@@ -120,53 +132,23 @@ const CEODashboardPage: React.FC = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <Card className="pos-stat">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Store className="w-4 h-4" /> Lojas Ativas
-          </div>
-          <p className="text-2xl font-bold">{stats?.total_stores ?? 0}</p>
-          <div className="flex items-center gap-1 text-xs">
-            <Wifi className="w-3 h-3 text-success" />
-            <span className="text-success">{stats?.stores_online ?? 0} online</span>
-          </div>
-        </Card>
-
-        <Card className="pos-stat">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <ShoppingCart className="w-4 h-4" /> Vendas Hoje
-          </div>
-          <p className="text-2xl font-bold">{stats?.total_sales_today ?? 0}</p>
-          <p className="text-xs text-muted-foreground">{stats?.active_registers ?? 0} caixas abertos</p>
-        </Card>
-
-        <Card className="pos-stat">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <DollarSign className="w-4 h-4" /> Receita Hoje
-          </div>
-          <p className="text-2xl font-bold pos-money text-primary">{formatCurrency(stats?.revenue_today ?? 0)}</p>
-        </Card>
-
-        <Card className="pos-stat">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <TrendingUp className="w-4 h-4" /> Receita Mês
-          </div>
-          <p className="text-2xl font-bold pos-money">{formatCurrency(stats?.revenue_month ?? 0)}</p>
-          <p className="text-xs text-success">Lucro: {formatCurrency(stats?.profit_month ?? 0)}</p>
-        </Card>
-
-        <Card className="pos-stat">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Package className="w-4 h-4" /> Estoque Baixo
-          </div>
-          <p className={`text-2xl font-bold ${(stats?.low_stock_count ?? 0) > 0 ? 'text-warning' : ''}`}>
-            {stats?.low_stock_count ?? 0}
-          </p>
-          <p className="text-xs text-muted-foreground">{stats?.total_products ?? 0} produtos total</p>
-        </Card>
+        {[
+          { icon: Store, label: 'Lojas Ativas', value: stats?.total_stores ?? 0, sub: <><Wifi className="w-3 h-3 text-green-500" /> <span className="text-green-500">{stats?.stores_online ?? 0} online</span></> },
+          { icon: ShoppingCart, label: 'Vendas Hoje', value: stats?.total_sales_today ?? 0, sub: `${stats?.active_registers ?? 0} caixas abertos` },
+          { icon: DollarSign, label: 'Receita Hoje', value: formatCurrency(stats?.revenue_today ?? 0), highlight: true },
+          { icon: TrendingUp, label: 'Receita Mês', value: formatCurrency(stats?.revenue_month ?? 0), sub: <span className="text-green-500">Lucro: {formatCurrency(stats?.profit_month ?? 0)}</span> },
+          { icon: Package, label: 'Estoque Baixo', value: stats?.low_stock_count ?? 0, warn: (stats?.low_stock_count ?? 0) > 0, sub: `${stats?.total_products ?? 0} produtos total` },
+        ].map((kpi, i) => (
+          <Card key={i} className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm"><kpi.icon className="w-4 h-4" /> {kpi.label}</div>
+            <p className={`text-2xl font-bold mt-1 ${kpi.highlight ? 'text-primary' : ''} ${kpi.warn ? 'text-orange-500' : ''}`}>{kpi.value}</p>
+            {kpi.sub && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">{kpi.sub}</p>}
+          </Card>
+        ))}
       </div>
 
-      {/* Tabs for period */}
-      <Tabs value={period} onValueChange={(v) => setPeriod(v as 'today' | 'week' | 'month')}>
+      {/* Tabs */}
+      <Tabs value={period} onValueChange={v => setPeriod(v as any)}>
         <TabsList>
           <TabsTrigger value="today">Hoje</TabsTrigger>
           <TabsTrigger value="week">Semana</TabsTrigger>
@@ -174,133 +156,93 @@ const CEODashboardPage: React.FC = () => {
         </TabsList>
 
         <TabsContent value={period} className="space-y-6 mt-4">
-          {/* Store Performance + Payment Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Revenue by Store */}
             <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" /> Receita por Loja
-                </CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="text-lg flex items-center gap-2"><BarChart3 className="w-5 h-5" /> Receita por Loja</CardTitle></CardHeader>
               <CardContent>
                 {storeData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={storeData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(217, 33%, 22%)" />
-                      <XAxis dataKey="store_name" tick={{ fill: 'hsl(215, 20%, 65%)', fontSize: 12 }} />
-                      <YAxis tick={{ fill: 'hsl(215, 20%, 65%)', fontSize: 12 }} />
-                      <Tooltip
-                        contentStyle={{ background: 'hsl(222, 47%, 14%)', border: '1px solid hsl(217, 33%, 22%)' }}
-                        formatter={(value: number) => formatCurrency(value)}
-                      />
-                      <Bar dataKey="total_revenue" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} name="Receita" />
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="store_name" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                      <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Bar dataKey="total_revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Receita" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    Sem dados de vendas para o período
-                  </div>
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">Sem dados de vendas para o período</div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Payment Methods */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Métodos de Pagamento</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="text-lg">Métodos de Pagamento</CardTitle></CardHeader>
               <CardContent>
                 {paymentPieData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                       <Pie data={paymentPieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                        {paymentPieData.map((_, i) => (
-                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                        ))}
+                        {paymentPieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                       </Pie>
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ background: 'hsl(222, 47%, 14%)', border: '1px solid hsl(217, 33%, 22%)' }} />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
-                    Sem dados
-                  </div>
+                  <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">Sem dados</div>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Store Status + Top Products */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Store Status Map */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Store className="w-5 h-5" /> Status das Lojas
-                </CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Store className="w-5 h-5" /> Status das Lojas</CardTitle></CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-[350px] overflow-auto">
-                  {storeData.map((store) => {
-                    const isOnline = store.last_online_at && 
-                      new Date(store.last_online_at).getTime() > Date.now() - 10 * 60 * 1000;
+                  {storeData.map(store => {
+                    const isOnline = store.last_online_at && new Date(store.last_online_at).getTime() > Date.now() - 10 * 60 * 1000;
                     return (
                       <div key={store.store_id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                         <div className="flex items-center gap-3">
-                          {isOnline ? (
-                            <Wifi className="w-4 h-4 text-success" />
-                          ) : (
-                            <WifiOff className="w-4 h-4 text-destructive" />
-                          )}
+                          {isOnline ? <Wifi className="w-4 h-4 text-green-500" /> : <WifiOff className="w-4 h-4 text-destructive" />}
                           <div>
                             <p className="font-medium text-sm">{store.store_name}</p>
                             <p className="text-xs text-muted-foreground">{store.city || 'Sem cidade'}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-sm pos-money">{formatCurrency(store.total_revenue)}</p>
+                          <p className="font-bold text-sm">{formatCurrency(store.total_revenue)}</p>
                           <p className="text-xs text-muted-foreground">{store.total_sales} vendas</p>
                         </div>
                       </div>
                     );
                   })}
-                  {storeData.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">Nenhuma loja encontrada</p>
-                  )}
+                  {storeData.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhuma loja encontrada</p>}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Top Products */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Package className="w-5 h-5" /> Produtos Mais Vendidos (Mês)
-                </CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Package className="w-5 h-5" /> Produtos Mais Vendidos (Mês)</CardTitle></CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-[350px] overflow-auto">
                   {topProducts.map((product, i) => (
                     <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                       <div className="flex items-center gap-3">
-                        <Badge variant="secondary" className="w-7 h-7 rounded-full flex items-center justify-center p-0 text-xs">
-                          {i + 1}
-                        </Badge>
+                        <Badge variant="secondary" className="w-7 h-7 rounded-full flex items-center justify-center p-0 text-xs">{i + 1}</Badge>
                         <div>
                           <p className="font-medium text-sm">{product.product_name}</p>
                           <p className="text-xs text-muted-foreground">{product.total_quantity} unidades</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-sm pos-money">{formatCurrency(product.total_revenue)}</p>
-                        <p className="text-xs text-success">Lucro: {formatCurrency(product.total_profit ?? 0)}</p>
+                        <p className="font-bold text-sm">{formatCurrency(product.total_revenue)}</p>
+                        <p className="text-xs text-green-500">Lucro: {formatCurrency(product.total_profit ?? 0)}</p>
                       </div>
                     </div>
                   ))}
-                  {topProducts.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">Sem dados de vendas</p>
-                  )}
+                  {topProducts.length === 0 && <p className="text-center text-muted-foreground py-8">Sem dados de vendas</p>}
                 </div>
               </CardContent>
             </Card>
