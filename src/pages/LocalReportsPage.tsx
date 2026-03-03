@@ -299,78 +299,27 @@ const LocalReportsPage: React.FC = () => {
       </Card>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <ShoppingCart className="w-5 h-5 text-primary" />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        {[
+          { icon: ShoppingCart, label: 'Vendas', value: String(stats.salesCount), color: 'primary' },
+          { icon: DollarSign, label: 'Receita', value: formatCurrency(stats.totalRevenue), color: 'success' },
+          { icon: TrendingUp, label: 'Lucro', value: formatCurrency(stats.totalProfit), color: 'profit', textColor: 'text-profit' },
+          { icon: BarChart3, label: 'Ticket Médio', value: formatCurrency(stats.averageTicket), color: 'accent' },
+          { icon: Calendar, label: 'Descontos', value: formatCurrency(stats.totalDiscount), color: 'warning', textColor: 'text-warning' },
+          { icon: XCircle, label: 'Canceladas', value: String(stats.cancelledCount), color: 'destructive', textColor: 'text-destructive' },
+        ].map((stat, i) => (
+          <Card key={i} className="p-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full bg-${stat.color}/10 flex items-center justify-center flex-shrink-0`}>
+                <stat.icon className={`w-5 h-5 text-${stat.color}`} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground truncate">{stat.label}</p>
+                <p className={`text-lg font-bold truncate ${stat.textColor || ''}`}>{stat.value}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Vendas</p>
-              <p className="text-2xl font-bold">{stats.salesCount}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-success" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Receita</p>
-              <p className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-profit/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-profit" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Lucro</p>
-              <p className="text-2xl font-bold text-profit">{formatCurrency(stats.totalProfit)}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-accent" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Ticket Médio</p>
-              <p className="text-2xl font-bold">{formatCurrency(stats.averageTicket)}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-warning" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Descontos</p>
-              <p className="text-2xl font-bold text-warning">{formatCurrency(stats.totalDiscount)}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-              <XCircle className="w-5 h-5 text-destructive" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Canceladas</p>
-              <p className="text-2xl font-bold text-destructive">{stats.cancelledCount}</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        ))}
       </div>
 
       {/* Tabs for different report views */}

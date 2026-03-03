@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { LocalSeller, useLocalPOS } from './LocalPOSContext';
 
 /**
@@ -30,8 +30,6 @@ export type POSFeature =
 
 const LocalSellerAuthContext = createContext<LocalSellerAuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'navanhula_current_seller';
-
 export const useLocalSellerAuth = () => {
   const context = useContext(LocalSellerAuthContext);
   if (!context) {
@@ -43,21 +41,6 @@ export const useLocalSellerAuth = () => {
 export const LocalSellerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { sellers } = useLocalPOS();
   const [currentSeller, setCurrentSeller] = useState<LocalSeller | null>(null);
-
-  // Load saved seller on mount
-  useEffect(() => {
-    try {
-      const savedSellerId = localStorage.getItem(STORAGE_KEY);
-      if (savedSellerId) {
-        const seller = sellers.find(s => s.id === savedSellerId && s.isActive);
-        if (seller) {
-          setCurrentSeller(seller);
-        }
-      }
-    } catch {
-      // Ignore errors
-    }
-  }, [sellers]);
 
   const loginSeller = useCallback((sellerId: string, password: string): boolean => {
     const seller = sellers.find(s => s.id === sellerId && s.isActive);
@@ -71,13 +54,11 @@ export const LocalSellerAuthProvider: React.FC<{ children: React.ReactNode }> = 
     }
 
     setCurrentSeller(seller);
-    localStorage.setItem(STORAGE_KEY, seller.id);
     return true;
   }, [sellers]);
 
   const logoutSeller = useCallback(() => {
     setCurrentSeller(null);
-    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   const isAdmin = currentSeller?.role === 'admin';

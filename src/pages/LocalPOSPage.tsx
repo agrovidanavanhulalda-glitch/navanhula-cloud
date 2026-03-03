@@ -100,7 +100,7 @@ const LocalPOSPage: React.FC = () => {
   const lastSale = getLastSale();
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex">
+    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row">
       {/* Products Grid - Left Side */}
       <div className="flex-1 p-4 overflow-auto">
         {/* Header */}
@@ -206,7 +206,7 @@ const LocalPOSPage: React.FC = () => {
       </div>
 
       {/* Cart - Right Side */}
-      <div className="w-96 border-l bg-card flex flex-col">
+      <div className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-card flex flex-col max-h-[50vh] md:max-h-none">
         {/* Cart Header */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">

@@ -136,7 +136,7 @@ const LocalCashRegisterPage: React.FC = () => {
         ) : (
           <Button 
             size="lg"
-            className="text-lg px-8 py-6 bg-green-600 hover:bg-green-700"
+            className="text-lg px-8 py-6 bg-success hover:bg-success/90 text-success-foreground"
             onClick={() => setShowOpenDialog(true)}
           >
             <Play className="w-5 h-5 mr-2" />
@@ -147,20 +147,20 @@ const LocalCashRegisterPage: React.FC = () => {
 
       {/* Current Register Status - ALTO CONTRASTE */}
       {currentCashRegister ? (
-        <Card className="p-8 mb-8 border-2 border-green-500 bg-green-950/30">
+        <Card className="p-8 mb-8 border-2 border-success bg-success/5">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-400" />
+              <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-success" />
               </div>
               <div>
-                <h3 className="font-bold text-2xl text-green-400">CAIXA ABERTO</h3>
+                <h3 className="font-bold text-2xl text-success">CAIXA ABERTO</h3>
                 <p className="text-lg text-muted-foreground">
                   Operador: <span className="font-semibold text-foreground">{currentCashRegister.sellerName}</span>
                 </p>
               </div>
             </div>
-            <Badge className="bg-green-500 text-white text-lg px-4 py-2">
+            <Badge className="bg-success text-success-foreground text-lg px-4 py-2">
               ABERTO
             </Badge>
           </div>
@@ -170,9 +170,9 @@ const LocalCashRegisterPage: React.FC = () => {
               <p className="text-muted-foreground text-sm mb-1">Abertura</p>
               <p className="text-3xl font-bold">{formatCurrency(currentCashRegister.openingAmount)}</p>
             </Card>
-            <Card className="p-6 bg-card border-2 border-green-500/50">
+            <Card className="p-6 bg-card border-2 border-success/50">
               <p className="text-muted-foreground text-sm mb-1">Vendas do Dia</p>
-              <p className="text-3xl font-bold text-green-400">{formatCurrency(currentCashRegister.salesTotal)}</p>
+              <p className="text-3xl font-bold text-success">{formatCurrency(currentCashRegister.salesTotal)}</p>
             </Card>
             <Card className="p-6 bg-card border-2">
               <p className="text-muted-foreground text-sm mb-1">Qtd. Vendas</p>
@@ -232,7 +232,7 @@ const LocalCashRegisterPage: React.FC = () => {
                     <div className="flex items-center gap-4">
                       <Badge 
                         variant={register.status === 'open' ? 'default' : 'secondary'}
-                        className={register.status === 'open' ? 'bg-green-500 text-lg' : 'text-lg'}
+                        className={register.status === 'open' ? 'bg-success text-success-foreground text-lg' : 'text-lg'}
                       >
                         {register.status === 'open' ? 'Aberto' : 'Fechado'}
                       </Badge>
@@ -260,7 +260,7 @@ const LocalCashRegisterPage: React.FC = () => {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Vendas:</span>
-                      <span className="ml-2 font-semibold text-green-500">{formatCurrency(register.salesTotal)}</span>
+                      <span className="ml-2 font-semibold text-success">{formatCurrency(register.salesTotal)}</span>
                     </div>
                     {register.closingAmount !== undefined && (
                       <div>
@@ -351,7 +351,7 @@ const LocalCashRegisterPage: React.FC = () => {
               size="lg" 
               onClick={handleOpenRegister}
               disabled={!selectedSellerId}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-success hover:bg-success/90 text-success-foreground"
             >
               <Play className="w-5 h-5 mr-2" />
               Abrir Caixa
@@ -376,7 +376,7 @@ const LocalCashRegisterPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-base">
                   <span>Total de Vendas:</span>
-                  <span className="font-semibold text-green-500">{formatCurrency(currentCashRegister.salesTotal)}</span>
+                  <span className="font-semibold text-success">{formatCurrency(currentCashRegister.salesTotal)}</span>
                 </div>
                 <div className="flex justify-between border-t pt-3 text-lg">
                   <span className="font-bold">Valor Esperado:</span>
@@ -413,7 +413,7 @@ const LocalCashRegisterPage: React.FC = () => {
                     {(() => {
                       const diff = parseFloat(closingAmount) - (currentCashRegister.openingAmount + currentCashRegister.salesTotal);
                       return (
-                        <span className={`font-bold text-xl ${diff >= 0 ? 'text-green-500' : 'text-destructive'}`}>
+                        <span className={`font-bold text-xl ${diff >= 0 ? 'text-success' : 'text-destructive'}`}>
                           {diff >= 0 ? '+' : ''}{formatCurrency(diff)}
                         </span>
                       );
