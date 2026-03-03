@@ -27,6 +27,7 @@ import SubscriptionPage from "./pages/SubscriptionPage";
 import CEODashboardPage from "./pages/CEODashboardPage";
 import FiscalPage from "./pages/FiscalPage";
 import WalletPage from "./pages/WalletPage";
+import CommunityPage from "./pages/CommunityPage";
 import MainLayout from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
 
@@ -142,6 +143,7 @@ const AppRoutes = () => {
         <Route path="/ceo" element={<CEODashboardPage />} />
         <Route path="/fiscal" element={<FiscalPage />} />
         <Route path="/carteira" element={<WalletPage />} />
+        <Route path="/comunidade" element={<CommunityPage />} />
       </Route>
       
       {/* Catch all */}
