@@ -96,13 +96,25 @@ const CommunityPage: React.FC = () => {
         likes?.forEach(l => likedPostIds.add(l.post_id));
       }
 
-      setPosts((data || []).map(p => ({
-        ...p,
-        author_name: profileMap[p.user_id] || 'Utilizador',
-        liked_by_me: likedPostIds.has(p.id),
-      })));
-    } catch (err) {
-      console.error('Error fetching posts:', err);
+      // Resolve signed URLs for private media
+      const postsWithUrls = await Promise.all((data || []).map(async (p) => {
+        const [signedImage, signedVideo, signedAudio] = await Promise.all([
+          getSignedUrl(p.image_url),
+          getSignedUrl(p.video_url),
+          getSignedUrl(p.audio_url),
+        ]);
+        return {
+          ...p,
+          image_url: signedImage,
+          video_url: signedVideo,
+          audio_url: signedAudio,
+          author_name: profileMap[p.user_id] || 'Utilizador',
+          liked_by_me: likedPostIds.has(p.id),
+        };
+      }));
+      setPosts(postsWithUrls);
+    } catch (_err) {
+      // Failed to fetch posts
     } finally {
       setLoading(false);
     }
@@ -146,11 +158,21 @@ const CommunityPage: React.FC = () => {
     const path = `${user.id}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('comunidade_media').upload(path, mediaFile);
     if (error) throw error;
-    const { data: urlData } = supabase.storage.from('comunidade_media').getPublicUrl(path);
-    const url = urlData.publicUrl;
-    if (mediaType === 'image') return { image_url: url };
-    if (mediaType === 'video') return { video_url: url };
-    return { audio_url: url };
+    // Store the path, not the public URL (bucket is private now)
+    const storagePath = path;
+    if (mediaType === 'image') return { image_url: storagePath };
+    if (mediaType === 'video') return { video_url: storagePath };
+    return { audio_url: storagePath };
+  };
+
+  // Generate signed URL for private media
+  const getSignedUrl = async (path: string | null): Promise<string | null> => {
+    if (!path) return null;
+    // If it's already a full URL (legacy), return as-is
+    if (path.startsWith('http')) return path;
+    const { data, error } = await supabase.storage.from('comunidade_media').createSignedUrl(path, 3600);
+    if (error) return null;
+    return data.signedUrl;
   };
 
   const handleCreatePost = async () => {
