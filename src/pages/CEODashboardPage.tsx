@@ -57,7 +57,7 @@ const CHART_COLORS = [
   'hsl(199, 89%, 48%)', 'hsl(0, 84%, 60%)', 'hsl(160, 84%, 39%)',
 ];
 
-const FISCAL_RATE = 0.17; // 17% IVA Mozambique
+const FISCAL_RATE = 0.16; // 16% IVA Mozambique
 
 const CEOKPICard: React.FC<{
   icon: React.ElementType;
@@ -251,7 +251,7 @@ const CEODashboardPage: React.FC = () => {
           label="IVA Estimado"
           value={formatCurrency(estimatedTax)}
           highlight="warning"
-          sub="17% s/ receita"
+          sub="16% s/ receita"
         />
       </div>
 
