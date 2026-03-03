@@ -12,19 +12,32 @@ import {
   Calculator,
   Check,
   ArrowRight,
-  Split
+  Split,
+  Ticket,
+  Loader2,
+  CheckCircle,
+  XCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface PaymentDetails {
-  method: 'cash' | 'mpesa' | 'emola' | 'card' | 'split';
+  method: 'cash' | 'mpesa' | 'emola' | 'card' | 'split' | 'voucher';
   amountReceived: number;
   change: number;
-  // Split payment details
   splitDetails?: {
     cashAmount: number;
     electronicAmount: number;
     electronicMethod: 'mpesa' | 'emola' | 'card';
+  };
+  voucherDetails?: {
+    code: string;
+    voucherId: string;
+    originalMethod: string;
+    customerName?: string;
+    phoneNumber?: string;
   };
 }
 
@@ -43,7 +56,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   total,
   onConfirm,
 }) => {
-  const [paymentType, setPaymentType] = useState<'single' | 'split'>('single');
+  const [paymentType, setPaymentType] = useState<'single' | 'split' | 'voucher'>('single');
   const [selectedMethod, setSelectedMethod] = useState<'cash' | 'mpesa' | 'emola' | 'card'>('cash');
   const [amountReceived, setAmountReceived] = useState<string>('');
   const [change, setChange] = useState<number>(0);
@@ -52,6 +65,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [cashAmount, setCashAmount] = useState<string>('');
   const [electronicAmount, setElectronicAmount] = useState<string>('');
   const [electronicMethod, setElectronicMethod] = useState<'mpesa' | 'emola' | 'card'>('mpesa');
+
+  // Voucher state
+  const [voucherCode, setVoucherCode] = useState('');
+  const [voucherValidating, setVoucherValidating] = useState(false);
+  const [voucherResult, setVoucherResult] = useState<{
+    success: boolean;
+    voucher_id?: string;
+    amount?: number;
+    payment_method?: string;
+    customer_name?: string;
+    phone_number?: string;
+    error?: string;
+    message?: string;
+  } | null>(null);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -63,6 +90,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setCashAmount('');
       setElectronicAmount('');
       setElectronicMethod('mpesa');
+      setVoucherCode('');
+      setVoucherValidating(false);
+      setVoucherResult(null);
     }
   }, [isOpen]);
 
@@ -124,6 +154,49 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     });
   };
 
+  const handleValidateVoucher = async () => {
+    if (!voucherCode.trim()) {
+      toast.error('Insira o código do voucher');
+      return;
+    }
+    setVoucherValidating(true);
+    setVoucherResult(null);
+    try {
+      const { data, error } = await supabase.rpc('validate_and_redeem_voucher', {
+        p_code: voucherCode.trim(),
+      });
+      if (error) throw error;
+      const result = data as any;
+      setVoucherResult(result);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (err: any) {
+      toast.error('Erro ao validar voucher');
+      setVoucherResult({ success: false, error: 'system_error', message: 'Erro de sistema' });
+    } finally {
+      setVoucherValidating(false);
+    }
+  };
+
+  const handleConfirmVoucher = () => {
+    if (!voucherResult?.success) return;
+    onConfirm({
+      method: 'voucher',
+      amountReceived: voucherResult.amount || total,
+      change: Math.max(0, (voucherResult.amount || 0) - total),
+      voucherDetails: {
+        code: voucherCode.trim(),
+        voucherId: voucherResult.voucher_id || '',
+        originalMethod: voucherResult.payment_method || '',
+        customerName: voucherResult.customer_name,
+        phoneNumber: voucherResult.phone_number,
+      },
+    });
+  };
+
   const canConfirmSingle = 
     selectedMethod !== 'cash' || 
     (parseFloat(amountReceived) || 0) >= total;
@@ -147,15 +220,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         </div>
 
         {/* Payment Type Tabs */}
-        <Tabs value={paymentType} onValueChange={(v) => setPaymentType(v as 'single' | 'split')}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="single" className="flex items-center gap-2">
-              <Banknote className="w-4 h-4" />
-              Pagamento Único
+        <Tabs value={paymentType} onValueChange={(v) => setPaymentType(v as 'single' | 'split' | 'voucher')}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="single" className="flex items-center gap-1 text-xs">
+              <Banknote className="w-3 h-3" />
+              Único
             </TabsTrigger>
-            <TabsTrigger value="split" className="flex items-center gap-2">
-              <Split className="w-4 h-4" />
-              Dividir Pagamento
+            <TabsTrigger value="split" className="flex items-center gap-1 text-xs">
+              <Split className="w-3 h-3" />
+              Dividir
+            </TabsTrigger>
+            <TabsTrigger value="voucher" className="flex items-center gap-1 text-xs">
+              <Ticket className="w-3 h-3" />
+              Voucher
             </TabsTrigger>
           </TabsList>
 
@@ -407,6 +484,120 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             >
               <Check className="w-5 h-5 mr-2" />
               Confirmar Pagamento Dividido
+            </Button>
+          </TabsContent>
+
+          {/* Voucher Payment */}
+          <TabsContent value="voucher" className="space-y-4">
+            <div className="text-center space-y-1">
+              <Ticket className="w-8 h-8 mx-auto text-primary" />
+              <p className="text-sm text-muted-foreground">
+                Insira o código/voucher recebido pelo cliente via SMS
+              </p>
+            </div>
+
+            {/* Voucher Code Input */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium block">Código do Voucher</label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Ex: NAV-ABC123"
+                  value={voucherCode}
+                  onChange={(e) => {
+                    setVoucherCode(e.target.value.toUpperCase());
+                    setVoucherResult(null);
+                  }}
+                  className="text-lg h-12 font-mono tracking-wider uppercase"
+                  autoFocus
+                  disabled={voucherValidating}
+                />
+                <Button
+                  className="h-12 px-6"
+                  onClick={handleValidateVoucher}
+                  disabled={!voucherCode.trim() || voucherValidating}
+                >
+                  {voucherValidating ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    'Validar'
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Validation Result */}
+            {voucherResult && (
+              <Card className={`p-4 ${voucherResult.success ? 'bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800' : 'bg-destructive/10 border-destructive/30'}`}>
+                {voucherResult.success ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-semibold">Voucher Válido!</span>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Valor:</span>
+                        <span className="font-bold text-lg">{formatCurrency(voucherResult.amount || 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Método Original:</span>
+                        <Badge variant="secondary">
+                          {voucherResult.payment_method === 'mpesa' ? 'M-Pesa' : voucherResult.payment_method === 'emola' ? 'E-Mola' : voucherResult.payment_method === 'mkesh' ? 'mKesh' : voucherResult.payment_method}
+                        </Badge>
+                      </div>
+                      {voucherResult.customer_name && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Cliente:</span>
+                          <span>{voucherResult.customer_name}</span>
+                        </div>
+                      )}
+                      {voucherResult.phone_number && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Telefone:</span>
+                          <span>{voucherResult.phone_number}</span>
+                        </div>
+                      )}
+                    </div>
+                    {(voucherResult.amount || 0) < total && (
+                      <Card className="p-2 bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800">
+                        <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 text-sm">
+                          <AlertTriangle className="w-4 h-4" />
+                          <span>Voucher cobre {formatCurrency(voucherResult.amount || 0)} de {formatCurrency(total)}. Faltam {formatCurrency(total - (voucherResult.amount || 0))}.</span>
+                        </div>
+                      </Card>
+                    )}
+                    {(voucherResult.amount || 0) > total && (
+                      <div className="flex justify-between text-primary font-bold">
+                        <span>Troco:</span>
+                        <span>{formatCurrency((voucherResult.amount || 0) - total)}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-destructive">
+                    <XCircle className="w-5 h-5" />
+                    <div>
+                      <span className="font-semibold">{voucherResult.message}</span>
+                      {voucherResult.error === 'already_redeemed' && (
+                        <p className="text-xs mt-1">Este código já foi utilizado em outra venda.</p>
+                      )}
+                      {voucherResult.error === 'expired' && (
+                        <p className="text-xs mt-1">O código expirou. Peça um novo ao cliente.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Confirm Button */}
+            <Button
+              className="w-full h-14 text-lg"
+              disabled={!voucherResult?.success || (voucherResult?.amount || 0) < total}
+              onClick={handleConfirmVoucher}
+            >
+              <Check className="w-5 h-5 mr-2" />
+              Confirmar Venda com Voucher
             </Button>
           </TabsContent>
         </Tabs>
