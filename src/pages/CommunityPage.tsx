@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SaaSAuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,10 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   Heart, MessageCircle, Send, Plus, TrendingUp, Lightbulb, HelpCircle,
-  Megaphone, Users, Clock, Trash2, Filter
+  Megaphone, Users, Clock, Trash2, Filter, Image, Video, Mic, X, Eye
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -26,6 +26,9 @@ interface CommunityPost {
   title: string;
   content: string;
   category: string;
+  image_url: string | null;
+  video_url: string | null;
+  audio_url: string | null;
   likes_count: number;
   comments_count: number;
   created_at: string;
@@ -66,40 +69,30 @@ const CommunityPage: React.FC = () => {
   const [comments, setComments] = useState<Record<string, Comment[]>>({});
   const [commentText, setCommentText] = useState<Record<string, string>>({});
 
+  // Media upload state
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<'image' | 'video' | 'audio' | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('community_posts')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (filterCategory !== 'all') {
-        query = query.eq('category', filterCategory);
-      }
-
+      let query = supabase.from('community_posts').select('*').order('created_at', { ascending: false }).limit(50);
+      if (filterCategory !== 'all') query = query.eq('category', filterCategory);
       const { data, error } = await query;
       if (error) throw error;
 
-      // Fetch author names
       const userIds = [...new Set((data || []).map(p => p.user_id))];
       let profileMap: Record<string, string> = {};
       if (userIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', userIds);
+        const { data: profiles } = await supabase.from('profiles').select('id, full_name').in('id', userIds);
         profiles?.forEach(p => { profileMap[p.id] = p.full_name; });
       }
 
-      // Check which posts user liked
       let likedPostIds: Set<string> = new Set();
       if (user?.id) {
-        const { data: likes } = await supabase
-          .from('community_likes')
-          .select('post_id')
-          .eq('user_id', user.id);
+        const { data: likes } = await supabase.from('community_likes').select('post_id').eq('user_id', user.id);
         likes?.forEach(l => likedPostIds.add(l.post_id));
       }
 
@@ -117,40 +110,70 @@ const CommunityPage: React.FC = () => {
 
   useEffect(() => { fetchPosts(); }, [filterCategory]);
 
-  // Realtime subscription
   useEffect(() => {
-    const channel = supabase
-      .channel('community-posts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_posts' }, () => {
-        fetchPosts();
-      })
+    const channel = supabase.channel('community-posts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_posts' }, () => fetchPosts())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [filterCategory]);
 
+  const handleFileSelect = (accept: string, type: 'image' | 'video' | 'audio') => {
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.accept = accept;
+    input.onchange = (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (file.size > 20 * 1024 * 1024) { toast.error('Ficheiro muito grande (máx. 20MB)'); return; }
+      setMediaFile(file);
+      setMediaType(type);
+      if (type === 'image') setMediaPreview(URL.createObjectURL(file));
+      else if (type === 'video') setMediaPreview(URL.createObjectURL(file));
+      else setMediaPreview(file.name);
+    };
+    input.click();
+  };
+
+  const clearMedia = () => {
+    setMediaFile(null);
+    setMediaPreview(null);
+    setMediaType(null);
+  };
+
+  const uploadMedia = async (): Promise<{ image_url?: string; video_url?: string; audio_url?: string }> => {
+    if (!mediaFile || !mediaType || !user?.id) return {};
+    const ext = mediaFile.name.split('.').pop();
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('comunidade_media').upload(path, mediaFile);
+    if (error) throw error;
+    const { data: urlData } = supabase.storage.from('comunidade_media').getPublicUrl(path);
+    const url = urlData.publicUrl;
+    if (mediaType === 'image') return { image_url: url };
+    if (mediaType === 'video') return { video_url: url };
+    return { audio_url: url };
+  };
+
   const handleCreatePost = async () => {
-    if (!newTitle.trim() || !newContent.trim()) {
-      toast({ title: 'Preencha título e conteúdo', variant: 'destructive' });
-      return;
-    }
+    if (!newTitle.trim() || !newContent.trim()) { toast.error('Preencha título e conteúdo'); return; }
     setSubmitting(true);
     try {
+      const mediaUrls = await uploadMedia();
       const { error } = await supabase.from('community_posts').insert({
         user_id: user!.id,
         company_id: (user as any)?.company_id || null,
         title: newTitle.trim(),
         content: newContent.trim(),
         category: newCategory,
+        ...mediaUrls,
       });
       if (error) throw error;
-      toast({ title: 'Post publicado!' });
-      setNewTitle('');
-      setNewContent('');
-      setNewCategory('general');
+      toast.success('Post publicado!');
+      setNewTitle(''); setNewContent(''); setNewCategory('general');
+      clearMedia();
       setNewPostOpen(false);
       fetchPosts();
     } catch (err: any) {
-      toast({ title: 'Erro ao publicar', description: err.message, variant: 'destructive' });
+      toast.error('Erro ao publicar: ' + err.message);
     } finally {
       setSubmitting(false);
     }
@@ -162,46 +185,26 @@ const CommunityPage: React.FC = () => {
       if (error) throw error;
       const result = data as any;
       setPosts(prev => prev.map(p =>
-        p.id === postId
-          ? { ...p, liked_by_me: result.liked, likes_count: p.likes_count + (result.liked ? 1 : -1) }
-          : p
+        p.id === postId ? { ...p, liked_by_me: result.liked, likes_count: p.likes_count + (result.liked ? 1 : -1) } : p
       ));
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      toast.error('Erro: ' + err.message);
     }
   };
 
   const fetchComments = async (postId: string) => {
-    const { data, error } = await supabase
-      .from('community_comments')
-      .select('*')
-      .eq('post_id', postId)
-      .order('created_at', { ascending: true });
-    if (error) return;
-
+    const { data } = await supabase.from('community_comments').select('*').eq('post_id', postId).order('created_at');
     const userIds = [...new Set((data || []).map(c => c.user_id))];
     let profileMap: Record<string, string> = {};
     if (userIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', userIds);
+      const { data: profiles } = await supabase.from('profiles').select('id, full_name').in('id', userIds);
       profiles?.forEach(p => { profileMap[p.id] = p.full_name; });
     }
-
-    setComments(prev => ({
-      ...prev,
-      [postId]: (data || []).map(c => ({ ...c, author_name: profileMap[c.user_id] || 'Utilizador' }))
-    }));
+    setComments(prev => ({ ...prev, [postId]: (data || []).map(c => ({ ...c, author_name: profileMap[c.user_id] || 'Utilizador' })) }));
   };
 
   const handleToggleComments = (postId: string) => {
-    if (expandedPost === postId) {
-      setExpandedPost(null);
-    } else {
-      setExpandedPost(postId);
-      fetchComments(postId);
-    }
+    if (expandedPost === postId) { setExpandedPost(null); } else { setExpandedPost(postId); fetchComments(postId); }
   };
 
   const handleAddComment = async (postId: string) => {
@@ -214,7 +217,7 @@ const CommunityPage: React.FC = () => {
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p));
       fetchComments(postId);
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      toast.error('Erro: ' + err.message);
     }
   };
 
@@ -222,63 +225,57 @@ const CommunityPage: React.FC = () => {
     try {
       const { error } = await supabase.from('community_posts').delete().eq('id', postId);
       if (error) throw error;
-      toast({ title: 'Post eliminado' });
+      toast.success('Post eliminado');
       fetchPosts();
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      toast.error('Erro: ' + err.message);
     }
   };
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-3xl mx-auto">
-      {/* Header */}
+      <input ref={fileInputRef} type="file" className="hidden" />
+
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Comunidade Empreendedora</h1>
+          <h1 className="text-2xl font-bold">Comunidade Empreendedora</h1>
           <p className="text-sm text-muted-foreground">Partilhe ideias, dicas e conecte-se com outros empreendedores</p>
         </div>
-        <Dialog open={newPostOpen} onOpenChange={setNewPostOpen}>
+        <Dialog open={newPostOpen} onOpenChange={v => { setNewPostOpen(v); if (!v) clearMedia(); }}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> Publicar</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Nova Publicação</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle>Nova Publicação</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
-              <div>
-                <Label>Título</Label>
-                <Input
-                  placeholder="Título do post..."
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                />
-              </div>
+              <div><Label>Título</Label><Input placeholder="Título do post..." value={newTitle} onChange={e => setNewTitle(e.target.value)} /></div>
               <div>
                 <Label>Categoria</Label>
                 <Select value={newCategory} onValueChange={setNewCategory}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map(c => (
-                      <SelectItem key={c.value} value={c.value}>
-                        <span className="flex items-center gap-2">{c.icon} {c.label}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectContent>{CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}><span className="flex items-center gap-2">{c.icon} {c.label}</span></SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Conteúdo</Label>
-                <Textarea
-                  placeholder="Partilhe a sua experiência, dica ou pergunta..."
-                  rows={5}
-                  value={newContent}
-                  onChange={(e) => setNewContent(e.target.value)}
-                />
+              <div><Label>Conteúdo</Label><Textarea placeholder="Partilhe a sua experiência..." rows={4} value={newContent} onChange={e => setNewContent(e.target.value)} /></div>
+
+              {/* Media buttons */}
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => handleFileSelect('image/*', 'image')}><Image className="w-4 h-4 mr-1" /> Imagem</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleFileSelect('video/*', 'video')}><Video className="w-4 h-4 mr-1" /> Vídeo</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleFileSelect('audio/*', 'audio')}><Mic className="w-4 h-4 mr-1" /> Áudio</Button>
               </div>
-              <Button className="w-full" onClick={handleCreatePost} disabled={submitting}>
-                {submitting ? 'Publicando...' : 'Publicar'}
-              </Button>
+
+              {/* Media preview */}
+              {mediaPreview && (
+                <div className="relative p-3 rounded-lg bg-muted/50">
+                  <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={clearMedia}><X className="w-4 h-4" /></Button>
+                  {mediaType === 'image' && <img src={mediaPreview} alt="Preview" className="max-h-40 rounded object-cover" />}
+                  {mediaType === 'video' && <video src={mediaPreview} className="max-h-40 rounded" controls />}
+                  {mediaType === 'audio' && <div className="flex items-center gap-2 text-sm"><Mic className="w-4 h-4" /> {mediaPreview}</div>}
+                </div>
+              )}
+
+              <Button className="w-full" onClick={handleCreatePost} disabled={submitting}>{submitting ? 'Publicando...' : 'Publicar'}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -286,43 +283,17 @@ const CommunityPage: React.FC = () => {
 
       {/* Category Filter */}
       <div className="flex gap-2 flex-wrap">
-        <Button
-          variant={filterCategory === 'all' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilterCategory('all')}
-        >
-          <Filter className="w-3 h-3 mr-1" /> Todos
-        </Button>
+        <Button variant={filterCategory === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilterCategory('all')}><Filter className="w-3 h-3 mr-1" /> Todos</Button>
         {CATEGORIES.map(c => (
-          <Button
-            key={c.value}
-            variant={filterCategory === c.value ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterCategory(c.value)}
-          >
-            {c.icon}
-            <span className="ml-1">{c.label}</span>
-          </Button>
+          <Button key={c.value} variant={filterCategory === c.value ? 'default' : 'outline'} size="sm" onClick={() => setFilterCategory(c.value)}>{c.icon}<span className="ml-1">{c.label}</span></Button>
         ))}
       </div>
 
-      {/* Posts Feed */}
+      {/* Posts */}
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map(i => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6"><div className="h-20 bg-muted rounded" /></CardContent>
-            </Card>
-          ))}
-        </div>
+        <div className="space-y-4">{[1, 2, 3].map(i => <Card key={i} className="animate-pulse"><CardContent className="p-6"><div className="h-20 bg-muted rounded" /></CardContent></Card>)}</div>
       ) : posts.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-medium text-foreground">Nenhuma publicação ainda</h3>
-            <p className="text-sm text-muted-foreground mt-1">Seja o primeiro a partilhar algo!</p>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-12 text-center"><Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" /><h3 className="text-lg font-medium">Nenhuma publicação ainda</h3><p className="text-sm text-muted-foreground mt-1">Seja o primeiro a partilhar algo!</p></CardContent></Card>
       ) : (
         <div className="space-y-4">
           {posts.map(post => {
@@ -335,89 +306,55 @@ const CommunityPage: React.FC = () => {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                          {(post.author_name || 'U').charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <Avatar className="h-9 w-9"><AvatarFallback className="bg-primary/10 text-primary text-sm">{(post.author_name || 'U').charAt(0).toUpperCase()}</AvatarFallback></Avatar>
                       <div>
-                        <p className="font-medium text-sm text-foreground">{post.author_name}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: pt })}
-                        </p>
+                        <p className="font-medium text-sm">{post.author_name}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" />{formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: pt })}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {catInfo.icon}
-                        <span className="ml-1">{catInfo.label}</span>
-                      </Badge>
+                      <Badge variant="secondary" className="text-xs">{catInfo.icon}<span className="ml-1">{catInfo.label}</span></Badge>
                       {post.user_id === user?.id && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDeletePost(post.id)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeletePost(post.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
                       )}
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="pb-3">
-                  <h3 className="font-semibold text-foreground mb-1">{post.title}</h3>
+                  <h3 className="font-semibold mb-1">{post.title}</h3>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{post.content}</p>
+
+                  {/* Media display */}
+                  {post.image_url && <img src={post.image_url} alt="Post" className="mt-3 rounded-lg max-h-80 w-full object-cover" />}
+                  {post.video_url && <video src={post.video_url} controls className="mt-3 rounded-lg max-h-80 w-full" />}
+                  {post.audio_url && <audio src={post.audio_url} controls className="mt-3 w-full" />}
 
                   <Separator className="my-3" />
 
-                  {/* Actions */}
                   <div className="flex items-center gap-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={post.liked_by_me ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground'}
-                      onClick={() => handleToggleLike(post.id)}
-                    >
-                      <Heart className={`w-4 h-4 mr-1 ${post.liked_by_me ? 'fill-current' : ''}`} />
-                      {post.likes_count}
+                    <Button variant="ghost" size="sm" className={post.liked_by_me ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground'} onClick={() => handleToggleLike(post.id)}>
+                      <Heart className={`w-4 h-4 mr-1 ${post.liked_by_me ? 'fill-current' : ''}`} />{post.likes_count}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground"
-                      onClick={() => handleToggleComments(post.id)}
-                    >
-                      <MessageCircle className="w-4 h-4 mr-1" />
-                      {post.comments_count}
+                    <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => handleToggleComments(post.id)}>
+                      <MessageCircle className="w-4 h-4 mr-1" />{post.comments_count}
                     </Button>
                   </div>
 
-                  {/* Comments section */}
                   {isExpanded && (
                     <div className="mt-3 space-y-3">
                       <Separator />
                       {postComments.map(comment => (
                         <div key={comment.id} className="flex items-start gap-2 pl-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-xs bg-muted">
-                              {(comment.author_name || 'U').charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                          <Avatar className="h-6 w-6"><AvatarFallback className="text-xs bg-muted">{(comment.author_name || 'U').charAt(0).toUpperCase()}</AvatarFallback></Avatar>
                           <div className="flex-1 bg-muted/50 rounded-lg p-2">
-                            <p className="text-xs font-medium text-foreground">{comment.author_name}</p>
+                            <p className="text-xs font-medium">{comment.author_name}</p>
                             <p className="text-sm text-muted-foreground">{comment.content}</p>
                           </div>
                         </div>
                       ))}
                       <div className="flex gap-2">
-                        <Input
-                          placeholder="Escreva um comentário..."
-                          value={commentText[post.id] || ''}
-                          onChange={(e) => setCommentText(prev => ({ ...prev, [post.id]: e.target.value }))}
-                          onKeyDown={(e) => e.key === 'Enter' && handleAddComment(post.id)}
-                          className="text-sm"
-                        />
-                        <Button size="icon" variant="ghost" onClick={() => handleAddComment(post.id)}>
-                          <Send className="w-4 h-4" />
-                        </Button>
+                        <Input placeholder="Escreva um comentário..." value={commentText[post.id] || ''} onChange={e => setCommentText(prev => ({ ...prev, [post.id]: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleAddComment(post.id)} className="text-sm" />
+                        <Button size="icon" variant="ghost" onClick={() => handleAddComment(post.id)}><Send className="w-4 h-4" /></Button>
                       </div>
                     </div>
                   )}
