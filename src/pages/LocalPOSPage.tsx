@@ -338,6 +338,8 @@ const LocalPOSPage: React.FC = () => {
         onClose={() => setShowPaymentModal(false)}
         total={getTotal()}
         onConfirm={handlePaymentConfirm}
+        storeId={store.id}
+        storeName={store.name}
       />
 
       {/* Thermal Receipt Modal */}

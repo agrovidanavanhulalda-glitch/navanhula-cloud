@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronRight,
   Wallet,
+  WalletCards,
   Users,
   BarChart3,
   Boxes,
@@ -46,6 +47,7 @@ const navItems: NavItem[] = [
   { label: 'Lojas', href: '/lojas', icon: <Store className="w-5 h-5" />, adminOnly: true },
   { label: 'Relatórios', href: '/relatorios', icon: <BarChart3 className="w-5 h-5" />, adminOnly: true },
   { label: 'Fiscal', href: '/fiscal', icon: <Calculator className="w-5 h-5" />, adminOnly: true },
+  { label: 'Carteira', href: '/carteira', icon: <WalletCards className="w-5 h-5" />, adminOnly: false },
   { label: 'Configurações', href: '/configuracoes', icon: <Settings className="w-5 h-5" />, adminOnly: true },
   { label: 'Assinatura', href: '/assinatura', icon: <CreditCard className="w-5 h-5" />, adminOnly: true },
 ];

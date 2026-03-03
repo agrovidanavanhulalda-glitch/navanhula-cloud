@@ -17,8 +17,10 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  QrCode
 } from 'lucide-react';
+import QRCodePayment from './QRCodePayment';
 import { formatCurrency } from '@/lib/formatters';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -46,6 +48,8 @@ interface PaymentModalProps {
   onClose: () => void;
   total: number;
   onConfirm: (paymentDetails: PaymentDetails) => void;
+  storeId?: string;
+  storeName?: string;
 }
 
 const QUICK_AMOUNTS = [50, 100, 200, 500, 1000, 2000];
@@ -55,8 +59,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   total,
   onConfirm,
+  storeId = '',
+  storeName = 'NAVANHULA',
 }) => {
-  const [paymentType, setPaymentType] = useState<'single' | 'split' | 'voucher'>('single');
+  const [paymentType, setPaymentType] = useState<'single' | 'split' | 'voucher' | 'qrcode'>('single');
   const [selectedMethod, setSelectedMethod] = useState<'cash' | 'mpesa' | 'emola' | 'card'>('cash');
   const [amountReceived, setAmountReceived] = useState<string>('');
   const [change, setChange] = useState<number>(0);
@@ -220,8 +226,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         </div>
 
         {/* Payment Type Tabs */}
-        <Tabs value={paymentType} onValueChange={(v) => setPaymentType(v as 'single' | 'split' | 'voucher')}>
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs value={paymentType} onValueChange={(v) => setPaymentType(v as 'single' | 'split' | 'voucher' | 'qrcode')}>
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="single" className="flex items-center gap-1 text-xs">
               <Banknote className="w-3 h-3" />
               Único
@@ -233,6 +239,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <TabsTrigger value="voucher" className="flex items-center gap-1 text-xs">
               <Ticket className="w-3 h-3" />
               Voucher
+            </TabsTrigger>
+            <TabsTrigger value="qrcode" className="flex items-center gap-1 text-xs">
+              <QrCode className="w-3 h-3" />
+              QR Code
             </TabsTrigger>
           </TabsList>
 
@@ -599,6 +609,22 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               <Check className="w-5 h-5 mr-2" />
               Confirmar Venda com Voucher
             </Button>
+          </TabsContent>
+
+          {/* QR Code Payment */}
+          <TabsContent value="qrcode">
+            <QRCodePayment
+              total={total}
+              storeId={storeId}
+              storeName={storeName}
+              onConfirm={() => {
+                onConfirm({
+                  method: 'mpesa',
+                  amountReceived: total,
+                  change: 0,
+                });
+              }}
+            />
           </TabsContent>
         </Tabs>
       </DialogContent>
