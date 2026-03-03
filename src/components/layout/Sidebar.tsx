@@ -23,6 +23,7 @@ import {
   CreditCard,
   Crown,
   Calculator,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
@@ -49,6 +50,7 @@ const navItems: NavItem[] = [
   { label: 'Fiscal', href: '/fiscal', icon: <Calculator className="w-5 h-5" />, adminOnly: true },
   { label: 'Carteira', href: '/carteira', icon: <WalletCards className="w-5 h-5" />, adminOnly: false },
   { label: 'Configurações', href: '/configuracoes', icon: <Settings className="w-5 h-5" />, adminOnly: true },
+  { label: 'Comunidade', href: '/comunidade', icon: <MessageSquare className="w-5 h-5" />, adminOnly: false },
   { label: 'Assinatura', href: '/assinatura', icon: <CreditCard className="w-5 h-5" />, adminOnly: true },
 ];
 
