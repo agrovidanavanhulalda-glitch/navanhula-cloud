@@ -155,9 +155,10 @@ const LocalSettingsPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="empresa" className="space-y-6">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full">
           <TabsTrigger value="empresa" className="gap-1"><Building2 className="w-4 h-4" /> Empresa</TabsTrigger>
           <TabsTrigger value="fiscal" className="gap-1"><Receipt className="w-4 h-4" /> Fiscal</TabsTrigger>
+          <TabsTrigger value="documentos" className="gap-1"><FileText className="w-4 h-4" /> Documentos</TabsTrigger>
           <TabsTrigger value="sistema" className="gap-1"><Globe className="w-4 h-4" /> Sistema</TabsTrigger>
           <TabsTrigger value="seguranca" className="gap-1"><Shield className="w-4 h-4" /> Segurança</TabsTrigger>
           <TabsTrigger value="integracoes" className="gap-1"><Plug className="w-4 h-4" /> Integrações</TabsTrigger>
