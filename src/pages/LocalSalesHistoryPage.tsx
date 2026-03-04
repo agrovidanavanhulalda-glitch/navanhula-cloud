@@ -163,6 +163,17 @@ const LocalSalesHistoryPage: React.FC = () => {
     }, 0);
   };
 
+  // Calculate cost total for a sale
+  const getSaleCost = (sale: LocalSale) => {
+    return sale.items.reduce((acc, item) => acc + item.product.costPrice * item.quantity, 0);
+  };
+
+  // Calculate margin %
+  const getSaleMargin = (sale: LocalSale) => {
+    if (sale.total === 0) return 0;
+    return (getSaleProfit(sale) / sale.total) * 100;
+  };
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -281,9 +292,17 @@ const LocalSalesHistoryPage: React.FC = () => {
                       {formatCurrency(sale.total)}
                     </p>
                     {sale.status === 'completed' && (
-                      <p className={`text-xs font-medium ${getSaleProfit(sale) >= 0 ? 'text-profit' : 'text-loss'}`}>
-                        Lucro: {formatCurrency(getSaleProfit(sale))}
-                      </p>
+                      <div className="space-y-0.5">
+                        <p className="text-xs text-muted-foreground">
+                          Custo: {formatCurrency(getSaleCost(sale))}
+                        </p>
+                        <p className={`text-xs font-medium ${getSaleProfit(sale) >= 0 ? 'text-profit' : 'text-loss'}`}>
+                          Lucro: {formatCurrency(getSaleProfit(sale))}
+                        </p>
+                        <p className={`text-xs font-medium ${getSaleMargin(sale) >= 0 ? 'text-profit' : 'text-loss'}`}>
+                          Margem: {getSaleMargin(sale).toFixed(1)}%
+                        </p>
+                      </div>
                     )}
                     <Badge variant="outline" className="text-xs mt-1">
                       {getPaymentLabel(sale.paymentMethod)}

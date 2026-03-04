@@ -536,6 +536,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       (async () => {
         try {
+          // Calculate cost_total and profit
+          const costTotal = sale.items.reduce((acc, item) => acc + item.product.costPrice * item.quantity, 0);
+          const saleProfit = sale.total - costTotal;
+
           // Insert sale
           const { error: saleError } = await supabase.from('sales').insert({
             id: sale.id,
@@ -545,6 +549,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             subtotal: sale.subtotal,
             discount_amount: sale.discount,
             total: sale.total,
+            cost_total: costTotal,
+            profit: saleProfit,
             payment_method: dbPaymentMethod as any,
             status: 'completed',
             customer_name: sale.paymentDetails?.voucherDetails?.customerName || null,
