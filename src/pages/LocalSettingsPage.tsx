@@ -12,9 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   Settings, Building2, Receipt, Shield, Plug, Save, Loader2,
-  AlertTriangle, CheckCircle, RefreshCw, Lock, Globe, Package
+  AlertTriangle, CheckCircle, RefreshCw, Lock, Globe, Package, Image
 } from 'lucide-react';
 import { toast } from 'sonner';
+import LogoUpload from '@/components/settings/LogoUpload';
 
 const LocalSettingsPage: React.FC = () => {
   const { role, company, user, store, refreshUserData } = useAuth();
@@ -28,6 +29,7 @@ const LocalSettingsPage: React.FC = () => {
     address: '',
     phone: '',
     city: '',
+    logo_url: '' as string | null,
   });
 
   // Fiscal form
@@ -56,6 +58,7 @@ const LocalSettingsPage: React.FC = () => {
         address: (company as any).address || '',
         phone: (company as any).phone || '',
         city: (company as any).city || '',
+        logo_url: (company as any).logo_url || null,
       });
       setFiscalForm({
         fiscal_regime: (company as any).fiscal_regime || 'irpc',
@@ -166,6 +169,17 @@ const LocalSettingsPage: React.FC = () => {
               <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5" /> Dados da Empresa</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Logo Upload */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2"><Image className="w-4 h-4" /> Logo da Empresa</Label>
+                <LogoUpload
+                  currentUrl={companyForm.logo_url}
+                  companyId={company!.id}
+                  onUploaded={(url) => setCompanyForm(p => ({ ...p, logo_url: url }))}
+                />
+                <p className="text-xs text-muted-foreground">O logo aparecerá nas faturas e recibos</p>
+              </div>
+              <Separator />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Nome da Empresa *</Label>

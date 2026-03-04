@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/SaaSAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
+import ProductImageUpload from '@/components/products/ProductImageUpload';
 
 // HYBRID: Local POS data + SaaS Auth
 
@@ -43,6 +45,7 @@ const LocalProductsPage: React.FC = () => {
     salePrice: '',
     stock: '',
     isActive: true,
+    imageUrl: '' as string | null,
   });
 
   const isAdmin = role === 'admin' || role === 'manager';
@@ -60,6 +63,7 @@ const LocalProductsPage: React.FC = () => {
       salePrice: '',
       stock: '',
       isActive: true,
+      imageUrl: null,
     });
     setEditingProduct(null);
   };
@@ -78,6 +82,7 @@ const LocalProductsPage: React.FC = () => {
       salePrice: product.salePrice.toString(),
       stock: product.stock.toString(),
       isActive: product.isActive,
+      imageUrl: (product as any).imageUrl || null,
     });
     setEditingProduct(product);
     setShowForm(true);
@@ -119,6 +124,10 @@ const LocalProductsPage: React.FC = () => {
 
     if (editingProduct) {
       updateProduct(editingProduct.id, productData);
+      // Update image_url in Supabase
+      if (formData.imageUrl) {
+        supabase.from('products').update({ image_url: formData.imageUrl }).eq('id', editingProduct.id);
+      }
       toast.success('Produto atualizado');
     } else {
       addProduct(productData);
@@ -269,6 +278,16 @@ const LocalProductsPage: React.FC = () => {
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Product Image */}
+            <div className="space-y-2">
+              <Label>Imagem do Produto</Label>
+              <ProductImageUpload
+                currentUrl={formData.imageUrl || null}
+                productId={editingProduct?.id}
+                onUploaded={(url) => setFormData({ ...formData, imageUrl: url })}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="name">Nome *</Label>
               <Input

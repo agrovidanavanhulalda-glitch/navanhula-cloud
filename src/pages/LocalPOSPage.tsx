@@ -309,9 +309,14 @@ const LocalPOSPage: React.FC = () => {
           )}
 
           {/* Payment Button - Opens Modal */}
+          {!cashRegisterOpen && cart.length > 0 && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive text-center">
+              Abra o caixa antes de finalizar a venda
+            </div>
+          )}
           <Button 
             className="w-full h-14 text-lg"
-            disabled={cart.length === 0}
+            disabled={cart.length === 0 || !cashRegisterOpen}
             onClick={() => setShowPaymentModal(true)}
           >
             <CreditCard className="w-5 h-5 mr-2" />
