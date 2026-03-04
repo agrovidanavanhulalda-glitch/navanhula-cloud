@@ -1404,6 +1404,7 @@ export type Database = {
       sales: {
         Row: {
           cash_register_id: string | null
+          cost_total: number
           created_at: string | null
           customer_name: string | null
           customer_phone: string | null
@@ -1412,6 +1413,7 @@ export type Database = {
           id: string
           notes: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
+          profit: number
           status: Database["public"]["Enums"]["sale_status"] | null
           store_id: string
           subtotal: number
@@ -1422,6 +1424,7 @@ export type Database = {
         }
         Insert: {
           cash_register_id?: string | null
+          cost_total?: number
           created_at?: string | null
           customer_name?: string | null
           customer_phone?: string | null
@@ -1430,6 +1433,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          profit?: number
           status?: Database["public"]["Enums"]["sale_status"] | null
           store_id: string
           subtotal?: number
@@ -1440,6 +1444,7 @@ export type Database = {
         }
         Update: {
           cash_register_id?: string | null
+          cost_total?: number
           created_at?: string | null
           customer_name?: string | null
           customer_phone?: string | null
@@ -1448,6 +1453,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          profit?: number
           status?: Database["public"]["Enums"]["sale_status"] | null
           store_id?: string
           subtotal?: number
