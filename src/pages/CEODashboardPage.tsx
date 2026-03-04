@@ -8,14 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonKPI, SkeletonChart, SkeletonList } from '@/components/ui/skeleton-card';
 import {
-  Store, TrendingUp, DollarSign, Users, AlertTriangle,
-  Wifi, WifiOff, BarChart3, Package, ShoppingCart, RefreshCw,
-  Receipt, ArrowUpRight, ArrowDownRight
+  Store, TrendingUp, DollarSign, AlertTriangle,
+  Wifi, WifiOff, BarChart3, Package, RefreshCw,
+  Receipt, Landmark, Building2
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend
+  ResponsiveContainer, Legend
 } from 'recharts';
 
 interface DashboardStats {
@@ -39,6 +39,7 @@ interface StoreData {
   last_online_at: string | null;
   total_sales: number;
   total_revenue: number;
+  total_profit: number;
   cash_revenue: number;
   mpesa_revenue: number;
   emola_revenue: number;
@@ -52,65 +53,44 @@ interface TopProduct {
   total_profit: number;
 }
 
-const CHART_COLORS = [
-  'hsl(217, 91%, 60%)', 'hsl(142, 76%, 36%)', 'hsl(38, 92%, 50%)',
-  'hsl(199, 89%, 48%)', 'hsl(0, 84%, 60%)', 'hsl(160, 84%, 39%)',
-];
+const FISCAL_RATE = 0.16;
 
-const FISCAL_RATE = 0.16; // 16% IVA Mozambique
-
-const CEOKPICard: React.FC<{
+const ExecutiveKPI: React.FC<{
   icon: React.ElementType;
   label: string;
   value: string | number;
   sub?: React.ReactNode;
-  highlight?: 'primary' | 'success' | 'warning' | 'profit';
-  trend?: { value: string; up: boolean };
-}> = ({ icon: Icon, label, value, sub, highlight, trend }) => (
-  <Card className="p-5 transition-all duration-150 hover:border-primary/30 hover:shadow-lg group">
-    <div className="flex items-center gap-2 mb-3">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-        highlight === 'success' ? 'bg-success/10' :
-        highlight === 'warning' ? 'bg-warning/10' :
-        highlight === 'profit' ? 'bg-profit/10' :
-        'bg-primary/10'
-      }`}>
-        <Icon className={`w-4 h-4 ${
-          highlight === 'success' ? 'text-success' :
-          highlight === 'warning' ? 'text-warning' :
-          highlight === 'profit' ? 'text-profit' :
-          'text-primary'
-        }`} />
+  accent?: 'blue' | 'green' | 'amber' | 'emerald';
+}> = ({ icon: Icon, label, value, sub, accent = 'blue' }) => {
+  const accentMap = {
+    blue: { bg: 'bg-primary/10', text: 'text-primary', valueClass: '' },
+    green: { bg: 'bg-success/10', text: 'text-success', valueClass: 'text-success' },
+    amber: { bg: 'bg-warning/10', text: 'text-warning', valueClass: 'text-warning' },
+    emerald: { bg: 'bg-profit/10', text: 'text-profit', valueClass: 'text-profit' },
+  };
+  const a = accentMap[accent];
+  return (
+    <Card className="p-6 transition-all duration-150 hover:shadow-lg hover:border-primary/20">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${a.bg}`}>
+          <Icon className={`w-5 h-5 ${a.text}`} />
+        </div>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
       </div>
-      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
-    </div>
-    <p className={`text-2xl lg:text-3xl font-bold tracking-tight ${
-      highlight === 'warning' ? 'text-warning' :
-      highlight === 'profit' ? 'text-profit' :
-      highlight === 'success' ? 'text-success' : ''
-    }`}>{value}</p>
-    {(sub || trend) && (
-      <div className="mt-2 flex items-center gap-2 text-xs">
-        {trend && (
-          <span className={`flex items-center gap-0.5 font-medium ${trend.up ? 'text-success' : 'text-destructive'}`}>
-            {trend.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-            {trend.value}
-          </span>
-        )}
-        {sub && <span className="text-muted-foreground">{sub}</span>}
-      </div>
-    )}
-  </Card>
-);
+      <p className={`text-3xl lg:text-4xl font-bold tracking-tight ${a.valueClass}`}>{value}</p>
+      {sub && <p className="mt-2 text-xs text-muted-foreground">{sub}</p>}
+    </Card>
+  );
+};
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const ChartTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
   return (
-    <div className="rounded-lg border border-border p-3 shadow-lg" style={{ background: 'hsl(222, 47%, 14%)' }}>
-      <p className="text-xs font-medium text-foreground mb-1">{label}</p>
+    <div className="rounded-lg border border-border p-3 shadow-xl" style={{ background: 'hsl(var(--card))' }}>
+      <p className="text-xs font-semibold text-foreground mb-2">{label}</p>
       {payload.map((p: any, i: number) => (
         <p key={i} className="text-xs text-muted-foreground">
-          {p.name}: <span className="font-semibold text-foreground">{formatCurrency(p.value)}</span>
+          {p.name}: <span className="font-bold text-foreground">{formatCurrency(p.value)}</span>
         </p>
       ))}
     </div>
@@ -122,7 +102,7 @@ const CEODashboardPage: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [storeData, setStoreData] = useState<StoreData[]>([]);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
-  const [period, setPeriod] = useState<'today' | 'week' | 'month'>('today');
+  const [period, setPeriod] = useState<'today' | 'week' | 'month'>('month');
   const [loading, setLoading] = useState(true);
 
   const isCEO = (role as string) === 'ceo' || role === 'admin';
@@ -148,9 +128,10 @@ const CEODashboardPage: React.FC = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Realtime: atualiza ao registrar vendas
   useEffect(() => {
     const channel = supabase
-      .channel('ceo-sales-realtime')
+      .channel('executive-dashboard-rt')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, () => fetchData())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -162,35 +143,26 @@ const CEODashboardPage: React.FC = () => {
         <Card className="max-w-md w-full text-center p-8">
           <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Acesso Restrito</h2>
-          <p className="text-muted-foreground">Este painel é exclusivo para CEO e Administradores.</p>
+          <p className="text-muted-foreground">Painel exclusivo para a direcção executiva.</p>
         </Card>
       </div>
     );
   }
 
-  const consolidatedRevenue = stats?.revenue_month ?? 0;
-  const consolidatedProfit = stats?.profit_month ?? 0;
-  const estimatedTax = consolidatedRevenue * FISCAL_RATE;
+  const totalRevenue = stats?.revenue_month ?? 0;
+  const totalProfit = stats?.profit_month ?? 0;
+  const estimatedTax = totalRevenue * FISCAL_RATE;
+  const profitMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0.0';
 
-  const paymentPieData = storeData.length > 0 ? [
-    { name: 'Dinheiro', value: storeData.reduce((s, d) => s + Number(d.cash_revenue), 0) },
-    { name: 'M-Pesa', value: storeData.reduce((s, d) => s + Number(d.mpesa_revenue), 0) },
-    { name: 'E-mola', value: storeData.reduce((s, d) => s + Number(d.emola_revenue), 0) },
-    { name: 'Cartão', value: storeData.reduce((s, d) => s + Number(d.card_revenue), 0) },
-  ].filter(d => d.value > 0) : [];
-
-  // Skeleton loading
+  // Skeleton
   if (loading && !stats) {
     return (
       <div className="p-4 md:p-6 space-y-6 animate-fade-in">
-        <div className="h-8 w-48 rounded bg-muted/50 animate-pulse" />
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {[1,2,3,4,5,6].map(i => <SkeletonKPI key={i} />)}
+        <div className="h-8 w-64 rounded bg-muted/50 animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[1,2,3,4].map(i => <SkeletonKPI key={i} />)}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2"><SkeletonChart /></div>
-          <SkeletonChart height={250} />
-        </div>
+        <SkeletonChart />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SkeletonList rows={4} />
           <SkeletonList rows={4} />
@@ -199,223 +171,204 @@ const CEODashboardPage: React.FC = () => {
     );
   }
 
+  const periodLabel = period === 'today' ? 'Hoje' : period === 'week' ? 'Esta Semana' : 'Este Mês';
+
   return (
-    <div className="p-4 md:p-6 space-y-6 animate-fade-in">
-      {/* Header */}
+    <div className="p-4 md:p-6 space-y-8 animate-fade-in">
+      {/* Header Executivo */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Painel Executivo</h1>
-          <p className="text-sm text-muted-foreground">{company?.name || 'NAVANHULA'} — Visão Nacional</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {company?.name || 'NAVANHULA'} — Consolidado Nacional
+          </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-2">
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-3">
+          <Tabs value={period} onValueChange={v => setPeriod(v as any)}>
+            <TabsList>
+              <TabsTrigger value="today">Hoje</TabsTrigger>
+              <TabsTrigger value="week">Semana</TabsTrigger>
+              <TabsTrigger value="month">Mês</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-2">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
-      {/* KPI Grid - Large Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <CEOKPICard
-          icon={Store}
-          label="Lojas"
-          value={stats?.total_stores ?? 0}
-          highlight="primary"
-          sub={<><span className="inline-block w-1.5 h-1.5 rounded-full bg-success mr-1 animate-pulse" />{stats?.stores_online ?? 0} online</>}
-        />
-        <CEOKPICard
-          icon={ShoppingCart}
-          label="Vendas Hoje"
-          value={stats?.total_sales_today ?? 0}
-          sub={`${stats?.active_registers ?? 0} caixas`}
-        />
-        <CEOKPICard
+      {/* 4 KPIs Executivos Grandes */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <ExecutiveKPI
           icon={DollarSign}
-          label="Receita Hoje"
-          value={formatCurrency(stats?.revenue_today ?? 0)}
-          highlight="primary"
+          label="Receita Total"
+          value={formatCurrency(totalRevenue)}
+          sub={`${stats?.total_sales_today ?? 0} vendas realizadas hoje`}
+          accent="blue"
         />
-        <CEOKPICard
+        <ExecutiveKPI
           icon={TrendingUp}
-          label="Receita Mensal"
-          value={formatCurrency(consolidatedRevenue)}
-          highlight="success"
+          label="Lucro Consolidado"
+          value={formatCurrency(totalProfit)}
+          sub={`Margem de ${profitMargin}% sobre receita`}
+          accent="emerald"
         />
-        <CEOKPICard
-          icon={TrendingUp}
-          label="Lucro Mensal"
-          value={formatCurrency(consolidatedProfit)}
-          highlight="profit"
-        />
-        <CEOKPICard
-          icon={Receipt}
-          label="IVA Estimado"
+        <ExecutiveKPI
+          icon={Landmark}
+          label="Impostos Estimados"
           value={formatCurrency(estimatedTax)}
-          highlight="warning"
-          sub="16% s/ receita"
+          sub="IVA 16% sobre a receita bruta"
+          accent="amber"
+        />
+        <ExecutiveKPI
+          icon={Building2}
+          label="Unidades Activas"
+          value={stats?.total_stores ?? 0}
+          sub={<><span className="inline-block w-1.5 h-1.5 rounded-full bg-success mr-1 animate-pulse" />{stats?.stores_online ?? 0} operando agora</>}
+          accent="green"
         />
       </div>
 
-      {/* Low stock alert */}
+      {/* Alerta de estoque */}
       {(stats?.low_stock_count ?? 0) > 0 && (
         <Card className="p-3 border-warning/40 bg-warning/5">
           <div className="flex items-center gap-2 text-sm text-warning font-medium">
             <AlertTriangle className="w-4 h-4" />
-            {stats?.low_stock_count} produtos com estoque baixo de {stats?.total_products ?? 0} total
+            {stats?.low_stock_count} produtos necessitam reposição
           </div>
         </Card>
       )}
 
-      {/* Tabs */}
-      <Tabs value={period} onValueChange={v => setPeriod(v as any)}>
-        <TabsList className="grid w-full max-w-xs grid-cols-3">
-          <TabsTrigger value="today">Hoje</TabsTrigger>
-          <TabsTrigger value="week">Semana</TabsTrigger>
-          <TabsTrigger value="month">Mês</TabsTrigger>
-        </TabsList>
+      {/* Gráfico: Receita e Lucro por Loja */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            Desempenho por Unidade — {periodLabel}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {storeData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={340}>
+              <BarChart data={storeData} barGap={4} barSize={24}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(217, 33%, 22%)" vertical={false} />
+                <XAxis
+                  dataKey="store_name"
+                  tick={{ fontSize: 11, fill: 'hsl(215, 20%, 65%)' }}
+                  axisLine={{ stroke: 'hsl(217, 33%, 25%)' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: 'hsl(215, 20%, 65%)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`}
+                />
+                <Tooltip content={<ChartTooltip />} />
+                <Legend
+                  verticalAlign="top"
+                  align="right"
+                  iconType="circle"
+                  iconSize={8}
+                  formatter={(value) => <span className="text-xs text-muted-foreground ml-1">{value}</span>}
+                />
+                <Bar dataKey="total_revenue" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} name="Receita" />
+                <Bar dataKey="total_profit" fill="hsl(142, 76%, 36%)" radius={[4, 4, 0, 0]} name="Lucro" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState icon={BarChart3} title="Sem movimentação" description="Nenhuma venda registrada neste período." />
+          )}
+        </CardContent>
+      </Card>
 
-        <TabsContent value={period} className="space-y-6 mt-4">
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-primary" />
-                  Receita por Loja
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {storeData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={storeData} barSize={32}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(217, 33%, 22%)" vertical={false} />
-                      <XAxis 
-                        dataKey="store_name" 
-                        tick={{ fontSize: 11, fill: 'hsl(215, 20%, 65%)' }} 
-                        axisLine={{ stroke: 'hsl(217, 33%, 25%)' }}
-                        tickLine={false}
-                      />
-                      <YAxis 
-                        tick={{ fontSize: 11, fill: 'hsl(215, 20%, 65%)' }} 
-                        axisLine={false}
-                        tickLine={false}
-                        tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                      />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="total_revenue" fill="hsl(217, 91%, 60%)" radius={[6, 6, 0, 0]} name="Receita" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <EmptyState icon={BarChart3} title="Sem dados" description="Nenhuma venda registrada para este período." />
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold">Métodos de Pagamento</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {paymentPieData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={280}>
-                    <PieChart>
-                      <Pie 
-                        data={paymentPieData} 
-                        cx="50%" cy="45%" 
-                        innerRadius={50} outerRadius={80}
-                        dataKey="value" 
-                        strokeWidth={2}
-                        stroke="hsl(222, 47%, 11%)"
-                      >
-                        {paymentPieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                      </Pie>
-                      <Legend 
-                        verticalAlign="bottom" 
-                        formatter={(value) => <span className="text-xs text-muted-foreground">{value}</span>}
-                      />
-                      <Tooltip content={<CustomTooltip />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <EmptyState icon={DollarSign} title="Sem dados" description="Nenhum pagamento registrado." />
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Store Status + Top Products */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Store className="w-4 h-4 text-primary" />
-                  Status das Lojas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {storeData.length > 0 ? (
-                  <div className="space-y-2 max-h-[360px] overflow-auto">
-                    {storeData.map(store => {
-                      const isOnline = store.last_online_at && new Date(store.last_online_at).getTime() > Date.now() - 10 * 60 * 1000;
-                      return (
-                        <div key={store.store_id} className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors duration-150">
-                          <div className="flex items-center gap-3 min-w-0">
-                            {isOnline 
-                              ? <Wifi className="w-4 h-4 text-success flex-shrink-0" /> 
-                              : <WifiOff className="w-4 h-4 text-destructive flex-shrink-0" />
-                            }
-                            <div className="min-w-0">
-                              <p className="font-medium text-sm truncate">{store.store_name}</p>
-                              <p className="text-xs text-muted-foreground">{store.city || '—'}</p>
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0 ml-3">
-                            <p className="font-bold text-sm font-mono">{formatCurrency(store.total_revenue)}</p>
-                            <p className="text-xs text-muted-foreground">{store.total_sales} vendas</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <EmptyState icon={Store} title="Sem lojas" description="Nenhuma loja encontrada." />
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Package className="w-4 h-4 text-primary" />
-                  Top Produtos (Mês)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {topProducts.length > 0 ? (
-                  <div className="space-y-2 max-h-[360px] overflow-auto">
-                    {topProducts.map((product, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors duration-150">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <Badge variant="secondary" className="w-6 h-6 rounded-full flex items-center justify-center p-0 text-xs font-bold flex-shrink-0">{i + 1}</Badge>
-                          <div className="min-w-0">
-                            <p className="font-medium text-sm truncate">{product.product_name}</p>
-                            <p className="text-xs text-muted-foreground">{product.total_quantity} unidades</p>
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0 ml-3">
-                          <p className="font-bold text-sm font-mono">{formatCurrency(product.total_revenue)}</p>
-                          <p className="text-xs text-profit font-medium">+{formatCurrency(product.total_profit ?? 0)}</p>
+      {/* Detalhamento: Unidades + Produtos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Resumo por Unidade */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Store className="w-4 h-4 text-primary" />
+              Resumo por Unidade
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {storeData.length > 0 ? (
+              <div className="space-y-2 max-h-[400px] overflow-auto">
+                {storeData.map(store => {
+                  const isOnline = store.last_online_at && new Date(store.last_online_at).getTime() > Date.now() - 10 * 60 * 1000;
+                  const margin = Number(store.total_revenue) > 0
+                    ? ((Number(store.total_profit) / Number(store.total_revenue)) * 100).toFixed(1)
+                    : '0.0';
+                  return (
+                    <div key={store.store_id} className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors duration-150">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {isOnline
+                          ? <Wifi className="w-4 h-4 text-success flex-shrink-0" />
+                          : <WifiOff className="w-4 h-4 text-destructive flex-shrink-0" />
+                        }
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{store.store_name}</p>
+                          <p className="text-xs text-muted-foreground">{store.city || '—'} · {store.total_sales} vendas</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState icon={Package} title="Sem dados" description="Nenhum produto vendido neste período." />
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                      <div className="text-right flex-shrink-0 ml-3">
+                        <p className="font-bold text-sm font-mono">{formatCurrency(store.total_revenue)}</p>
+                        <p className="text-xs text-profit font-medium">
+                          {formatCurrency(Number(store.total_profit))} · {margin}%
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState icon={Store} title="Sem unidades" description="Nenhuma unidade registrada." />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Produtos mais vendidos */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Package className="w-4 h-4 text-primary" />
+              Produtos com Maior Receita
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topProducts.length > 0 ? (
+              <div className="space-y-2 max-h-[400px] overflow-auto">
+                {topProducts.map((product, i) => {
+                  const margin = product.total_revenue > 0
+                    ? ((product.total_profit / product.total_revenue) * 100).toFixed(1)
+                    : '0.0';
+                  return (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors duration-150">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Badge variant="secondary" className="w-6 h-6 rounded-full flex items-center justify-center p-0 text-xs font-bold flex-shrink-0">{i + 1}</Badge>
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{product.product_name}</p>
+                          <p className="text-xs text-muted-foreground">{product.total_quantity} unidades vendidas</p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-3">
+                        <p className="font-bold text-sm font-mono">{formatCurrency(product.total_revenue)}</p>
+                        <p className="text-xs text-profit font-medium">
+                          +{formatCurrency(product.total_profit ?? 0)} · {margin}%
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState icon={Package} title="Sem movimentação" description="Nenhum produto vendido neste período." />
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
