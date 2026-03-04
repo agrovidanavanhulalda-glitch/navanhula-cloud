@@ -205,11 +205,11 @@ const mapDbStoreToLocal = (s: any): LocalStore => ({
   isActive: s.is_active ?? true,
 });
 
-const mapDbCashRegisterToLocal = (cr: any): LocalCashRegister => ({
+const mapDbCashRegisterToLocal = (cr: any, profileName?: string): LocalCashRegister => ({
   id: cr.id,
   storeId: cr.store_id,
   sellerId: cr.user_id,
-  sellerName: '',
+  sellerName: profileName || cr.user_id || '',
   openingAmount: cr.opening_amount || 0,
   closingAmount: cr.closing_amount,
   expectedAmount: cr.expected_amount,
@@ -308,8 +308,19 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const stores: LocalStore[] = (storesRes.data || []).map(mapDbStoreToLocal);
         const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : FALLBACK_STORE);
 
-        // Map cash registers
-        const cashRegisters = (cashRegistersRes.data || []).map(mapDbCashRegisterToLocal);
+        // Map cash registers - fetch profile names for seller display
+        const crUserIds = [...new Set((cashRegistersRes.data || []).map((cr: any) => cr.user_id))];
+        let profileMap = new Map<string, string>();
+        if (crUserIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', crUserIds);
+          (profilesData || []).forEach((p: any) => profileMap.set(p.id, p.full_name));
+        }
+        const cashRegisters = (cashRegistersRes.data || []).map((cr: any) =>
+          mapDbCashRegisterToLocal(cr, profileMap.get(cr.user_id))
+        );
         const openRegister = cashRegisters.find(cr => cr.status === 'open') || null;
 
         // Map sales

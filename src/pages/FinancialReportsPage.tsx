@@ -67,6 +67,11 @@ import {
 } from 'lucide-react';
 import { formatCurrency, formatDateTime, formatDate } from '@/lib/formatters';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { FileDown, Download } from 'lucide-react';
 
 // Types
 interface WalletData {
@@ -282,6 +287,85 @@ const FinancialReportsPage: React.FC = () => {
     toast.success('Relatório exportado com sucesso');
   };
 
+  // Export PDF A4
+  const handleExportPDF = () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = 210;
+    const margin = 25;
+    let y = margin;
+
+    doc.setFont('times', 'bold');
+    doc.setFontSize(18);
+    doc.text('RELATÓRIO FINANCEIRO', pageWidth / 2, y, { align: 'center' });
+    y += 8;
+
+    doc.setFont('times', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Período: ${startDate} a ${endDate}`, pageWidth / 2, y, { align: 'center' });
+    y += 5;
+    doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-MZ')}`, pageWidth / 2, y, { align: 'center' });
+    y += 10;
+
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    // KPIs
+    doc.setFont('times', 'bold');
+    doc.setFontSize(13);
+    doc.text('RESUMO FINANCEIRO', margin, y);
+    y += 8;
+
+    const drawRow = (label: string, value: string, bold = false) => {
+      doc.setFont('times', bold ? 'bold' : 'normal');
+      doc.setFontSize(11);
+      doc.text(label, margin + 5, y);
+      doc.text(value, pageWidth - margin, y, { align: 'right' });
+      y += 6;
+    };
+
+    drawRow('Saldo Total', formatCurrency(kpis.totalBalance));
+    drawRow('Total Créditos', formatCurrency(kpis.totalCredits));
+    drawRow('Total Débitos', formatCurrency(kpis.totalDebits));
+    drawRow('Transferências', formatCurrency(kpis.totalTransfers));
+    y += 2;
+    doc.setLineWidth(0.2);
+    doc.line(margin + 5, y, pageWidth - margin, y);
+    y += 5;
+    drawRow('Fluxo Líquido', formatCurrency(kpis.netFlow), true);
+    y += 6;
+
+    // Balance by method
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    doc.setFont('times', 'bold');
+    doc.setFontSize(13);
+    doc.text('SALDO POR MÉTODO DE PAGAMENTO', margin, y);
+    y += 8;
+
+    balanceByMethod.forEach(item => {
+      doc.setFont('times', 'normal');
+      doc.setFontSize(11);
+      doc.text(item.label, margin + 5, y);
+      doc.text(formatCurrency(item.balance), pageWidth - margin, y, { align: 'right' });
+      y += 6;
+    });
+
+    // Footer
+    const footerY = 297 - margin;
+    doc.setLineWidth(0.3);
+    doc.line(margin, footerY - 12, pageWidth - margin, footerY - 12);
+    doc.setFont('times', 'italic');
+    doc.setFontSize(8);
+    doc.text('Documento gerado pelo NAVANHULA POS', pageWidth / 2, footerY - 7, { align: 'center' });
+    doc.text(`Impresso em: ${new Date().toLocaleString('pt-MZ')}`, pageWidth / 2, footerY - 3, { align: 'center' });
+
+    doc.save(`relatorio_financeiro_${startDate}_${endDate}.pdf`);
+    toast.success('PDF exportado com sucesso');
+  };
+
   const getTypeLabel = (type: string) => {
     const map: Record<string, string> = {
       credit: 'Crédito',
@@ -326,10 +410,22 @@ const FinancialReportsPage: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportCSV}>
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
-            Exportar CSV
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportPDF}>
+                <FileDown className="w-4 h-4 mr-2" /> Relatório PDF A4
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportCSV}>
+                <FileSpreadsheet className="w-4 h-4 mr-2" /> Exportar CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="icon" onClick={loadData}>
             <RefreshCw className="w-4 h-4" />
           </Button>
