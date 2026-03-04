@@ -37,7 +37,7 @@ import {
 import { formatCurrency } from '@/lib/formatters';
 import PDFReportPreview, { exportPDFReport, exportExcelReport } from '@/components/reports/PDFReport';
 
-// 100% LOCAL - Relatórios profissionais com templates separados
+// Relatórios profissionais com templates separados
 
 const LocalReportsPage: React.FC = () => {
   const { sales, stores, currentStore, products, getCancelledSales, getCancellationHistory } = useLocalPOS();
@@ -301,21 +301,21 @@ const LocalReportsPage: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         {[
-          { icon: ShoppingCart, label: 'Vendas', value: String(stats.salesCount), color: 'primary' },
-          { icon: DollarSign, label: 'Receita', value: formatCurrency(stats.totalRevenue), color: 'success' },
-          { icon: TrendingUp, label: 'Lucro', value: formatCurrency(stats.totalProfit), color: 'profit', textColor: 'text-profit' },
-          { icon: BarChart3, label: 'Ticket Médio', value: formatCurrency(stats.averageTicket), color: 'accent' },
-          { icon: Calendar, label: 'Descontos', value: formatCurrency(stats.totalDiscount), color: 'warning', textColor: 'text-warning' },
-          { icon: XCircle, label: 'Canceladas', value: String(stats.cancelledCount), color: 'destructive', textColor: 'text-destructive' },
+          { icon: ShoppingCart, label: 'Vendas', value: String(stats.salesCount), accent: 'primary' },
+          { icon: DollarSign, label: 'Receita', value: formatCurrency(stats.totalRevenue), accent: 'success' },
+          { icon: TrendingUp, label: 'Lucro', value: formatCurrency(stats.totalProfit), accent: 'profit' },
+          { icon: BarChart3, label: 'Ticket Médio', value: formatCurrency(stats.averageTicket), accent: 'accent' },
+          { icon: Calendar, label: 'Descontos', value: formatCurrency(stats.totalDiscount), accent: 'warning' },
+          { icon: XCircle, label: 'Canceladas', value: String(stats.cancelledCount), accent: 'destructive' },
         ].map((stat, i) => (
           <Card key={i} className="p-4">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full bg-${stat.color}/10 flex items-center justify-center flex-shrink-0`}>
-                <stat.icon className={`w-5 h-5 text-${stat.color}`} />
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-${stat.accent}/10`}>
+                <stat.icon className={`w-5 h-5 text-${stat.accent}`} />
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground truncate">{stat.label}</p>
-                <p className={`text-lg font-bold truncate ${stat.textColor || ''}`}>{stat.value}</p>
+                <p className={`text-lg font-semibold truncate text-${stat.accent}`}>{stat.value}</p>
               </div>
             </div>
           </Card>
@@ -490,7 +490,7 @@ const LocalReportsPage: React.FC = () => {
               <TrendingUp className="w-5 h-5" />
               Margem por Produto
             </h3>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[60vh]">
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
@@ -556,7 +556,7 @@ const LocalReportsPage: React.FC = () => {
             {cancelledSales.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">Nenhum cancelamento no período</p>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-[60vh]">
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr>
