@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Calculator, FileText, Download, AlertTriangle, TrendingUp, DollarSign, Receipt
+  Calculator, FileText, Download, AlertTriangle, TrendingUp, DollarSign, Receipt, FileDown
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
+import { downloadFiscalPdfA4 } from '@/lib/generateFiscalPdfA4';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 type FiscalRegime = 'irpc' | 'ispc' | 'iva';
 
@@ -74,32 +76,50 @@ const FiscalPage: React.FC = () => {
     }
   };
 
-  const handleExport = () => {
-    const periodLabel = period === 'month' ? 'Mensal' : 'Trimestral';
-    const lines = [
-      `RELATÓRIO FISCAL — ${FISCAL_RATES[regime].label}`,
-      `Empresa: ${company?.name || 'N/A'}`,
-      `Período: ${periodLabel}`,
-      ``,
-      `Total Faturado: ${formatCurrency(stats.totalRevenue)}`,
-      `Descontos: ${formatCurrency(stats.totalDiscount)}`,
-      `Taxa: ${stats.rate}%`,
-      `Imposto Devido: ${formatCurrency(stats.taxDue)}`,
-      `Receita Líquida: ${formatCurrency(stats.netRevenue)}`,
-      `Total de Vendas: ${stats.totalSales}`,
-      ``,
-      `Por Método:`,
-      ...Object.entries(stats.byMethod).map(([m, v]) => `  ${getMethodLabel(m)}: ${formatCurrency(v)}`),
-    ];
+  const pdfOptions = () => ({
+    companyName: company?.name || 'Empresa',
+    companyNif: (company as any)?.nif || '',
+    companyAddress: (company as any)?.address || '',
+    companyPhone: (company as any)?.phone || '',
+    regime: FISCAL_RATES[regime],
+    periodLabel: period === 'month' ? 'Mensal' : 'Trimestral',
+    totalRevenue: stats.totalRevenue,
+    totalDiscount: stats.totalDiscount,
+    taxDue: stats.taxDue,
+    netRevenue: stats.netRevenue,
+    totalSales: stats.totalSales,
+    byMethod: stats.byMethod,
+    getMethodLabel,
+  });
 
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const handleExportPdf = () => {
+    downloadFiscalPdfA4(pdfOptions());
+    toast.success('Relatório PDF exportado');
+  };
+
+  const handleExportCsv = () => {
+    const rows = [
+      ['Método', 'Valor', 'Imposto', '% do Total'],
+      ...Object.entries(stats.byMethod).map(([m, v]) => [
+        getMethodLabel(m),
+        v.toFixed(2),
+        (v * (stats.rate / 100)).toFixed(2),
+        stats.totalRevenue > 0 ? ((v / stats.totalRevenue) * 100).toFixed(1) + '%' : '0%',
+      ]),
+      [],
+      ['Total Faturado', stats.totalRevenue.toFixed(2)],
+      ['Imposto Devido', stats.taxDue.toFixed(2)],
+      ['Receita Líquida', stats.netRevenue.toFixed(2)],
+    ];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `relatorio_fiscal_${regime}_${new Date().toISOString().slice(0, 10)}.txt`;
+    a.download = `relatorio_fiscal_${regime}_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Relatório exportado');
+    toast.success('CSV exportado');
   };
 
   if (!isAdmin) {
@@ -125,9 +145,21 @@ const FiscalPage: React.FC = () => {
           <p className="text-muted-foreground">{company?.name} — Obrigações Tributárias</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="w-4 h-4 mr-2" /> Exportar
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <Download className="w-4 h-4 mr-2" /> Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportPdf}>
+                <FileDown className="w-4 h-4 mr-2" /> Relatório PDF A4
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportCsv}>
+                <FileText className="w-4 h-4 mr-2" /> Exportar CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
