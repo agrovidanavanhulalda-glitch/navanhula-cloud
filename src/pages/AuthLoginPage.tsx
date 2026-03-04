@@ -22,7 +22,7 @@ const AuthLoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const { signIn, isAuthenticated, onboardingCompleted, loading } = useAuth();
+  const { signIn, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

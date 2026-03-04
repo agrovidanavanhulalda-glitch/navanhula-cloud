@@ -18,7 +18,7 @@ const AuthSignupPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   
-  const { signUp, isAuthenticated, onboardingCompleted, loading } = useAuth();
+  const { signUp, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
