@@ -717,6 +717,94 @@ export type Database = {
           },
         ]
       }
+      employees: {
+        Row: {
+          bank_account: string | null
+          bank_name: string | null
+          base_salary: number
+          company_id: string
+          created_at: string
+          department: string
+          email: string | null
+          full_name: string
+          hire_date: string
+          id: string
+          inss_number: string | null
+          nuit: string | null
+          phone: string | null
+          position: string
+          profile_id: string | null
+          status: string
+          store_id: string | null
+          termination_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          bank_account?: string | null
+          bank_name?: string | null
+          base_salary?: number
+          company_id: string
+          created_at?: string
+          department?: string
+          email?: string | null
+          full_name: string
+          hire_date?: string
+          id?: string
+          inss_number?: string | null
+          nuit?: string | null
+          phone?: string | null
+          position?: string
+          profile_id?: string | null
+          status?: string
+          store_id?: string | null
+          termination_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bank_account?: string | null
+          bank_name?: string | null
+          base_salary?: number
+          company_id?: string
+          created_at?: string
+          department?: string
+          email?: string | null
+          full_name?: string
+          hire_date?: string
+          id?: string
+          inss_number?: string | null
+          nuit?: string | null
+          phone?: string | null
+          position?: string
+          profile_id?: string | null
+          status?: string
+          store_id?: string | null
+          termination_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           category: string
@@ -872,6 +960,93 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_runs: {
+        Row: {
+          base_salary: number
+          bonus_amount: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          gross_salary: number
+          id: string
+          inss_employee: number
+          inss_employer: number
+          irps_amount: number
+          net_salary: number
+          notes: string | null
+          other_deductions: number
+          overtime_amount: number
+          paid_at: string | null
+          period_month: number
+          period_year: number
+          status: string
+          total_cost: number
+          updated_at: string
+        }
+        Insert: {
+          base_salary?: number
+          bonus_amount?: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          gross_salary?: number
+          id?: string
+          inss_employee?: number
+          inss_employer?: number
+          irps_amount?: number
+          net_salary?: number
+          notes?: string | null
+          other_deductions?: number
+          overtime_amount?: number
+          paid_at?: string | null
+          period_month: number
+          period_year: number
+          status?: string
+          total_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          base_salary?: number
+          bonus_amount?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          gross_salary?: number
+          id?: string
+          inss_employee?: number
+          inss_employer?: number
+          irps_amount?: number
+          net_salary?: number
+          notes?: string | null
+          other_deductions?: number
+          overtime_amount?: number
+          paid_at?: string | null
+          period_month?: number
+          period_year?: number
+          status?: string
+          total_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_runs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_runs_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
