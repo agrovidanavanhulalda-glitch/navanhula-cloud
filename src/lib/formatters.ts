@@ -1,12 +1,11 @@
 // Currency and number formatters for Mozambican Metical
 
 export const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('pt-MZ', {
-    style: 'currency',
-    currency: 'MZN',
+  const formatted = new Intl.NumberFormat('pt-MZ', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
+  return `${formatted} MT`;
 };
 
 export const formatNumber = (value: number): string => {
