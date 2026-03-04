@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TrendingUp, TrendingDown, DollarSign, Receipt, RefreshCw, Download, Calculator } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Receipt, RefreshCw, Download, Calculator, Users } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-
+import EmployeeManagement from '@/components/hr/EmployeeManagement';
+import PayrollProcessing from '@/components/hr/PayrollProcessing';
 interface AccountingEntry {
   id: string;
   type: string;
@@ -149,6 +150,8 @@ const AccountingPage: React.FC = () => {
           <TabsTrigger value="dre">DRE</TabsTrigger>
           <TabsTrigger value="flow">Fluxo de Caixa</TabsTrigger>
           <TabsTrigger value="entries">Lançamentos</TabsTrigger>
+          <TabsTrigger value="employees"><Users className="w-4 h-4 mr-1" /> Funcionários</TabsTrigger>
+          <TabsTrigger value="payroll"><Calculator className="w-4 h-4 mr-1" /> Folha Salarial</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dre" className="mt-4">
@@ -246,6 +249,13 @@ const AccountingPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="employees" className="mt-4">
+          <EmployeeManagement />
+        </TabsContent>
+
+        <TabsContent value="payroll" className="mt-4">
+          <PayrollProcessing />
         </TabsContent>
       </Tabs>
     </div>
