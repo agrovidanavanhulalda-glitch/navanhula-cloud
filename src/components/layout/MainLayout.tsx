@@ -33,7 +33,7 @@ const MainLayout: React.FC = () => {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <ShoppingCart className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-bold text-gradient-primary">NAVANHULA</span>
+            <span className="font-bold text-gradient-primary">NAVANHULA POS</span>
           </div>
           
           <div className="flex items-center gap-1">

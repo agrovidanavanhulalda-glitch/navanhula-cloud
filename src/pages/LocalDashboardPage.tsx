@@ -199,7 +199,7 @@ const LocalDashboardPage: React.FC = () => {
           icon={Package}
           title="Produtos"
           description="Gerenciar catálogo de produtos"
-          onClick={() => navigate('/produtos')}
+          onClick={() => navigate('/app/produtos')}
         />
       </div>
 

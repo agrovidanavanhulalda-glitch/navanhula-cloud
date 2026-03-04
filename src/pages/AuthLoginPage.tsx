@@ -152,7 +152,7 @@ const AuthLoginPage: React.FC = () => {
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
             Ainda não tem conta?{' '}
-            <Link to="/signup" className="text-primary hover:underline font-medium">
+            <Link to="/registrar" className="text-primary hover:underline font-medium">
               Criar conta
             </Link>
           </p>
