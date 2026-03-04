@@ -122,7 +122,7 @@ const LocalDashboardPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
-            Bem-vindo, {user?.full_name?.split(' ')[0] || 'Usuário'}
+            Bem-vindo{user?.full_name && !/^[0-9a-f-]{36}$/i.test(user.full_name) ? `, ${user.full_name.split(' ')[0]}` : ''}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">{store.name}</p>
         </div>
