@@ -18,18 +18,14 @@ const AuthSignupPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   
-  const { signUp, isAuthenticated, onboardingCompleted, loading } = useAuth();
+  const { signUp, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      if (onboardingCompleted) {
-        navigate('/', { replace: true });
-      } else {
-        navigate('/onboarding', { replace: true });
-      }
+      navigate('/app/dashboard', { replace: true });
     }
-  }, [loading, isAuthenticated, onboardingCompleted, navigate]);
+  }, [loading, isAuthenticated, navigate]);
 
   // Live password validation
   useEffect(() => {
@@ -120,7 +116,7 @@ const AuthSignupPage: React.FC = () => {
                 {['Mínimo 8 caracteres', 'Pelo menos 1 letra maiúscula', 'Pelo menos 1 letra minúscula', 'Pelo menos 1 número', 'Pelo menos 1 caractere especial (!@#$%...)'].map((rule) => {
                   const passed = !passwordErrors.includes(rule);
                   return (
-                    <div key={rule} className={`flex items-center gap-1.5 text-xs ${passed ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    <div key={rule} className={`flex items-center gap-1.5 text-xs ${passed ? 'text-success' : 'text-muted-foreground'}`}>
                       {passed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                       {rule}
                     </div>

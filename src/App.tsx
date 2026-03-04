@@ -8,11 +8,8 @@ import { SaaSAuthProvider, useAuth } from "@/contexts/SaaSAuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
 import { Loader2 } from "lucide-react";
 
-// Auth pages
 import AuthLoginPage from "./pages/AuthLoginPage";
 import AuthSignupPage from "./pages/AuthSignupPage";
-
-// Main app pages
 import LocalDashboardPage from "./pages/LocalDashboardPage";
 import LocalPOSPage from "./pages/LocalPOSPage";
 import LocalProductsPage from "./pages/LocalProductsPage";
@@ -35,7 +32,13 @@ import SuppliersPage from "./pages/SuppliersPage";
 import BIDashboardPage from "./pages/BIDashboardPage";
 import AgriculturePage from "./pages/AgriculturePage";
 import PoultryPage from "./pages/PoultryPage";
+import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
+import Index from "./pages/Index";
+import AboutPage from "./pages/AboutPage";
+import PricingPage from "./pages/PricingPage";
+import FeaturesPage from "./pages/FeaturesPage";
+import ContactPage from "./pages/ContactPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -47,12 +50,33 @@ const queryClient = new QueryClient({
   },
 });
 
-/**
- * Loading Screen - shows for max 2 seconds
- */
+const legacyRoutes = [
+  { from: "/pdv", to: "/app/pdv" },
+  { from: "/caixa", to: "/app/caixa" },
+  { from: "/produtos", to: "/app/produtos" },
+  { from: "/estoque", to: "/app/estoque" },
+  { from: "/vendedores", to: "/app/vendedores" },
+  { from: "/lojas", to: "/app/lojas" },
+  { from: "/relatorios", to: "/app/relatorios" },
+  { from: "/historico", to: "/app/vendas" },
+  { from: "/configuracoes", to: "/app/configuracoes" },
+  { from: "/assinatura", to: "/app/assinatura" },
+  { from: "/ceo", to: "/app/ceo" },
+  { from: "/fiscal", to: "/app/fiscal" },
+  { from: "/carteira", to: "/app/carteira" },
+  { from: "/comunidade", to: "/app/comunidade" },
+  { from: "/financeiro", to: "/app/financeiro" },
+  { from: "/contabilidade", to: "/app/contabilidade" },
+  { from: "/crm", to: "/app/crm" },
+  { from: "/fornecedores", to: "/app/fornecedores" },
+  { from: "/bi", to: "/app/bi" },
+  { from: "/agricultura", to: "/app/agricultura" },
+  { from: "/avicultura", to: "/app/avicultura" },
+];
+
 const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
-  <div 
-    ref={ref} 
+  <div
+    ref={ref}
     className="min-h-screen bg-background flex flex-col items-center justify-center gap-4"
   >
     <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -61,106 +85,106 @@ const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
 ));
 LoadingScreen.displayName = "LoadingScreen";
 
-/**
- * Protected Route - requires authentication only (NO onboarding check)
- */
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  
-  console.log('[Route] Protected:', { loading, isAuthenticated });
-  
+
   if (loading) {
     return <LoadingScreen />;
   }
-  
+
   if (!isAuthenticated) {
-    console.log('[Route] → /login');
     return <Navigate to="/login" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
-/**
- * Public Route - redirects authenticated users to dashboard
- */
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  
-  console.log('[Route] Public:', { loading, isAuthenticated });
-  
+
   if (loading) {
     return <LoadingScreen />;
   }
-  
+
   if (isAuthenticated) {
-    console.log('[Route] Authenticated → /');
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app/dashboard" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
-/**
- * App Routes - SIMPLIFIED (no onboarding)
- */
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public routes */}
-      <Route 
-        path="/login" 
+      <Route element={<PublicSiteLayout />}>
+        <Route path="/" element={<Index />} />
+        <Route path="/home" element={<Index />} />
+        <Route path="/sobre" element={<AboutPage />} />
+        <Route path="/precos" element={<PricingPage />} />
+        <Route path="/recursos" element={<FeaturesPage />} />
+        <Route path="/contato" element={<ContactPage />} />
+      </Route>
+
+      <Route
+        path="/login"
         element={
           <PublicRoute>
             <AuthLoginPage />
           </PublicRoute>
-        } 
+        }
       />
-      <Route 
-        path="/signup" 
+      <Route
+        path="/registrar"
         element={
           <PublicRoute>
             <AuthSignupPage />
           </PublicRoute>
-        } 
+        }
       />
-      
-      {/* Onboarding route - redirect to dashboard */}
-      <Route path="/onboarding" element={<Navigate to="/" replace />} />
-      
-      {/* Protected Routes */}
-      <Route element={
-        <ProtectedRoute>
-          <LocalPOSProvider>
-            <MainLayout />
-          </LocalPOSProvider>
-        </ProtectedRoute>
-      }>
-        <Route path="/" element={<LocalDashboardPage />} />
-        <Route path="/pdv" element={<LocalPOSPage />} />
-        <Route path="/caixa" element={<LocalCashRegisterPage />} />
-        <Route path="/produtos" element={<LocalProductsPage />} />
-        <Route path="/estoque" element={<LocalInventoryPage />} />
-        <Route path="/vendedores" element={<LocalSellersPage />} />
-        <Route path="/lojas" element={<LocalStoresPage />} />
-        <Route path="/relatorios" element={<LocalReportsPage />} />
-        <Route path="/historico" element={<LocalSalesHistoryPage />} />
-        <Route path="/configuracoes" element={<LocalSettingsPage />} />
-        <Route path="/assinatura" element={<SubscriptionPage />} />
-        <Route path="/ceo" element={<CEODashboardPage />} />
-        <Route path="/fiscal" element={<FiscalPage />} />
-        <Route path="/carteira" element={<WalletPage />} />
-        <Route path="/comunidade" element={<CommunityPage />} />
-        <Route path="/financeiro" element={<FinancialReportsPage />} />
-        <Route path="/contabilidade" element={<AccountingPage />} />
-        <Route path="/crm" element={<CRMPage />} />
-        <Route path="/fornecedores" element={<SuppliersPage />} />
-        <Route path="/bi" element={<BIDashboardPage />} />
-        <Route path="/agricultura" element={<AgriculturePage />} />
-        <Route path="/avicultura" element={<PoultryPage />} />
+      <Route path="/signup" element={<Navigate to="/registrar" replace />} />
+      <Route path="/onboarding" element={<Navigate to="/app/dashboard" replace />} />
+
+      <Route
+        path="/app"
+        element={
+          <ProtectedRoute>
+            <LocalPOSProvider>
+              <MainLayout />
+            </LocalPOSProvider>
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<LocalDashboardPage />} />
+        <Route path="pdv" element={<LocalPOSPage />} />
+        <Route path="lojas" element={<LocalStoresPage />} />
+        <Route path="produtos" element={<LocalProductsPage />} />
+        <Route path="estoque" element={<LocalInventoryPage />} />
+        <Route path="vendas" element={<LocalSalesHistoryPage />} />
+        <Route path="relatorios" element={<LocalReportsPage />} />
+        <Route path="financeiro" element={<FinancialReportsPage />} />
+        <Route path="carteira" element={<WalletPage />} />
+        <Route path="configuracoes" element={<LocalSettingsPage />} />
+        <Route path="comunidade" element={<CommunityPage />} />
+
+        <Route path="caixa" element={<LocalCashRegisterPage />} />
+        <Route path="historico" element={<LocalSalesHistoryPage />} />
+        <Route path="vendedores" element={<LocalSellersPage />} />
+        <Route path="assinatura" element={<SubscriptionPage />} />
+        <Route path="ceo" element={<CEODashboardPage />} />
+        <Route path="fiscal" element={<FiscalPage />} />
+        <Route path="contabilidade" element={<AccountingPage />} />
+        <Route path="crm" element={<CRMPage />} />
+        <Route path="fornecedores" element={<SuppliersPage />} />
+        <Route path="bi" element={<BIDashboardPage />} />
+        <Route path="agricultura" element={<AgriculturePage />} />
+        <Route path="avicultura" element={<PoultryPage />} />
       </Route>
-      
-      {/* Catch all */}
+
+      {legacyRoutes.map((route) => (
+        <Route key={route.from} path={route.from} element={<Navigate to={route.to} replace />} />
+      ))}
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

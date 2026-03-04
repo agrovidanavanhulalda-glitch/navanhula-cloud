@@ -22,20 +22,15 @@ const AuthLoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const { signIn, isAuthenticated, onboardingCompleted, loading } = useAuth();
+  const { signIn, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect based on auth state
   useEffect(() => {
     if (!loading && isAuthenticated) {
       console.log('[Login] User authenticated, redirecting...');
-      if (onboardingCompleted) {
-        navigate('/', { replace: true });
-      } else {
-        navigate('/onboarding', { replace: true });
-      }
+      navigate('/app/dashboard', { replace: true });
     }
-  }, [loading, isAuthenticated, onboardingCompleted, navigate]);
+  }, [loading, isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,7 +152,7 @@ const AuthLoginPage: React.FC = () => {
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
             Ainda não tem conta?{' '}
-            <Link to="/signup" className="text-primary hover:underline font-medium">
+            <Link to="/registrar" className="text-primary hover:underline font-medium">
               Criar conta
             </Link>
           </p>
