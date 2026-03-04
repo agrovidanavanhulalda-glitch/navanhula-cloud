@@ -93,7 +93,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
   const isAdmin = role === 'admin' || role === 'manager' || (role as string) === 'ceo';
   const isCEO = (role as string) === 'ceo' || role === 'admin';
-  const currentOperator = currentCashRegister?.sellerName || user?.full_name || 'Operador';
+  const rawName = currentCashRegister?.sellerName || user?.full_name || '';
+  const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : 'Operador';
   const currentOperatorRole = (role as string) === 'ceo' ? 'CEO' :
                               currentCashRegister?.sellerId?.includes('admin') ? 'Administrador' : 
                               isAdmin ? 'Administrador' : 'Vendedor';
