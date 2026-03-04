@@ -255,6 +255,11 @@ const LocalSettingsPage: React.FC = () => {
           </Card>
         </TabsContent>
 
+        {/* DOCUMENTOS */}
+        <TabsContent value="documentos">
+          <FiscalDocumentsManager />
+        </TabsContent>
+
         {/* SISTEMA */}
         <TabsContent value="sistema">
           <Card>
