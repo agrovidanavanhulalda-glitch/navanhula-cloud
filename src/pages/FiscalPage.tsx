@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Calculator, FileText, Download, AlertTriangle, TrendingUp, DollarSign, Receipt, FileDown
+  Calculator, FileText, Download, AlertTriangle, TrendingUp, DollarSign, Receipt, FileDown,
+  Globe, Shield, Code
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import { downloadFiscalPdfA4 } from '@/lib/generateFiscalPdfA4';
+import { downloadSaftMZXml, type SaftOptions } from '@/lib/generateSaftMZ';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 type FiscalRegime = 'irpc' | 'ispc' | 'iva';
@@ -122,6 +124,71 @@ const FiscalPage: React.FC = () => {
     toast.success('CSV exportado');
   };
 
+  const handleExportSaftMZ = async () => {
+    // Fetch sales with items for SAFT
+    const startDate = period === 'month'
+      ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+      : new Date(new Date().getFullYear(), Math.floor(new Date().getMonth() / 3) * 3, 1).toISOString();
+    const endDate = new Date().toISOString();
+
+    const { data: salesWithItems } = await supabase
+      .from('sales')
+      .select('id, total, subtotal, discount_amount, created_at, payment_method, customer_name, sale_items(product_id, product_name, quantity, unit_price, total)')
+      .eq('status', 'completed')
+      .gte('created_at', startDate)
+      .order('created_at', { ascending: true });
+
+    const rate = FISCAL_RATES[regime].rate;
+    const productsMap = new Map<string, { code: string; name: string; unitPrice: number }>();
+    const invoices = (salesWithItems || []).map(s => {
+      const lines = ((s as any).sale_items || []).map((item: any) => {
+        const code = item.product_id?.slice(0, 8) || 'PROD';
+        if (!productsMap.has(code)) {
+          productsMap.set(code, { code, name: item.product_name, unitPrice: Number(item.unit_price) });
+        }
+        return {
+          productCode: code,
+          productName: item.product_name,
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unit_price),
+          total: Number(item.total),
+          tax: Number(item.total) * (rate / 100),
+        };
+      });
+      const total = Number(s.total);
+      return {
+        id: s.id,
+        date: s.created_at || new Date().toISOString(),
+        customerName: s.customer_name || undefined,
+        paymentMethod: s.payment_method,
+        subtotal: Number(s.subtotal),
+        discount: Number(s.discount_amount || 0),
+        total,
+        taxAmount: total * (rate / 100),
+        lines,
+      };
+    });
+
+    const saftOptions: SaftOptions = {
+      company: {
+        name: company?.name || 'Empresa',
+        nif: (company as any)?.nif || '',
+        address: (company as any)?.address || '',
+        city: (company as any)?.city || 'Maputo',
+        phone: (company as any)?.phone || '',
+        fiscalRegime: regime,
+        fiscalRate: rate,
+      },
+      periodStart: startDate,
+      periodEnd: endDate,
+      products: Array.from(productsMap.values()),
+      invoices,
+    };
+
+    downloadSaftMZXml(saftOptions);
+    toast.success('Ficheiro SAFT-MZ exportado com sucesso');
+  };
+
   if (!isAdmin) {
     return (
       <div className="p-6 flex items-center justify-center min-h-[60vh]">
@@ -157,6 +224,9 @@ const FiscalPage: React.FC = () => {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleExportCsv}>
                 <FileText className="w-4 h-4 mr-2" /> Exportar CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportSaftMZ}>
+                <Code className="w-4 h-4 mr-2" /> SAFT-MZ (XML)
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -258,6 +328,47 @@ const FiscalPage: React.FC = () => {
             {Object.keys(stats.byMethod).length === 0 && (
               <p className="col-span-4 text-center text-muted-foreground py-4">Sem dados para o período</p>
             )}
+          </div>
+        </CardContent>
+      </Card>
+      {/* API Fiscal Integration Status */}
+      <Card className="border-dashed border-2 border-muted-foreground/30">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Globe className="w-5 h-5" /> Integração API — Autoridade Tributária (e-Tributação)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-3">
+            <Shield className="w-8 h-8 text-muted-foreground mt-1 shrink-0" />
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="secondary" className="bg-amber-500/15 text-amber-700 border-amber-500/30">
+                  Aguardando API Pública
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                A Autoridade Tributária de Moçambique ainda não disponibilizou uma API pública para submissão 
+                electrónica de dados fiscais. O sistema está preparado para integração futura.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Ficheiro SAFT-MZ</p>
+                  <p className="text-sm font-semibold text-green-600">✓ Disponível</p>
+                  <p className="text-xs text-muted-foreground">Exportação XML pronta para auditoria</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Envio Automático</p>
+                  <p className="text-sm font-semibold text-amber-600">⏳ Pendente</p>
+                  <p className="text-xs text-muted-foreground">Aguardando endpoints da AT-MZ</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Certificado Digital</p>
+                  <p className="text-sm font-semibold text-amber-600">⏳ Pendente</p>
+                  <p className="text-xs text-muted-foreground">Requer certificação pela AT</p>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
