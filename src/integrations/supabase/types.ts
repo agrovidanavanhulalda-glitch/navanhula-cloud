@@ -717,6 +717,60 @@ export type Database = {
           },
         ]
       }
+      document_series: {
+        Row: {
+          company_id: string
+          created_at: string
+          default_notes: string | null
+          document_type: Database["public"]["Enums"]["fiscal_document_type"]
+          id: string
+          is_active: boolean
+          next_number: number
+          prefix: string
+          store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          default_notes?: string | null
+          document_type: Database["public"]["Enums"]["fiscal_document_type"]
+          id?: string
+          is_active?: boolean
+          next_number?: number
+          prefix: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          default_notes?: string | null
+          document_type?: Database["public"]["Enums"]["fiscal_document_type"]
+          id?: string
+          is_active?: boolean
+          next_number?: number
+          prefix?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_series_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_series_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           bank_account: string | null
@@ -798,6 +852,153 @@ export type Database = {
           },
           {
             foreignKeyName: "employees_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiscal_document_items: {
+        Row: {
+          created_at: string
+          description: string
+          document_id: string
+          id: string
+          line_total: number
+          quantity: number
+          tax_rate: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          document_id: string
+          id?: string
+          line_total?: number
+          quantity?: number
+          tax_rate?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          document_id?: string
+          id?: string
+          line_total?: number
+          quantity?: number
+          tax_rate?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_document_items_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiscal_documents: {
+        Row: {
+          company_id: string
+          created_at: string
+          currency: string
+          customer_address: string | null
+          customer_email: string | null
+          customer_name: string
+          customer_nuit: string | null
+          customer_phone: string | null
+          discount_amount: number
+          document_number: string
+          document_type: Database["public"]["Enums"]["fiscal_document_type"]
+          id: string
+          issue_date: string
+          issued_by: string
+          notes: string | null
+          number: number
+          series_id: string | null
+          status: string
+          store_id: string | null
+          subtotal: number
+          tax_amount: number
+          tax_rate: number
+          total: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          currency?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name: string
+          customer_nuit?: string | null
+          customer_phone?: string | null
+          discount_amount?: number
+          document_number: string
+          document_type: Database["public"]["Enums"]["fiscal_document_type"]
+          id?: string
+          issue_date?: string
+          issued_by: string
+          notes?: string | null
+          number?: number
+          series_id?: string | null
+          status?: string
+          store_id?: string | null
+          subtotal?: number
+          tax_amount?: number
+          tax_rate?: number
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          currency?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string
+          customer_nuit?: string | null
+          customer_phone?: string | null
+          discount_amount?: number
+          document_number?: string
+          document_type?: Database["public"]["Enums"]["fiscal_document_type"]
+          id?: string
+          issue_date?: string
+          issued_by?: string
+          notes?: string | null
+          number?: number
+          series_id?: string | null
+          status?: string
+          store_id?: string | null
+          subtotal?: number
+          tax_amount?: number
+          tax_rate?: number
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_documents_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "document_series"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_documents_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
@@ -2106,6 +2307,23 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      issue_fiscal_document: {
+        Args: {
+          p_customer_address?: string
+          p_customer_email?: string
+          p_customer_name: string
+          p_customer_nuit?: string
+          p_customer_phone?: string
+          p_discount_amount?: number
+          p_document_type: Database["public"]["Enums"]["fiscal_document_type"]
+          p_items: Json
+          p_notes?: string
+          p_store_id?: string
+          p_tax_rate?: number
+          p_valid_until?: string
+        }
+        Returns: Json
+      }
       notify_company_admins: {
         Args: {
           p_category?: string
@@ -2158,6 +2376,14 @@ export type Database = {
       app_role: "admin" | "manager" | "seller" | "ceo"
       billing_payment_method: "mpesa" | "emola" | "manual"
       cash_register_status: "open" | "closed"
+      fiscal_document_type:
+        | "quotation"
+        | "proforma"
+        | "invoice"
+        | "invoice_receipt"
+        | "receipt"
+        | "credit_note"
+        | "debit_note"
       payment_method: "cash" | "mpesa" | "emola" | "card" | "voucher"
       purchase_order_status:
         | "draft"
@@ -2305,6 +2531,15 @@ export const Constants = {
       app_role: ["admin", "manager", "seller", "ceo"],
       billing_payment_method: ["mpesa", "emola", "manual"],
       cash_register_status: ["open", "closed"],
+      fiscal_document_type: [
+        "quotation",
+        "proforma",
+        "invoice",
+        "invoice_receipt",
+        "receipt",
+        "credit_note",
+        "debit_note",
+      ],
       payment_method: ["cash", "mpesa", "emola", "card", "voucher"],
       purchase_order_status: [
         "draft",
