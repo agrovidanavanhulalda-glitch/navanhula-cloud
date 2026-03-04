@@ -12,10 +12,11 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   Settings, Building2, Receipt, Shield, Plug, Save, Loader2,
-  AlertTriangle, CheckCircle, RefreshCw, Lock, Globe, Package, Image
+  AlertTriangle, CheckCircle, RefreshCw, Lock, Globe, Package, Image, FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import LogoUpload from '@/components/settings/LogoUpload';
+import FiscalDocumentsManager from '@/components/settings/FiscalDocumentsManager';
 
 const LocalSettingsPage: React.FC = () => {
   const { role, company, user, store, refreshUserData } = useAuth();
