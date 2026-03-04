@@ -96,7 +96,7 @@ const LocalDashboardPage: React.FC = () => {
 
   const handleNewSale = () => {
     startNewSale();
-    navigate('/pdv');
+    navigate('/app/pdv');
   };
 
   if (loading) {

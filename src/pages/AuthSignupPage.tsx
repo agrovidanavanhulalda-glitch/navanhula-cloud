@@ -23,13 +23,9 @@ const AuthSignupPage: React.FC = () => {
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      if (onboardingCompleted) {
-        navigate('/', { replace: true });
-      } else {
-        navigate('/onboarding', { replace: true });
-      }
+      navigate('/app/dashboard', { replace: true });
     }
-  }, [loading, isAuthenticated, onboardingCompleted, navigate]);
+  }, [loading, isAuthenticated, navigate]);
 
   // Live password validation
   useEffect(() => {

@@ -25,17 +25,12 @@ const AuthLoginPage: React.FC = () => {
   const { signIn, isAuthenticated, onboardingCompleted, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect based on auth state
   useEffect(() => {
     if (!loading && isAuthenticated) {
       console.log('[Login] User authenticated, redirecting...');
-      if (onboardingCompleted) {
-        navigate('/', { replace: true });
-      } else {
-        navigate('/onboarding', { replace: true });
-      }
+      navigate('/app/dashboard', { replace: true });
     }
-  }, [loading, isAuthenticated, onboardingCompleted, navigate]);
+  }, [loading, isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
