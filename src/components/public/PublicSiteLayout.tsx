@@ -1,26 +1,52 @@
-import React from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Home', href: '/' },
-  { label: 'Sobre', href: '/sobre' },
-  { label: 'Preços', href: '/precos' },
-  { label: 'Recursos', href: '/recursos' },
-  { label: 'Contacto', href: '/contato' },
+  { label: 'Home', hash: '#top' },
+  { label: 'Sobre', hash: '#sobre' },
+  { label: 'Preços', hash: '#precos' },
+  { label: 'Recursos', hash: '#recursos' },
+  { label: 'Contacto', hash: '#contacto' },
 ];
 
 const PublicSiteLayout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.pathname !== '/') {
+      return;
+    }
+
+    if (!location.hash || location.hash === '#top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const scrollToSection = () => {
+      const element = document.querySelector(location.hash);
+      if (element instanceof HTMLElement) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+
+    const frame = window.requestAnimationFrame(scrollToSection);
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash, location.pathname]);
+
+  const handleSectionNavigation = (hash: string) => {
+    navigate({ pathname: '/', hash });
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur">
         <div className="container flex flex-col gap-4 py-4 md:h-20 md:flex-row md:items-center md:justify-between md:py-0">
           <div className="flex items-center justify-between gap-4">
-            <Link to="/" className="flex items-center gap-3">
+            <button type="button" onClick={() => handleSectionNavigation('#top')} className="flex items-center gap-3 text-left">
               <div
                 className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground"
                 style={{ boxShadow: 'var(--shadow-glow)' }}
@@ -29,16 +55,16 @@ const PublicSiteLayout: React.FC = () => {
               </div>
               <div>
                 <p className="text-lg font-bold tracking-tight">NAVANHULA POS</p>
-                <p className="text-xs text-muted-foreground">SaaS público + privado para retalho moderno</p>
+                <p className="text-xs text-muted-foreground">Controle total do seu negócio em tempo real.</p>
               </div>
-            </Link>
+            </button>
 
             <div className="flex items-center gap-2 md:hidden">
               <Button variant="ghost" asChild>
                 <Link to="/login">Entrar</Link>
               </Button>
               <Button asChild>
-                <Link to="/registrar">Criar conta</Link>
+                <Link to="/registrar">COMEÇAR AGORA</Link>
               </Button>
             </div>
           </div>
@@ -46,21 +72,22 @@ const PublicSiteLayout: React.FC = () => {
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <nav className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
               {navItems.map((item) => {
-                const isActive = location.pathname === item.href;
+                const isActive =
+                  location.pathname === '/' &&
+                  ((item.hash === '#top' && (!location.hash || location.hash === '#top')) || location.hash === item.hash);
 
                 return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
+                  <button
+                    key={item.hash}
+                    type="button"
+                    onClick={() => handleSectionNavigation(item.hash)}
                     className={cn(
                       'whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     )}
                   >
                     {item.label}
-                  </Link>
+                  </button>
                 );
               })}
             </nav>
@@ -70,7 +97,7 @@ const PublicSiteLayout: React.FC = () => {
                 <Link to="/login">Entrar</Link>
               </Button>
               <Button asChild>
-                <Link to="/registrar">Começar agora</Link>
+                <Link to="/registrar">COMEÇAR AGORA</Link>
               </Button>
             </div>
           </div>
@@ -82,25 +109,26 @@ const PublicSiteLayout: React.FC = () => {
       </main>
 
       <footer className="border-t border-border bg-card/40">
-        <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-xl space-y-2">
+        <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-xl space-y-3">
             <p className="text-lg font-black tracking-tight">NAVANHULA POS</p>
-            <p className="text-sm text-muted-foreground">Tecnologia para empresas que querem crescer.</p>
+            <p className="text-sm leading-7 text-muted-foreground">
+              Sistema profissional de gestão para lojas, supermercados, farmácias e empresas.
+            </p>
+            <p className="text-xs text-muted-foreground">© NAVANHULA GROUP LDA · Todos os direitos reservados.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <Link to="/sobre" className="transition-colors hover:text-foreground">
-              Sobre
-            </Link>
-            <Link to="/precos" className="transition-colors hover:text-foreground">
-              Preços
-            </Link>
-            <Link to="/recursos" className="transition-colors hover:text-foreground">
-              Recursos
-            </Link>
-            <Link to="/contato" className="transition-colors hover:text-foreground">
-              Contato
-            </Link>
+            {navItems.slice(1).map((item) => (
+              <button
+                key={item.hash}
+                type="button"
+                onClick={() => handleSectionNavigation(item.hash)}
+                className="transition-colors hover:text-foreground"
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         </div>
       </footer>
