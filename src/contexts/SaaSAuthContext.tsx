@@ -134,16 +134,15 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setUser(profileData as Profile);
         setRole(userRole);
 
-        // Fetch store and company
         if (profileData.store_id) {
           const { data: storeData } = await supabase
             .from('stores')
             .select('*')
             .eq('id', profileData.store_id)
             .maybeSingle();
-          setStore(storeData as Store || DEFAULT_STORE);
+          setStore(storeData as Store || (userRole === 'reseller' ? null : DEFAULT_STORE));
         } else {
-          setStore(DEFAULT_STORE);
+          setStore(userRole === 'reseller' ? null : DEFAULT_STORE);
         }
 
         if (profileData.company_id) {
@@ -152,12 +151,11 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .select('*')
             .eq('id', profileData.company_id)
             .maybeSingle();
-          setCompany(companyData as Company || DEFAULT_COMPANY);
+          setCompany(companyData as Company || (userRole === 'reseller' ? null : DEFAULT_COMPANY));
         } else {
-          setCompany(DEFAULT_COMPANY);
+          setCompany(userRole === 'reseller' ? null : DEFAULT_COMPANY);
         }
       } else {
-        // Fallback
         setCompany(DEFAULT_COMPANY);
         setStore(DEFAULT_STORE);
         setRole('admin');
