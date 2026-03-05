@@ -3,7 +3,7 @@ import SalesLandingPage from '@/components/public/SalesLandingPage';
 
 const Index = () => {
   useEffect(() => {
-    document.title = 'NAVANHULA POS | Controle sua empresa';
+    document.title = 'NAVANHULA POS | Controle total do seu negócio';
   }, []);
 
   return <SalesLandingPage />;

@@ -3,127 +3,131 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   BarChart3,
-  BadgeCheck,
   Boxes,
   Building2,
-  ChartColumnBig,
   CheckCircle2,
+  CirclePlay,
   CreditCard,
-  LockKeyhole,
+  FileSpreadsheet,
+  Handshake,
+  Landmark,
+  LayoutDashboard,
+  PackageCheck,
   Receipt,
   ShieldCheck,
   ShoppingCart,
+  Store,
   Users,
   Wallet,
 } from 'lucide-react';
+import SectionHeading from '@/components/public/SectionHeading';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
-const problems = [
-  'Produtos desaparecem do estoque',
-  'Funcionários fazem vendas sem registro',
-  'O dono não sabe quanto a empresa faturou',
-  'Difícil controlar várias lojas',
-  'Falta de relatórios claros',
+const trustSegments = ['Lojas', 'Supermercados', 'Farmácias', 'PMEs'];
+
+const heroBenefits = [
+  'Registe vendas em segundos',
+  'Controle seu estoque automaticamente',
+  'Veja relatórios claros do seu negócio',
+  'Gerencie múltiplas lojas',
 ];
 
-const solutions = [
-  'Controlar todas as vendas',
-  'Saber exatamente quanto entrou no caixa',
-  'Acompanhar estoque em tempo real',
-  'Ver desempenho de vendedores',
-  'Gerir várias lojas ao mesmo tempo',
+const steps = [
+  {
+    title: 'Cadastre seus produtos',
+    description: 'Adicione produtos e organize seu estoque facilmente.',
+  },
+  {
+    title: 'Faça vendas rapidamente',
+    description: 'Registe vendas no sistema POS de forma simples e rápida.',
+  },
+  {
+    title: 'Controle seu negócio',
+    description: 'Veja relatórios claros de vendas, caixa e desempenho.',
+  },
 ];
 
 const features = [
   {
-    title: 'GESTÃO DE VENDAS',
-    description: 'Registre todas as vendas com rapidez e precisão.',
+    title: 'POS profissional de vendas',
+    description: 'Atenda clientes com rapidez, recibos organizados e controlo total de cada venda.',
     icon: ShoppingCart,
   },
   {
-    title: 'CONTROLE DE ESTOQUE',
-    description: 'Saiba sempre quais produtos estão acabando.',
+    title: 'Gestão inteligente de estoque',
+    description: 'Saiba o que entrou, saiu e quais produtos precisam de reposição.',
     icon: Boxes,
   },
   {
-    title: 'GESTÃO DE FUNCIONÁRIOS',
-    description: 'Acompanhe o desempenho da equipe.',
-    icon: Users,
-  },
-  {
-    title: 'RELATÓRIOS INTELIGENTES',
-    description: 'Veja relatórios claros para tomar decisões.',
-    icon: ChartColumnBig,
-  },
-  {
-    title: 'CONTROLE DE CAIXA',
-    description: 'Saiba exatamente quanto entrou e saiu.',
+    title: 'Controle de caixa',
+    description: 'Acompanhe entradas, saídas e fecho de caixa com mais segurança.',
     icon: Wallet,
   },
   {
-    title: 'GESTÃO MULTI-LOJA',
-    description: 'Controle várias lojas no mesmo sistema.',
+    title: 'Relatórios de vendas',
+    description: 'Veja resultados do dia, produtos mais vendidos e desempenho do negócio.',
+    icon: BarChart3,
+  },
+  {
+    title: 'Gestão de vendedores',
+    description: 'Monitore produtividade, comissões e performance da equipa.',
+    icon: Users,
+  },
+  {
+    title: 'Controle de múltiplas lojas',
+    description: 'Gerencie diferentes unidades num único painel centralizado.',
     icon: Building2,
   },
-];
-
-const powerItems = [
-  'Quanto sua empresa vendeu hoje',
-  'Qual produto vende mais',
-  'Qual vendedor vende mais',
-  'Quais produtos estão acabando',
-  'Quanto dinheiro entrou no caixa',
-];
-
-const roles = [
   {
-    title: 'ADMINISTRADOR',
-    description: 'Controle total da empresa.',
+    title: 'Financeiro integrado',
+    description: 'Organize movimentos financeiros e acompanhe a saúde da empresa.',
+    icon: Landmark,
   },
   {
-    title: 'GESTOR',
-    description: 'Acompanha vendas, estoque e relatórios.',
+    title: 'Emissão de documentos comerciais',
+    description: 'Crie documentos de forma profissional para clientes e operações do dia a dia.',
+    icon: FileSpreadsheet,
   },
   {
-    title: 'VENDEDOR',
-    description: 'Realiza vendas no ponto de venda.',
+    title: 'Carteira digital',
+    description: 'Acompanhe pagamentos e saldos com mais controlo e agilidade.',
+    icon: CreditCard,
+  },
+  {
+    title: 'Comunidade de empreendedores',
+    description: 'Conecte-se com outros empresários e descubra novas oportunidades.',
+    icon: Handshake,
   },
 ];
 
-const plans = [
-  {
-    name: 'STARTER',
-    description: 'Para pequenos negócios.',
-    highlight: false,
-  },
-  {
-    name: 'BUSINESS',
-    description: 'Para empresas em crescimento.',
-    highlight: true,
-  },
-  {
-    name: 'ENTERPRISE',
-    description: 'Para empresas com várias lojas.',
-    highlight: false,
-  },
+const benefits = [
+  'Controle total da empresa',
+  'Redução de erros nas vendas',
+  'Estoque organizado',
+  'Relatórios em tempo real',
+  'Sistema acessível em qualquer lugar',
+  'Crescimento estruturado do negócio',
 ];
 
-const stats = [
+const audiences = ['Lojas', 'Supermercados', 'Farmácias', 'Armazéns', 'Distribuidores', 'Pequenas e médias empresas'];
+
+const dashboardStats = [
   { label: 'Vendas do dia', value: '124.500 MT', tone: 'text-profit' },
-  { label: 'Produtos em alerta', value: '18 itens', tone: 'text-warning' },
-  { label: 'Caixa atualizado', value: '37.200 MT', tone: 'text-primary' },
+  { label: 'Caixa atual', value: '37.200 MT', tone: 'text-primary' },
+  { label: 'Estoque crítico', value: '18 itens', tone: 'text-warning' },
 ];
 
 const SalesLandingPage: React.FC = () => {
   return (
-    <div className="relative overflow-hidden">
+    <div id="top" className="relative overflow-hidden">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[42rem]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[46rem]"
         style={{
           background:
-            'radial-gradient(circle at top left, hsl(var(--primary) / 0.28), transparent 40%), radial-gradient(circle at top right, hsl(var(--accent) / 0.18), transparent 34%)',
+            'radial-gradient(circle at top left, hsl(var(--primary) / 0.25), transparent 38%), radial-gradient(circle at top right, hsl(var(--accent) / 0.16), transparent 32%)',
         }}
       />
 
@@ -132,15 +136,24 @@ const SalesLandingPage: React.FC = () => {
           <div className="space-y-8">
             <div className="space-y-5">
               <Badge variant="secondary" className="rounded-full px-4 py-1 text-sm">
-                Feito para lojas, supermercados, farmácias, armazéns e PME
+                Controle total do seu negócio em tempo real.
               </Badge>
-              <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-                Controle toda sua empresa em um <span className="text-gradient-primary">único sistema</span>.
+              <h1 className="max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
+                Controle vendas, estoque e dinheiro da sua empresa em um <span className="text-gradient-primary">único sistema</span>.
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-                O NAVANHULA POS ajuda empresários a controlar vendas, estoque, caixa e funcionários com simplicidade e
-                segurança.
+                O NAVANHULA POS é um sistema moderno criado para lojas, supermercados, farmácias e empresas que precisam de
+                controle total do negócio em tempo real.
               </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {heroBenefits.map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-[1.25rem] border border-border bg-card/60 px-4 py-3 backdrop-blur-sm">
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                  <span className="font-medium text-foreground">{item}</span>
+                </div>
+              ))}
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -151,17 +164,19 @@ const SalesLandingPage: React.FC = () => {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="px-8">
-                <a href="#como-funciona">VER COMO FUNCIONA</a>
+                <Link to={{ pathname: '/', hash: '#como-funciona' }}>VER COMO FUNCIONA</Link>
               </Button>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              {stats.map((stat) => (
-                <div key={stat.label} className="rounded-[1.5rem] border border-border bg-card/60 p-4 backdrop-blur-sm">
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{stat.label}</p>
-                  <p className={`mt-3 text-2xl font-black ${stat.tone}`}>{stat.value}</p>
-                </div>
-              ))}
+            <div className="space-y-4 rounded-[1.75rem] border border-border bg-card/50 p-5 backdrop-blur-sm">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Empresas usando o sistema</p>
+              <div className="flex flex-wrap gap-3">
+                {trustSegments.map((segment) => (
+                  <div key={segment} className="rounded-full border border-border bg-background/70 px-4 py-2 text-sm font-medium text-foreground">
+                    {segment}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -183,48 +198,24 @@ const SalesLandingPage: React.FC = () => {
                   <div className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">Ao vivo</div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Card className="rounded-[1.5rem] border-border bg-card/70 p-5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Vendas do dia</p>
-                        <p className="mt-2 text-3xl font-black text-gradient-success">124.500 MT</p>
-                      </div>
-                      <div className="rounded-2xl bg-profit/15 p-3 text-profit">
-                        <Receipt className="h-6 w-6" />
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-sm text-success">
-                      <BadgeCheck className="h-4 w-4" />
-                      42 vendas registadas hoje
-                    </div>
-                  </Card>
-
-                  <Card className="rounded-[1.5rem] border-border bg-card/70 p-5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Caixa</p>
-                        <p className="mt-2 text-3xl font-black">37.200 MT</p>
-                      </div>
-                      <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-                        <CreditCard className="h-6 w-6" />
-                      </div>
-                    </div>
-                    <div className="mt-4 rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-                      Entradas e saídas organizadas automaticamente
-                    </div>
-                  </Card>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {dashboardStats.map((stat) => (
+                    <Card key={stat.label} className="rounded-[1.4rem] border-border bg-card/70 p-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{stat.label}</p>
+                      <p className={`mt-3 text-2xl font-black ${stat.tone}`}>{stat.value}</p>
+                    </Card>
+                  ))}
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
                   <Card className="rounded-[1.5rem] border-border bg-card/70 p-5">
                     <div className="mb-4 flex items-center gap-3">
-                      <div className="rounded-2xl bg-accent/10 p-3 text-accent">
-                        <BarChart3 className="h-5 w-5" />
+                      <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+                        <LayoutDashboard className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="font-semibold">Relatórios claros</p>
-                        <p className="text-sm text-muted-foreground">Saiba o que vender, comprar e corrigir</p>
+                        <p className="font-semibold">Visão geral do negócio</p>
+                        <p className="text-sm text-muted-foreground">Relatórios claros para decidir rápido</p>
                       </div>
                     </div>
                     <div className="space-y-3">
@@ -242,12 +233,12 @@ const SalesLandingPage: React.FC = () => {
                   </Card>
 
                   <Card className="rounded-[1.5rem] border-border bg-card/70 p-5">
-                    <p className="text-sm text-muted-foreground">Estoque</p>
+                    <p className="text-sm text-muted-foreground">Estoque e operações</p>
                     <div className="mt-4 space-y-3">
                       {[
                         ['Açúcar', 'Baixo'],
                         ['Óleo', 'Normal'],
-                        ['Medicamentos', 'Alerta'],
+                        ['Medicamentos', 'Reposição'],
                       ].map(([label, status]) => (
                         <div key={label} className="rounded-xl border border-border bg-background/70 px-4 py-3">
                           <p className="font-medium">{label}</p>
@@ -263,64 +254,64 @@ const SalesLandingPage: React.FC = () => {
         </div>
       </section>
 
-      <section className="container py-16 lg:py-24">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Problema</p>
-            <h2 className="text-3xl font-black tracking-tight sm:text-4xl">Muitos negócios perdem dinheiro todos os dias.</h2>
-            <p className="max-w-xl text-lg leading-8 text-muted-foreground">
-              Quando tudo depende de cadernos, memória ou controlo manual, os erros aparecem e o lucro desaparece.
-            </p>
-          </div>
+      <section id="sobre" className="container scroll-mt-28 py-16 lg:py-24">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <SectionHeading
+            eyebrow="Sobre o sistema"
+            title="Controle total do seu negócio em tempo real."
+            description="O NAVANHULA POS é um sistema inteligente que ajuda empresas a controlar vendas, estoque, caixa e relatórios em um único lugar."
+          />
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {problems.map((problem) => (
-              <Card key={problem} className="rounded-[1.5rem] border-border bg-card/70 p-5">
-                <p className="text-base font-semibold">{problem}</p>
+          <Card className="rounded-[2rem] border-border bg-card/60 p-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[
+                'Mais controlo sobre vendas e caixa',
+                'Menos erros no estoque e nas operações',
+                'Mais clareza para decidir o próximo passo',
+                'Mais confiança para crescer com organização',
+              ].map((item) => (
+                <div key={item} className="rounded-[1.25rem] border border-border bg-background/70 p-5">
+                  <CheckCircle2 className="mb-3 h-5 w-5 text-success" />
+                  <p className="font-semibold leading-7">{item}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      <section id="como-funciona" className="scroll-mt-28 border-y border-border/60 bg-card/30">
+        <div className="container py-16 lg:py-24">
+          <SectionHeading
+            eyebrow="Como funciona"
+            title="Comece a usar em poucos minutos"
+            description="Uma jornada simples para sair do controlo manual e começar a gerir sua empresa com mais confiança."
+            className="max-w-3xl"
+          />
+
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+            {steps.map((step, index) => (
+              <Card key={step.title} className="rounded-[1.75rem] border-border bg-card/70 p-6">
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-lg font-black text-primary">
+                  0{index + 1}
+                </div>
+                <h3 className="text-xl font-black tracking-tight">{step.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{step.description}</p>
               </Card>
             ))}
-            <Card className="rounded-[1.5rem] border-border bg-secondary/70 p-5 md:col-span-2">
-              <p className="text-xl font-bold">Sem controlo, o negócio cresce no escuro.</p>
-            </Card>
           </div>
         </div>
       </section>
 
-      <section id="como-funciona" className="border-y border-border/60 bg-card/30">
-        <div className="container grid gap-12 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-24">
-          <div className="space-y-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Solução</p>
-            <h2 className="text-3xl font-black tracking-tight sm:text-4xl">Agora imagine ter tudo sob controlo.</h2>
-            <p className="text-lg leading-8 text-muted-foreground">
-              O NAVANHULA POS reúne vendas, caixa, estoque, equipa e relatórios num único lugar para você gerir com mais
-              confiança todos os dias.
-            </p>
-            <Button asChild size="lg" className="px-8">
-              <Link to="/registrar">Criar conta</Link>
-            </Button>
-          </div>
+      <section id="recursos" className="container scroll-mt-28 py-16 lg:py-24">
+        <SectionHeading
+          eyebrow="Recursos"
+          title="Tudo que sua empresa precisa em um único sistema"
+          description="Do atendimento no balcão até o controlo financeiro, cada recurso foi pensado para simplificar sua operação."
+          className="max-w-3xl"
+        />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {solutions.map((item) => (
-              <div key={item} className="rounded-[1.5rem] border border-border bg-background/70 p-5">
-                <CheckCircle2 className="mb-3 h-6 w-6 text-success" />
-                <p className="font-semibold">{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="container py-16 lg:py-24">
-        <div className="mb-8 max-w-2xl space-y-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Funcionalidades</p>
-          <h2 className="text-3xl font-black tracking-tight sm:text-4xl">Tudo o que o empresário precisa para gerir melhor.</h2>
-          <p className="text-lg leading-8 text-muted-foreground">
-            Cada módulo foi pensado para ajudar você a vender mais, perder menos e decidir com clareza.
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
@@ -336,96 +327,154 @@ const SalesLandingPage: React.FC = () => {
         </div>
       </section>
 
-      <section className="border-y border-border/60">
-        <div className="container grid gap-10 py-16 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:py-24">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Poder para o empresário</p>
-            <h2 className="text-3xl font-black tracking-tight sm:text-4xl">Informação é poder.</h2>
-            <p className="text-lg leading-8 text-muted-foreground">
-              Com o NAVANHULA POS você pode descobrir agora o que está a acontecer no seu negócio e agir no momento certo.
-            </p>
-            <p className="text-base leading-7 text-muted-foreground">
-              Isso permite tomar decisões inteligentes todos os dias.
-            </p>
-          </div>
+      <section className="border-y border-border/60 bg-card/30">
+        <div className="container grid gap-10 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-24">
+          <SectionHeading
+            eyebrow="Demonstração"
+            title="Veja o NAVANHULA POS em funcionamento"
+            description="Assista à demonstração e descubra como o sistema pode transformar a gestão do seu negócio."
+          />
 
-          <Card className="rounded-[2rem] border-border bg-card/70 p-6">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {powerItems.map((item) => (
-                <div key={item} className="rounded-2xl bg-background/70 px-4 py-4">
-                  <p className="font-semibold">{item}</p>
+          <Card className="overflow-hidden rounded-[2rem] border-border bg-card/70 p-4">
+            <AspectRatio ratio={16 / 9}>
+              <div
+                className="flex h-full flex-col justify-between rounded-[1.5rem] border border-border px-6 py-6"
+                style={{ backgroundImage: 'var(--gradient-dark)' }}
+              >
+                <div className="inline-flex w-fit items-center gap-2 rounded-full bg-background/70 px-3 py-1 text-sm text-muted-foreground">
+                  <CirclePlay className="h-4 w-4 text-primary" />
+                  Área para vídeo de demonstração
                 </div>
-              ))}
-            </div>
+                <div className="space-y-4">
+                  <h3 className="max-w-lg text-2xl font-black tracking-tight sm:text-3xl">Veja vendas, estoque, caixa e relatórios numa apresentação simples e objetiva.</h3>
+                  <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                    <span className="rounded-full border border-border bg-background/70 px-3 py-1">POS</span>
+                    <span className="rounded-full border border-border bg-background/70 px-3 py-1">Estoque</span>
+                    <span className="rounded-full border border-border bg-background/70 px-3 py-1">Financeiro</span>
+                    <span className="rounded-full border border-border bg-background/70 px-3 py-1">Relatórios</span>
+                  </div>
+                </div>
+              </div>
+            </AspectRatio>
           </Card>
         </div>
       </section>
 
       <section className="container py-16 lg:py-24">
-        <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Segurança e acesso</p>
-            <h2 className="text-3xl font-black tracking-tight sm:text-4xl">Cada pessoa vê apenas o que precisa.</h2>
-            <p className="text-lg leading-8 text-muted-foreground">
-              Proteja a operação da empresa com acessos organizados por função e mantenha mais controlo sobre o dia a dia.
-            </p>
-          </div>
+        <div className="grid gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-start">
+          <SectionHeading
+            eyebrow="Benefícios"
+            title="Por que empresas escolhem o NAVANHULA POS?"
+            description="O sistema foi pensado para empresários que precisam de mais controlo, mais clareza e mais velocidade nas decisões."
+          />
 
-          <div className="grid gap-4 md:grid-cols-3">
-            {roles.map((role) => (
-              <Card key={role.title} className="rounded-[1.75rem] border-border bg-card/70 p-6">
-                <div className="mb-4 inline-flex rounded-2xl bg-accent/10 p-3 text-accent">
-                  <LockKeyhole className="h-5 w-5" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            {benefits.map((item) => (
+              <Card key={item} className="rounded-[1.5rem] border-border bg-card/70 p-5">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="mt-1 h-5 w-5 text-primary" />
+                  <p className="font-semibold leading-7">{item}</p>
                 </div>
-                <h3 className="text-lg font-black tracking-tight">{role.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{role.description}</p>
               </Card>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="border-y border-border/60 bg-card/30">
-        <div className="container py-16 lg:py-24">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="mx-auto mb-6 inline-flex rounded-full bg-success/10 p-3 text-success">
-              <ShieldCheck className="h-6 w-6" />
-            </div>
-            <h2 className="text-3xl font-black tracking-tight sm:text-4xl">Confiança para crescer com organização.</h2>
-            <p className="mt-5 text-lg leading-8 text-muted-foreground">
-              O NAVANHULA POS foi criado para ajudar empresas a crescer com organização, controlo e inteligência de negócio.
-            </p>
-            <p className="mt-4 text-base leading-7 text-muted-foreground">
-              Cada venda, cada produto e cada movimento da empresa fica registado no sistema.
-            </p>
+      <section className="border-y border-border/60">
+        <div className="container grid gap-10 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-24">
+          <SectionHeading
+            eyebrow="Para quem é"
+            title="Feito para empresas que querem crescer"
+            description="O NAVANHULA POS atende operações de diferentes tamanhos, sempre com foco em simplicidade e controlo real do negócio."
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {audiences.map((item) => (
+              <Card key={item} className="rounded-[1.5rem] border-border bg-card/70 p-5">
+                <div className="mb-4 inline-flex rounded-2xl bg-accent/10 p-3 text-accent">
+                  <Store className="h-5 w-5" />
+                </div>
+                <p className="font-semibold">{item}</p>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="container py-16 lg:py-24">
-        <div className="mb-8 max-w-2xl space-y-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Planos</p>
-          <h2 className="text-3xl font-black tracking-tight sm:text-4xl">Escolha o plano certo para o momento da sua empresa.</h2>
-        </div>
+      <section id="precos" className="container scroll-mt-28 py-16 lg:py-24">
+        <SectionHeading
+          eyebrow="Preços"
+          title="Planos simples para empresas que querem crescer"
+          description="Escolha uma solução pronta para organizar sua operação e acelerar o crescimento da empresa."
+          className="mx-auto max-w-3xl text-center"
+          align="center"
+        />
 
-        <div className="grid gap-5 lg:grid-cols-3">
-          {plans.map((plan) => (
-            <Card
-              key={plan.name}
-              className="rounded-[2rem] border-border bg-card/70 p-6"
-              style={plan.highlight ? { boxShadow: 'var(--shadow-glow)' } : undefined}
-            >
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">{plan.name}</p>
-              <p className="mt-6 text-lg leading-8 text-muted-foreground">{plan.description}</p>
-              <Button asChild className="mt-8 w-full" variant={plan.highlight ? 'default' : 'outline'}>
-                <Link to="/registrar">COMEÇAR AGORA</Link>
-              </Button>
-            </Card>
-          ))}
+        <div className="mx-auto mt-10 max-w-4xl">
+          <Card className="overflow-hidden rounded-[2rem] border-border bg-card/70 p-0">
+            <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="border-b border-border p-8 lg:border-b-0 lg:border-r">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Plano profissional</p>
+                <h3 className="mt-4 text-3xl font-black tracking-tight">Tudo para operar com confiança.</h3>
+                <p className="mt-4 text-base leading-8 text-muted-foreground">
+                  Ideal para empresas que querem sair do controlo manual e profissionalizar vendas, estoque, caixa e relatórios.
+                </p>
+                <Button asChild size="lg" className="mt-8 px-8">
+                  <Link to="/registrar">Começar agora</Link>
+                </Button>
+              </div>
+              <div className="p-8">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[
+                    'Gestão completa de vendas',
+                    'Controle de estoque',
+                    'Gestão de caixa',
+                    'Relatórios avançados',
+                    'Gestão de funcionários',
+                    'Suporte técnico',
+                    'Atualizações do sistema',
+                  ].map((item) => (
+                    <div key={item} className="rounded-[1.25rem] border border-border bg-background/70 px-4 py-4">
+                      <div className="flex items-start gap-3">
+                        <PackageCheck className="mt-1 h-5 w-5 text-success" />
+                        <span className="font-medium leading-7">{item}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
       </section>
 
-      <section className="pb-16 lg:pb-24">
+      <section id="contacto" className="scroll-mt-28 border-y border-border/60 bg-card/30">
+        <div className="container grid gap-10 py-16 lg:grid-cols-[1fr_0.95fr] lg:items-center lg:py-24">
+          <SectionHeading
+            eyebrow="Contacto"
+            title="Precisa de ajuda para implementar o sistema?"
+            description="Nossa equipa pode ajudar sua empresa a começar a usar o NAVANHULA POS com mais rapidez e segurança."
+          />
+
+          <Card className="rounded-[2rem] border-border bg-card/70 p-8">
+            <p className="text-lg font-semibold leading-8">Fale com um especialista e descubra a melhor forma de aplicar o sistema no seu negócio.</p>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
+              Receba orientação para organizar produtos, vendas, caixa e operação diária sem complicação.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button asChild size="lg" className="px-8">
+                <Link to="/contato">Falar com especialista</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="px-8">
+                <Link to="/registrar">Criar conta</Link>
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      <section className="pb-16 pt-16 lg:pb-24">
         <div className="container">
           <div
             className="overflow-hidden rounded-[2rem] border border-border px-6 py-10 text-center sm:px-10 lg:px-16 lg:py-14"
@@ -446,7 +495,6 @@ const SalesLandingPage: React.FC = () => {
           </div>
         </div>
       </section>
-
     </div>
   );
 };
