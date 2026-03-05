@@ -86,7 +86,9 @@ const LocalSettingsPage: React.FC = () => {
           nif: companyForm.nif.trim() || null,
           address: companyForm.address.trim() || null,
           phone: companyForm.phone.trim() || null,
+          email: companyForm.email.trim() || null,
           city: companyForm.city.trim() || null,
+          country: companyForm.country.trim() || 'Moçambique',
         })
         .eq('id', company!.id);
 
