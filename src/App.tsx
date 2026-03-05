@@ -39,6 +39,7 @@ import AboutPage from "./pages/AboutPage";
 import PricingPage from "./pages/PricingPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import ContactPage from "./pages/ContactPage";
+import ResellersNetworkPage from "./pages/ResellersNetworkPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,14 +18,16 @@ const AuthSignupPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   
-  const { signUp, isAuthenticated, loading } = useAuth();
+  const { signUp, isAuthenticated, loading, role } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referralCode = (searchParams.get('ref') || '').trim().toUpperCase();
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      navigate('/app/dashboard', { replace: true });
+      navigate(role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard', { replace: true });
     }
-  }, [loading, isAuthenticated, navigate]);
+  }, [loading, isAuthenticated, role, navigate]);
 
   // Live password validation
   useEffect(() => {

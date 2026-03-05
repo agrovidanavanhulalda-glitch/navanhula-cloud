@@ -76,22 +76,26 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setupRan.current = true;
     
     try {
-      // 1. Bootstrap profile
       const { error: bootstrapError } = await supabase.rpc('bootstrap_current_user');
       if (bootstrapError) {
         // Bootstrap warning - non-critical
       }
-      // 2. Check if user needs company
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*, company_id, store_id, onboarding_completed')
-        .eq('id', userId)
-        .maybeSingle();
 
-      // 3. If no company, create one automatically
-      if (!profile?.company_id || !profile?.onboarding_completed) {
-        
-        const { data: result, error: onboardError } = await supabase.rpc('complete_onboarding', {
+      const [profileResult, roleResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, company_id, store_id, onboarding_completed')
+          .eq('id', userId)
+          .maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+      ]);
+
+      const profile = profileResult.data;
+      const currentRole = (roleResult.data?.role as AppRole | undefined) ?? 'admin';
+      const needsCompany = !profile?.company_id || !profile?.onboarding_completed;
+
+      if (currentRole !== 'reseller' && needsCompany) {
+        const { error: onboardError } = await supabase.rpc('complete_onboarding', {
           p_company_name: 'NAVANHULA EMPRESA PRINCIPAL',
           p_company_nif: null,
           p_company_phone: null,
@@ -106,7 +110,6 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
-      // 4. Fetch final user data
       await fetchUserData(userId);
     } catch (error) {
       setCompany(DEFAULT_COMPANY);
