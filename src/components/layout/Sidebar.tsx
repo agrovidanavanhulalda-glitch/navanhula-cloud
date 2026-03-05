@@ -35,7 +35,7 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-const backofficeNavItems: NavItem[] = [
+const primaryNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/app/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { label: 'PDV', href: '/app/pdv', icon: <ShoppingCart className="w-5 h-5" /> },
   { label: 'Lojas', href: '/app/lojas', icon: <Store className="w-5 h-5" /> },
@@ -47,23 +47,27 @@ const backofficeNavItems: NavItem[] = [
   { label: 'Carteira', href: '/app/carteira', icon: <WalletCards className="w-5 h-5" /> },
   { label: 'Configurações', href: '/app/configuracoes', icon: <Settings className="w-5 h-5" /> },
   { label: 'Comunidade', href: '/app/comunidade', icon: <MessageSquare className="w-5 h-5" /> },
-  { label: 'Dashboard Revendedores', href: '/app/revendedores/dashboard', icon: <Users className="w-5 h-5" /> },
+];
+
+const adminResellerNavItems: NavItem[] = [
+  { label: 'Dashboard de Revendedores', href: '/app/revendedores/dashboard', icon: <Users className="w-5 h-5" /> },
   { label: 'Cadastrar Revendedor', href: '/app/revendedores/cadastrar', icon: <UserPlus className="w-5 h-5" /> },
   { label: 'Lista de Revendedores', href: '/app/revendedores/lista', icon: <Users className="w-5 h-5" /> },
   { label: 'Comissões', href: '/app/revendedores/comissoes', icon: <TrendingUp className="w-5 h-5" /> },
   { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: <Wallet className="w-5 h-5" /> },
   { label: 'Links de Convite', href: '/app/revendedores/links', icon: <Link2 className="w-5 h-5" /> },
-  { label: 'Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
+  { label: 'Relatórios de Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
+  { label: 'Materiais de Venda', href: '/app/revendedores/materiais', icon: <FileText className="w-5 h-5" /> },
 ];
 
-const resellerNavItems: NavItem[] = [
+const resellerPortalNavItems: NavItem[] = [
   { label: 'Meu Painel', href: '/app/revendedores/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { label: 'Clientes Indicados', href: '/app/revendedores/lista', icon: <Users className="w-5 h-5" /> },
   { label: 'Comissões', href: '/app/revendedores/comissoes', icon: <TrendingUp className="w-5 h-5" /> },
   { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: <Wallet className="w-5 h-5" /> },
   { label: 'Links de Convite', href: '/app/revendedores/links', icon: <Link2 className="w-5 h-5" /> },
-  { label: 'Materiais', href: '/app/revendedores/materiais', icon: <FileText className="w-5 h-5" /> },
-  { label: 'Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
+  { label: 'Materiais de Venda', href: '/app/revendedores/materiais', icon: <FileText className="w-5 h-5" /> },
+  { label: 'Relatórios de Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
 ];
 
 interface SidebarProps {
@@ -78,15 +82,50 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
   const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo';
   const isReseller = role === 'reseller';
-  const navItems = isReseller ? resellerNavItems : backofficeNavItems.filter((item) => item.href.startsWith('/app/revendedores') ? isBackofficeAdmin : true);
+  const mainNavItems = isReseller ? resellerPortalNavItems : primaryNavItems;
+  const resellerSectionItems = !isReseller && isBackofficeAdmin ? adminResellerNavItems : [];
   const rawName = currentCashRegister?.sellerName || user?.full_name || '';
   const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : 'Operador';
   const currentOperatorRole =
-    role === 'reseller' ? 'Revendedor' : role === 'ceo' ? 'CEO' : role === 'manager' ? 'Gerente' : isBackofficeAdmin ? 'Administrador' : 'Vendedor';
+    role === 'reseller'
+      ? 'Revendedor'
+      : role === 'ceo'
+        ? 'CEO'
+        : role === 'manager'
+          ? 'Gerente'
+          : isBackofficeAdmin
+            ? 'Administrador'
+            : 'Vendedor';
 
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
+  };
+
+  const renderNavItem = (item: NavItem) => {
+    const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
+
+    return (
+      <Link
+        key={item.href}
+        to={item.href}
+        className={cn(
+          'flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all',
+          isActive
+            ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+          collapsed && 'justify-center px-2'
+        )}
+      >
+        {item.icon}
+        {!collapsed && (
+          <>
+            <span className="flex-1 text-sm">{item.label}</span>
+            {isActive && <ChevronRight className="w-4 h-4" />}
+          </>
+        )}
+      </Link>
+    );
   };
 
   return (
@@ -138,32 +177,19 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         </div>
       )}
 
-      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
+      <nav className="flex-1 p-2 overflow-y-auto">
+        <div className="space-y-1">{mainNavItems.map(renderNavItem)}</div>
 
-          return (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all',
-                isActive
-                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                collapsed && 'justify-center px-2'
-              )}
-            >
-              {item.icon}
-              {!collapsed && (
-                <>
-                  <span className="flex-1 text-sm">{item.label}</span>
-                  {isActive && <ChevronRight className="w-4 h-4" />}
-                </>
-              )}
-            </Link>
-          );
-        })}
+        {resellerSectionItems.length > 0 && (
+          <div className="pt-4">
+            {!collapsed && (
+              <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Rede de Revendedores
+              </p>
+            )}
+            <div className="space-y-1">{resellerSectionItems.map(renderNavItem)}</div>
+          </div>
+        )}
       </nav>
 
       <div className={cn('p-4 border-t border-sidebar-border', collapsed && 'p-2')}>
@@ -193,3 +219,4 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 };
 
 export default Sidebar;
+
