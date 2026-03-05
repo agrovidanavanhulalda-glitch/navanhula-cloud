@@ -60,7 +60,9 @@ const LocalSettingsPage: React.FC = () => {
         nif: (company as any).nif || '',
         address: (company as any).address || '',
         phone: (company as any).phone || '',
+        email: (company as any).email || '',
         city: (company as any).city || '',
+        country: (company as any).country || 'Moçambique',
         logo_url: (company as any).logo_url || null,
       });
       setFiscalForm({
