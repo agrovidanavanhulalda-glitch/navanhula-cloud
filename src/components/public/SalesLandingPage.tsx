@@ -151,7 +151,7 @@ const SalesLandingPage: React.FC = () => {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="px-8">
-                <Link to="#como-funciona">VER COMO FUNCIONA</Link>
+                <a href="#como-funciona">VER COMO FUNCIONA</a>
               </Button>
             </div>
 
