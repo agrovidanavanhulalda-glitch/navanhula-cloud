@@ -447,33 +447,6 @@ const SalesLandingPage: React.FC = () => {
         </div>
       </section>
 
-      <footer className="border-t border-border/60 bg-card/40">
-        <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-lg font-black tracking-tight">NAVANHULA POS</p>
-            <p className="mt-2 text-sm text-muted-foreground">Tecnologia para empresas que querem crescer.</p>
-          </div>
-
-          <nav className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <Link to="/sobre" className="transition-colors hover:text-foreground">
-              Sobre
-            </Link>
-            <Link to="/precos" className="transition-colors hover:text-foreground">
-              Preços
-            </Link>
-            <Link to="/recursos" className="transition-colors hover:text-foreground">
-              Recursos
-            </Link>
-            <Link to="/contato" className="transition-colors hover:text-foreground">
-              Contato
-            </Link>
-          </nav>
-
-          <div className="hidden rounded-full bg-primary/10 p-3 text-primary md:flex">
-            <Store className="h-5 w-5" />
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
