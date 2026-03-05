@@ -29,7 +29,9 @@ const LocalSettingsPage: React.FC = () => {
     nif: '',
     address: '',
     phone: '',
+    email: '',
     city: '',
+    country: 'Moçambique',
     logo_url: '' as string | null,
   });
 
@@ -58,7 +60,9 @@ const LocalSettingsPage: React.FC = () => {
         nif: (company as any).nif || '',
         address: (company as any).address || '',
         phone: (company as any).phone || '',
+        email: (company as any).email || '',
         city: (company as any).city || '',
+        country: (company as any).country || 'Moçambique',
         logo_url: (company as any).logo_url || null,
       });
       setFiscalForm({
@@ -82,7 +86,9 @@ const LocalSettingsPage: React.FC = () => {
           nif: companyForm.nif.trim() || null,
           address: companyForm.address.trim() || null,
           phone: companyForm.phone.trim() || null,
+          email: companyForm.email.trim() || null,
           city: companyForm.city.trim() || null,
+          country: companyForm.country.trim() || 'Moçambique',
         })
         .eq('id', company!.id);
 
@@ -192,6 +198,14 @@ const LocalSettingsPage: React.FC = () => {
                   <Input value={companyForm.nif} onChange={e => setCompanyForm(p => ({ ...p, nif: e.target.value }))} placeholder="Número de contribuinte" />
                 </div>
                 <div className="space-y-2">
+                  <Label>Email da empresa</Label>
+                  <Input type="email" value={companyForm.email} onChange={e => setCompanyForm(p => ({ ...p, email: e.target.value }))} placeholder="geral@empresa.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Contacto</Label>
+                  <Input value={companyForm.phone} onChange={e => setCompanyForm(p => ({ ...p, phone: e.target.value }))} placeholder="+258 84 000 0000" />
+                </div>
+                <div className="space-y-2">
                   <Label>Endereço</Label>
                   <Input value={companyForm.address} onChange={e => setCompanyForm(p => ({ ...p, address: e.target.value }))} placeholder="Endereço completo" />
                 </div>
@@ -200,8 +214,8 @@ const LocalSettingsPage: React.FC = () => {
                   <Input value={companyForm.city} onChange={e => setCompanyForm(p => ({ ...p, city: e.target.value }))} placeholder="Maputo, Beira, etc." />
                 </div>
                 <div className="space-y-2">
-                  <Label>Contacto</Label>
-                  <Input value={companyForm.phone} onChange={e => setCompanyForm(p => ({ ...p, phone: e.target.value }))} placeholder="+258 84 000 0000" />
+                  <Label>País</Label>
+                  <Input value={companyForm.country} onChange={e => setCompanyForm(p => ({ ...p, country: e.target.value }))} placeholder="Moçambique" />
                 </div>
               </div>
               <Button onClick={handleSaveCompany} disabled={saving}>

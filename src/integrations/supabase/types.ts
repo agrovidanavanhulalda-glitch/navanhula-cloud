@@ -502,7 +502,9 @@ export type Database = {
         Row: {
           address: string | null
           city: string | null
+          country: string | null
           created_at: string | null
+          email: string | null
           fiscal_rate: number | null
           fiscal_regime: string | null
           id: string
@@ -516,7 +518,9 @@ export type Database = {
         Insert: {
           address?: string | null
           city?: string | null
+          country?: string | null
           created_at?: string | null
+          email?: string | null
           fiscal_rate?: number | null
           fiscal_regime?: string | null
           id?: string
@@ -530,7 +534,9 @@ export type Database = {
         Update: {
           address?: string | null
           city?: string | null
+          country?: string | null
           created_at?: string | null
+          email?: string | null
           fiscal_rate?: number | null
           fiscal_regime?: string | null
           id?: string
@@ -2412,6 +2418,7 @@ export type Database = {
           price_monthly: number
           status: Database["public"]["Enums"]["subscription_status"]
           store_id: string
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
@@ -2426,6 +2433,7 @@ export type Database = {
           price_monthly?: number
           status?: Database["public"]["Enums"]["subscription_status"]
           store_id: string
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -2440,6 +2448,7 @@ export type Database = {
           price_monthly?: number
           status?: Database["public"]["Enums"]["subscription_status"]
           store_id?: string
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2795,12 +2804,16 @@ export type Database = {
         Args: {
           p_payment_method: Database["public"]["Enums"]["billing_payment_method"]
           p_phone_number?: string
-          p_reference_id?: string
+          p_reference_id: string
           p_subscription_id: string
         }
         Returns: Json
       }
       set_active_store: { Args: { p_store_id: string }; Returns: Json }
+      sync_company_subscription_pricing: {
+        Args: { p_company_id: string }
+        Returns: undefined
+      }
       toggle_post_like: { Args: { p_post_id: string }; Returns: Json }
       transfer_between_stores: {
         Args: {

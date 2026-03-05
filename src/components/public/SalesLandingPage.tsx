@@ -411,29 +411,35 @@ const SalesLandingPage: React.FC = () => {
           align="center"
         />
 
-        <div className="mx-auto mt-10 max-w-4xl">
+        <div className="mx-auto mt-10 max-w-5xl">
           <Card className="overflow-hidden rounded-[2rem] border-border bg-card/70 p-0">
-            <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="grid gap-0 lg:grid-cols-[0.88fr_1.12fr]">
               <div className="border-b border-border p-8 lg:border-b-0 lg:border-r">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Plano profissional</p>
-                <h3 className="mt-4 text-3xl font-black tracking-tight">Tudo para operar com confiança.</h3>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Plano único</p>
+                <h3 className="mt-4 text-3xl font-black tracking-tight">NAVANHULA POS PROFISSIONAL</h3>
+                <div className="mt-5 flex items-end gap-3">
+                  <span className="text-5xl font-black tracking-tight">1500 MT</span>
+                  <span className="pb-1 text-base text-muted-foreground">/ mês por loja ativa</span>
+                </div>
                 <p className="mt-4 text-base leading-8 text-muted-foreground">
-                  Ideal para empresas que querem sair do controlo manual e profissionalizar vendas, estoque, caixa e relatórios.
+                  Sem instalação complicada. Comece a controlar seu negócio em minutos.
                 </p>
                 <Button asChild size="lg" className="mt-8 px-8">
-                  <Link to="/registrar">Começar agora</Link>
+                  <Link to="/registrar">COMEÇAR TESTE GRÁTIS</Link>
                 </Button>
+                <p className="mt-3 text-sm text-muted-foreground">Teste gratuito disponível. Cancele quando quiser.</p>
               </div>
               <div className="p-8">
                 <div className="grid gap-4 sm:grid-cols-2">
                   {[
-                    'Gestão completa de vendas',
-                    'Controle de estoque',
-                    'Gestão de caixa',
-                    'Relatórios avançados',
+                    'Sistema completo de vendas (POS)',
+                    'Gestão de estoque',
+                    'Relatórios financeiros',
                     'Gestão de funcionários',
-                    'Suporte técnico',
-                    'Atualizações do sistema',
+                    'Emissão de documentos comerciais',
+                    'Loja online integrada',
+                    'Acesso multi-usuário',
+                    'Suporte e atualizações',
                   ].map((item) => (
                     <div key={item} className="rounded-[1.25rem] border border-border bg-background/70 px-4 py-4">
                       <div className="flex items-start gap-3">
