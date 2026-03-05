@@ -29,7 +29,9 @@ const LocalSettingsPage: React.FC = () => {
     nif: '',
     address: '',
     phone: '',
+    email: '',
     city: '',
+    country: 'Moçambique',
     logo_url: '' as string | null,
   });
 
