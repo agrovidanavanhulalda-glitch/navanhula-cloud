@@ -56,7 +56,7 @@ const AuthSignupPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await signUp(email, password, fullName);
+      await signUp(email, password, fullName, referralCode || undefined);
       toast.info('Verifique seu email para ativar sua conta.');
     } catch (err: any) {
       setError(err?.message || 'Erro ao criar conta');
