@@ -13,7 +13,6 @@ import {
   Receipt,
   ShieldCheck,
   ShoppingCart,
-  Store,
   Users,
   Wallet,
 } from 'lucide-react';
