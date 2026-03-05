@@ -82,22 +82,24 @@ const PublicSiteLayout: React.FC = () => {
       </main>
 
       <footer className="border-t border-border bg-card/40">
-        <div className="container flex flex-col gap-8 py-10 md:flex-row md:items-center md:justify-between">
+        <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-center md:justify-between">
           <div className="max-w-xl space-y-2">
-            <p className="text-lg font-semibold">NAVANHULA POS</p>
-            <p className="text-sm text-muted-foreground">
-              Plataforma para vender, controlar estoque, acompanhar lojas e operar com documentos fiscais numa única conta.
-            </p>
+            <p className="text-lg font-black tracking-tight">NAVANHULA POS</p>
+            <p className="text-sm text-muted-foreground">Tecnologia para empresas que querem crescer.</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            {navItems.map((item) => (
-              <Link key={item.href} to={item.href} className="transition-colors hover:text-foreground">
-                {item.label}
-              </Link>
-            ))}
-            <Link to="/registrar" className="transition-colors hover:text-foreground">
-              Criar conta
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <Link to="/sobre" className="transition-colors hover:text-foreground">
+              Sobre
+            </Link>
+            <Link to="/precos" className="transition-colors hover:text-foreground">
+              Preços
+            </Link>
+            <Link to="/recursos" className="transition-colors hover:text-foreground">
+              Recursos
+            </Link>
+            <Link to="/contato" className="transition-colors hover:text-foreground">
+              Contato
             </Link>
           </div>
         </div>
