@@ -76,22 +76,26 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setupRan.current = true;
     
     try {
-      // 1. Bootstrap profile
       const { error: bootstrapError } = await supabase.rpc('bootstrap_current_user');
       if (bootstrapError) {
         // Bootstrap warning - non-critical
       }
-      // 2. Check if user needs company
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*, company_id, store_id, onboarding_completed')
-        .eq('id', userId)
-        .maybeSingle();
 
-      // 3. If no company, create one automatically
-      if (!profile?.company_id || !profile?.onboarding_completed) {
-        
-        const { data: result, error: onboardError } = await supabase.rpc('complete_onboarding', {
+      const [profileResult, roleResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, company_id, store_id, onboarding_completed')
+          .eq('id', userId)
+          .maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+      ]);
+
+      const profile = profileResult.data;
+      const currentRole = (roleResult.data?.role as AppRole | undefined) ?? 'admin';
+      const needsCompany = !profile?.company_id || !profile?.onboarding_completed;
+
+      if (currentRole !== 'reseller' && needsCompany) {
+        const { error: onboardError } = await supabase.rpc('complete_onboarding', {
           p_company_name: 'NAVANHULA EMPRESA PRINCIPAL',
           p_company_nif: null,
           p_company_phone: null,
@@ -106,7 +110,6 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
-      // 4. Fetch final user data
       await fetchUserData(userId);
     } catch (error) {
       setCompany(DEFAULT_COMPANY);
@@ -131,16 +134,15 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setUser(profileData as Profile);
         setRole(userRole);
 
-        // Fetch store and company
         if (profileData.store_id) {
           const { data: storeData } = await supabase
             .from('stores')
             .select('*')
             .eq('id', profileData.store_id)
             .maybeSingle();
-          setStore(storeData as Store || DEFAULT_STORE);
+          setStore(storeData as Store || (userRole === 'reseller' ? null : DEFAULT_STORE));
         } else {
-          setStore(DEFAULT_STORE);
+          setStore(userRole === 'reseller' ? null : DEFAULT_STORE);
         }
 
         if (profileData.company_id) {
@@ -149,12 +151,11 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .select('*')
             .eq('id', profileData.company_id)
             .maybeSingle();
-          setCompany(companyData as Company || DEFAULT_COMPANY);
+          setCompany(companyData as Company || (userRole === 'reseller' ? null : DEFAULT_COMPANY));
         } else {
-          setCompany(DEFAULT_COMPANY);
+          setCompany(userRole === 'reseller' ? null : DEFAULT_COMPANY);
         }
       } else {
-        // Fallback
         setCompany(DEFAULT_COMPANY);
         setStore(DEFAULT_STORE);
         setRole('admin');
@@ -262,13 +263,16 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     toast.success('Login realizado!');
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: fullName },
+        data: {
+          full_name: fullName,
+          referral_code: referralCode ?? null,
+        },
       },
     });
     if (error) {

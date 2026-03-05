@@ -39,6 +39,7 @@ import AboutPage from "./pages/AboutPage";
 import PricingPage from "./pages/PricingPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import ContactPage from "./pages/ContactPage";
+import ResellersNetworkPage from "./pages/ResellersNetworkPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -100,17 +101,22 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, role } = useAuth();
 
   if (loading) {
     return <LoadingScreen />;
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/app/dashboard" replace />;
+    return <Navigate to={role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard'} replace />;
   }
 
   return <>{children}</>;
+};
+
+const AppEntryRoute = () => {
+  const { role } = useAuth();
+  return <Navigate to={role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard'} replace />;
 };
 
 const AppRoutes = () => {
@@ -154,7 +160,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route index element={<AppEntryRoute />} />
         <Route path="dashboard" element={<LocalDashboardPage />} />
         <Route path="pdv" element={<LocalPOSPage />} />
         <Route path="lojas" element={<LocalStoresPage />} />
@@ -179,6 +185,15 @@ const AppRoutes = () => {
         <Route path="bi" element={<BIDashboardPage />} />
         <Route path="agricultura" element={<AgriculturePage />} />
         <Route path="avicultura" element={<PoultryPage />} />
+        <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
+        <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/lista" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/comissoes" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/pagamentos" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/links" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/performance" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/materiais" element={<ResellersNetworkPage />} />
       </Route>
 
       {legacyRoutes.map((route) => (

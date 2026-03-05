@@ -1,6 +1,6 @@
 // NAVANHULA POS Types - SaaS Multi-tenant
 
-export type AppRole = 'admin' | 'manager' | 'seller' | 'ceo';
+export type AppRole = 'admin' | 'manager' | 'seller' | 'ceo' | 'reseller';
 export type PaymentMethod = 'cash' | 'mpesa' | 'emola' | 'card';
 export type SaleStatus = 'pending' | 'completed' | 'cancelled' | 'refunded';
 export type CashRegisterStatus = 'open' | 'closed';
@@ -195,7 +195,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   onboardingCompleted: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, referralCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
   completeOnboarding: (companyData: OnboardingData) => Promise<void>;
   refreshUserData: () => Promise<void>;

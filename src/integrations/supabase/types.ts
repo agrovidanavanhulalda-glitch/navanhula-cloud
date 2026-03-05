@@ -1720,6 +1720,431 @@ export type Database = {
           },
         ]
       }
+      referral_logs: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          referral_code: string | null
+          referred_user_id: string | null
+          reseller_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          referral_code?: string | null
+          referred_user_id?: string | null
+          reseller_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          referral_code?: string | null
+          referred_user_id?: string | null
+          reseller_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_logs_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_signups: {
+        Row: {
+          company_id: string | null
+          converted_at: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          referral_code: string
+          referred_email: string | null
+          referred_user_id: string | null
+          reseller_id: string
+          status: Database["public"]["Enums"]["referral_signup_status"]
+        }
+        Insert: {
+          company_id?: string | null
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          referral_code: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          reseller_id: string
+          status?: Database["public"]["Enums"]["referral_signup_status"]
+        }
+        Update: {
+          company_id?: string | null
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          referral_code?: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          reseller_id?: string
+          status?: Database["public"]["Enums"]["referral_signup_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_signups_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_signups_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reseller_clients: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          primary_contact_email: string | null
+          referral_signup_id: string | null
+          reseller_id: string
+          status: string
+          total_commission_generated: number
+          total_commission_paid: number
+          total_revenue: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          primary_contact_email?: string | null
+          referral_signup_id?: string | null
+          reseller_id: string
+          status?: string
+          total_commission_generated?: number
+          total_commission_paid?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          primary_contact_email?: string | null
+          referral_signup_id?: string | null
+          reseller_id?: string
+          status?: string
+          total_commission_generated?: number
+          total_commission_paid?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_clients_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_clients_referral_signup_id_fkey"
+            columns: ["referral_signup_id"]
+            isOneToOne: true
+            referencedRelation: "referral_signups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_clients_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reseller_commissions: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          company_id: string
+          created_at: string
+          id: string
+          paid_at: string | null
+          payment_amount: number
+          payment_transaction_id: string
+          reseller_client_id: string | null
+          reseller_id: string
+          status: Database["public"]["Enums"]["reseller_commission_status"]
+          subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          commission_amount: number
+          commission_rate?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_amount: number
+          payment_transaction_id: string
+          reseller_client_id?: string | null
+          reseller_id: string
+          status?: Database["public"]["Enums"]["reseller_commission_status"]
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_amount?: number
+          payment_transaction_id?: string
+          reseller_client_id?: string | null
+          reseller_id?: string
+          status?: Database["public"]["Enums"]["reseller_commission_status"]
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_commissions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_commissions_payment_transaction_id_fkey"
+            columns: ["payment_transaction_id"]
+            isOneToOne: true
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_commissions_reseller_client_id_fkey"
+            columns: ["reseller_client_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_commissions_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_commissions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reseller_materials: {
+        Row: {
+          asset_url: string | null
+          content_text: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          material_type: Database["public"]["Enums"]["reseller_material_type"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          asset_url?: string | null
+          content_text?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          material_type: Database["public"]["Enums"]["reseller_material_type"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          asset_url?: string | null
+          content_text?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          material_type?: Database["public"]["Enums"]["reseller_material_type"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reseller_payout_items: {
+        Row: {
+          commission_id: string
+          created_at: string
+          id: string
+          payout_id: string
+        }
+        Insert: {
+          commission_id: string
+          created_at?: string
+          id?: string
+          payout_id: string
+        }
+        Update: {
+          commission_id?: string
+          created_at?: string
+          id?: string
+          payout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_payout_items_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: true
+            referencedRelation: "reseller_commissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_payout_items_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "reseller_payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reseller_payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          payment_method: string
+          reference: string | null
+          reseller_id: string
+          status: Database["public"]["Enums"]["reseller_payout_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method: string
+          reference?: string | null
+          reseller_id: string
+          status?: Database["public"]["Enums"]["reseller_payout_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string
+          reference?: string | null
+          reseller_id?: string
+          status?: Database["public"]["Enums"]["reseller_payout_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_payouts_reseller_id_fkey"
+            columns: ["reseller_id"]
+            isOneToOne: false
+            referencedRelation: "resellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resellers: {
+        Row: {
+          city: string | null
+          country: string
+          created_at: string
+          document_id: string | null
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          profile_id: string | null
+          referral_code: string
+          status: Database["public"]["Enums"]["reseller_status"]
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string
+          created_at?: string
+          document_id?: string | null
+          email: string
+          full_name: string
+          id?: string
+          phone: string
+          profile_id?: string | null
+          referral_code?: string
+          status?: Database["public"]["Enums"]["reseller_status"]
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          country?: string
+          created_at?: string
+          document_id?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          profile_id?: string | null
+          referral_code?: string
+          status?: Database["public"]["Enums"]["reseller_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resellers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sale_items: {
         Row: {
           cost_price: number
@@ -2270,6 +2695,15 @@ export type Database = {
         Returns: Json
       }
       bootstrap_current_user: { Args: never; Returns: undefined }
+      capture_referral_for_user: {
+        Args: {
+          _email: string
+          _metadata?: Json
+          _referral_code: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       check_subscription_status: {
         Args: { p_store_id: string }
         Returns: Database["public"]["Enums"]["subscription_status"]
@@ -2292,7 +2726,9 @@ export type Database = {
         }
         Returns: Json
       }
+      generate_reseller_code: { Args: never; Returns: string }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
+      get_reseller_id: { Args: { _user_id: string }; Returns: string }
       get_sales_by_store: { Args: { p_period?: string }; Returns: Json }
       get_top_products_national: { Args: { p_limit?: number }; Returns: Json }
       get_user_company: { Args: { _user_id: string }; Returns: string }
@@ -2307,6 +2743,7 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_reseller: { Args: { _user_id: string }; Returns: boolean }
       issue_fiscal_document: {
         Args: {
           p_customer_address?: string
@@ -2323,6 +2760,10 @@ export type Database = {
           p_valid_until?: string
         }
         Returns: Json
+      }
+      link_referral_company: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: undefined
       }
       notify_company_admins: {
         Args: {
@@ -2344,6 +2785,10 @@ export type Database = {
           p_type: string
           p_user_id: string
         }
+        Returns: undefined
+      }
+      process_reseller_commission: {
+        Args: { _payment_transaction_id: string }
         Returns: undefined
       }
       process_subscription_payment: {
@@ -2373,7 +2818,7 @@ export type Database = {
     }
     Enums: {
       accounting_entry_type: "revenue" | "expense" | "tax" | "transfer"
-      app_role: "admin" | "manager" | "seller" | "ceo"
+      app_role: "admin" | "manager" | "seller" | "ceo" | "reseller"
       billing_payment_method: "mpesa" | "emola" | "manual"
       cash_register_status: "open" | "closed"
       fiscal_document_type:
@@ -2391,6 +2836,16 @@ export type Database = {
         | "approved"
         | "received"
         | "cancelled"
+      referral_signup_status: "captured" | "converted"
+      reseller_commission_status: "pending" | "paid" | "cancelled"
+      reseller_material_type:
+        | "presentation"
+        | "video"
+        | "image"
+        | "sales_copy"
+        | "manual"
+      reseller_payout_status: "pending" | "paid"
+      reseller_status: "active" | "suspended"
       sale_status: "pending" | "completed" | "cancelled" | "refunded"
       stock_adjustment_reason:
         | "loss"
@@ -2528,7 +2983,7 @@ export const Constants = {
   public: {
     Enums: {
       accounting_entry_type: ["revenue", "expense", "tax", "transfer"],
-      app_role: ["admin", "manager", "seller", "ceo"],
+      app_role: ["admin", "manager", "seller", "ceo", "reseller"],
       billing_payment_method: ["mpesa", "emola", "manual"],
       cash_register_status: ["open", "closed"],
       fiscal_document_type: [
@@ -2548,6 +3003,17 @@ export const Constants = {
         "received",
         "cancelled",
       ],
+      referral_signup_status: ["captured", "converted"],
+      reseller_commission_status: ["pending", "paid", "cancelled"],
+      reseller_material_type: [
+        "presentation",
+        "video",
+        "image",
+        "sales_copy",
+        "manual",
+      ],
+      reseller_payout_status: ["pending", "paid"],
+      reseller_status: ["active", "suspended"],
       sale_status: ["pending", "completed", "cancelled", "refunded"],
       stock_adjustment_reason: [
         "loss",

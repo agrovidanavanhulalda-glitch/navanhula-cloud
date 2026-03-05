@@ -19,6 +19,11 @@ import {
   Shield,
   User,
   MessageSquare,
+  Users,
+  UserPlus,
+  Link2,
+  Wallet,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
@@ -28,21 +33,37 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
-  adminOnly: boolean;
 }
 
-const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/app/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, adminOnly: false },
-  { label: 'PDV', href: '/app/pdv', icon: <ShoppingCart className="w-5 h-5" />, adminOnly: false },
-  { label: 'Lojas', href: '/app/lojas', icon: <Store className="w-5 h-5" />, adminOnly: true },
-  { label: 'Produtos', href: '/app/produtos', icon: <Package className="w-5 h-5" />, adminOnly: true },
-  { label: 'Estoque', href: '/app/estoque', icon: <Boxes className="w-5 h-5" />, adminOnly: true },
-  { label: 'Vendas', href: '/app/vendas', icon: <History className="w-5 h-5" />, adminOnly: false },
-  { label: 'Relatórios', href: '/app/relatorios', icon: <BarChart3 className="w-5 h-5" />, adminOnly: true },
-  { label: 'Financeiro', href: '/app/financeiro', icon: <TrendingUp className="w-5 h-5" />, adminOnly: true },
-  { label: 'Carteira', href: '/app/carteira', icon: <WalletCards className="w-5 h-5" />, adminOnly: false },
-  { label: 'Configurações', href: '/app/configuracoes', icon: <Settings className="w-5 h-5" />, adminOnly: true },
-  { label: 'Comunidade', href: '/app/comunidade', icon: <MessageSquare className="w-5 h-5" />, adminOnly: false },
+const backofficeNavItems: NavItem[] = [
+  { label: 'Dashboard', href: '/app/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+  { label: 'PDV', href: '/app/pdv', icon: <ShoppingCart className="w-5 h-5" /> },
+  { label: 'Lojas', href: '/app/lojas', icon: <Store className="w-5 h-5" /> },
+  { label: 'Produtos', href: '/app/produtos', icon: <Package className="w-5 h-5" /> },
+  { label: 'Estoque', href: '/app/estoque', icon: <Boxes className="w-5 h-5" /> },
+  { label: 'Vendas', href: '/app/vendas', icon: <History className="w-5 h-5" /> },
+  { label: 'Relatórios', href: '/app/relatorios', icon: <BarChart3 className="w-5 h-5" /> },
+  { label: 'Financeiro', href: '/app/financeiro', icon: <TrendingUp className="w-5 h-5" /> },
+  { label: 'Carteira', href: '/app/carteira', icon: <WalletCards className="w-5 h-5" /> },
+  { label: 'Configurações', href: '/app/configuracoes', icon: <Settings className="w-5 h-5" /> },
+  { label: 'Comunidade', href: '/app/comunidade', icon: <MessageSquare className="w-5 h-5" /> },
+  { label: 'Dashboard Revendedores', href: '/app/revendedores/dashboard', icon: <Users className="w-5 h-5" /> },
+  { label: 'Cadastrar Revendedor', href: '/app/revendedores/cadastrar', icon: <UserPlus className="w-5 h-5" /> },
+  { label: 'Lista de Revendedores', href: '/app/revendedores/lista', icon: <Users className="w-5 h-5" /> },
+  { label: 'Comissões', href: '/app/revendedores/comissoes', icon: <TrendingUp className="w-5 h-5" /> },
+  { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: <Wallet className="w-5 h-5" /> },
+  { label: 'Links de Convite', href: '/app/revendedores/links', icon: <Link2 className="w-5 h-5" /> },
+  { label: 'Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
+];
+
+const resellerNavItems: NavItem[] = [
+  { label: 'Meu Painel', href: '/app/revendedores/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+  { label: 'Clientes Indicados', href: '/app/revendedores/lista', icon: <Users className="w-5 h-5" /> },
+  { label: 'Comissões', href: '/app/revendedores/comissoes', icon: <TrendingUp className="w-5 h-5" /> },
+  { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: <Wallet className="w-5 h-5" /> },
+  { label: 'Links de Convite', href: '/app/revendedores/links', icon: <Link2 className="w-5 h-5" /> },
+  { label: 'Materiais', href: '/app/revendedores/materiais', icon: <FileText className="w-5 h-5" /> },
+  { label: 'Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
 ];
 
 interface SidebarProps {
@@ -55,18 +76,18 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const { user, company, store, signOut, role } = useAuth();
   const { currentCashRegister } = useLocalPOS();
 
-  const isAdmin = role === 'admin' || role === 'manager' || (role as string) === 'ceo';
+  const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo';
+  const isReseller = role === 'reseller';
+  const navItems = isReseller ? resellerNavItems : backofficeNavItems.filter((item) => item.href.startsWith('/app/revendedores') ? isBackofficeAdmin : true);
   const rawName = currentCashRegister?.sellerName || user?.full_name || '';
   const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : 'Operador';
   const currentOperatorRole =
-    (role as string) === 'ceo' ? 'CEO' : role === 'manager' ? 'Gerente' : isAdmin ? 'Administrador' : 'Vendedor';
+    role === 'reseller' ? 'Revendedor' : role === 'ceo' ? 'CEO' : role === 'manager' ? 'Gerente' : isBackofficeAdmin ? 'Administrador' : 'Vendedor';
 
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
   };
-
-  const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdmin);
 
   return (
     <aside
@@ -82,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         {!collapsed && (
           <div>
             <h1 className="font-bold text-lg text-sidebar-foreground">NAVANHULA POS</h1>
-            <p className="text-xs text-muted-foreground">Área privada do cliente</p>
+            <p className="text-xs text-muted-foreground">{isReseller ? 'Área do revendedor' : 'Área privada do cliente'}</p>
           </div>
         )}
       </div>
@@ -94,7 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         </div>
       )}
 
-      {!collapsed && (
+      {!collapsed && (company || store || isReseller) && (
         <div className="px-4 py-3 border-b border-sidebar-border space-y-2">
           {company && (
             <div className="flex items-center gap-2 text-sm">
@@ -102,17 +123,23 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
               <span className="text-sidebar-foreground truncate font-medium">{company.name}</span>
             </div>
           )}
-          {store && (
+          {store && !isReseller && (
             <div className="flex items-center gap-2 text-xs">
               <Store className="w-3 h-3 text-muted-foreground" />
               <span className="text-muted-foreground truncate">{store.name}</span>
+            </div>
+          )}
+          {isReseller && !company && (
+            <div className="flex items-center gap-2 text-xs">
+              <Users className="w-3 h-3 text-primary" />
+              <span className="text-muted-foreground truncate">Rede comercial NAVANHULA POS</span>
             </div>
           )}
         </div>
       )}
 
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-        {visibleNavItems.map((item) => {
+        {navItems.map((item) => {
           const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
 
           return (
@@ -130,7 +157,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
               {item.icon}
               {!collapsed && (
                 <>
-                  <span className="flex-1">{item.label}</span>
+                  <span className="flex-1 text-sm">{item.label}</span>
                   {isActive && <ChevronRight className="w-4 h-4" />}
                 </>
               )}
@@ -143,7 +170,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         {!collapsed && (
           <div className="mb-3 p-3 rounded-lg bg-sidebar-accent">
             <div className="flex items-center gap-2 mb-1">
-              {isAdmin ? <Shield className="w-4 h-4 text-primary" /> : <User className="w-4 h-4 text-muted-foreground" />}
+              {isBackofficeAdmin ? <Shield className="w-4 h-4 text-primary" /> : <User className="w-4 h-4 text-muted-foreground" />}
               <p className="font-medium text-sm text-sidebar-accent-foreground truncate">{currentOperator}</p>
             </div>
             <p className="text-xs text-muted-foreground">{currentOperatorRole}</p>

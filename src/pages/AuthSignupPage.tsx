@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,14 +18,16 @@ const AuthSignupPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   
-  const { signUp, isAuthenticated, loading } = useAuth();
+  const { signUp, isAuthenticated, loading, role } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referralCode = (searchParams.get('ref') || '').trim().toUpperCase();
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      navigate('/app/dashboard', { replace: true });
+      navigate(role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard', { replace: true });
     }
-  }, [loading, isAuthenticated, navigate]);
+  }, [loading, isAuthenticated, role, navigate]);
 
   // Live password validation
   useEffect(() => {
@@ -54,7 +56,7 @@ const AuthSignupPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await signUp(email, password, fullName);
+      await signUp(email, password, fullName, referralCode || undefined);
       toast.info('Verifique seu email para ativar sua conta.');
     } catch (err: any) {
       setError(err?.message || 'Erro ao criar conta');
@@ -89,6 +91,12 @@ const AuthSignupPage: React.FC = () => {
           <UserPlus className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-semibold">Criar Conta</h2>
         </div>
+
+        {referralCode ? (
+          <div className="mb-4 p-3 rounded-lg border border-primary/20 bg-primary/10 text-sm text-foreground">
+            Cadastro com indicação ativa: <span className="font-semibold">{referralCode}</span>
+          </div>
+        ) : null}
 
         {error && (
           <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">

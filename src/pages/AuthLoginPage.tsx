@@ -22,15 +22,15 @@ const AuthLoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const { signIn, isAuthenticated, loading } = useAuth();
+  const { signIn, isAuthenticated, loading, role } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
       console.log('[Login] User authenticated, redirecting...');
-      navigate('/app/dashboard', { replace: true });
+      navigate(role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard', { replace: true });
     }
-  }, [loading, isAuthenticated, navigate]);
+  }, [loading, isAuthenticated, role, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
