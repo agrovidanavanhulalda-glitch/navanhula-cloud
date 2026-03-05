@@ -101,17 +101,22 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, role } = useAuth();
 
   if (loading) {
     return <LoadingScreen />;
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/app/dashboard" replace />;
+    return <Navigate to={role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard'} replace />;
   }
 
   return <>{children}</>;
+};
+
+const AppEntryRoute = () => {
+  const { role } = useAuth();
+  return <Navigate to={role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard'} replace />;
 };
 
 const AppRoutes = () => {
