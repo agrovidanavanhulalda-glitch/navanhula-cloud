@@ -195,7 +195,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   onboardingCompleted: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, referralCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
   completeOnboarding: (companyData: OnboardingData) => Promise<void>;
   refreshUserData: () => Promise<void>;

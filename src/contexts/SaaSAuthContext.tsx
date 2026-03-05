@@ -263,13 +263,16 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     toast.success('Login realizado!');
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: fullName },
+        data: {
+          full_name: fullName,
+          referral_code: referralCode ?? null,
+        },
       },
     });
     if (error) {

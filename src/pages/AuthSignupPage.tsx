@@ -92,6 +92,12 @@ const AuthSignupPage: React.FC = () => {
           <h2 className="text-xl font-semibold">Criar Conta</h2>
         </div>
 
+        {referralCode ? (
+          <div className="mb-4 p-3 rounded-lg border border-primary/20 bg-primary/10 text-sm text-foreground">
+            Cadastro com indicação ativa: <span className="font-semibold">{referralCode}</span>
+          </div>
+        ) : null}
+
         {error && (
           <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">
             <AlertTriangle className="w-5 h-5 flex-shrink-0" />

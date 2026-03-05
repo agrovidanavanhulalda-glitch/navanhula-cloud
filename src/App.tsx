@@ -160,7 +160,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route index element={<AppEntryRoute />} />
         <Route path="dashboard" element={<LocalDashboardPage />} />
         <Route path="pdv" element={<LocalPOSPage />} />
         <Route path="lojas" element={<LocalStoresPage />} />
@@ -185,6 +185,15 @@ const AppRoutes = () => {
         <Route path="bi" element={<BIDashboardPage />} />
         <Route path="agricultura" element={<AgriculturePage />} />
         <Route path="avicultura" element={<PoultryPage />} />
+        <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
+        <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/lista" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/comissoes" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/pagamentos" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/links" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/performance" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/materiais" element={<ResellersNetworkPage />} />
       </Route>
 
       {legacyRoutes.map((route) => (
