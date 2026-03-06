@@ -123,7 +123,8 @@ const FiscalDocumentsManager: React.FC = () => {
 
     setLoading(true);
     try {
-      const [seriesResult, documentsResult] = await Promise.all([
+      const storeId = store?.id;
+      const [seriesResult, documentsResult, productsResult] = await Promise.all([
         db.from('document_series').select('*').eq('company_id', company.id).order('document_type'),
         db
           .from('fiscal_documents')
@@ -131,6 +132,9 @@ const FiscalDocumentsManager: React.FC = () => {
           .eq('company_id', company.id)
           .order('issue_date', { ascending: false })
           .limit(12),
+        storeId
+          ? db.from('products').select('id, name, code, sale_price, product_stock(quantity)').eq('is_active', true).limit(500)
+          : Promise.resolve({ data: [], error: null }),
       ]);
 
       if (seriesResult.error) throw seriesResult.error;
