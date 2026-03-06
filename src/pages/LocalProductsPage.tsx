@@ -215,10 +215,23 @@ const LocalProductsPage: React.FC = () => {
             {products.length} produtos cadastrados
           </p>
         </div>
-        <Button onClick={handleNewProduct}>
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Produto
-        </Button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={handleExcelImport}
+          />
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+            {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
+            Importar Excel
+          </Button>
+          <Button onClick={handleNewProduct}>
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Produto
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

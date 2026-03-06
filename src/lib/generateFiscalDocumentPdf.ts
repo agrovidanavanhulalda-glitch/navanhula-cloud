@@ -114,8 +114,16 @@ export const generateFiscalDocumentPdf = ({ document, company, store }: Generate
     doc.text(`Tel: ${company.phone}`, margin, y);
     y += 4;
   }
+  if (company?.email) {
+    doc.text(`Email: ${company.email}`, margin, y);
+    y += 4;
+  }
   if (company?.nif) {
     doc.text(`NUIT: ${company.nif}`, margin, y);
+    y += 4;
+  }
+  if (company?.country) {
+    doc.text(company.country, margin, y);
     y += 4;
   }
   if (company?.fiscal_regime) {

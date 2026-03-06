@@ -475,7 +475,16 @@ const FiscalDocumentsManager: React.FC = () => {
                     <div key={index} className="rounded-lg border border-border p-4">
                       <div className="grid gap-3 md:grid-cols-[2fr_0.8fr_1fr_auto]">
                         <div className="space-y-2 md:col-span-4">
-                          <Label>Descrição</Label>
+                          <Label>Produto / Descrição</Label>
+                          {stockProducts.length > 0 && (
+                            <DocumentProductPicker
+                              products={stockProducts}
+                              onSelect={(product) => {
+                                updateItem(index, 'description', product.name);
+                                updateItem(index, 'unit_price', String(product.salePrice));
+                              }}
+                            />
+                          )}
                           <Input
                             value={item.description}
                             onChange={(event) => updateItem(index, 'description', event.target.value)}
