@@ -43,8 +43,11 @@ interface PdfCompany {
   name: string;
   nif?: string | null;
   phone?: string | null;
+  email?: string | null;
   address?: string | null;
   city?: string | null;
+  country?: string | null;
+  logo_url?: string | null;
   fiscal_regime?: string | null;
 }
 
