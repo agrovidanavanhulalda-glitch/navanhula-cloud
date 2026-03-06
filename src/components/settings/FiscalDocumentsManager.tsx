@@ -742,9 +742,17 @@ const FiscalDocumentsManager: React.FC = () => {
                       <span>Total: {formatCurrency(Number(document.total || 0))}</span>
                     </div>
                   </div>
-                  <Button variant="outline" onClick={() => handleDownload(document)}>
-                    <Download className="mr-2 h-4 w-4" /> PDF
-                  </Button>
+                  <div className="flex gap-2">
+                    {CONVERSION_MAP[document.document_type as FiscalDocumentType] && (
+                      <Button variant="secondary" onClick={() => handleConvertDocument(document)}>
+                        <ArrowRightLeft className="mr-2 h-4 w-4" />
+                        {CONVERSION_MAP[document.document_type as FiscalDocumentType]!.label}
+                      </Button>
+                    )}
+                    <Button variant="outline" onClick={() => handleDownload(document)}>
+                      <Download className="mr-2 h-4 w-4" /> PDF
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
