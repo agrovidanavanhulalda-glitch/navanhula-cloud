@@ -113,6 +113,7 @@ const FiscalDocumentsManager: React.FC = () => {
   const [taxRate, setTaxRate] = useState(Number((company as any)?.fiscal_rate || 0));
   const [discountAmount, setDiscountAmount] = useState(0);
   const [items, setItems] = useState<DocumentItemForm[]>([{ ...createEmptyItem(), tax_rate: Number((company as any)?.fiscal_rate || 0) }]);
+  const [stockProducts, setStockProducts] = useState<DocumentProductOption[]>([]);
 
   const loadData = useCallback(async () => {
     if (!company?.id || company.id === 'local-default') {
