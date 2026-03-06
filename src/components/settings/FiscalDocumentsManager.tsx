@@ -142,6 +142,15 @@ const FiscalDocumentsManager: React.FC = () => {
 
       setSeries((seriesResult.data || []) as DocumentSeriesRecord[]);
       setDocuments((documentsResult.data || []) as FiscalDocumentPdfRecord[]);
+      
+      const mappedProducts: DocumentProductOption[] = (productsResult.data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        salePrice: Number(p.sale_price || 0),
+        stock: Number(p.product_stock?.[0]?.quantity ?? 0),
+        code: p.code,
+      }));
+      setStockProducts(mappedProducts);
     } catch (error: any) {
       toast.error(error.message || 'Erro ao carregar documentos fiscais');
     } finally {
