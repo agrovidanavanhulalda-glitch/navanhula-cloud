@@ -21,7 +21,9 @@ import {
   ScrollText,
   Trash2,
   UserRound,
+  Search,
 } from 'lucide-react';
+import DocumentProductPicker, { type DocumentProductOption } from '@/components/settings/DocumentProductPicker';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters';
 import { downloadFiscalDocumentPdf, type FiscalDocumentPdfRecord } from '@/lib/generateFiscalDocumentPdf';
 
