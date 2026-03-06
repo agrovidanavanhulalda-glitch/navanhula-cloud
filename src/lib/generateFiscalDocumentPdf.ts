@@ -43,8 +43,11 @@ interface PdfCompany {
   name: string;
   nif?: string | null;
   phone?: string | null;
+  email?: string | null;
   address?: string | null;
   city?: string | null;
+  country?: string | null;
+  logo_url?: string | null;
   fiscal_regime?: string | null;
 }
 
@@ -111,8 +114,16 @@ export const generateFiscalDocumentPdf = ({ document, company, store }: Generate
     doc.text(`Tel: ${company.phone}`, margin, y);
     y += 4;
   }
+  if (company?.email) {
+    doc.text(`Email: ${company.email}`, margin, y);
+    y += 4;
+  }
   if (company?.nif) {
     doc.text(`NUIT: ${company.nif}`, margin, y);
+    y += 4;
+  }
+  if (company?.country) {
+    doc.text(company.country, margin, y);
     y += 4;
   }
   if (company?.fiscal_regime) {

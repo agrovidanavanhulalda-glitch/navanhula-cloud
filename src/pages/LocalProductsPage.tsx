@@ -21,11 +21,15 @@ import {
   Pencil, 
   Trash2, 
   Search,
-  AlertTriangle
+  AlertTriangle,
+  Upload,
+  Loader2,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import ProductImageUpload from '@/components/products/ProductImageUpload';
+import * as XLSX from 'xlsx';
 
 // HYBRID: Local POS data + SaaS Auth
 
@@ -37,6 +41,8 @@ const LocalProductsPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LocalProduct | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -151,6 +157,39 @@ const LocalProductsPage: React.FC = () => {
     return ((sale - cost) / cost * 100).toFixed(1);
   };
 
+  // Excel Import
+  const handleExcelImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet);
+      
+      let imported = 0;
+      for (const row of rows) {
+        const name = String(row['nome'] || row['Nome'] || row['name'] || row['Produto'] || '').trim();
+        const salePrice = parseFloat(row['preço de venda'] || row['preco_venda'] || row['sale_price'] || row['preco'] || row['Preço'] || 0);
+        const costPrice = parseFloat(row['preço de compra'] || row['preco_compra'] || row['cost_price'] || row['custo'] || row['Custo'] || 0);
+        const stock = parseInt(row['estoque'] || row['stock'] || row['quantidade'] || row['Estoque'] || 0);
+        
+        if (!name || salePrice <= 0) continue;
+        
+        addProduct({ name, salePrice, costPrice: costPrice || 0, stock: stock || 0, isActive: true });
+        imported++;
+      }
+      
+      toast.success(`${imported} produtos importados com sucesso.`);
+    } catch (err: any) {
+      toast.error('Erro ao importar: ' + (err.message || 'Ficheiro inválido'));
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   if (!isAdmin) {
     return (
       <div className="p-8 text-center">
@@ -176,10 +215,23 @@ const LocalProductsPage: React.FC = () => {
             {products.length} produtos cadastrados
           </p>
         </div>
-        <Button onClick={handleNewProduct}>
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Produto
-        </Button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={handleExcelImport}
+          />
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+            {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
+            Importar Excel
+          </Button>
+          <Button onClick={handleNewProduct}>
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Produto
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

@@ -37,14 +37,19 @@ interface NavItem {
 
 const primaryNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/app/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+  { label: 'Painel CEO', href: '/app/ceo', icon: <TrendingUp className="w-5 h-5" /> },
   { label: 'PDV', href: '/app/pdv', icon: <ShoppingCart className="w-5 h-5" /> },
-  { label: 'Lojas', href: '/app/lojas', icon: <Store className="w-5 h-5" /> },
+  { label: 'Caixa', href: '/app/caixa', icon: <WalletCards className="w-5 h-5" /> },
+  { label: 'Vendas', href: '/app/vendas', icon: <History className="w-5 h-5" /> },
   { label: 'Produtos', href: '/app/produtos', icon: <Package className="w-5 h-5" /> },
   { label: 'Estoque', href: '/app/estoque', icon: <Boxes className="w-5 h-5" /> },
-  { label: 'Vendas', href: '/app/vendas', icon: <History className="w-5 h-5" /> },
+  { label: 'Vendedores', href: '/app/vendedores', icon: <Users className="w-5 h-5" /> },
+  { label: 'Lojas', href: '/app/lojas', icon: <Store className="w-5 h-5" /> },
   { label: 'Relatórios', href: '/app/relatorios', icon: <BarChart3 className="w-5 h-5" /> },
+  { label: 'Fiscal', href: '/app/fiscal', icon: <FileText className="w-5 h-5" /> },
   { label: 'Financeiro', href: '/app/financeiro', icon: <TrendingUp className="w-5 h-5" /> },
   { label: 'Carteira', href: '/app/carteira', icon: <WalletCards className="w-5 h-5" /> },
+  { label: 'Assinatura', href: '/app/assinatura', icon: <Shield className="w-5 h-5" /> },
   { label: 'Configurações', href: '/app/configuracoes', icon: <Settings className="w-5 h-5" /> },
   { label: 'Comunidade', href: '/app/comunidade', icon: <MessageSquare className="w-5 h-5" /> },
 ];

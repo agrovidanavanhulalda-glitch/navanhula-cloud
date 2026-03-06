@@ -21,7 +21,9 @@ import {
   ScrollText,
   Trash2,
   UserRound,
+  Search,
 } from 'lucide-react';
+import DocumentProductPicker, { type DocumentProductOption } from '@/components/settings/DocumentProductPicker';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters';
 import { downloadFiscalDocumentPdf, type FiscalDocumentPdfRecord } from '@/lib/generateFiscalDocumentPdf';
 
@@ -111,6 +113,7 @@ const FiscalDocumentsManager: React.FC = () => {
   const [taxRate, setTaxRate] = useState(Number((company as any)?.fiscal_rate || 0));
   const [discountAmount, setDiscountAmount] = useState(0);
   const [items, setItems] = useState<DocumentItemForm[]>([{ ...createEmptyItem(), tax_rate: Number((company as any)?.fiscal_rate || 0) }]);
+  const [stockProducts, setStockProducts] = useState<DocumentProductOption[]>([]);
 
   const loadData = useCallback(async () => {
     if (!company?.id || company.id === 'local-default') {
@@ -120,7 +123,8 @@ const FiscalDocumentsManager: React.FC = () => {
 
     setLoading(true);
     try {
-      const [seriesResult, documentsResult] = await Promise.all([
+      const storeId = store?.id;
+      const [seriesResult, documentsResult, productsResult] = await Promise.all([
         db.from('document_series').select('*').eq('company_id', company.id).order('document_type'),
         db
           .from('fiscal_documents')
@@ -128,6 +132,9 @@ const FiscalDocumentsManager: React.FC = () => {
           .eq('company_id', company.id)
           .order('issue_date', { ascending: false })
           .limit(12),
+        storeId
+          ? db.from('products').select('id, name, code, sale_price, product_stock(quantity)').eq('is_active', true).limit(500)
+          : Promise.resolve({ data: [], error: null }),
       ]);
 
       if (seriesResult.error) throw seriesResult.error;
@@ -135,6 +142,15 @@ const FiscalDocumentsManager: React.FC = () => {
 
       setSeries((seriesResult.data || []) as DocumentSeriesRecord[]);
       setDocuments((documentsResult.data || []) as FiscalDocumentPdfRecord[]);
+      
+      const mappedProducts: DocumentProductOption[] = (productsResult.data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        salePrice: Number(p.sale_price || 0),
+        stock: Number(p.product_stock?.[0]?.quantity ?? 0),
+        code: p.code,
+      }));
+      setStockProducts(mappedProducts);
     } catch (error: any) {
       toast.error(error.message || 'Erro ao carregar documentos fiscais');
     } finally {
@@ -459,7 +475,16 @@ const FiscalDocumentsManager: React.FC = () => {
                     <div key={index} className="rounded-lg border border-border p-4">
                       <div className="grid gap-3 md:grid-cols-[2fr_0.8fr_1fr_auto]">
                         <div className="space-y-2 md:col-span-4">
-                          <Label>Descrição</Label>
+                          <Label>Produto / Descrição</Label>
+                          {stockProducts.length > 0 && (
+                            <DocumentProductPicker
+                              products={stockProducts}
+                              onSelect={(product) => {
+                                updateItem(index, 'description', product.name);
+                                updateItem(index, 'unit_price', String(product.salePrice));
+                              }}
+                            />
+                          )}
                           <Input
                             value={item.description}
                             onChange={(event) => updateItem(index, 'description', event.target.value)}

@@ -152,7 +152,7 @@ const AuthSignupPage: React.FC = () => {
         </div>
       </Card>
 
-      <p className="text-sm text-muted-foreground mt-8">© 2024 NAVANHULA POS. Todos os direitos reservados.</p>
+      <p className="text-sm text-muted-foreground mt-8">© 2026 Navanhula Group Lda. Todos os direitos reservados.</p>
     </div>
   );
 };

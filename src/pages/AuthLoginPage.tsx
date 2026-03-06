@@ -161,7 +161,7 @@ const AuthLoginPage: React.FC = () => {
 
       {/* Footer */}
       <p className="text-sm text-muted-foreground mt-8">
-        © 2024 NAVANHULA POS. Todos os direitos reservados.
+        © 2026 Navanhula Group Lda. Todos os direitos reservados.
       </p>
     </div>
   );
