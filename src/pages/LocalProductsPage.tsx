@@ -21,11 +21,15 @@ import {
   Pencil, 
   Trash2, 
   Search,
-  AlertTriangle
+  AlertTriangle,
+  Upload,
+  Loader2,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import ProductImageUpload from '@/components/products/ProductImageUpload';
+import * as XLSX from 'xlsx';
 
 // HYBRID: Local POS data + SaaS Auth
 
