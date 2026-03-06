@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import {
+  ArrowRightLeft,
   Calculator,
   Download,
   FileText,
@@ -350,6 +351,45 @@ const FiscalDocumentsManager: React.FC = () => {
       company: company as any,
       store: store as any,
     });
+  };
+
+  const CONVERSION_MAP: Partial<Record<FiscalDocumentType, { target: FiscalDocumentType; label: string }>> = {
+    quotation: { target: 'proforma', label: 'Converter em Proforma' },
+    proforma: { target: 'invoice', label: 'Converter em Factura' },
+  };
+
+  const handleConvertDocument = (doc: FiscalDocumentPdfRecord) => {
+    const conversion = CONVERSION_MAP[doc.document_type as FiscalDocumentType];
+    if (!conversion) return;
+
+    setDocumentType(conversion.target);
+    setCustomerName(doc.customer_name || '');
+    setCustomerPhone(doc.customer_phone || '');
+    setCustomerEmail(doc.customer_email || '');
+    setCustomerNuit(doc.customer_nuit || '');
+    setCustomerAddress(doc.customer_address || '');
+    setNotes(doc.notes || '');
+    setTaxRate(Number(doc.tax_rate || 0));
+    setDiscountAmount(Number(doc.discount_amount || 0));
+
+    const docItems = doc.fiscal_document_items || [];
+    if (docItems.length > 0) {
+      setItems(
+        docItems.map((item) => ({
+          description: item.description || '',
+          quantity: Number(item.quantity || 1),
+          unit_price: Number(item.unit_price || 0),
+          tax_rate: Number(item.tax_rate || 0),
+        })),
+      );
+    }
+
+    if (conversion.target === 'proforma' || conversion.target === 'invoice') {
+      setValidUntil(conversion.target === 'proforma' ? createDefaultValidityDate() : '');
+    }
+
+    toast.info(`Dados carregados. Revise e emita a ${conversion.target === 'proforma' ? 'Proforma' : 'Factura'}.`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (!company?.id || company.id === 'local-default') {
@@ -702,9 +742,17 @@ const FiscalDocumentsManager: React.FC = () => {
                       <span>Total: {formatCurrency(Number(document.total || 0))}</span>
                     </div>
                   </div>
-                  <Button variant="outline" onClick={() => handleDownload(document)}>
-                    <Download className="mr-2 h-4 w-4" /> PDF
-                  </Button>
+                  <div className="flex gap-2">
+                    {CONVERSION_MAP[document.document_type as FiscalDocumentType] && (
+                      <Button variant="secondary" onClick={() => handleConvertDocument(document)}>
+                        <ArrowRightLeft className="mr-2 h-4 w-4" />
+                        {CONVERSION_MAP[document.document_type as FiscalDocumentType]!.label}
+                      </Button>
+                    )}
+                    <Button variant="outline" onClick={() => handleDownload(document)}>
+                      <Download className="mr-2 h-4 w-4" /> PDF
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
