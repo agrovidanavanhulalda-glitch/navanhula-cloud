@@ -207,17 +207,21 @@ const AppRoutes = () => {
   );
 };
 
+import { I18nProvider } from "@/contexts/i18n";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <SaaSAuthProvider>
-          <AppRoutes />
-        </SaaSAuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+    <I18nProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <SaaSAuthProvider>
+            <AppRoutes />
+          </SaaSAuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </I18nProvider>
   </QueryClientProvider>
 );
 
