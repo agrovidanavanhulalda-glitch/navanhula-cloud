@@ -110,7 +110,7 @@ const translations: Record<Language, Record<string, string>> = {
     'pos.title': 'Punto de Venta', 'pos.finalize': 'Finalizar Venta', 'pos.emptyCart': 'Carrito vacío',
     'payment.cash': 'Efectivo', 'payment.method': 'Método de Pago',
     'auth.login': 'Iniciar Sesión', 'auth.signup': 'Registrarse', 'auth.logout': 'Salir',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Plataforma ERP SaaS',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Sistema ERP Empresarial',
   },
   fr: {
     'nav.dashboard': 'Tableau de bord', 'nav.pos': 'PDV', 'nav.products': 'Produits', 'nav.inventory': 'Stock',
