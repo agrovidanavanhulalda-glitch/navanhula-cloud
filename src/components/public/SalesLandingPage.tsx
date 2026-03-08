@@ -142,7 +142,7 @@ const SalesLandingPage: React.FC = () => {
                 Controle vendas, estoque e dinheiro da sua empresa em um <span className="text-gradient-primary">único sistema</span>.
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-                O NAVANHULA POS é um sistema moderno criado para lojas, supermercados, farmácias e empresas que precisam de
+                O NAVANHULA ERP é uma plataforma empresarial completa para lojas, supermercados, farmácias e empresas que precisam de
                 controle total do negócio em tempo real.
               </p>
             </div>
