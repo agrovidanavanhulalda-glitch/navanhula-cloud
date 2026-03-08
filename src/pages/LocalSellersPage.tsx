@@ -109,19 +109,37 @@ const LocalSellersPage: React.FC = () => {
     setShowDialog(true);
   };
 
-  // Save seller
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim()) {
       toast.error('Nome é obrigatório');
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      toast.error('Email é obrigatório');
+      return;
+    }
+
+    if (!editingSeller && formData.password.trim().length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
       return;
     }
 
     if (editingSeller) {
       updateSeller(editingSeller.id, formData);
       toast.success('Vendedor atualizado!');
-    } else {
-      addSeller(formData);
-      toast.success('Vendedor criado!');
+      setShowDialog(false);
+      setEditingSeller(null);
+      return;
+    }
+
+    const created = await addSeller({
+      ...formData,
+      password: formData.password.trim() || '123456',
+    });
+
+    if (!created) {
+      return;
     }
 
     setShowDialog(false);
