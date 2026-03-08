@@ -30,7 +30,7 @@ const audiences = [
 
 const AboutPage: React.FC = () => {
   useEffect(() => {
-    document.title = 'Sobre | NAVANHULA POS';
+    document.title = 'Sobre | NAVANHULA ERP';
   }, []);
 
   return (
@@ -40,7 +40,7 @@ const AboutPage: React.FC = () => {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Sobre a plataforma</p>
           <h1 className="text-4xl font-black tracking-tight sm:text-5xl">Um sistema criado para ligar marketing, vendas e operação real.</h1>
           <p className="text-lg leading-8 text-muted-foreground">
-            O NAVANHULA POS nasce para resolver um problema comum: o software de gestão normalmente vende mal para o visitante e opera mal
+            O NAVANHULA ERP nasce para resolver um problema comum: o software de gestão normalmente vende mal para o visitante e opera mal
             para o cliente. Aqui, a experiência pública apresenta valor com clareza e a experiência privada entrega produtividade diária.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">

@@ -200,7 +200,7 @@ const LocalReportsPage: React.FC = () => {
       startDate,
       endDate,
       selectedStore,
-      companyName: 'NAVANHULA POS',
+      companyName: 'NAVANHULA ERP',
     });
   };
 
@@ -211,7 +211,7 @@ const LocalReportsPage: React.FC = () => {
       startDate,
       endDate,
       selectedStore,
-      companyName: 'NAVANHULA POS',
+      companyName: 'NAVANHULA ERP',
     });
   };
 
@@ -593,7 +593,7 @@ const LocalReportsPage: React.FC = () => {
           startDate={startDate}
           endDate={endDate}
           selectedStore={selectedStore}
-          companyName="NAVANHULA POS"
+          companyName="NAVANHULA ERP"
           onClose={() => setShowPDFPreview(false)}
         />
       )}

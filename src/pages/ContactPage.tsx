@@ -24,7 +24,7 @@ const contactCards = [
 
 const ContactPage: React.FC = () => {
   useEffect(() => {
-    document.title = 'Contacto | NAVANHULA POS';
+    document.title = 'Contacto | NAVANHULA ERP';
   }, []);
 
   return (

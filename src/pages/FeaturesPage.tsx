@@ -39,7 +39,7 @@ const featureGroups = [
 
 const FeaturesPage: React.FC = () => {
   useEffect(() => {
-    document.title = 'Recursos | NAVANHULA POS';
+    document.title = 'Recursos | NAVANHULA ERP';
   }, []);
 
   return (
@@ -48,7 +48,7 @@ const FeaturesPage: React.FC = () => {
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Recursos</p>
         <h1 className="text-4xl font-black tracking-tight sm:text-5xl">Tudo o que o cliente precisa para entrar, operar e crescer.</h1>
         <p className="text-lg leading-8 text-muted-foreground">
-          O NAVANHULA POS foi organizado para separar bem o que é apresentação pública do que é execução privada, sem confusão na navegação.
+          O NAVANHULA ERP foi organizado para separar bem o que é apresentação pública do que é execução privada, sem confusão na navegação.
         </p>
       </section>
 
