@@ -30,7 +30,7 @@ const audiences = [
 
 const AboutPage: React.FC = () => {
   useEffect(() => {
-    document.title = 'Sobre | NAVANHULA POS';
+    document.title = 'Sobre | NAVANHULA ERP';
   }, []);
 
   return (
