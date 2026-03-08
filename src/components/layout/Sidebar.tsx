@@ -24,6 +24,7 @@ import {
   Link2,
   Wallet,
   FileText,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
@@ -48,6 +49,7 @@ const primaryNavItems: NavItem[] = [
   { label: 'Relatórios', href: '/app/relatorios', icon: <BarChart3 className="w-5 h-5" /> },
   { label: 'Fiscal', href: '/app/fiscal', icon: <FileText className="w-5 h-5" /> },
   { label: 'Financeiro', href: '/app/financeiro', icon: <TrendingUp className="w-5 h-5" /> },
+  { label: 'Contabilidade', href: '/app/contabilidade', icon: <BookOpen className="w-5 h-5" /> },
   { label: 'Carteira', href: '/app/carteira', icon: <WalletCards className="w-5 h-5" /> },
   { label: 'Assinatura', href: '/app/assinatura', icon: <Shield className="w-5 h-5" /> },
   { label: 'Configurações', href: '/app/configuracoes', icon: <Settings className="w-5 h-5" /> },
