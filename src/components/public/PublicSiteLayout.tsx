@@ -64,7 +64,7 @@ const PublicSiteLayout: React.FC = () => {
                 <Link to="/login">Entrar</Link>
               </Button>
               <Button asChild>
-                <Link to="/registrar">COMEÇAR AGORA</Link>
+                <Link to="/registrar">CRIAR CONTA</Link>
               </Button>
             </div>
           </div>
