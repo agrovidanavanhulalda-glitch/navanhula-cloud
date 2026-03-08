@@ -118,11 +118,11 @@ Posso te ajudar a criar a conta agora mesmo! É muito simples.`,
     description: 'Texto formal para apresentações a empresas maiores ou licitações.',
     icon: FileText,
     type: 'Proposta',
-    content: `PROPOSTA COMERCIAL - NAVANHULA POS
+    content: `PROPOSTA COMERCIAL - NAVANHULA ERP
 Sistema de Gestão Empresarial
 
 SOBRE A SOLUÇÃO:
-O NAVANHULA POS é um sistema de gestão empresarial desenvolvido para o mercado moçambicano, oferecendo controlo completo de operações comerciais, financeiras e fiscais.
+O NAVANHULA ERP é um sistema de gestão empresarial desenvolvido para o mercado moçambicano, oferecendo controlo completo de operações comerciais, financeiras e fiscais.
 
 MÓDULOS INCLUSOS:
 • Ponto de Venda (PDV) profissional
