@@ -148,7 +148,7 @@ const translations: Record<Language, Record<string, string>> = {
     'pos.title': 'Kasse', 'pos.finalize': 'Verkauf abschließen',
     'payment.cash': 'Bargeld', 'payment.method': 'Zahlungsmethode',
     'auth.login': 'Anmelden', 'auth.signup': 'Registrieren', 'auth.logout': 'Abmelden',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'SaaS ERP-Plattform',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'ERP-System für Unternehmen',
   },
   it: {
     'nav.dashboard': 'Cruscotto', 'nav.pos': 'POS', 'nav.products': 'Prodotti', 'nav.inventory': 'Magazzino',
