@@ -89,7 +89,7 @@ const LocalSellersPage: React.FC = () => {
       email: '',
       role: 'vendedor',
       storeId: currentStore.id,
-      password: '1234',
+      password: '123456',
       isActive: true,
     });
     setShowDialog(true);
