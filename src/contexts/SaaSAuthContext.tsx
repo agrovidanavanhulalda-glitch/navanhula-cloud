@@ -23,12 +23,12 @@ const fallbackAuth: AuthContextType = {
   company: null,
   loading: true,
   isAuthenticated: false,
-  login: async () => {},
-  signup: async () => {},
-  logout: async () => {},
-  updateProfile: async () => {},
-  setActiveStore: async () => {},
-  refreshProfile: async () => {},
+  onboardingCompleted: false,
+  signIn: async () => {},
+  signUp: async () => {},
+  signOut: async () => {},
+  completeOnboarding: async () => {},
+  refreshUserData: async () => {},
 };
 
 export const useAuth = () => {
