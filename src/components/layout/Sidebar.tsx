@@ -186,7 +186,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
           {isReseller && !company && (
             <div className="flex items-center gap-2 text-xs">
               <Users className="w-3 h-3 text-primary" />
-              <span className="text-muted-foreground truncate">Rede comercial NAVANHULA POS</span>
+              <span className="text-muted-foreground truncate">Rede comercial NAVANHULA ERP</span>
             </div>
           )}
         </div>
