@@ -10,11 +10,11 @@ import { toast } from 'sonner';
 
 const materials = [
   {
-    title: 'Apresentação do NAVANHULA POS',
+    title: 'Apresentação do NAVANHULA ERP',
     description: 'Apresentação completa do sistema para mostrar a potenciais clientes. Inclui funcionalidades, benefícios e diferenciais.',
     icon: Presentation,
     type: 'Apresentação',
-    content: `NAVANHULA POS - Sistema de Gestão Empresarial
+    content: `NAVANHULA ERP - Sistema de Gestão Empresarial
 
 ✅ Sistema POS completo e profissional
 ✅ Gestão de estoque em tempo real
