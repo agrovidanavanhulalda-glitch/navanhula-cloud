@@ -189,7 +189,7 @@ const translations: Record<Language, Record<string, string>> = {
     'pos.title': '销售点', 'pos.finalize': '完成销售',
     'payment.cash': '现金', 'payment.method': '支付方式',
     'auth.login': '登录', 'auth.signup': '注册', 'auth.logout': '退出',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'SaaS ERP 平台',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': '企业ERP系统',
   },
   ru: {
     'nav.dashboard': 'Панель', 'nav.pos': 'Касса', 'nav.products': 'Товары', 'nav.inventory': 'Склад',
