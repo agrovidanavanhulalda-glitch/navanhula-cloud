@@ -345,8 +345,8 @@ const FiscalDocumentsManager: React.FC = () => {
     }
   };
 
-  const handleDownload = (document: FiscalDocumentPdfRecord) => {
-    downloadFiscalDocumentPdf({
+  const handleDownload = async (document: FiscalDocumentPdfRecord) => {
+    await downloadFiscalDocumentPdf({
       document,
       company: company as any,
       store: store as any,
