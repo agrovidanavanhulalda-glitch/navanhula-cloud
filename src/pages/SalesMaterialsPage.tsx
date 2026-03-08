@@ -56,7 +56,7 @@ Teste grátis: 7 dias com acesso total`,
     description: 'Passo a passo simplificado para novos clientes começarem a usar o sistema imediatamente.',
     icon: BookOpen,
     type: 'Guia',
-    content: `GUIA RÁPIDO - NAVANHULA POS
+    content: `GUIA RÁPIDO - NAVANHULA ERP
 
 1️⃣ CADASTRO
 • Acesse o site e clique em "Criar Conta"
