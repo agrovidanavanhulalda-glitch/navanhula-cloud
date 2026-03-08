@@ -263,8 +263,19 @@ export const generateFiscalDocumentPdf = async ({ document, company, store }: Ge
   return doc;
 };
 
-export const downloadFiscalDocumentPdf = (options: GenerateFiscalDocumentPdfOptions) => {
-  const doc = generateFiscalDocumentPdf(options);
+export const downloadFiscalDocumentPdf = async (options: GenerateFiscalDocumentPdfOptions) => {
+  const doc = await generateFiscalDocumentPdf(options);
   const filename = `${options.document.document_number}`.toLowerCase().replace(/[^a-z0-9-_]+/g, '-');
   doc.save(`${filename}.pdf`);
 };
+
+// Helper to load image as base64
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = url;
+  });
+}
