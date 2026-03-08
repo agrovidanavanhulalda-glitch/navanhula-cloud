@@ -107,8 +107,8 @@ const OnboardingPage: React.FC = () => {
             <ShoppingCart className="w-8 h-8 text-primary-foreground" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-primary">NAVANHULA POS</h1>
-        <p className="text-muted-foreground mt-2">Sistema de Ponto de Venda</p>
+        <h1 className="text-3xl font-bold text-primary">NAVANHULA ERP</h1>
+        <p className="text-muted-foreground mt-2">Sistema de Gestão Empresarial</p>
       </div>
 
       {/* Onboarding card */}
