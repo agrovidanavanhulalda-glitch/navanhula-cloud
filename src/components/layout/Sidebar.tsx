@@ -117,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
     navigate('/login');
   };
 
-  const renderNavItem = (item: NavItem) => {
+  const renderNavItem = (item: NavItemWithRole) => {
     const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
 
     return (
