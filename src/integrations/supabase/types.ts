@@ -2911,7 +2911,7 @@ export type Database = {
           p_company_nif?: string
           p_company_phone?: string
         }
-        Returns: Json
+        Returns: undefined
       }
       credit_wallet_from_sale: {
         Args: {
