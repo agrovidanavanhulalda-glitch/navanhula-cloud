@@ -35,7 +35,7 @@ Teste grátis: 7 dias com acesso total`,
     description: 'Lista de benefícios para convencer clientes. Ideal para conversas, WhatsApp e redes sociais.',
     icon: CheckCircle2,
     type: 'Texto de Venda',
-    content: `🚀 POR QUE ESCOLHER O NAVANHULA POS?
+    content: `🚀 POR QUE ESCOLHER O NAVANHULA ERP?
 
 💰 Aumente as suas vendas com controlo total do negócio
 📊 Veja relatórios em tempo real de qualquer lugar
