@@ -359,7 +359,7 @@ const FinancialReportsPage: React.FC = () => {
     doc.line(margin, footerY - 12, pageWidth - margin, footerY - 12);
     doc.setFont('times', 'italic');
     doc.setFontSize(8);
-    doc.text('Documento gerado pelo NAVANHULA POS', pageWidth / 2, footerY - 7, { align: 'center' });
+    doc.text('Documento gerado pelo NAVANHULA ERP', pageWidth / 2, footerY - 7, { align: 'center' });
     doc.text(`Impresso em: ${new Date().toLocaleString('pt-MZ')}`, pageWidth / 2, footerY - 3, { align: 'center' });
 
     doc.save(`relatorio_financeiro_${startDate}_${endDate}.pdf`);

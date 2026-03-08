@@ -21,7 +21,7 @@ interface ThermalReceiptProps {
 
 const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
   sale,
-  storeName = 'NAVANHULA POS',
+  storeName = 'NAVANHULA ERP',
   storeAddress = '',
   storePhone = '',
   storeNuit = '',
