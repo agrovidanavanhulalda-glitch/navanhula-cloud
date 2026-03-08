@@ -15,10 +15,27 @@ import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Fallback context for when provider is temporarily unmounted (HMR, etc.)
+const fallbackAuth: AuthContextType = {
+  user: null,
+  role: null,
+  store: null,
+  company: null,
+  loading: true,
+  isAuthenticated: false,
+  login: async () => {},
+  signup: async () => {},
+  logout: async () => {},
+  updateProfile: async () => {},
+  setActiveStore: async () => {},
+  refreshProfile: async () => {},
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    console.warn('useAuth called outside AuthProvider – using fallback');
+    return fallbackAuth;
   }
   return context;
 };
