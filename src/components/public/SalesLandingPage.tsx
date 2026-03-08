@@ -259,7 +259,7 @@ const SalesLandingPage: React.FC = () => {
           <SectionHeading
             eyebrow="Sobre o sistema"
             title="Controle total do seu negócio em tempo real."
-            description="O NAVANHULA POS é um sistema inteligente que ajuda empresas a controlar vendas, estoque, caixa e relatórios em um único lugar."
+            description="O NAVANHULA ERP é uma plataforma inteligente que ajuda empresas a controlar vendas, estoque, caixa, contabilidade e relatórios em um único lugar."
           />
 
           <Card className="rounded-[2rem] border-border bg-card/60 p-6">
