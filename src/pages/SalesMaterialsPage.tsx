@@ -94,7 +94,7 @@ Teste grátis: 7 dias com acesso total`,
 Olá! 👋
 Você tem um negócio e ainda controla vendas no caderno ou Excel?
 
-O NAVANHULA POS é um sistema profissional de gestão que te ajuda a:
+O NAVANHULA ERP é um sistema profissional de gestão que te ajuda a:
 ✅ Registrar vendas rapidamente
 ✅ Controlar estoque automaticamente  
 ✅ Emitir faturas e recibos
