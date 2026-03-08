@@ -40,6 +40,7 @@ import PricingPage from "./pages/PricingPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import ContactPage from "./pages/ContactPage";
 import ResellersNetworkPage from "./pages/ResellersNetworkPage";
+import SalesMaterialsPage from "./pages/SalesMaterialsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -193,7 +194,8 @@ const AppRoutes = () => {
         <Route path="revendedores/pagamentos" element={<ResellersNetworkPage />} />
         <Route path="revendedores/links" element={<ResellersNetworkPage />} />
         <Route path="revendedores/performance" element={<ResellersNetworkPage />} />
-        <Route path="revendedores/materiais" element={<ResellersNetworkPage />} />
+        <Route path="revendedores/materiais" element={<SalesMaterialsPage />} />
+        <Route path="materiais-venda" element={<SalesMaterialsPage />} />
       </Route>
 
       {legacyRoutes.map((route) => (

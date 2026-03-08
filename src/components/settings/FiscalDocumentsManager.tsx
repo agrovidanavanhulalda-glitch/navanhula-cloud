@@ -503,11 +503,50 @@ const FiscalDocumentsManager: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Itens do documento</p>
-                <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                  <Plus className="mr-2 h-4 w-4" /> Adicionar item
-                </Button>
               </div>
 
+              {/* Product selection grid */}
+              {stockProducts.length > 0 && (
+                <div className="rounded-xl border border-border bg-muted/10 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-sm font-medium">Selecionar produtos do estoque</p>
+                  </div>
+                  <DocumentProductPicker
+                    products={stockProducts}
+                    onSelect={(product) => {
+                      // Check if product already in items
+                      const existingIdx = items.findIndex(it => it.description === product.name);
+                      if (existingIdx >= 0) {
+                        // Increment quantity
+                        updateItem(existingIdx, 'quantity', String(Number(items[existingIdx].quantity) + 1));
+                        toast.info(`Quantidade de "${product.name}" aumentada`);
+                      } else {
+                        // Add new item or replace first empty item
+                        const emptyIdx = items.findIndex(it => !it.description.trim() && it.unit_price === 0);
+                        if (emptyIdx >= 0) {
+                          setItems(current => current.map((item, idx) =>
+                            idx === emptyIdx
+                              ? { description: product.name, quantity: 1, unit_price: product.salePrice, tax_rate: Number(taxRate || 0) }
+                              : item
+                          ));
+                        } else {
+                          setItems(current => [...current, {
+                            description: product.name,
+                            quantity: 1,
+                            unit_price: product.salePrice,
+                            tax_rate: Number(taxRate || 0),
+                          }]);
+                        }
+                        toast.success(`"${product.name}" adicionado ao documento`);
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">Clique num produto para adicioná-lo automaticamente à lista abaixo</p>
+                </div>
+              )}
+
+              {/* Items list */}
               <div className="space-y-3">
                 {items.map((item, index) => {
                   const lineTotal = Number(item.quantity || 0) * Number(item.unit_price || 0);
@@ -516,15 +555,6 @@ const FiscalDocumentsManager: React.FC = () => {
                       <div className="grid gap-3 md:grid-cols-[2fr_0.8fr_1fr_auto]">
                         <div className="space-y-2 md:col-span-4">
                           <Label>Produto / Descrição</Label>
-                          {stockProducts.length > 0 && (
-                            <DocumentProductPicker
-                              products={stockProducts}
-                              onSelect={(product) => {
-                                updateItem(index, 'description', product.name);
-                                updateItem(index, 'unit_price', String(product.salePrice));
-                              }}
-                            />
-                          )}
                           <Input
                             value={item.description}
                             onChange={(event) => updateItem(index, 'description', event.target.value)}
@@ -564,6 +594,9 @@ const FiscalDocumentsManager: React.FC = () => {
                     </div>
                   );
                 })}
+                <Button type="button" variant="outline" size="sm" onClick={addItem} className="w-full">
+                  <Plus className="mr-2 h-4 w-4" /> Adicionar item manualmente
+                </Button>
               </div>
             </div>
 
