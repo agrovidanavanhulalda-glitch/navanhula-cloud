@@ -855,25 +855,136 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   // ============ SELLER ACTIONS ============
-  // Sellers now map to profiles in Supabase but we keep local interface
+  // Sellers are persisted to Supabase profiles table
 
-  const addSeller = useCallback((seller: Omit<LocalSeller, 'id'>) => {
-    const sellerId = generateId();
+  const loadSellers = useCallback(async () => {
+    const companyId = company?.id;
+    if (!companyId) return;
+    
+    try {
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, store_id, is_active')
+        .eq('company_id', companyId);
+      
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+      
+      const roleMap = new Map<string, string>();
+      (rolesData || []).forEach((r: any) => roleMap.set(r.user_id, r.role));
+      
+      const sellers: LocalSeller[] = (profilesData || [])
+        .filter((p: any) => p.id !== user?.id) // exclude current admin user
+        .map((p: any) => ({
+          id: p.id,
+          name: p.full_name || '',
+          email: p.email || '',
+          role: (roleMap.get(p.id) === 'admin' || roleMap.get(p.id) === 'manager') ? 'admin' as const : 'vendedor' as const,
+          storeId: p.store_id || '',
+          isActive: p.is_active ?? true,
+          password: '', // passwords are managed by auth, not exposed
+        }));
+      
+      setState(prev => ({ ...prev, sellers }));
+    } catch (error) {
+      console.error('[POS] Load sellers error:', error);
+    }
+  }, [company?.id, user?.id]);
+
+  // Load sellers on mount
+  useEffect(() => {
+    if (company?.id && user?.id) {
+      loadSellers();
+    }
+  }, [company?.id, user?.id, loadSellers]);
+
+  const addSeller = useCallback(async (seller: Omit<LocalSeller, 'id'>) => {
+    const tempId = generateId();
+    // Optimistic update
     setState(prev => ({
       ...prev,
-      sellers: [...prev.sellers, { ...seller, id: sellerId }],
+      sellers: [...prev.sellers, { ...seller, id: tempId }],
     }));
-  }, []);
 
-  const updateSeller = useCallback((id: string, updates: Partial<LocalSeller>) => {
+    try {
+      // Create auth user for the seller via Supabase
+      const email = seller.email || `seller-${tempId}@navanhula.local`;
+      const password = seller.password || '123456';
+      
+      // Insert profile directly (seller accounts are managed by admin)
+      const { data: newProfile, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: tempId,
+          full_name: seller.name,
+          email: email,
+          store_id: seller.storeId || authStore?.id,
+          company_id: company?.id,
+          is_active: seller.isActive,
+          onboarding_completed: true,
+        })
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('[POS] Error creating seller profile:', profileError);
+        // Don't remove from state - keep optimistic update
+        toast.error('Erro ao salvar vendedor no servidor');
+        return;
+      }
+
+      // Assign role
+      const dbRole = seller.role === 'admin' ? 'manager' : 'seller';
+      await supabase.from('user_roles').insert({
+        user_id: tempId,
+        role: dbRole,
+      });
+
+      toast.success('Vendedor criado e salvo!');
+    } catch (error) {
+      console.error('[POS] addSeller error:', error);
+    }
+  }, [authStore?.id, company?.id]);
+
+  const updateSeller = useCallback(async (id: string, updates: Partial<LocalSeller>) => {
     setState(prev => ({
       ...prev,
       sellers: prev.sellers.map(s => s.id === id ? { ...s, ...updates } : s),
     }));
+
+    // Persist to Supabase
+    const dbUpdates: Record<string, any> = {};
+    if (updates.name !== undefined) dbUpdates.full_name = updates.name;
+    if (updates.email !== undefined) dbUpdates.email = updates.email;
+    if (updates.storeId !== undefined) dbUpdates.store_id = updates.storeId;
+    if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
+
+    if (Object.keys(dbUpdates).length > 0) {
+      dbUpdates.updated_at = new Date().toISOString();
+      await supabase.from('profiles').update(dbUpdates).eq('id', id);
+    }
+
+    if (updates.role !== undefined) {
+      const dbRole = updates.role === 'admin' ? 'manager' : 'seller';
+      await supabase.from('user_roles')
+        .update({ role: dbRole })
+        .eq('user_id', id);
+    }
   }, []);
 
-  const deleteSeller = useCallback((id: string) => {
-    setState(prev => ({ ...prev, sellers: prev.sellers.filter(s => s.id !== id) }));
+  const deleteSeller = useCallback(async (id: string) => {
+    // Soft-delete: deactivate instead of removing
+    setState(prev => ({
+      ...prev,
+      sellers: prev.sellers.map(s => s.id === id ? { ...s, isActive: false } : s),
+    }));
+
+    await supabase.from('profiles')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    
+    toast.success('Vendedor desativado');
   }, []);
 
   const getSellersByStore = useCallback((storeId: string) => {
