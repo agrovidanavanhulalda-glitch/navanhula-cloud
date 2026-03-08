@@ -56,7 +56,7 @@ const LocalSellersPage: React.FC = () => {
     email: '',
     role: 'vendedor' as 'admin' | 'vendedor',
     storeId: currentStore.id,
-    password: '1234',
+    password: '123456',
     isActive: true,
   });
 
