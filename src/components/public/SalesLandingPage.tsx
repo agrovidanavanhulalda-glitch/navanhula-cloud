@@ -460,7 +460,7 @@ const SalesLandingPage: React.FC = () => {
           <SectionHeading
             eyebrow="Contacto"
             title="Precisa de ajuda para implementar o sistema?"
-            description="Nossa equipa pode ajudar sua empresa a começar a usar o NAVANHULA POS com mais rapidez e segurança."
+            description="Nossa equipa pode ajudar sua empresa a começar a usar o NAVANHULA ERP com mais rapidez e segurança."
           />
 
           <Card className="rounded-[2rem] border-border bg-card/70 p-8">
