@@ -2924,6 +2924,7 @@ export type Database = {
       }
       generate_reseller_code: { Args: never; Returns: string }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
+      get_platform_stats: { Args: never; Returns: Json }
       get_reseller_id: { Args: { _user_id: string }; Returns: string }
       get_sales_by_store: { Args: { p_period?: string }; Returns: Json }
       get_top_products_national: { Args: { p_limit?: number }; Returns: Json }
