@@ -495,7 +495,7 @@ const SalesLandingPage: React.FC = () => {
                 Se você quer controlar seu negócio, aumentar seus lucros e tomar decisões com confiança, o NAVANHULA POS é a solução.
               </p>
               <Button asChild size="lg" className="mt-8 px-10">
-                <Link to="/registrar">COMEÇAR AGORA</Link>
+                <Link to="/registrar">CRIAR CONTA</Link>
               </Button>
             </div>
           </div>
