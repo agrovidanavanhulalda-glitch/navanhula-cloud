@@ -77,10 +77,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    const rawPassword = typeof password === 'string' ? password.trim() : '';
+    const safePassword = rawPassword.length >= 6 ? rawPassword : '123456';
+
     // Create auth user via admin API
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
-      password: password || '123456',
+      password: safePassword,
       email_confirm: true, // Auto-confirm for seller accounts created by admin
       user_metadata: {
         full_name: name,
@@ -125,6 +128,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       seller_id: sellerId,
+      temporary_password: safePassword,
       message: 'Vendedor criado com sucesso',
     }), {
       status: 200,

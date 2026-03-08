@@ -56,7 +56,7 @@ const LocalSellersPage: React.FC = () => {
     email: '',
     role: 'vendedor' as 'admin' | 'vendedor',
     storeId: currentStore.id,
-    password: '1234',
+    password: '123456',
     isActive: true,
   });
 
@@ -89,7 +89,7 @@ const LocalSellersPage: React.FC = () => {
       email: '',
       role: 'vendedor',
       storeId: currentStore.id,
-      password: '1234',
+      password: '123456',
       isActive: true,
     });
     setShowDialog(true);
@@ -109,19 +109,37 @@ const LocalSellersPage: React.FC = () => {
     setShowDialog(true);
   };
 
-  // Save seller
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim()) {
       toast.error('Nome é obrigatório');
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      toast.error('Email é obrigatório');
+      return;
+    }
+
+    if (!editingSeller && formData.password.trim().length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
       return;
     }
 
     if (editingSeller) {
       updateSeller(editingSeller.id, formData);
       toast.success('Vendedor atualizado!');
-    } else {
-      addSeller(formData);
-      toast.success('Vendedor criado!');
+      setShowDialog(false);
+      setEditingSeller(null);
+      return;
+    }
+
+    const created = await addSeller({
+      ...formData,
+      password: formData.password.trim() || '123456',
+    });
+
+    if (!created) {
+      return;
     }
 
     setShowDialog(false);
@@ -348,10 +366,10 @@ const LocalSellersPage: React.FC = () => {
                 type="text"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="1234"
+                placeholder="123456"
               />
               <p className="text-xs text-muted-foreground">
-                Senha para acesso rápido ao PDV
+                Mínimo 6 caracteres para o acesso do vendedor
               </p>
             </div>
 
