@@ -170,7 +170,7 @@ const LocalPOSContext = createContext<LocalPOSContextType | undefined>(undefined
 
 const FALLBACK_STORE: LocalStore = {
   id: 'fallback',
-  name: 'NAVANHULA – Loja Principal',
+  name: 'NAVANHULA STORE',
   address: 'Maputo, Moçambique',
   phone: '+258 84 000 0000',
   isActive: true,

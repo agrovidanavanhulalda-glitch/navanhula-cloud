@@ -12,6 +12,14 @@ import { Globe } from 'lucide-react';
 const languages: { code: Language; label: string; flag: string }[] = [
   { code: 'pt', label: 'Português', flag: '🇲🇿' },
   { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+  { code: 'zh', label: '中文', flag: '🇨🇳' },
+  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
 ];
 
 const LanguageSelector: React.FC = () => {
@@ -27,7 +35,7 @@ const LanguageSelector: React.FC = () => {
           <span className="sm:hidden text-xs">{current.flag}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
         {languages.map(lang => (
           <DropdownMenuItem
             key={lang.code}

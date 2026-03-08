@@ -142,7 +142,7 @@ const SalesLandingPage: React.FC = () => {
                 Controle vendas, estoque e dinheiro da sua empresa em um <span className="text-gradient-primary">único sistema</span>.
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-                O NAVANHULA POS é um sistema moderno criado para lojas, supermercados, farmácias e empresas que precisam de
+                O NAVANHULA ERP é uma plataforma empresarial completa para lojas, supermercados, farmácias e empresas que precisam de
                 controle total do negócio em tempo real.
               </p>
             </div>
@@ -192,7 +192,7 @@ const SalesLandingPage: React.FC = () => {
               <div className="space-y-4 rounded-[1.5rem] border border-border/80 bg-background/80 p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Painel NAVANHULA POS</p>
+                    <p className="text-sm text-muted-foreground">Painel NAVANHULA ERP</p>
                     <p className="text-2xl font-bold">Seu negócio em tempo real</p>
                   </div>
                   <div className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">Ao vivo</div>
@@ -259,7 +259,7 @@ const SalesLandingPage: React.FC = () => {
           <SectionHeading
             eyebrow="Sobre o sistema"
             title="Controle total do seu negócio em tempo real."
-            description="O NAVANHULA POS é um sistema inteligente que ajuda empresas a controlar vendas, estoque, caixa e relatórios em um único lugar."
+            description="O NAVANHULA ERP é uma plataforma inteligente que ajuda empresas a controlar vendas, estoque, caixa, contabilidade e relatórios em um único lugar."
           />
 
           <Card className="rounded-[2rem] border-border bg-card/60 p-6">
@@ -331,7 +331,7 @@ const SalesLandingPage: React.FC = () => {
         <div className="container grid gap-10 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-24">
           <SectionHeading
             eyebrow="Demonstração"
-            title="Veja o NAVANHULA POS em funcionamento"
+            title="Veja o NAVANHULA ERP em funcionamento"
             description="Assista à demonstração e descubra como o sistema pode transformar a gestão do seu negócio."
           />
 
@@ -364,7 +364,7 @@ const SalesLandingPage: React.FC = () => {
         <div className="grid gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-start">
           <SectionHeading
             eyebrow="Benefícios"
-            title="Por que empresas escolhem o NAVANHULA POS?"
+            title="Por que empresas escolhem o NAVANHULA ERP?"
             description="O sistema foi pensado para empresários que precisam de mais controlo, mais clareza e mais velocidade nas decisões."
           />
 
@@ -386,7 +386,7 @@ const SalesLandingPage: React.FC = () => {
           <SectionHeading
             eyebrow="Para quem é"
             title="Feito para empresas que querem crescer"
-            description="O NAVANHULA POS atende operações de diferentes tamanhos, sempre com foco em simplicidade e controlo real do negócio."
+            description="O NAVANHULA ERP atende operações de diferentes tamanhos, sempre com foco em simplicidade e controlo real do negócio."
           />
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -416,7 +416,7 @@ const SalesLandingPage: React.FC = () => {
             <div className="grid gap-0 lg:grid-cols-[0.88fr_1.12fr]">
               <div className="border-b border-border p-8 lg:border-b-0 lg:border-r">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Plano único</p>
-                <h3 className="mt-4 text-3xl font-black tracking-tight">NAVANHULA POS PROFISSIONAL</h3>
+                <h3 className="mt-4 text-3xl font-black tracking-tight">NAVANHULA ERP PROFISSIONAL</h3>
                 <div className="mt-5 flex items-end gap-3">
                   <span className="text-5xl font-black tracking-tight">1500 MT</span>
                   <span className="pb-1 text-base text-muted-foreground">/ mês por loja ativa</span>

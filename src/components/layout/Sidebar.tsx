@@ -156,8 +156,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         </div>
         {!collapsed && (
           <div>
-            <h1 className="font-bold text-lg text-sidebar-foreground">NAVANHULA POS</h1>
-            <p className="text-xs text-muted-foreground">{isReseller ? 'Área do revendedor' : 'Área privada do cliente'}</p>
+            <h1 className="font-bold text-lg text-sidebar-foreground">NAVANHULA ERP</h1>
+            <p className="text-xs text-muted-foreground">{isReseller ? 'Área do revendedor' : 'ERP Platform'}</p>
           </div>
         )}
       </div>
@@ -186,7 +186,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
           {isReseller && !company && (
             <div className="flex items-center gap-2 text-xs">
               <Users className="w-3 h-3 text-primary" />
-              <span className="text-muted-foreground truncate">Rede comercial NAVANHULA POS</span>
+              <span className="text-muted-foreground truncate">Rede comercial NAVANHULA ERP</span>
             </div>
           )}
         </div>
