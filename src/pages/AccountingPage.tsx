@@ -5,11 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TrendingUp, TrendingDown, DollarSign, Receipt, RefreshCw, Download, Calculator, Users } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Receipt, RefreshCw, Download, Calculator, Users, BookOpen, CreditCard, ArrowDownLeft } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import EmployeeManagement from '@/components/hr/EmployeeManagement';
 import PayrollProcessing from '@/components/hr/PayrollProcessing';
+import ExpensesManager from '@/components/finance/ExpensesManager';
+import AccountsPayableManager from '@/components/finance/AccountsPayableManager';
+import AccountsReceivableManager from '@/components/finance/AccountsReceivableManager';
+
 interface AccountingEntry {
   id: string;
   type: string;
@@ -61,7 +65,6 @@ const AccountingPage: React.FC = () => {
   const fiscalRate = company ? Number((company as any).fiscal_rate || 3) : 3;
   const estimatedTax = revenue * (fiscalRate / 100);
 
-  // DRE data
   const dreData = [
     { label: 'Receita Bruta', value: revenue, type: 'positive' },
     { label: 'Despesas Operacionais', value: -expenses, type: 'negative' },
@@ -78,7 +81,6 @@ const AccountingPage: React.FC = () => {
 
   const pieData = Object.entries(categoryBreakdown).map(([name, value]) => ({ name, value }));
 
-  // Daily revenue chart
   const dailyData = entries
     .filter(e => e.type === 'revenue')
     .reduce((acc, e) => {
@@ -88,6 +90,19 @@ const AccountingPage: React.FC = () => {
     }, {} as Record<string, number>);
 
   const barData = Object.entries(dailyData).map(([day, total]) => ({ day, total })).reverse().slice(0, 30);
+
+  // Livro Caixa
+  const cashBookEntries = entries.map(e => ({
+    ...e,
+    entrada: e.type === 'revenue' ? Number(e.amount) : 0,
+    saida: e.type !== 'revenue' ? Number(e.amount) : 0,
+  }));
+
+  let runningBalance = 0;
+  const cashBookWithBalance = [...cashBookEntries].reverse().map(e => {
+    runningBalance += e.entrada - e.saida;
+    return { ...e, saldo: runningBalance };
+  }).reverse();
 
   const exportCSV = () => {
     const rows = ['Data,Tipo,Categoria,Valor,Descrição'];
@@ -106,8 +121,8 @@ const AccountingPage: React.FC = () => {
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Contabilidade</h1>
-          <p className="text-muted-foreground">Demonstração de Resultados e Fluxo de Caixa</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Contabilidade & Finanças</h1>
+          <p className="text-muted-foreground">Gestão financeira completa da empresa</p>
         </div>
         <div className="flex gap-2">
           <Select value={period} onValueChange={setPeriod}>
@@ -127,28 +142,31 @@ const AccountingPage: React.FC = () => {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="pos-stat">
+        <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm"><TrendingUp className="w-4 h-4" /> Receita</div>
-          <p className="text-2xl font-bold text-primary pos-money">{formatCurrency(revenue)}</p>
+          <p className="text-2xl font-bold text-primary">{formatCurrency(revenue)}</p>
         </Card>
-        <Card className="pos-stat">
+        <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm"><TrendingDown className="w-4 h-4" /> Despesas</div>
           <p className="text-2xl font-bold text-destructive">{formatCurrency(expenses)}</p>
         </Card>
-        <Card className="pos-stat">
+        <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm"><Calculator className="w-4 h-4" /> Impostos ({fiscalRate}%)</div>
           <p className="text-2xl font-bold text-warning">{formatCurrency(estimatedTax)}</p>
         </Card>
-        <Card className="pos-stat">
+        <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm"><DollarSign className="w-4 h-4" /> Lucro Líquido</div>
           <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(netProfit)}</p>
         </Card>
       </div>
 
       <Tabs defaultValue="dre">
-        <TabsList>
-          <TabsTrigger value="dre">DRE</TabsTrigger>
-          <TabsTrigger value="flow">Fluxo de Caixa</TabsTrigger>
+        <TabsList className="flex-wrap h-auto gap-1">
+          <TabsTrigger value="dre"><Receipt className="w-4 h-4 mr-1" /> DRE</TabsTrigger>
+          <TabsTrigger value="cashbook"><BookOpen className="w-4 h-4 mr-1" /> Livro Caixa</TabsTrigger>
+          <TabsTrigger value="expenses"><TrendingDown className="w-4 h-4 mr-1" /> Despesas</TabsTrigger>
+          <TabsTrigger value="payable"><CreditCard className="w-4 h-4 mr-1" /> Contas a Pagar</TabsTrigger>
+          <TabsTrigger value="receivable"><ArrowDownLeft className="w-4 h-4 mr-1" /> Contas a Receber</TabsTrigger>
           <TabsTrigger value="entries">Lançamentos</TabsTrigger>
           <TabsTrigger value="employees"><Users className="w-4 h-4 mr-1" /> Funcionários</TabsTrigger>
           <TabsTrigger value="payroll"><Calculator className="w-4 h-4 mr-1" /> Folha Salarial</TabsTrigger>
@@ -171,7 +189,6 @@ const AccountingPage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader><CardTitle className="text-lg">Distribuição por Categoria</CardTitle></CardHeader>
               <CardContent>
@@ -192,25 +209,57 @@ const AccountingPage: React.FC = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="flow" className="mt-4">
+        <TabsContent value="cashbook" className="mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-lg">Receita Diária</CardTitle></CardHeader>
-            <CardContent>
-              {barData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={barData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(217, 33%, 22%)" />
-                    <XAxis dataKey="day" tick={{ fill: 'hsl(215, 20%, 65%)', fontSize: 11 }} />
-                    <YAxis tick={{ fill: 'hsl(215, 20%, 65%)', fontSize: 11 }} />
-                    <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{ background: 'hsl(222, 47%, 14%)', border: '1px solid hsl(217, 33%, 22%)' }} />
-                    <Bar dataKey="total" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} name="Receita" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-[350px] flex items-center justify-center text-muted-foreground">Sem dados de receita</div>
-              )}
+            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><BookOpen className="w-5 h-5" /> Livro Caixa</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-auto max-h-[600px]">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-card">
+                    <tr className="border-b border-border">
+                      <th className="text-left p-3">Data</th>
+                      <th className="text-left p-3">Tipo</th>
+                      <th className="text-left p-3">Descrição</th>
+                      <th className="text-right p-3 text-success">Entrada</th>
+                      <th className="text-right p-3 text-destructive">Saída</th>
+                      <th className="text-right p-3 font-bold">Saldo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cashBookWithBalance.map(e => (
+                      <tr key={e.id} className="border-b border-border/50 hover:bg-muted/20">
+                        <td className="p-3">{new Date(e.created_at).toLocaleDateString('pt-BR')}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded text-xs ${e.type === 'revenue' ? 'bg-success/20 text-success' : e.type === 'expense' ? 'bg-destructive/20 text-destructive' : 'bg-warning/20 text-warning'}`}>
+                            {e.type === 'revenue' ? 'Receita' : e.type === 'expense' ? 'Despesa' : 'Imposto'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-muted-foreground truncate max-w-[200px]">{e.description || '-'}</td>
+                        <td className="p-3 text-right font-mono text-success">{e.entrada > 0 ? formatCurrency(e.entrada) : '-'}</td>
+                        <td className="p-3 text-right font-mono text-destructive">{e.saida > 0 ? formatCurrency(e.saida) : '-'}</td>
+                        <td className={`p-3 text-right font-mono font-bold ${e.saldo >= 0 ? 'text-foreground' : 'text-destructive'}`}>{formatCurrency(e.saldo)}</td>
+                      </tr>
+                    ))}
+                    {cashBookWithBalance.length === 0 && (
+                      <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">Nenhum lançamento no período</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="expenses" className="mt-4">
+          <ExpensesManager />
+        </TabsContent>
+
+        <TabsContent value="payable" className="mt-4">
+          <AccountsPayableManager />
+        </TabsContent>
+
+        <TabsContent value="receivable" className="mt-4">
+          <AccountsReceivableManager />
         </TabsContent>
 
         <TabsContent value="entries" className="mt-4">
@@ -250,6 +299,7 @@ const AccountingPage: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="employees" className="mt-4">
           <EmployeeManagement />
         </TabsContent>
