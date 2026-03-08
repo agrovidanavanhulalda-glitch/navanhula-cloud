@@ -128,6 +128,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       seller_id: sellerId,
+      temporary_password: safePassword,
       message: 'Vendedor criado com sucesso',
     }), {
       status: 200,

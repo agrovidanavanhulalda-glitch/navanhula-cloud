@@ -899,18 +899,20 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [company?.id, user?.id, loadSellers]);
 
-  const addSeller = useCallback(async (seller: Omit<LocalSeller, 'id'>) => {
+  const addSeller = useCallback(async (seller: Omit<LocalSeller, 'id'>): Promise<boolean> => {
     try {
       const email = seller.email?.trim();
       const name = seller.name?.trim();
+      const rawPassword = seller.password?.trim();
+      const safePassword = rawPassword && rawPassword.length >= 6 ? rawPassword : '123456';
       
       if (!name) {
         toast.error('Nome é obrigatório');
-        return;
+        return false;
       }
       if (!email) {
         toast.error('Email é obrigatório');
-        return;
+        return false;
       }
 
       // Call edge function to create seller via admin API
@@ -921,27 +923,42 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           phone: null,
           store_id: seller.storeId || authStore?.id,
           role: seller.role,
-          password: seller.password || '123456',
+          password: safePassword,
         },
       });
 
       if (error) {
+        let serverMessage = error.message || 'Erro do servidor';
+        const errorWithContext = error as { context?: Response };
+        if (errorWithContext.context) {
+          try {
+            const payload = await errorWithContext.context.json();
+            if (payload?.error) {
+              serverMessage = payload.error;
+            }
+          } catch {
+            // keep default server message
+          }
+        }
+
         console.error('[POS] Create seller error:', error);
-        toast.error('Erro ao criar vendedor: ' + (error.message || 'Erro do servidor'));
-        return;
+        toast.error('Erro ao criar vendedor: ' + serverMessage);
+        return false;
       }
 
       if (data?.error) {
         toast.error(data.error);
-        return;
+        return false;
       }
 
       // Reload sellers from database
       await loadSellers();
       toast.success('Vendedor criado com sucesso.');
+      return true;
     } catch (error: any) {
       console.error('[POS] addSeller error:', error);
       toast.error('Erro ao criar vendedor');
+      return false;
     }
   }, [authStore?.id, loadSellers]);
 

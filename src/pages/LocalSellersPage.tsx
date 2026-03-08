@@ -366,10 +366,10 @@ const LocalSellersPage: React.FC = () => {
                 type="text"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="1234"
+                placeholder="123456"
               />
               <p className="text-xs text-muted-foreground">
-                Senha para acesso rápido ao PDV
+                Mínimo 6 caracteres para o acesso do vendedor
               </p>
             </div>
 
