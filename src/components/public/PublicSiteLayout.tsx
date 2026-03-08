@@ -54,7 +54,7 @@ const PublicSiteLayout: React.FC = () => {
                 <ShoppingCart className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-lg font-bold tracking-tight">NAVANHULA POS</p>
+                <p className="text-lg font-bold tracking-tight">NAVANHULA ERP</p>
                 <p className="text-xs text-muted-foreground">Controle total do seu negócio em tempo real.</p>
               </div>
             </button>
