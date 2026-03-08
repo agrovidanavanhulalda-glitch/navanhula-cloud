@@ -386,7 +386,7 @@ const SalesLandingPage: React.FC = () => {
           <SectionHeading
             eyebrow="Para quem é"
             title="Feito para empresas que querem crescer"
-            description="O NAVANHULA POS atende operações de diferentes tamanhos, sempre com foco em simplicidade e controlo real do negócio."
+            description="O NAVANHULA ERP atende operações de diferentes tamanhos, sempre com foco em simplicidade e controlo real do negócio."
           />
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
