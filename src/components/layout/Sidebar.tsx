@@ -24,6 +24,7 @@ import {
   Link2,
   Wallet,
   FileText,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
