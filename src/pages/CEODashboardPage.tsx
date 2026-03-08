@@ -157,7 +157,7 @@ const CEODashboardPage: React.FC = () => {
         />
         <ExecutiveKPI
           icon={TrendingUp}
-          label="Receita Mensal SaaS"
+          label="Receita Mensal do Sistema"
           value={formatCurrency(stats?.platform_revenue_month ?? 0)}
           sub="Receita recorrente das assinaturas"
           accent="emerald"
