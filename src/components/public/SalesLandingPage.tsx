@@ -192,7 +192,7 @@ const SalesLandingPage: React.FC = () => {
               <div className="space-y-4 rounded-[1.5rem] border border-border/80 bg-background/80 p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Painel NAVANHULA POS</p>
+                    <p className="text-sm text-muted-foreground">Painel NAVANHULA ERP</p>
                     <p className="text-2xl font-bold">Seu negócio em tempo real</p>
                   </div>
                   <div className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">Ao vivo</div>
