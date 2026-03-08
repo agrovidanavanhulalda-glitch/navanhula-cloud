@@ -215,7 +215,7 @@ const translations: Record<Language, Record<string, string>> = {
     'pos.title': 'बिक्री बिंदु', 'pos.finalize': 'बिक्री पूरी करें',
     'payment.cash': 'नकद', 'payment.method': 'भुगतान विधि',
     'auth.login': 'लॉगिन', 'auth.signup': 'साइन अप', 'auth.logout': 'लॉगआउट',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'SaaS ERP प्लेटफ़ॉर्म',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'एंटरप्राइज़ ERP सिस्टम',
   },
 };
 

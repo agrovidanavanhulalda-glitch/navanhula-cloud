@@ -38,7 +38,7 @@ const AboutPage: React.FC = () => {
       <section className="grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
         <div className="space-y-5">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Sobre a plataforma</p>
-          <h1 className="text-4xl font-black tracking-tight sm:text-5xl">Um SaaS criado para ligar marketing, vendas e operação real.</h1>
+          <h1 className="text-4xl font-black tracking-tight sm:text-5xl">Um sistema criado para ligar marketing, vendas e operação real.</h1>
           <p className="text-lg leading-8 text-muted-foreground">
             O NAVANHULA POS nasce para resolver um problema comum: o software de gestão normalmente vende mal para o visitante e opera mal
             para o cliente. Aqui, a experiência pública apresenta valor com clareza e a experiência privada entrega produtividade diária.
