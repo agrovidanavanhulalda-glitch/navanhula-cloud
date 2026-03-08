@@ -117,7 +117,7 @@ const CEODashboardPage: React.FC = () => {
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Painel da Plataforma</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            NAVANHULA GROUP LDA — Visão global do ERP SaaS
+            NAVANHULA GROUP LDA — Visão global do Sistema ERP
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-2">
