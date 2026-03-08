@@ -83,7 +83,7 @@ const drawTextRow = (doc: jsPDF, label: string, value: string, x: number, y: num
   return y + lines.length * 4.2;
 };
 
-export const generateFiscalDocumentPdf = ({ document, company, store }: GenerateFiscalDocumentPdfOptions) => {
+export const generateFiscalDocumentPdf = async ({ document, company, store }: GenerateFiscalDocumentPdfOptions) => {
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageWidth = 210;
   const pageHeight = 297;
@@ -95,41 +95,64 @@ export const generateFiscalDocumentPdf = ({ document, company, store }: Generate
   const storeName = store?.name || companyName;
   const title = DOCUMENT_LABELS[document.document_type] || 'DOCUMENTO';
 
+  // Company Logo
+  const logoStartY = y;
+  let logoWidth = 0;
+  if (company?.logo_url) {
+    try {
+      const img = await loadImage(company.logo_url);
+      const maxLogoH = 18;
+      const maxLogoW = 30;
+      const ratio = Math.min(maxLogoW / img.width, maxLogoH / img.height);
+      const w = img.width * ratio;
+      const h = img.height * ratio;
+      doc.addImage(img, 'PNG', margin, y, w, h);
+      logoWidth = w + 4;
+    } catch {
+      // logo failed to load, continue without it
+    }
+  }
+
+  const textX = margin + logoWidth;
+
   doc.setFont('times', 'bold');
   doc.setFontSize(18);
-  doc.text(companyName, margin, y);
+  doc.text(companyName, textX, y + 5);
   doc.setFontSize(10);
   doc.setFont('times', 'normal');
-  y += 6;
+  y += 10;
 
   if (company?.address) {
-    doc.text(company.address, margin, y);
+    doc.text(company.address, textX, y);
     y += 4;
   }
   if (company?.city) {
-    doc.text(company.city, margin, y);
+    doc.text(company.city, textX, y);
     y += 4;
   }
   if (company?.phone) {
-    doc.text(`Tel: ${company.phone}`, margin, y);
+    doc.text(`Tel: ${company.phone}`, textX, y);
     y += 4;
   }
   if (company?.email) {
-    doc.text(`Email: ${company.email}`, margin, y);
+    doc.text(`Email: ${company.email}`, textX, y);
     y += 4;
   }
   if (company?.nif) {
-    doc.text(`NUIT: ${company.nif}`, margin, y);
+    doc.text(`NUIT: ${company.nif}`, textX, y);
     y += 4;
   }
   if (company?.country) {
-    doc.text(company.country, margin, y);
+    doc.text(company.country, textX, y);
     y += 4;
   }
   if (company?.fiscal_regime) {
-    doc.text(`Regime: ${String(company.fiscal_regime).toUpperCase()}`, margin, y);
+    doc.text(`Regime: ${String(company.fiscal_regime).toUpperCase()}`, textX, y);
     y += 4;
   }
+
+  // Ensure y is at least past the logo
+  y = Math.max(y, logoStartY + 20);
 
   doc.setFont('times', 'bold');
   doc.setFontSize(16);
@@ -240,8 +263,19 @@ export const generateFiscalDocumentPdf = ({ document, company, store }: Generate
   return doc;
 };
 
-export const downloadFiscalDocumentPdf = (options: GenerateFiscalDocumentPdfOptions) => {
-  const doc = generateFiscalDocumentPdf(options);
+export const downloadFiscalDocumentPdf = async (options: GenerateFiscalDocumentPdfOptions) => {
+  const doc = await generateFiscalDocumentPdf(options);
   const filename = `${options.document.document_number}`.toLowerCase().replace(/[^a-z0-9-_]+/g, '-');
   doc.save(`${filename}.pdf`);
 };
+
+// Helper to load image as base64
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = url;
+  });
+}

@@ -900,52 +900,50 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [company?.id, user?.id, loadSellers]);
 
   const addSeller = useCallback(async (seller: Omit<LocalSeller, 'id'>) => {
-    const tempId = generateId();
-    // Optimistic update
-    setState(prev => ({
-      ...prev,
-      sellers: [...prev.sellers, { ...seller, id: tempId }],
-    }));
-
     try {
-      // Create auth user for the seller via Supabase
-      const email = seller.email || `seller-${tempId}@navanhula.local`;
-      const password = seller.password || '123456';
+      const email = seller.email?.trim();
+      const name = seller.name?.trim();
       
-      // Insert profile directly (seller accounts are managed by admin)
-      const { data: newProfile, error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: tempId,
-          full_name: seller.name,
-          email: email,
-          store_id: seller.storeId || authStore?.id,
-          company_id: company?.id,
-          is_active: seller.isActive,
-          onboarding_completed: true,
-        })
-        .select()
-        .single();
-
-      if (profileError) {
-        console.error('[POS] Error creating seller profile:', profileError);
-        // Don't remove from state - keep optimistic update
-        toast.error('Erro ao salvar vendedor no servidor');
+      if (!name) {
+        toast.error('Nome é obrigatório');
+        return;
+      }
+      if (!email) {
+        toast.error('Email é obrigatório');
         return;
       }
 
-      // Assign role
-      const dbRole = seller.role === 'admin' ? 'manager' : 'seller';
-      await supabase.from('user_roles').insert({
-        user_id: tempId,
-        role: dbRole,
+      // Call edge function to create seller via admin API
+      const { data, error } = await supabase.functions.invoke('create-seller', {
+        body: {
+          name,
+          email,
+          phone: null,
+          store_id: seller.storeId || authStore?.id,
+          role: seller.role,
+          password: seller.password || '123456',
+        },
       });
 
-      toast.success('Vendedor criado e salvo!');
-    } catch (error) {
+      if (error) {
+        console.error('[POS] Create seller error:', error);
+        toast.error('Erro ao criar vendedor: ' + (error.message || 'Erro do servidor'));
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      // Reload sellers from database
+      await loadSellers();
+      toast.success('Vendedor criado com sucesso.');
+    } catch (error: any) {
       console.error('[POS] addSeller error:', error);
+      toast.error('Erro ao criar vendedor');
     }
-  }, [authStore?.id, company?.id]);
+  }, [authStore?.id, loadSellers]);
 
   const updateSeller = useCallback(async (id: string, updates: Partial<LocalSeller>) => {
     setState(prev => ({

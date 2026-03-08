@@ -327,7 +327,7 @@ const FiscalDocumentsManager: React.FC = () => {
           .maybeSingle();
 
         if (documentData) {
-          downloadFiscalDocumentPdf({
+          await downloadFiscalDocumentPdf({
             document: documentData as FiscalDocumentPdfRecord,
             company: company as any,
             store: store as any,
@@ -345,8 +345,8 @@ const FiscalDocumentsManager: React.FC = () => {
     }
   };
 
-  const handleDownload = (document: FiscalDocumentPdfRecord) => {
-    downloadFiscalDocumentPdf({
+  const handleDownload = async (document: FiscalDocumentPdfRecord) => {
+    await downloadFiscalDocumentPdf({
       document,
       company: company as any,
       store: store as any,
