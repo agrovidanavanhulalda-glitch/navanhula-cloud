@@ -1,4 +1,4 @@
-// NAVANHULA POS Types - SaaS Multi-tenant
+// NAVANHULA ERP Types - Multi-tenant
 
 export type AppRole = 'admin' | 'manager' | 'seller' | 'ceo' | 'reseller';
 export type PaymentMethod = 'cash' | 'mpesa' | 'emola' | 'card';

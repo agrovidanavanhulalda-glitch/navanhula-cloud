@@ -85,7 +85,7 @@ export function generateSaftMZXml(options: SaftOptions): string {
     periodEnd,
     products,
     invoices,
-    softwareName = 'NAVANHULA POS',
+    softwareName = 'NAVANHULA ERP',
     softwareVersion = '1.0',
   } = options;
 

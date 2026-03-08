@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     }
 
     const authToken = await getEmolaAuthToken();
-    const emolaPayload = { merchant_id: EMOLA_MERCHANT_ID, customer_msisdn: formattedPhone, amount: paymentAmount, reference: transactionRef, description: "NAVANHULA POS - Assinatura mensal" };
+    const emolaPayload = { merchant_id: EMOLA_MERCHANT_ID, customer_msisdn: formattedPhone, amount: paymentAmount, reference: transactionRef, description: "NAVANHULA ERP - Assinatura mensal" };
     const emolaResponse = await fetch(`${EMOLA_BASE_URL}/payments/c2b`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` }, body: JSON.stringify(emolaPayload) });
     const emolaResult = await emolaResponse.json();
 
