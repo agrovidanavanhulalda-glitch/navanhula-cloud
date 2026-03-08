@@ -200,7 +200,7 @@ const LocalReportsPage: React.FC = () => {
       startDate,
       endDate,
       selectedStore,
-      companyName: 'NAVANHULA POS',
+      companyName: 'NAVANHULA ERP',
     });
   };
 
