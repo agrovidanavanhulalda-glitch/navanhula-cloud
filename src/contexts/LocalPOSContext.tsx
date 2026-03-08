@@ -179,7 +179,47 @@ const FALLBACK_STORE: LocalStore = {
 export const useLocalPOS = () => {
   const context = useContext(LocalPOSContext);
   if (!context) {
-    throw new Error('useLocalPOS must be used within a LocalPOSProvider');
+    console.warn('useLocalPOS called outside LocalPOSProvider – using fallback');
+    // Return a safe fallback to prevent crashes during HMR
+    return {
+      store: { id: '', name: '', address: '', phone: '', email: '' },
+      products: [],
+      cart: [],
+      sales: [],
+      cashRegisters: [],
+      sellers: [],
+      stores: [],
+      cancellations: [],
+      cashRegisterOpen: false,
+      currentCashRegister: null,
+      currentSeller: null,
+      setCurrentSeller: () => {},
+      addToCart: () => false,
+      addManualItem: () => {},
+      removeFromCart: () => {},
+      updateQuantity: () => {},
+      clearCart: () => {},
+      completeSale: () => null as any,
+      getSubtotal: () => 0,
+      getTotal: () => 0,
+      getTotalDiscount: () => 0,
+      getLastSale: () => null,
+      openCashRegister: () => null as any,
+      closeCashRegister: () => null as any,
+      getSalesByPeriod: () => [],
+      addProduct: async () => {},
+      updateProduct: async () => {},
+      deleteProduct: async () => {},
+      addStore: async () => {},
+      updateStore: async () => {},
+      deleteStore: async () => {},
+      switchStore: () => {},
+      addSeller: async () => {},
+      updateSeller: async () => {},
+      deleteSeller: async () => {},
+      cancelSale: () => null as any,
+      refreshData: async () => {},
+    } as any;
   }
   return context;
 };
