@@ -146,7 +146,7 @@ export const generateFiscalPdfA4 = (options: FiscalPdfOptions): jsPDF => {
   doc.line(margin, footerY - 12, pageWidth - margin, footerY - 12);
   doc.setFont('times', 'italic');
   doc.setFontSize(8);
-  doc.text('Documento gerado pelo NAVANHULA POS', pageWidth / 2, footerY - 7, { align: 'center' });
+  doc.text('Documento gerado pelo NAVANHULA ERP', pageWidth / 2, footerY - 7, { align: 'center' });
   doc.text('Este documento é meramente informativo e não substitui a declaração fiscal oficial.', pageWidth / 2, footerY - 3, { align: 'center' });
   doc.text(`Impresso em: ${new Date().toLocaleString('pt-MZ')}`, pageWidth / 2, footerY + 1, { align: 'center' });
 

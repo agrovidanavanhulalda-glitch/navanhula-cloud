@@ -416,7 +416,7 @@ const SalesLandingPage: React.FC = () => {
             <div className="grid gap-0 lg:grid-cols-[0.88fr_1.12fr]">
               <div className="border-b border-border p-8 lg:border-b-0 lg:border-r">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Plano único</p>
-                <h3 className="mt-4 text-3xl font-black tracking-tight">NAVANHULA POS PROFISSIONAL</h3>
+                <h3 className="mt-4 text-3xl font-black tracking-tight">NAVANHULA ERP PROFISSIONAL</h3>
                 <div className="mt-5 flex items-end gap-3">
                   <span className="text-5xl font-black tracking-tight">1500 MT</span>
                   <span className="pb-1 text-base text-muted-foreground">/ mês por loja ativa</span>
