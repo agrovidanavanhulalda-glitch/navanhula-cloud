@@ -95,7 +95,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
   const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo';
   const isReseller = role === 'reseller';
-  const mainNavItems = isReseller ? resellerPortalNavItems : primaryNavItems;
+  const mainNavItems = isReseller 
+    ? resellerPortalNavItems 
+    : allNavItems.filter(item => !item.roles || item.roles.includes(role || 'seller'));
   const resellerSectionItems = !isReseller && isBackofficeAdmin ? adminResellerNavItems : [];
   const rawName = currentCashRegister?.sellerName || user?.full_name || '';
   const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : 'Operador';
