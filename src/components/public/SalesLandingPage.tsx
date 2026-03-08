@@ -492,7 +492,7 @@ const SalesLandingPage: React.FC = () => {
                 Empresas organizadas crescem mais rápido.
               </h2>
               <p className="mt-5 text-lg leading-8 text-muted-foreground">
-                Se você quer controlar seu negócio, aumentar seus lucros e tomar decisões com confiança, o NAVANHULA POS é a solução.
+                Se você quer controlar seu negócio, aumentar seus lucros e tomar decisões com confiança, o NAVANHULA ERP é a solução.
               </p>
               <Button asChild size="lg" className="mt-8 px-10">
                 <Link to="/registrar">CRIAR CONTA</Link>

@@ -239,7 +239,7 @@ const OnboardingPage: React.FC = () => {
 
       {/* Footer */}
       <p className="text-sm text-muted-foreground mt-8">
-        © 2024 NAVANHULA POS. Todos os direitos reservados.
+        © 2024 NAVANHULA ERP. Todos os direitos reservados.
       </p>
     </div>
   );
