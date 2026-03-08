@@ -364,7 +364,7 @@ const SalesLandingPage: React.FC = () => {
         <div className="grid gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-start">
           <SectionHeading
             eyebrow="Benefícios"
-            title="Por que empresas escolhem o NAVANHULA POS?"
+            title="Por que empresas escolhem o NAVANHULA ERP?"
             description="O sistema foi pensado para empresários que precisam de mais controlo, mais clareza e mais velocidade nas decisões."
           />
 
