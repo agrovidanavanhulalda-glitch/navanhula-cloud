@@ -28,7 +28,7 @@ const getPaymentLabel = (method: string) => {
 
 // Generate PDF content
 export const generatePDFContent = (props: PDFReportProps): string => {
-  const { sales, stores, startDate, endDate, selectedStore, companyName = 'NAVANHULA POS' } = props;
+  const { sales, stores, startDate, endDate, selectedStore, companyName = 'NAVANHULA ERP' } = props;
 
   // Filter sales
   const filteredSales = sales.filter(sale => {

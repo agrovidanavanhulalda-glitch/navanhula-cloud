@@ -1,7 +1,7 @@
 {
-  "name": "NAVANHULA POS",
-  "short_name": "NAVANHULA POS",
-  "description": "Plataforma SaaS pública e privada para gestão comercial e ponto de venda",
+  "name": "NAVANHULA ERP",
+  "short_name": "NAVANHULA ERP",
+  "description": "Plataforma empresarial para gestão comercial e ponto de venda",
   "theme_color": "#1e3a8a",
   "background_color": "#0f172a",
   "display": "standalone",

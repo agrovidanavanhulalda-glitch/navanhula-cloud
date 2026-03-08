@@ -20,9 +20,9 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
       manifest: {
-        name: 'NAVANHULA POS',
+        name: 'NAVANHULA ERP',
         short_name: 'NAVANHULA',
-        description: 'Sistema de Ponto de Venda Profissional',
+        description: 'Sistema de Gestão Empresarial',
         theme_color: '#1e3a8a',
         background_color: '#0f172a',
         display: 'standalone',

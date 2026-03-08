@@ -1,5 +1,5 @@
 /**
- * Strong password validation for NAVANHULA POS
+ * Strong password validation for NAVANHULA ERP
  */
 
 export interface PasswordValidation {
