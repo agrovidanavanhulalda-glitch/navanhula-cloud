@@ -113,7 +113,7 @@ const PublicSiteLayout: React.FC = () => {
           <div className="max-w-xl space-y-3">
             <p className="text-lg font-black tracking-tight">NAVANHULA ERP</p>
             <p className="text-sm leading-7 text-muted-foreground">
-              Plataforma ERP SaaS profissional para gestão empresarial completa.
+              Sistema ERP profissional para gestão empresarial completa.
             </p>
             <p className="text-xs text-muted-foreground">© NAVANHULA GROUP LDA · Todos os direitos reservados.</p>
           </div>

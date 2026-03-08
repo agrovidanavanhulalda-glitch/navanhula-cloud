@@ -44,7 +44,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Nota de Débito',
     'auth.login': 'Entrar', 'auth.signup': 'Criar Conta', 'auth.logout': 'Sair',
     'auth.email': 'Email', 'auth.password': 'Senha',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Plataforma ERP SaaS',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Sistema ERP Empresarial',
   },
   en: {
     'nav.dashboard': 'Dashboard', 'nav.pos': 'POS', 'nav.products': 'Products', 'nav.inventory': 'Inventory',
@@ -87,7 +87,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Debit Note',
     'auth.login': 'Login', 'auth.signup': 'Sign Up', 'auth.logout': 'Logout',
     'auth.email': 'Email', 'auth.password': 'Password',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'SaaS ERP Platform',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Enterprise ERP System',
   },
   es: {
     'nav.dashboard': 'Panel', 'nav.pos': 'TPV', 'nav.products': 'Productos', 'nav.inventory': 'Inventario',
@@ -110,7 +110,7 @@ const translations: Record<Language, Record<string, string>> = {
     'pos.title': 'Punto de Venta', 'pos.finalize': 'Finalizar Venta', 'pos.emptyCart': 'Carrito vacío',
     'payment.cash': 'Efectivo', 'payment.method': 'Método de Pago',
     'auth.login': 'Iniciar Sesión', 'auth.signup': 'Registrarse', 'auth.logout': 'Salir',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Plataforma ERP SaaS',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Sistema ERP Empresarial',
   },
   fr: {
     'nav.dashboard': 'Tableau de bord', 'nav.pos': 'PDV', 'nav.products': 'Produits', 'nav.inventory': 'Stock',
@@ -132,7 +132,7 @@ const translations: Record<Language, Record<string, string>> = {
     'pos.title': 'Point de Vente', 'pos.finalize': 'Finaliser Vente', 'pos.emptyCart': 'Panier vide',
     'payment.cash': 'Espèces', 'payment.method': 'Mode de Paiement',
     'auth.login': 'Connexion', 'auth.signup': "S'inscrire", 'auth.logout': 'Déconnexion',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Plateforme ERP SaaS',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Système ERP Entreprise',
   },
   de: {
     'nav.dashboard': 'Dashboard', 'nav.pos': 'Kasse', 'nav.products': 'Produkte', 'nav.inventory': 'Lager',
@@ -148,7 +148,7 @@ const translations: Record<Language, Record<string, string>> = {
     'pos.title': 'Kasse', 'pos.finalize': 'Verkauf abschließen',
     'payment.cash': 'Bargeld', 'payment.method': 'Zahlungsmethode',
     'auth.login': 'Anmelden', 'auth.signup': 'Registrieren', 'auth.logout': 'Abmelden',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'SaaS ERP-Plattform',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'ERP-System für Unternehmen',
   },
   it: {
     'nav.dashboard': 'Cruscotto', 'nav.pos': 'POS', 'nav.products': 'Prodotti', 'nav.inventory': 'Magazzino',
@@ -163,7 +163,7 @@ const translations: Record<Language, Record<string, string>> = {
     'pos.title': 'Punto Vendita', 'pos.finalize': 'Finalizza Vendita',
     'payment.cash': 'Contanti', 'payment.method': 'Metodo di Pagamento',
     'auth.login': 'Accedi', 'auth.signup': 'Registrati', 'auth.logout': 'Esci',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Piattaforma ERP SaaS',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Sistema ERP Aziendale',
   },
   ar: {
     'nav.dashboard': 'لوحة القيادة', 'nav.pos': 'نقطة البيع', 'nav.products': 'المنتجات', 'nav.inventory': 'المخزون',
@@ -189,7 +189,7 @@ const translations: Record<Language, Record<string, string>> = {
     'pos.title': '销售点', 'pos.finalize': '完成销售',
     'payment.cash': '现金', 'payment.method': '支付方式',
     'auth.login': '登录', 'auth.signup': '注册', 'auth.logout': '退出',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'SaaS ERP 平台',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': '企业ERP系统',
   },
   ru: {
     'nav.dashboard': 'Панель', 'nav.pos': 'Касса', 'nav.products': 'Товары', 'nav.inventory': 'Склад',
@@ -215,7 +215,7 @@ const translations: Record<Language, Record<string, string>> = {
     'pos.title': 'बिक्री बिंदु', 'pos.finalize': 'बिक्री पूरी करें',
     'payment.cash': 'नकद', 'payment.method': 'भुगतान विधि',
     'auth.login': 'लॉगिन', 'auth.signup': 'साइन अप', 'auth.logout': 'लॉगआउट',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'SaaS ERP प्लेटफ़ॉर्म',
+    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'एंटरप्राइज़ ERP सिस्टम',
   },
 };
 
