@@ -50,6 +50,17 @@ const LocalPOSPage: React.FC = () => {
   const [manualPrice, setManualPrice] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+
+  // Handle barcode scan result
+  const handleBarcodeScan = useCallback((code: string) => {
+    const product = products.find(p => p.barcode === code || p.code === code);
+    if (product) {
+      handleAddToCart(product);
+    } else {
+      toast.error(`Produto não encontrado para o código: ${code}`);
+    }
+  }, [products]);
 
   // Filter active products - SYNCHRONOUS
   const filteredProducts = products
