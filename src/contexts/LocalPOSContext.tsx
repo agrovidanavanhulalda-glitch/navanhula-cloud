@@ -238,6 +238,7 @@ const mapDbProductToLocal = (p: any, stockQty: number): LocalProduct => ({
   isActive: p.is_active ?? true,
   code: p.code,
   barcode: p.barcode,
+  imageUrl: p.image_url || null,
 });
 
 const mapDbStoreToLocal = (s: any): LocalStore => ({
