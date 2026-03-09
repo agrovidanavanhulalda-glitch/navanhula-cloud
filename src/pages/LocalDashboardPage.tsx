@@ -158,13 +158,13 @@ const LocalDashboardPage: React.FC = () => {
             icon={TrendingUp} 
             label="Lucro Hoje" 
             value={formatCurrency(totalProfit)}
-            color="bg-emerald-100 text-emerald-600"
+            color="bg-profit/10 text-profit"
           />
           <KPICard 
             icon={BarChart3} 
             label="Ticket Médio" 
             value={totalSalesCount > 0 ? formatCurrency(totalRevenue / totalSalesCount) : formatCurrency(0)}
-            color="bg-violet-100 text-violet-600"
+            color="bg-primary/10 text-primary"
           />
         </div>
 
