@@ -22,6 +22,7 @@ export interface LocalProduct {
   isActive: boolean;
   code?: string;
   barcode?: string;
+  imageUrl?: string | null;
 }
 
 export interface LocalCartItem {
