@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useLocalPOS, LocalProduct, PaymentDetails } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,14 @@ import {
   CreditCard, 
   Search,
   X,
-  Printer
+  Printer,
+  ScanLine
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import ThermalReceipt from '@/components/reports/ThermalReceipt';
 import PaymentModal from '@/components/pos/PaymentModal';
+import BarcodeScanner from '@/components/pos/BarcodeScanner';
 
 // HYBRID: Local POS data + SaaS Auth
 
