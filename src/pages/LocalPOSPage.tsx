@@ -127,15 +127,26 @@ const LocalPOSPage: React.FC = () => {
           </Badge>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Buscar produto..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search + Barcode */}
+        <div className="flex gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Buscar produto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="flex-shrink-0 h-10 w-10"
+            onClick={() => setShowBarcodeScanner(true)}
+            title="Scanner de código de barras"
+          >
+            <ScanLine className="w-5 h-5" />
+          </Button>
         </div>
 
         {/* Manual Entry */}
