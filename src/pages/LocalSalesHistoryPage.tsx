@@ -158,6 +158,8 @@ const LocalSalesHistoryPage: React.FC = () => {
 
   // Calculate profit for a sale
   const getSaleProfit = (sale: LocalSale) => {
+    // Use pre-calculated profit from DB when available
+    if (sale.profit != null) return sale.profit;
     return sale.items.reduce((acc, item) => {
       return acc + (item.product.salePrice - item.product.costPrice) * item.quantity - item.discount;
     }, 0);
@@ -165,6 +167,7 @@ const LocalSalesHistoryPage: React.FC = () => {
 
   // Calculate cost total for a sale
   const getSaleCost = (sale: LocalSale) => {
+    if (sale.costTotal != null) return sale.costTotal;
     return sale.items.reduce((acc, item) => acc + item.product.costPrice * item.quantity, 0);
   };
 

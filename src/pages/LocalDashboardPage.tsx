@@ -80,6 +80,9 @@ const LocalDashboardPage: React.FC = () => {
   const totalSalesCount = todaySales.length;
   const lowStockProducts = products.filter(p => p.stock <= 10 && p.isActive);
   const totalProfit = todaySales.reduce((acc, sale) => {
+    // Use pre-calculated profit from sales table (persists after refresh)
+    if (sale.profit != null) return acc + sale.profit;
+    // Fallback: calculate from items
     return acc + sale.items.reduce((itemAcc, item) => {
       return itemAcc + (item.product.salePrice - item.product.costPrice) * item.quantity;
     }, 0);
@@ -123,7 +126,7 @@ const LocalDashboardPage: React.FC = () => {
               variant={cashRegisterOpen ? 'default' : 'destructive'} 
               className="text-xs py-1.5 px-4 font-medium rounded-full"
             >
-              <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${cashRegisterOpen ? 'bg-green-400 animate-pulse' : 'bg-red-300'}`} />
+              <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${cashRegisterOpen ? 'bg-success animate-pulse' : 'bg-destructive/60'}`} />
               Caixa {cashRegisterOpen ? 'Aberto' : 'Fechado'}
             </Badge>
             <Button size="default" onClick={handleNewSale} className="gap-2 rounded-lg font-semibold"
@@ -155,13 +158,13 @@ const LocalDashboardPage: React.FC = () => {
             icon={TrendingUp} 
             label="Lucro Hoje" 
             value={formatCurrency(totalProfit)}
-            color="bg-emerald-100 text-emerald-600"
+            color="bg-profit/10 text-profit"
           />
           <KPICard 
             icon={BarChart3} 
             label="Ticket Médio" 
             value={totalSalesCount > 0 ? formatCurrency(totalRevenue / totalSalesCount) : formatCurrency(0)}
-            color="bg-violet-100 text-violet-600"
+            color="bg-primary/10 text-primary"
           />
         </div>
 

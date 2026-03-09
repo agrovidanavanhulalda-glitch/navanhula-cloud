@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useLocalPOS, LocalProduct, PaymentDetails } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,14 @@ import {
   CreditCard, 
   Search,
   X,
-  Printer
+  Printer,
+  ScanLine
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import ThermalReceipt from '@/components/reports/ThermalReceipt';
 import PaymentModal from '@/components/pos/PaymentModal';
+import BarcodeScanner from '@/components/pos/BarcodeScanner';
 
 // HYBRID: Local POS data + SaaS Auth
 
@@ -48,6 +50,17 @@ const LocalPOSPage: React.FC = () => {
   const [manualPrice, setManualPrice] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+
+  // Handle barcode scan result
+  const handleBarcodeScan = useCallback((code: string) => {
+    const product = products.find(p => p.barcode === code || p.code === code);
+    if (product) {
+      handleAddToCart(product);
+    } else {
+      toast.error(`Produto não encontrado para o código: ${code}`);
+    }
+  }, [products]);
 
   // Filter active products - SYNCHRONOUS
   const filteredProducts = products
@@ -114,15 +127,26 @@ const LocalPOSPage: React.FC = () => {
           </Badge>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Buscar produto..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search + Barcode */}
+        <div className="flex gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Buscar produto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="flex-shrink-0 h-10 w-10"
+            onClick={() => setShowBarcodeScanner(true)}
+            title="Scanner de código de barras"
+          >
+            <ScanLine className="w-5 h-5" />
+          </Button>
         </div>
 
         {/* Manual Entry */}
@@ -182,9 +206,15 @@ const LocalPOSPage: React.FC = () => {
               onClick={() => product.stock > 0 && handleAddToCart(product)}
             >
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
-                  <ShoppingCart className="w-6 h-6 text-primary" />
-                </div>
+                {product.imageUrl ? (
+                  <div className="w-14 h-14 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
+                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
+                    <ShoppingCart className="w-6 h-6 text-primary" />
+                  </div>
+                )}
                 <h3 className="font-medium text-sm truncate">{product.name}</h3>
                 <p className="text-lg font-bold text-primary mt-1">
                   {formatCurrency(product.salePrice)}
@@ -357,6 +387,13 @@ const LocalPOSPage: React.FC = () => {
           onClose={() => setShowReceipt(false)}
         />
       )}
+
+      {/* Barcode Scanner */}
+      <BarcodeScanner
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onScan={handleBarcodeScan}
+      />
     </div>
   );
 };
