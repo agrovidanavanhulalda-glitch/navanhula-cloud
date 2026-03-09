@@ -206,9 +206,15 @@ const LocalPOSPage: React.FC = () => {
               onClick={() => product.stock > 0 && handleAddToCart(product)}
             >
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
-                  <ShoppingCart className="w-6 h-6 text-primary" />
-                </div>
+                {product.imageUrl ? (
+                  <div className="w-14 h-14 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
+                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
+                    <ShoppingCart className="w-6 h-6 text-primary" />
+                  </div>
+                )}
                 <h3 className="font-medium text-sm truncate">{product.name}</h3>
                 <p className="text-lg font-bold text-primary mt-1">
                   {formatCurrency(product.salePrice)}
