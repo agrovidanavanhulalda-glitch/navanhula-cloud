@@ -80,6 +80,9 @@ const LocalDashboardPage: React.FC = () => {
   const totalSalesCount = todaySales.length;
   const lowStockProducts = products.filter(p => p.stock <= 10 && p.isActive);
   const totalProfit = todaySales.reduce((acc, sale) => {
+    // Use pre-calculated profit from sales table (persists after refresh)
+    if (sale.profit != null) return acc + sale.profit;
+    // Fallback: calculate from items
     return acc + sale.items.reduce((itemAcc, item) => {
       return itemAcc + (item.product.salePrice - item.product.costPrice) * item.quantity;
     }, 0);

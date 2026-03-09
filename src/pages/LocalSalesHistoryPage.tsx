@@ -167,6 +167,7 @@ const LocalSalesHistoryPage: React.FC = () => {
 
   // Calculate cost total for a sale
   const getSaleCost = (sale: LocalSale) => {
+    if (sale.costTotal != null) return sale.costTotal;
     return sale.items.reduce((acc, item) => acc + item.product.costPrice * item.quantity, 0);
   };
 
