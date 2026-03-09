@@ -262,30 +262,37 @@ const mapDbCashRegisterToLocal = (cr: any, profileName?: string): LocalCashRegis
   salesCount: 0,
 });
 
-const mapDbSaleToLocal = (s: any, items: any[]): LocalSale => ({
-  id: s.id,
-  items: items.map(si => ({
-    product: {
-      id: si.product_id,
-      name: si.product_name,
-      costPrice: si.cost_price || 0,
-      salePrice: si.unit_price,
-      stock: 0,
-      isActive: true,
-    },
-    quantity: si.quantity,
-    discount: si.discount_amount || 0,
-    total: si.total,
-  })),
-  subtotal: s.subtotal || 0,
-  discount: s.discount_amount || 0,
-  total: s.total || 0,
-  status: s.status === 'cancelled' ? 'cancelled' : 'completed',
-  paymentMethod: s.payment_method,
-  createdAt: new Date(s.created_at),
-  storeId: s.store_id,
-  sellerId: s.user_id,
-});
+const mapDbSaleToLocal = (s: any, items: any[]): LocalSale => {
+  const costTotal = s.cost_total || items.reduce((acc: number, si: any) => acc + (si.cost_price || 0) * (si.quantity || 0), 0);
+  const profit = s.profit != null ? s.profit : (s.total || 0) - costTotal;
+  
+  return {
+    id: s.id,
+    items: items.map((si: any) => ({
+      product: {
+        id: si.product_id,
+        name: si.product_name,
+        costPrice: si.cost_price || 0,
+        salePrice: si.unit_price,
+        stock: 0,
+        isActive: true,
+      },
+      quantity: si.quantity,
+      discount: si.discount_amount || 0,
+      total: si.total,
+    })),
+    subtotal: s.subtotal || 0,
+    discount: s.discount_amount || 0,
+    total: s.total || 0,
+    costTotal,
+    profit,
+    status: s.status === 'cancelled' ? 'cancelled' : 'completed',
+    paymentMethod: s.payment_method,
+    createdAt: new Date(s.created_at),
+    storeId: s.store_id,
+    sellerId: s.user_id,
+  };
+};
 
 // ============ PROVIDER ============
 
