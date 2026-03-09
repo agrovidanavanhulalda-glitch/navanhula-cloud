@@ -18,11 +18,12 @@ const MainLayout: React.FC = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         {/* Mobile header */}
-        <header className="sticky top-0 z-50 flex items-center justify-between p-4 bg-card border-b border-border safe-top">
+        <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-card border-b border-border safe-top"
+          style={{ boxShadow: 'var(--shadow-sm)' }}>
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="w-6 h-6" />
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-64">
@@ -31,10 +32,11 @@ const MainLayout: React.FC = () => {
           </Sheet>
           
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <ShoppingCart className="w-4 h-4 text-primary-foreground" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: 'var(--gradient-primary)' }}>
+              <ShoppingCart className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gradient-primary">NAVANHULA ERP</span>
+            <span className="font-bold text-sm tracking-tight">NAVANHULA</span>
           </div>
           
           <div className="flex items-center gap-1">
@@ -49,7 +51,6 @@ const MainLayout: React.FC = () => {
           <Outlet />
         </main>
 
-        {/* Footer */}
         <Footer />
       </div>
     );
@@ -59,13 +60,14 @@ const MainLayout: React.FC = () => {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Desktop top bar with language selector */}
-        <header className="flex items-center justify-end gap-2 px-6 py-2 border-b border-border bg-card">
+        {/* Desktop top bar */}
+        <header className="flex items-center justify-end gap-2 px-6 py-2.5 border-b border-border bg-card"
+          style={{ boxShadow: 'var(--shadow-sm)' }}>
           <LanguageSelector />
           <NotificationBell />
           <NetworkIndicator />
         </header>
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-background">
           <Outlet />
         </main>
         <Footer />
