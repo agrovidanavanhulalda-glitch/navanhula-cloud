@@ -55,6 +55,8 @@ export interface LocalSale {
   subtotal: number;
   discount: number;
   total: number;
+  costTotal?: number;
+  profit?: number;
   status: 'open' | 'completed' | 'cancelled';
   paymentMethod?: string;
   paymentDetails?: PaymentDetails;
