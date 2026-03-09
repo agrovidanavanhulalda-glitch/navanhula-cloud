@@ -126,7 +126,7 @@ const LocalDashboardPage: React.FC = () => {
               variant={cashRegisterOpen ? 'default' : 'destructive'} 
               className="text-xs py-1.5 px-4 font-medium rounded-full"
             >
-              <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${cashRegisterOpen ? 'bg-green-400 animate-pulse' : 'bg-red-300'}`} />
+              <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${cashRegisterOpen ? 'bg-success animate-pulse' : 'bg-destructive/60'}`} />
               Caixa {cashRegisterOpen ? 'Aberto' : 'Fechado'}
             </Badge>
             <Button size="default" onClick={handleNewSale} className="gap-2 rounded-lg font-semibold"
