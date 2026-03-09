@@ -49,7 +49,7 @@ Teste grátis: 7 dias com acesso total`,
 📈 Painel CEO para decisões estratégicas
 
 ✨ Comece GRÁTIS por 7 dias!
-🔗 Registre-se em navanhula-pos-sync.lovable.app/registrar`,
+🔗 Registre-se em navanhula-erp.lovable.app/registrar`,
   },
   {
     title: 'Guia Rápido do Produto',

@@ -107,16 +107,18 @@ Deno.serve(async (req) => {
 
     const sellerId = newUser.user.id;
 
-    // Update the profile (created by trigger) with company/store info
-    await adminClient.from('profiles').update({
+    // Upsert profile — handles both cases: trigger already created it, or not yet
+    const targetStoreId = store_id || callerProfile.store_id;
+    await adminClient.from('profiles').upsert({
+      id: sellerId,
       full_name: name,
       email,
       phone: phone || null,
       company_id: callerProfile.company_id,
-      store_id: store_id || callerProfile.store_id,
+      store_id: targetStoreId,
       is_active: true,
       onboarding_completed: true,
-    }).eq('id', sellerId);
+    }, { onConflict: 'id' });
 
     // Assign role
     const dbRole = role === 'admin' ? 'manager' : 'seller';
