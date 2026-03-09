@@ -381,6 +381,13 @@ const LocalPOSPage: React.FC = () => {
           onClose={() => setShowReceipt(false)}
         />
       )}
+
+      {/* Barcode Scanner */}
+      <BarcodeScanner
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onScan={handleBarcodeScan}
+      />
     </div>
   );
 };
