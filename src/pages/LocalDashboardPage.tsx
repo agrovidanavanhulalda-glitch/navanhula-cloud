@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/SaaSAuthContext';
@@ -9,9 +9,23 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonKPI, SkeletonList } from '@/components/ui/skeleton-card';
 import { 
   ShoppingCart, Package, DollarSign, TrendingUp,
-  ArrowRight, Plus, AlertTriangle, BarChart3, Users, Receipt
+  ArrowRight, Plus, AlertTriangle, BarChart3, Users, Receipt,
+  Wallet, FileText, Boxes
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend
+} from 'recharts';
+
+const CHART_COLORS = [
+  'hsl(217, 91%, 53%)',
+  'hsl(160, 84%, 39%)',
+  'hsl(38, 92%, 50%)',
+  'hsl(199, 89%, 48%)',
+  'hsl(280, 67%, 55%)',
+  'hsl(0, 84%, 60%)',
+];
 
 const KPICard: React.FC<{
   icon: React.ElementType;
@@ -46,14 +60,14 @@ const QuickAction: React.FC<{
   onClick: () => void;
 }> = ({ icon: Icon, title, description, onClick }) => (
   <Card 
-    className="p-5 cursor-pointer hover:translate-y-[-2px] transition-all duration-200 group border-transparent"
+    className="p-4 cursor-pointer hover:translate-y-[-1px] transition-all duration-200 group border-transparent"
     style={{ boxShadow: 'var(--shadow-card)' }}
     onClick={onClick}
   >
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center group-hover:bg-primary/15 transition-all duration-200">
-          <Icon className="w-6 h-6 text-primary" />
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-all duration-200">
+          <Icon className="w-5 h-5 text-primary" />
         </div>
         <div>
           <h3 className="font-semibold text-foreground text-sm">{title}</h3>
@@ -70,23 +84,68 @@ const LocalDashboardPage: React.FC = () => {
   const { store, sales, products, cashRegisterOpen, startNewSale, loading } = useLocalPOS();
   const { user } = useAuth();
 
-  const todaySales = sales.filter(s => {
+  const todaySales = useMemo(() => sales.filter(s => {
     const today = new Date();
     const saleDate = new Date(s.createdAt);
     return saleDate.toDateString() === today.toDateString();
-  });
+  }), [sales]);
 
   const totalRevenue = todaySales.reduce((acc, s) => acc + s.total, 0);
   const totalSalesCount = todaySales.length;
   const lowStockProducts = products.filter(p => p.stock <= 10 && p.isActive);
   const totalProfit = todaySales.reduce((acc, sale) => {
-    // Use pre-calculated profit from sales table (persists after refresh)
     if (sale.profit != null) return acc + sale.profit;
-    // Fallback: calculate from items
     return acc + sale.items.reduce((itemAcc, item) => {
       return itemAcc + (item.product.salePrice - item.product.costPrice) * item.quantity;
     }, 0);
   }, 0);
+
+  // Chart data: Sales by last 7 days
+  const salesByDay = useMemo(() => {
+    const days: { name: string; vendas: number; receita: number; lucro: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dayStr = date.toDateString();
+      const daySales = sales.filter(s => new Date(s.createdAt).toDateString() === dayStr);
+      days.push({
+        name: date.toLocaleDateString('pt-MZ', { weekday: 'short', day: 'numeric' }),
+        vendas: daySales.length,
+        receita: daySales.reduce((a, s) => a + s.total, 0),
+        lucro: daySales.reduce((a, s) => a + (s.profit ?? 0), 0),
+      });
+    }
+    return days;
+  }, [sales]);
+
+  // Chart data: Top products by revenue
+  const topProducts = useMemo(() => {
+    const productMap = new Map<string, { name: string; revenue: number; qty: number }>();
+    sales.forEach(sale => {
+      sale.items.forEach(item => {
+        const existing = productMap.get(item.product.id) || { name: item.product.name, revenue: 0, qty: 0 };
+        existing.revenue += item.total;
+        existing.qty += item.quantity;
+        productMap.set(item.product.id, existing);
+      });
+    });
+    return Array.from(productMap.values())
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 6);
+  }, [sales]);
+
+  // Chart data: Sales by payment method
+  const salesByPayment = useMemo(() => {
+    const methods: Record<string, number> = {};
+    todaySales.forEach(s => {
+      const label = s.paymentMethod === 'cash' ? 'Dinheiro' :
+        s.paymentMethod === 'mpesa' ? 'M-Pesa' :
+        s.paymentMethod === 'emola' ? 'E-Mola' :
+        s.paymentMethod === 'card' ? 'Cartão' : s.paymentMethod;
+      methods[label] = (methods[label] || 0) + s.total;
+    });
+    return Object.entries(methods).map(([name, value]) => ({ name, value }));
+  }, [todaySales]);
 
   const handleNewSale = () => {
     startNewSale();
@@ -112,7 +171,7 @@ const LocalDashboardPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-      {/* Hero Section with gradient */}
+      {/* Hero Section */}
       <div className="dashboard-hero px-4 md:px-8 pt-6 pb-10 md:pt-8 md:pb-14">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -142,30 +201,10 @@ const LocalDashboardPage: React.FC = () => {
       <div className="px-4 md:px-8 -mt-6 md:-mt-8 pb-8 space-y-6">
         {/* KPI Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-          <KPICard 
-            icon={ShoppingCart} 
-            label="Vendas Hoje" 
-            value={totalSalesCount}
-            color="bg-primary/10 text-primary"
-          />
-          <KPICard 
-            icon={DollarSign} 
-            label="Receita Hoje" 
-            value={formatCurrency(totalRevenue)}
-            color="bg-success/10 text-success"
-          />
-          <KPICard 
-            icon={TrendingUp} 
-            label="Lucro Hoje" 
-            value={formatCurrency(totalProfit)}
-            color="bg-profit/10 text-profit"
-          />
-          <KPICard 
-            icon={BarChart3} 
-            label="Ticket Médio" 
-            value={totalSalesCount > 0 ? formatCurrency(totalRevenue / totalSalesCount) : formatCurrency(0)}
-            color="bg-primary/10 text-primary"
-          />
+          <KPICard icon={ShoppingCart} label="Vendas Hoje" value={totalSalesCount} color="bg-primary/10 text-primary" />
+          <KPICard icon={DollarSign} label="Receita Hoje" value={formatCurrency(totalRevenue)} color="bg-success/10 text-success" />
+          <KPICard icon={TrendingUp} label="Lucro Hoje" value={formatCurrency(totalProfit)} color="bg-profit/10 text-profit" />
+          <KPICard icon={BarChart3} label="Ticket Médio" value={totalSalesCount > 0 ? formatCurrency(totalRevenue / totalSalesCount) : formatCurrency(0)} color="bg-primary/10 text-primary" />
         </div>
 
         {/* Low Stock Alert */}
@@ -186,20 +225,95 @@ const LocalDashboardPage: React.FC = () => {
           </Card>
         )}
 
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Sales by Day Chart */}
+          <Card className="p-5 lg:col-span-2">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-primary" />
+              Vendas — Últimos 7 Dias
+            </h3>
+            {sales.length === 0 ? (
+              <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
+                Sem dados de vendas para exibir
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={salesByDay} barGap={4}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(214 32% 91%)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
+                  <YAxis tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(0 0% 100%)', 
+                      border: '1px solid hsl(214 32% 91%)',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                    formatter={(value: number, name: string) => [
+                      name === 'receita' || name === 'lucro' ? formatCurrency(value) : value,
+                      name === 'receita' ? 'Receita' : name === 'lucro' ? 'Lucro' : 'Vendas'
+                    ]}
+                  />
+                  <Legend formatter={(v) => v === 'receita' ? 'Receita' : v === 'lucro' ? 'Lucro' : 'Vendas'} />
+                  <Bar dataKey="receita" fill="hsl(217, 91%, 53%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="lucro" fill="hsl(160, 84%, 39%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </Card>
+
+          {/* Payment Methods Pie */}
+          <Card className="p-5">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-primary" />
+              Métodos de Pagamento
+            </h3>
+            {salesByPayment.length === 0 ? (
+              <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
+                Sem vendas hoje
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={salesByPayment} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value">
+                    {salesByPayment.map((_, index) => (
+                      <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </Card>
+        </div>
+
+        {/* Top Products */}
+        {topProducts.length > 0 && (
+          <Card className="p-5">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Package className="w-4 h-4 text-primary" />
+              Produtos Mais Vendidos
+            </h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={topProducts} layout="vertical" barSize={16}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(214 32% 91%)" />
+                <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
+                <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
+                <Bar dataKey="revenue" fill="hsl(199, 89%, 48%)" radius={[0, 4, 4, 0]} name="Receita" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        )}
+
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <QuickAction
-            icon={ShoppingCart}
-            title="Nova Venda"
-            description="Iniciar uma nova venda no PDV"
-            onClick={handleNewSale}
-          />
-          <QuickAction
-            icon={Package}
-            title="Produtos"
-            description="Gerenciar catálogo de produtos"
-            onClick={() => navigate('/app/produtos')}
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <QuickAction icon={ShoppingCart} title="Nova Venda" description="Iniciar venda no PDV" onClick={handleNewSale} />
+          <QuickAction icon={Package} title="Produtos" description="Gerenciar catálogo" onClick={() => navigate('/app/produtos')} />
+          <QuickAction icon={Boxes} title="Estoque" description="Controle de inventário" onClick={() => navigate('/app/estoque')} />
+          <QuickAction icon={FileText} title="Fiscal" description="Documentos fiscais" onClick={() => navigate('/app/fiscal')} />
         </div>
 
         {/* Recent Sales */}
@@ -220,7 +334,7 @@ const LocalDashboardPage: React.FC = () => {
                   className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-colors duration-200 border border-transparent hover:border-border"
                 >
                   <div className="min-w-0 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Receipt className="w-4 h-4 text-primary" />
                     </div>
                     <div>
