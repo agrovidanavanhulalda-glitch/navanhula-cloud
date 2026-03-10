@@ -56,8 +56,8 @@ export interface ReceiptData {
 }
 
 class BluetoothPrinterService {
-  private device: BluetoothDevice | null = null;
-  private characteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private device: any = null;
+  private characteristic: any = null;
   private connected = false;
 
   /**
