@@ -356,14 +356,22 @@ const LocalPOSPage: React.FC = () => {
 
           {/* Last sale receipt button */}
           {lastSale && !showReceipt && (
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => setShowReceipt(true)}
-            >
-              <Printer className="w-4 h-4 mr-2" />
-              Ver Último Recibo
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowReceipt(true)}
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                Ver Último Recibo
+              </Button>
+              <BluetoothPrintButton
+                sale={lastSale}
+                storeName={store.name}
+                storeAddress={store.address}
+                storePhone={store.phone}
+              />
+            </div>
           )}
         </div>
       </div>
