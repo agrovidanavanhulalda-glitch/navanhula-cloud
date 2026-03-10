@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import ThermalReceipt from '@/components/reports/ThermalReceipt';
 import PaymentModal from '@/components/pos/PaymentModal';
 import BarcodeScanner from '@/components/pos/BarcodeScanner';
+import BluetoothPrintButton from '@/components/pos/BluetoothPrintButton';
 
 // HYBRID: Local POS data + SaaS Auth
 
