@@ -1,3 +1,4 @@
+/// <reference path="../types/web-bluetooth.d.ts" />
 /**
  * Bluetooth Thermal Printer Service
  * 
