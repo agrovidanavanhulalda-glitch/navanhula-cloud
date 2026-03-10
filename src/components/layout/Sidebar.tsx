@@ -4,26 +4,10 @@ import { useAuth } from '@/contexts/SaaSAuthContext';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard,
-  ShoppingCart,
-  Package,
-  Settings,
-  Store,
-  LogOut,
-  WalletCards,
-  History,
-  BarChart3,
-  TrendingUp,
-  Boxes,
-  Shield,
-  User,
-  MessageSquare,
-  Users,
-  UserPlus,
-  Link2,
-  Wallet,
-  FileText,
-  BookOpen,
+  LayoutDashboard, ShoppingCart, Package, Settings, Store, LogOut,
+  WalletCards, History, BarChart3, TrendingUp, Boxes, Shield, User,
+  MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
+  UserCheck, Truck, PieChart, Sprout, Egg,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
@@ -33,41 +17,86 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
-}
-
-interface NavItemWithRole extends NavItem {
   roles?: string[];
 }
 
-const allNavItems: NavItemWithRole[] = [
-  { label: 'Dashboard', href: '/app/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-  { label: 'Painel CEO', href: '/app/ceo', icon: <TrendingUp className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-  { label: 'PDV', href: '/app/pdv', icon: <ShoppingCart className="w-5 h-5" /> },
-  { label: 'Caixa', href: '/app/caixa', icon: <WalletCards className="w-5 h-5" /> },
-  { label: 'Vendas', href: '/app/vendas', icon: <History className="w-5 h-5" /> },
-  { label: 'Produtos', href: '/app/produtos', icon: <Package className="w-5 h-5" /> },
-  { label: 'Estoque', href: '/app/estoque', icon: <Boxes className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-  { label: 'Vendedores', href: '/app/vendedores', icon: <Users className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-  { label: 'Lojas', href: '/app/lojas', icon: <Store className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-  { label: 'Relatórios', href: '/app/relatorios', icon: <BarChart3 className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-  { label: 'Fiscal', href: '/app/fiscal', icon: <FileText className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-  { label: 'Financeiro', href: '/app/financeiro', icon: <TrendingUp className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-  { label: 'Contabilidade', href: '/app/contabilidade', icon: <BookOpen className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-  { label: 'Carteira', href: '/app/carteira', icon: <WalletCards className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-  { label: 'Assinatura', href: '/app/assinatura', icon: <Shield className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-  { label: 'Configurações', href: '/app/configuracoes', icon: <Settings className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-  { label: 'Comunidade', href: '/app/comunidade', icon: <MessageSquare className="w-5 h-5" /> },
+interface NavSection {
+  title?: string;
+  items: NavItem[];
+  roles?: string[];
+}
+
+const navSections: NavSection[] = [
+  {
+    items: [
+      { label: 'Dashboard', href: '/app/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+      { label: 'Painel CEO', href: '/app/ceo', icon: <TrendingUp className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+    ],
+  },
+  {
+    title: 'Vendas',
+    items: [
+      { label: 'PDV', href: '/app/pdv', icon: <ShoppingCart className="w-5 h-5" /> },
+      { label: 'Caixa', href: '/app/caixa', icon: <WalletCards className="w-5 h-5" /> },
+      { label: 'Histórico', href: '/app/vendas', icon: <History className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: 'Catálogo',
+    items: [
+      { label: 'Produtos', href: '/app/produtos', icon: <Package className="w-5 h-5" /> },
+      { label: 'Estoque', href: '/app/estoque', icon: <Boxes className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+    ],
+  },
+  {
+    title: 'CRM & Equipa',
+    roles: ['admin', 'manager', 'ceo'],
+    items: [
+      { label: 'Clientes', href: '/app/crm', icon: <UserCheck className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+      { label: 'Vendedores', href: '/app/vendedores', icon: <Users className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+      { label: 'Fornecedores', href: '/app/fornecedores', icon: <Truck className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+    ],
+  },
+  {
+    title: 'Financeiro',
+    roles: ['admin', 'manager', 'ceo'],
+    items: [
+      { label: 'Relatórios', href: '/app/relatorios', icon: <BarChart3 className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+      { label: 'Financeiro', href: '/app/financeiro', icon: <TrendingUp className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+      { label: 'Contabilidade', href: '/app/contabilidade', icon: <BookOpen className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+      { label: 'Fiscal', href: '/app/fiscal', icon: <FileText className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+      { label: 'Carteira', href: '/app/carteira', icon: <WalletCards className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+      { label: 'BI Analytics', href: '/app/bi', icon: <PieChart className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+    ],
+  },
+  {
+    title: 'Operações',
+    roles: ['admin', 'ceo'],
+    items: [
+      { label: 'Lojas', href: '/app/lojas', icon: <Store className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+      { label: 'Agricultura', href: '/app/agricultura', icon: <Sprout className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+      { label: 'Avicultura', href: '/app/avicultura', icon: <Egg className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+    ],
+  },
+  {
+    title: 'Sistema',
+    items: [
+      { label: 'Assinatura', href: '/app/assinatura', icon: <Shield className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+      { label: 'Configurações', href: '/app/configuracoes', icon: <Settings className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+      { label: 'Comunidade', href: '/app/comunidade', icon: <MessageSquare className="w-5 h-5" /> },
+    ],
+  },
 ];
 
 const adminResellerNavItems: NavItem[] = [
-  { label: 'Dashboard de Revendedores', href: '/app/revendedores/dashboard', icon: <Users className="w-5 h-5" /> },
-  { label: 'Cadastrar Revendedor', href: '/app/revendedores/cadastrar', icon: <UserPlus className="w-5 h-5" /> },
-  { label: 'Lista de Revendedores', href: '/app/revendedores/lista', icon: <Users className="w-5 h-5" /> },
+  { label: 'Dashboard', href: '/app/revendedores/dashboard', icon: <Users className="w-5 h-5" /> },
+  { label: 'Cadastrar', href: '/app/revendedores/cadastrar', icon: <UserPlus className="w-5 h-5" /> },
+  { label: 'Lista', href: '/app/revendedores/lista', icon: <Users className="w-5 h-5" /> },
   { label: 'Comissões', href: '/app/revendedores/comissoes', icon: <TrendingUp className="w-5 h-5" /> },
   { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: <Wallet className="w-5 h-5" /> },
-  { label: 'Links de Convite', href: '/app/revendedores/links', icon: <Link2 className="w-5 h-5" /> },
-  { label: 'Relatórios de Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
-  { label: 'Materiais de Venda', href: '/app/revendedores/materiais', icon: <FileText className="w-5 h-5" /> },
+  { label: 'Links', href: '/app/revendedores/links', icon: <Link2 className="w-5 h-5" /> },
+  { label: 'Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
+  { label: 'Materiais', href: '/app/revendedores/materiais', icon: <FileText className="w-5 h-5" /> },
 ];
 
 const resellerPortalNavItems: NavItem[] = [
@@ -75,9 +104,9 @@ const resellerPortalNavItems: NavItem[] = [
   { label: 'Clientes Indicados', href: '/app/revendedores/lista', icon: <Users className="w-5 h-5" /> },
   { label: 'Comissões', href: '/app/revendedores/comissoes', icon: <TrendingUp className="w-5 h-5" /> },
   { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: <Wallet className="w-5 h-5" /> },
-  { label: 'Links de Convite', href: '/app/revendedores/links', icon: <Link2 className="w-5 h-5" /> },
-  { label: 'Materiais de Venda', href: '/app/revendedores/materiais', icon: <FileText className="w-5 h-5" /> },
-  { label: 'Relatórios de Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
+  { label: 'Links', href: '/app/revendedores/links', icon: <Link2 className="w-5 h-5" /> },
+  { label: 'Materiais', href: '/app/revendedores/materiais', icon: <FileText className="w-5 h-5" /> },
+  { label: 'Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
 ];
 
 interface SidebarProps {
@@ -92,31 +121,21 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
   const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo';
   const isReseller = role === 'reseller';
-  const mainNavItems = isReseller 
-    ? resellerPortalNavItems 
-    : allNavItems.filter(item => !item.roles || item.roles.includes(role || 'seller'));
-  const resellerSectionItems = !isReseller && isBackofficeAdmin ? adminResellerNavItems : [];
   const rawName = currentCashRegister?.sellerName || user?.full_name || '';
   const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : 'Operador';
   const currentOperatorRole =
-    role === 'reseller'
-      ? 'Revendedor'
-      : role === 'ceo'
-        ? 'CEO'
-        : role === 'manager'
-          ? 'Gerente'
-          : isBackofficeAdmin
-            ? 'Administrador'
-            : 'Vendedor';
+    role === 'reseller' ? 'Revendedor' :
+    role === 'ceo' ? 'CEO' :
+    role === 'manager' ? 'Gerente' :
+    isBackofficeAdmin ? 'Administrador' : 'Vendedor';
 
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
   };
 
-  const renderNavItem = (item: NavItemWithRole) => {
+  const renderNavItem = (item: NavItem) => {
     const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
-
     return (
       <Link
         key={item.href}
@@ -129,20 +148,41 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
           collapsed && 'justify-center px-2'
         )}
       >
-        <span className={cn(
-          'flex-shrink-0 transition-colors duration-200',
-          isActive ? 'text-primary' : ''
-        )}>
+        <span className={cn('flex-shrink-0 transition-colors duration-200', isActive ? 'text-primary' : '')}>
           {item.icon}
         </span>
-        {!collapsed && (
-          <span className="flex-1 truncate">{item.label}</span>
-        )}
-        {!collapsed && isActive && (
-          <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-        )}
+        {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+        {!collapsed && isActive && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
       </Link>
     );
+  };
+
+  const renderSections = () => {
+    if (isReseller) {
+      return resellerPortalNavItems.map(renderNavItem);
+    }
+
+    return navSections.map((section, idx) => {
+      // Filter section by role
+      if (section.roles && !section.roles.includes(role || 'seller')) return null;
+      const visibleItems = section.items.filter(item => !item.roles || item.roles.includes(role || 'seller'));
+      if (visibleItems.length === 0) return null;
+
+      return (
+        <div key={idx} className={idx > 0 ? 'pt-3' : ''}>
+          {section.title && !collapsed && (
+            <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
+              style={{ color: 'hsl(215 16% 45%)' }}>
+              {section.title}
+            </p>
+          )}
+          {collapsed && idx > 0 && (
+            <div className="mx-3 mb-2 border-t" style={{ borderColor: 'hsl(217 33% 18%)' }} />
+          )}
+          <div className="space-y-0.5">{visibleItems.map(renderNavItem)}</div>
+        </div>
+      );
+    });
   };
 
   return (
@@ -151,10 +191,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         'flex flex-col h-screen border-r transition-all duration-300',
         collapsed ? 'w-16' : 'w-64'
       )}
-      style={{ 
-        backgroundColor: 'hsl(222 47% 11%)',
-        borderColor: 'hsl(217 33% 18%)'
-      }}
+      style={{ backgroundColor: 'hsl(222 47% 11%)', borderColor: 'hsl(217 33% 18%)' }}
     >
       {/* Brand */}
       <div className={cn('flex items-center gap-3 p-4 border-b', collapsed && 'justify-center')}
@@ -207,17 +244,18 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
 
       {/* Navigation */}
       <nav className="flex-1 p-2 overflow-y-auto space-y-0.5">
-        {mainNavItems.map(renderNavItem)}
+        {renderSections()}
 
-        {resellerSectionItems.length > 0 && (
-          <div className="pt-4">
+        {/* Reseller admin section */}
+        {!isReseller && isBackofficeAdmin && adminResellerNavItems.length > 0 && (
+          <div className="pt-3">
             {!collapsed && (
-              <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em]"
+              <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
                 style={{ color: 'hsl(215 16% 45%)' }}>
-                Rede de Revendedores
+                Revendedores
               </p>
             )}
-            <div className="space-y-0.5">{resellerSectionItems.map(renderNavItem)}</div>
+            <div className="space-y-0.5">{adminResellerNavItems.map(renderNavItem)}</div>
           </div>
         )}
       </nav>
@@ -232,8 +270,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
                 style={{ backgroundColor: 'hsl(217 91% 53% / 0.15)' }}>
                 {isBackofficeAdmin
                   ? <Shield className="w-3.5 h-3.5 text-primary" />
-                  : <User className="w-3.5 h-3.5" style={{ color: 'hsl(215 16% 55%)' }} />
-                }
+                  : <User className="w-3.5 h-3.5" style={{ color: 'hsl(215 16% 55%)' }} />}
               </div>
               <div className="min-w-0">
                 <p className="font-medium text-xs text-white truncate">{currentOperator}</p>
