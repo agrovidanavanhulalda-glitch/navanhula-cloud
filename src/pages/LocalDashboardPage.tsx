@@ -10,12 +10,14 @@ import { SkeletonKPI, SkeletonList } from '@/components/ui/skeleton-card';
 import { 
   ShoppingCart, Package, DollarSign, TrendingUp,
   ArrowRight, Plus, AlertTriangle, BarChart3, Users, Receipt,
-  Wallet, FileText, Boxes
+  Wallet, FileText, Boxes, Calendar, Target, Award, Clock,
+  ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend
+  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  LineChart, Line, AreaChart, Area
 } from 'recharts';
 
 const CHART_COLORS = [
@@ -32,24 +34,27 @@ const KPICard: React.FC<{
   label: string;
   value: string | number;
   trend?: string;
-  trendUp?: boolean;
+  trendUp?: boolean | null;
   color: string;
-}> = ({ icon: Icon, label, value, trend, trendUp, color }) => (
+  sub?: string;
+}> = ({ icon: Icon, label, value, trend, trendUp, color, sub }) => (
   <Card className="p-5 hover:translate-y-[-2px] transition-all duration-200 group border-transparent"
     style={{ boxShadow: 'var(--shadow-card)' }}>
-    <div className="flex items-center justify-between mb-4">
-      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${color}`}>
-        <Icon className="w-5 h-5" />
+    <div className="flex items-center justify-between mb-3">
+      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${color}`}>
+        <Icon className="w-4.5 h-4.5" />
       </div>
     </div>
-    <p className="text-3xl font-bold tracking-tight text-foreground">{value}</p>
+    <p className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">{value}</p>
     {trend && (
-      <p className={`text-xs mt-2 flex items-center gap-1 font-medium ${trendUp ? 'text-success' : 'text-muted-foreground'}`}>
-        {trendUp && <TrendingUp className="w-3 h-3" />}
+      <p className={`text-xs mt-1.5 flex items-center gap-1 font-medium ${trendUp === true ? 'text-success' : trendUp === false ? 'text-destructive' : 'text-muted-foreground'}`}>
+        {trendUp === true && <ArrowUpRight className="w-3 h-3" />}
+        {trendUp === false && <ArrowDownRight className="w-3 h-3" />}
         {trend}
       </p>
     )}
+    {sub && <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>}
   </Card>
 );
 
@@ -84,44 +89,100 @@ const LocalDashboardPage: React.FC = () => {
   const { store, sales, products, cashRegisterOpen, startNewSale, loading } = useLocalPOS();
   const { user } = useAuth();
 
-  const todaySales = useMemo(() => sales.filter(s => {
-    const today = new Date();
-    const saleDate = new Date(s.createdAt);
-    return saleDate.toDateString() === today.toDateString();
-  }), [sales]);
+  // Time-based sales calculations
+  const { todaySales, weekSales, monthSales } = useMemo(() => {
+    const now = new Date();
+    const today = now.toDateString();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const todayS = sales.filter(s => new Date(s.createdAt).toDateString() === today);
+    const weekS = sales.filter(s => new Date(s.createdAt) >= weekStart);
+    const monthS = sales.filter(s => new Date(s.createdAt) >= monthStart);
+    return { todaySales: todayS, weekSales: weekS, monthSales: monthS };
+  }, [sales]);
 
   const totalRevenue = todaySales.reduce((acc, s) => acc + s.total, 0);
-  const totalSalesCount = todaySales.length;
+  const weekRevenue = weekSales.reduce((acc, s) => acc + s.total, 0);
+  const monthRevenue = monthSales.reduce((acc, s) => acc + s.total, 0);
   const lowStockProducts = products.filter(p => p.stock <= 10 && p.isActive);
-  const totalProfit = todaySales.reduce((acc, sale) => {
+  const criticalStockProducts = products.filter(p => p.stock <= 3 && p.isActive);
+
+  const calcProfit = (salesList: typeof sales) => salesList.reduce((acc, sale) => {
     if (sale.profit != null) return acc + sale.profit;
-    return acc + sale.items.reduce((itemAcc, item) => {
-      return itemAcc + (item.product.salePrice - item.product.costPrice) * item.quantity;
-    }, 0);
+    return acc + sale.items.reduce((itemAcc, item) =>
+      itemAcc + (item.product.salePrice - item.product.costPrice) * item.quantity, 0);
   }, 0);
 
-  // Chart data: Sales by last 7 days
-  const salesByDay = useMemo(() => {
+  const todayProfit = calcProfit(todaySales);
+  const monthProfit = calcProfit(monthSales);
+  const avgTicket = todaySales.length > 0 ? totalRevenue / todaySales.length : 0;
+
+  // Top sellers
+  const topSellers = useMemo(() => {
+    const sellerMap = new Map<string, { name: string; sales: number; revenue: number }>();
+    monthSales.forEach(sale => {
+      const name = sale.sellerName || 'Vendedor';
+      const existing = sellerMap.get(name) || { name, sales: 0, revenue: 0 };
+      existing.sales++;
+      existing.revenue += sale.total;
+      sellerMap.set(name, existing);
+    });
+    return Array.from(sellerMap.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  }, [monthSales]);
+
+  // Sales trend (last 14 days for growth calculation)
+  const { salesByDay, growthPercent } = useMemo(() => {
     const days: { name: string; vendas: number; receita: number; lucro: number }[] = [];
-    for (let i = 6; i >= 0; i--) {
+    let thisWeekTotal = 0;
+    let lastWeekTotal = 0;
+    for (let i = 13; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dayStr = date.toDateString();
       const daySales = sales.filter(s => new Date(s.createdAt).toDateString() === dayStr);
-      days.push({
-        name: date.toLocaleDateString('pt-MZ', { weekday: 'short', day: 'numeric' }),
-        vendas: daySales.length,
-        receita: daySales.reduce((a, s) => a + s.total, 0),
-        lucro: daySales.reduce((a, s) => a + (s.profit ?? 0), 0),
-      });
+      const rev = daySales.reduce((a, s) => a + s.total, 0);
+      if (i < 7) thisWeekTotal += rev;
+      else lastWeekTotal += rev;
+      if (i < 7) {
+        days.push({
+          name: date.toLocaleDateString('pt-MZ', { weekday: 'short', day: 'numeric' }),
+          vendas: daySales.length,
+          receita: rev,
+          lucro: daySales.reduce((a, s) => a + (s.profit ?? 0), 0),
+        });
+      }
     }
-    return days;
+    const growth = lastWeekTotal > 0 ? ((thisWeekTotal - lastWeekTotal) / lastWeekTotal * 100) : 0;
+    return { salesByDay: days, growthPercent: growth };
   }, [sales]);
 
-  // Chart data: Top products by revenue
+  // Monthly trend (last 6 months)
+  const monthlyTrend = useMemo(() => {
+    const months: { name: string; receita: number; lucro: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      const mSales = sales.filter(s => {
+        const d = new Date(s.createdAt);
+        return d >= monthStart && d <= monthEnd;
+      });
+      months.push({
+        name: date.toLocaleDateString('pt-MZ', { month: 'short' }),
+        receita: mSales.reduce((a, s) => a + s.total, 0),
+        lucro: calcProfit(mSales),
+      });
+    }
+    return months;
+  }, [sales]);
+
+  // Top products
   const topProducts = useMemo(() => {
     const productMap = new Map<string, { name: string; revenue: number; qty: number }>();
-    sales.forEach(sale => {
+    monthSales.forEach(sale => {
       sale.items.forEach(item => {
         const existing = productMap.get(item.product.id) || { name: item.product.name, revenue: 0, qty: 0 };
         existing.revenue += item.total;
@@ -129,12 +190,10 @@ const LocalDashboardPage: React.FC = () => {
         productMap.set(item.product.id, existing);
       });
     });
-    return Array.from(productMap.values())
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 6);
-  }, [sales]);
+    return Array.from(productMap.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 6);
+  }, [monthSales]);
 
-  // Chart data: Sales by payment method
+  // Payment methods
   const salesByPayment = useMemo(() => {
     const methods: Record<string, number> = {};
     todaySales.forEach(s => {
@@ -147,24 +206,36 @@ const LocalDashboardPage: React.FC = () => {
     return Object.entries(methods).map(([name, value]) => ({ name, value }));
   }, [todaySales]);
 
-  const handleNewSale = () => {
-    startNewSale();
-    navigate('/app/pdv');
-  };
+  // Stock prediction
+  const stockAlerts = useMemo(() => {
+    return products
+      .filter(p => p.isActive && p.stock > 0)
+      .map(p => {
+        const soldThisMonth = monthSales.reduce((acc, sale) => {
+          return acc + sale.items.filter(i => i.product.id === p.id).reduce((a, i) => a + i.quantity, 0);
+        }, 0);
+        const daysInMonth = new Date().getDate();
+        const dailyRate = daysInMonth > 0 ? soldThisMonth / daysInMonth : 0;
+        const daysUntilEmpty = dailyRate > 0 ? Math.floor(p.stock / dailyRate) : 999;
+        return { ...p, dailyRate, daysUntilEmpty, soldThisMonth };
+      })
+      .filter(p => p.daysUntilEmpty <= 14)
+      .sort((a, b) => a.daysUntilEmpty - b.daysUntilEmpty)
+      .slice(0, 6);
+  }, [products, monthSales]);
+
+  const handleNewSale = () => { startNewSale(); navigate('/app/pdv'); };
 
   if (loading) {
     return (
       <div className="p-4 md:p-8 space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <div className="h-8 w-64 rounded-lg bg-muted animate-pulse" />
-            <div className="h-4 w-40 rounded bg-muted/60 animate-pulse" />
-          </div>
+        <div className="space-y-2">
+          <div className="h-8 w-64 rounded-lg bg-muted animate-pulse" />
+          <div className="h-4 w-40 rounded bg-muted/60 animate-pulse" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {[1,2,3,4].map(i => <SkeletonKPI key={i} />)}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4,5,6,7,8].map(i => <SkeletonKPI key={i} />)}
         </div>
-        <SkeletonList rows={3} />
       </div>
     );
   }
@@ -176,22 +247,20 @@ const LocalDashboardPage: React.FC = () => {
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-white">
-              Bem-vindo{user?.full_name && !/^[0-9a-f-]{36}$/i.test(user.full_name) ? `, ${user.full_name.split(' ')[0]}` : ''}
+              Dashboard Titan
+              {user?.full_name && !/^[0-9a-f-]{36}$/i.test(user.full_name) ? ` — ${user.full_name.split(' ')[0]}` : ''}
             </h1>
-            <p className="text-sm mt-1" style={{ color: 'hsl(214 32% 70%)' }}>{store.name} — Painel de Controle</p>
+            <p className="text-sm mt-1" style={{ color: 'hsl(214 32% 70%)' }}>
+              {store.name} — Inteligência Empresarial em Tempo Real
+            </p>
           </div>
           <div className="flex items-center gap-3">
-            <Badge 
-              variant={cashRegisterOpen ? 'default' : 'destructive'} 
-              className="text-xs py-1.5 px-4 font-medium rounded-full"
-            >
+            <Badge variant={cashRegisterOpen ? 'default' : 'destructive'} className="text-xs py-1.5 px-4 font-medium rounded-full">
               <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${cashRegisterOpen ? 'bg-success animate-pulse' : 'bg-destructive/60'}`} />
               Caixa {cashRegisterOpen ? 'Aberto' : 'Fechado'}
             </Badge>
-            <Button size="default" onClick={handleNewSale} className="gap-2 rounded-lg font-semibold"
-              style={{ boxShadow: 'var(--shadow-glow)' }}>
-              <Plus className="w-4 h-4" />
-              Nova Venda
+            <Button size="default" onClick={handleNewSale} className="gap-2 rounded-lg font-semibold" style={{ boxShadow: 'var(--shadow-glow)' }}>
+              <Plus className="w-4 h-4" /> Nova Venda
             </Button>
           </div>
         </div>
@@ -199,63 +268,93 @@ const LocalDashboardPage: React.FC = () => {
 
       {/* Content */}
       <div className="px-4 md:px-8 -mt-6 md:-mt-8 pb-8 space-y-6">
-        {/* KPI Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-          <KPICard icon={ShoppingCart} label="Vendas Hoje" value={totalSalesCount} color="bg-primary/10 text-primary" />
-          <KPICard icon={DollarSign} label="Receita Hoje" value={formatCurrency(totalRevenue)} color="bg-success/10 text-success" />
-          <KPICard icon={TrendingUp} label="Lucro Hoje" value={formatCurrency(totalProfit)} color="bg-profit/10 text-profit" />
-          <KPICard icon={BarChart3} label="Ticket Médio" value={totalSalesCount > 0 ? formatCurrency(totalRevenue / totalSalesCount) : formatCurrency(0)} color="bg-primary/10 text-primary" />
+        {/* KPI Grid - 8 KPIs */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPICard icon={ShoppingCart} label="Vendas Hoje" value={todaySales.length} color="bg-primary/10 text-primary"
+            trend={`${weekSales.length} esta semana`} />
+          <KPICard icon={DollarSign} label="Receita Hoje" value={formatCurrency(totalRevenue)} color="bg-success/10 text-success"
+            sub={`Semana: ${formatCurrency(weekRevenue)}`} />
+          <KPICard icon={TrendingUp} label="Lucro Hoje" value={formatCurrency(todayProfit)} color="bg-profit/10 text-profit"
+            trend={todayProfit > 0 ? 'Positivo' : 'Sem lucro'} trendUp={todayProfit > 0 ? true : null} />
+          <KPICard icon={Target} label="Ticket Médio" value={formatCurrency(avgTicket)} color="bg-primary/10 text-primary" />
+          <KPICard icon={Calendar} label="Receita Mensal" value={formatCurrency(monthRevenue)} color="bg-success/10 text-success"
+            sub={`Lucro: ${formatCurrency(monthProfit)}`} />
+          <KPICard icon={BarChart3} label="Crescimento" 
+            value={`${growthPercent >= 0 ? '+' : ''}${growthPercent.toFixed(1)}%`} 
+            color={growthPercent >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}
+            trend="vs semana anterior" trendUp={growthPercent >= 0} />
+          <KPICard icon={Package} label="Produtos Ativos" value={products.filter(p => p.isActive).length} color="bg-primary/10 text-primary"
+            sub={`${lowStockProducts.length} com estoque baixo`} />
+          <KPICard icon={AlertTriangle} label="Alertas Críticos" 
+            value={criticalStockProducts.length + (cashRegisterOpen ? 0 : 1)} 
+            color={criticalStockProducts.length > 0 ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'}
+            trend={criticalStockProducts.length > 0 ? `${criticalStockProducts.length} produtos críticos` : 'Tudo em ordem'} 
+            trendUp={criticalStockProducts.length === 0} />
         </div>
 
-        {/* Low Stock Alert */}
-        {lowStockProducts.length > 0 && (
-          <Card className="p-4 border-warning/30 bg-warning/5 animate-fade-in">
+        {/* Stock Prediction Alerts */}
+        {stockAlerts.length > 0 && (
+          <Card className="p-4 border-warning/30 bg-warning/5">
             <h3 className="font-semibold text-warning text-sm mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              Produtos com Estoque Baixo ({lowStockProducts.length})
+              <Clock className="w-4 h-4" />
+              Previsão de Estoque — Reposição Necessária
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {lowStockProducts.slice(0, 8).map(product => (
-                <div key={product.id} className="flex items-center justify-between p-2.5 bg-card rounded-lg text-sm border border-border">
-                  <span className="truncate mr-2 text-foreground">{product.name}</span>
-                  <Badge variant="destructive" className="text-xs flex-shrink-0">{product.stock}</Badge>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {stockAlerts.map(p => (
+                <div key={p.id} className="flex items-center justify-between p-3 bg-card rounded-lg text-sm border border-border">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-foreground">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {p.dailyRate.toFixed(1)}/dia · {p.stock} restantes
+                    </p>
+                  </div>
+                  <Badge variant={p.daysUntilEmpty <= 3 ? 'destructive' : 'secondary'} className="text-xs flex-shrink-0 ml-2">
+                    {p.daysUntilEmpty <= 0 ? 'ESGOTA HOJE' : `${p.daysUntilEmpty}d`}
+                  </Badge>
                 </div>
               ))}
             </div>
           </Card>
         )}
 
-        {/* Charts Row */}
+        {/* Low Stock Alert */}
+        {lowStockProducts.length > 0 && (
+          <Card className="p-4 border-warning/30 bg-warning/5">
+            <h3 className="font-semibold text-warning text-sm mb-3 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Estoque Baixo ({lowStockProducts.length})
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {lowStockProducts.slice(0, 8).map(product => (
+                <div key={product.id} className="flex items-center justify-between p-2.5 bg-card rounded-lg text-sm border border-border">
+                  <span className="truncate mr-2 text-foreground">{product.name}</span>
+                  <Badge variant={product.stock <= 3 ? 'destructive' : 'secondary'} className="text-xs flex-shrink-0">
+                    {product.stock}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Charts Row 1 */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Sales by Day Chart */}
           <Card className="p-5 lg:col-span-2">
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-primary" />
-              Vendas — Últimos 7 Dias
+              Receita & Lucro — Últimos 7 Dias
             </h3>
             {sales.length === 0 ? (
-              <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
-                Sem dados de vendas para exibir
-              </div>
+              <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">Sem dados</div>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={salesByDay} barGap={4}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(214 32% 91%)" />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
                   <YAxis tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(0 0% 100%)', 
-                      border: '1px solid hsl(214 32% 91%)',
-                      borderRadius: '8px',
-                      fontSize: '12px'
-                    }}
-                    formatter={(value: number, name: string) => [
-                      name === 'receita' || name === 'lucro' ? formatCurrency(value) : value,
-                      name === 'receita' ? 'Receita' : name === 'lucro' ? 'Lucro' : 'Vendas'
-                    ]}
-                  />
-                  <Legend formatter={(v) => v === 'receita' ? 'Receita' : v === 'lucro' ? 'Lucro' : 'Vendas'} />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(0 0% 100%)', border: '1px solid hsl(214 32% 91%)', borderRadius: '8px', fontSize: '12px' }}
+                    formatter={(value: number, name: string) => [formatCurrency(value), name === 'receita' ? 'Receita' : 'Lucro']} />
+                  <Legend formatter={(v) => v === 'receita' ? 'Receita' : 'Lucro'} />
                   <Bar dataKey="receita" fill="hsl(217, 91%, 53%)" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="lucro" fill="hsl(160, 84%, 39%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -263,16 +362,13 @@ const LocalDashboardPage: React.FC = () => {
             )}
           </Card>
 
-          {/* Payment Methods Pie */}
           <Card className="p-5">
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
               <Wallet className="w-4 h-4 text-primary" />
-              Métodos de Pagamento
+              Pagamentos Hoje
             </h3>
             {salesByPayment.length === 0 ? (
-              <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
-                Sem vendas hoje
-              </div>
+              <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">Sem vendas hoje</div>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
@@ -289,22 +385,81 @@ const LocalDashboardPage: React.FC = () => {
           </Card>
         </div>
 
-        {/* Top Products */}
-        {topProducts.length > 0 && (
+        {/* Charts Row 2 - Monthly Trend & Top Products */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <Card className="p-5">
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Package className="w-4 h-4 text-primary" />
-              Produtos Mais Vendidos
+              <TrendingUp className="w-4 h-4 text-primary" />
+              Crescimento — Últimos 6 Meses
             </h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={topProducts} layout="vertical" barSize={16}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(214 32% 91%)" />
-                <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
-                <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
-                <Bar dataKey="revenue" fill="hsl(199, 89%, 48%)" radius={[0, 4, 4, 0]} name="Receita" />
-              </BarChart>
-            </ResponsiveContainer>
+            {monthlyTrend.every(m => m.receita === 0) ? (
+              <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">Sem dados históricos</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={monthlyTrend}>
+                  <defs>
+                    <linearGradient id="gradReceita" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(217, 91%, 53%)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(217, 91%, 53%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(214 32% 91%)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
+                  <YAxis tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
+                  <Area type="monotone" dataKey="receita" stroke="hsl(217, 91%, 53%)" fill="url(#gradReceita)" name="Receita" />
+                  <Line type="monotone" dataKey="lucro" stroke="hsl(160, 84%, 39%)" strokeWidth={2} dot={{ r: 3 }} name="Lucro" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </Card>
+
+          {topProducts.length > 0 ? (
+            <Card className="p-5">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Package className="w-4 h-4 text-primary" />
+                Top Produtos — Mês
+              </h3>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={topProducts} layout="vertical" barSize={16}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(214 32% 91%)" />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
+                  <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 10, fill: 'hsl(215 16% 47%)' }} />
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
+                  <Bar dataKey="revenue" fill="hsl(199, 89%, 48%)" radius={[0, 4, 4, 0]} name="Receita" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          ) : (
+            <Card className="p-5 flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <Package className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">Sem dados de produtos vendidos</p>
+              </div>
+            </Card>
+          )}
+        </div>
+
+        {/* Top Sellers */}
+        {topSellers.length > 0 && (
+          <Card className="p-5">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Award className="w-4 h-4 text-primary" />
+              Top Vendedores — Mês
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {topSellers.map((seller, i) => (
+                <div key={seller.name} className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-transparent hover:border-border transition-colors">
+                  <Badge variant={i === 0 ? 'default' : 'secondary'} className="w-7 h-7 rounded-full flex items-center justify-center p-0 text-xs flex-shrink-0">
+                    {i + 1}
+                  </Badge>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate text-foreground">{seller.name}</p>
+                    <p className="text-xs text-muted-foreground">{seller.sales} vendas · {formatCurrency(seller.revenue)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </Card>
         )}
 
@@ -320,37 +475,26 @@ const LocalDashboardPage: React.FC = () => {
         <Card className="p-6">
           <h3 className="text-sm font-semibold mb-4 text-foreground uppercase tracking-wider">Vendas Recentes</h3>
           {sales.length === 0 ? (
-            <EmptyState
-              icon={ShoppingCart}
-              title="Nenhuma venda ainda"
-              description="Clique em 'Nova Venda' para registrar sua primeira venda no sistema."
-              action={{ label: 'Nova Venda', onClick: handleNewSale }}
-            />
+            <EmptyState icon={ShoppingCart} title="Nenhuma venda ainda" description="Clique em 'Nova Venda' para registrar sua primeira venda."
+              action={{ label: 'Nova Venda', onClick: handleNewSale }} />
           ) : (
             <div className="space-y-2">
               {sales.slice(-5).reverse().map((sale) => (
-                <div 
-                  key={sale.id} 
-                  className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-colors duration-200 border border-transparent hover:border-border"
-                >
+                <div key={sale.id} className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-colors duration-200 border border-transparent hover:border-border">
                   <div className="min-w-0 flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Receipt className="w-4 h-4 text-primary" />
                     </div>
                     <div>
                       <p className="font-medium text-sm text-foreground">{sale.items.length} itens</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(sale.createdAt).toLocaleString('pt-MZ')}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{new Date(sale.createdAt).toLocaleString('pt-MZ')}</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-bold text-sm text-foreground font-mono">{formatCurrency(sale.total)}</p>
                     <Badge variant="secondary" className="capitalize text-xs mt-0.5">
-                      {sale.paymentMethod === 'cash' ? 'Dinheiro' :
-                       sale.paymentMethod === 'card' ? 'Cartão' :
-                       sale.paymentMethod === 'mpesa' ? 'M-Pesa' :
-                       sale.paymentMethod === 'emola' ? 'E-Mola' : sale.paymentMethod}
+                      {sale.paymentMethod === 'cash' ? 'Dinheiro' : sale.paymentMethod === 'card' ? 'Cartão' :
+                       sale.paymentMethod === 'mpesa' ? 'M-Pesa' : sale.paymentMethod === 'emola' ? 'E-Mola' : sale.paymentMethod}
                     </Badge>
                   </div>
                 </div>
