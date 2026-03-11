@@ -11,7 +11,8 @@ import {
   ShoppingCart, Package, DollarSign, TrendingUp,
   ArrowRight, Plus, AlertTriangle, BarChart3, Users, Receipt,
   Wallet, FileText, Boxes, Calendar, Target, Award, Clock,
-  ArrowUpRight, ArrowDownRight
+  ArrowUpRight, ArrowDownRight, Lightbulb, Zap, Brain,
+  RefreshCw, Bell, Star, Activity
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import {
@@ -84,28 +85,65 @@ const QuickAction: React.FC<{
   </Card>
 );
 
+// AI Insight Card
+const InsightCard: React.FC<{
+  icon: React.ElementType;
+  type: 'success' | 'warning' | 'info' | 'danger';
+  title: string;
+  description: string;
+}> = ({ icon: Icon, type, title, description }) => {
+  const styles = {
+    success: 'border-success/30 bg-success/5',
+    warning: 'border-warning/30 bg-warning/5',
+    info: 'border-primary/30 bg-primary/5',
+    danger: 'border-destructive/30 bg-destructive/5',
+  };
+  const iconColors = {
+    success: 'text-success',
+    warning: 'text-warning',
+    info: 'text-primary',
+    danger: 'text-destructive',
+  };
+  return (
+    <div className={`flex items-start gap-3 p-3.5 rounded-xl border ${styles[type]}`}>
+      <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconColors[type]}`} />
+      <div className="min-w-0">
+        <p className="font-semibold text-foreground text-sm">{title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+      </div>
+    </div>
+  );
+};
+
 const LocalDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { store, sales, products, cashRegisterOpen, startNewSale, loading } = useLocalPOS();
   const { user } = useAuth();
 
   // Time-based sales calculations
-  const { todaySales, weekSales, monthSales } = useMemo(() => {
+  const { todaySales, weekSales, monthSales, lastMonthSales } = useMemo(() => {
     const now = new Date();
     const today = now.toDateString();
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - now.getDay());
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
     const todayS = sales.filter(s => new Date(s.createdAt).toDateString() === today);
     const weekS = sales.filter(s => new Date(s.createdAt) >= weekStart);
     const monthS = sales.filter(s => new Date(s.createdAt) >= monthStart);
-    return { todaySales: todayS, weekSales: weekS, monthSales: monthS };
+    const lastMonthS = sales.filter(s => {
+      const d = new Date(s.createdAt);
+      return d >= lastMonthStart && d <= lastMonthEnd;
+    });
+    return { todaySales: todayS, weekSales: weekS, monthSales: monthS, lastMonthSales: lastMonthS };
   }, [sales]);
 
   const totalRevenue = todaySales.reduce((acc, s) => acc + s.total, 0);
   const weekRevenue = weekSales.reduce((acc, s) => acc + s.total, 0);
   const monthRevenue = monthSales.reduce((acc, s) => acc + s.total, 0);
+  const lastMonthRevenue = lastMonthSales.reduce((acc, s) => acc + s.total, 0);
   const lowStockProducts = products.filter(p => p.stock <= 10 && p.isActive);
   const criticalStockProducts = products.filter(p => p.stock <= 3 && p.isActive);
 
@@ -117,7 +155,22 @@ const LocalDashboardPage: React.FC = () => {
 
   const todayProfit = calcProfit(todaySales);
   const monthProfit = calcProfit(monthSales);
+  const lastMonthProfit = calcProfit(lastMonthSales);
   const avgTicket = todaySales.length > 0 ? totalRevenue / todaySales.length : 0;
+
+  // Profit forecast
+  const profitForecast = useMemo(() => {
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+    const dayOfMonth = new Date().getDate();
+    const dailyAvgRevenue = dayOfMonth > 0 ? monthRevenue / dayOfMonth : 0;
+    const dailyAvgProfit = dayOfMonth > 0 ? monthProfit / dayOfMonth : 0;
+    return {
+      estimatedMonthRevenue: Math.round(dailyAvgRevenue * daysInMonth),
+      estimatedMonthProfit: Math.round(dailyAvgProfit * daysInMonth),
+      revenueGrowth: lastMonthRevenue > 0 ? ((monthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0,
+      profitGrowth: lastMonthProfit > 0 ? ((monthProfit - lastMonthProfit) / lastMonthProfit * 100) : 0,
+    };
+  }, [monthRevenue, monthProfit, lastMonthRevenue, lastMonthProfit]);
 
   // Top sellers
   const topSellers = useMemo(() => {
@@ -224,6 +277,126 @@ const LocalDashboardPage: React.FC = () => {
       .slice(0, 6);
   }, [products, monthSales]);
 
+  // AI INSIGHTS ENGINE
+  const aiInsights = useMemo(() => {
+    const insights: { icon: React.ElementType; type: 'success' | 'warning' | 'info' | 'danger'; title: string; description: string }[] = [];
+
+    // Product growth insight
+    if (topProducts.length > 0) {
+      const topProd = topProducts[0];
+      const lastMonthQty = lastMonthSales.reduce((acc, s) => acc + s.items.filter(i => i.product.name === topProd.name).reduce((a, i) => a + i.quantity, 0), 0);
+      if (lastMonthQty > 0) {
+        const change = ((topProd.qty - lastMonthQty) / lastMonthQty * 100);
+        if (Math.abs(change) > 10) {
+          insights.push({
+            icon: change > 0 ? TrendingUp : ArrowDownRight,
+            type: change > 0 ? 'success' : 'warning',
+            title: `${topProd.name} ${change > 0 ? 'em alta' : 'em queda'}`,
+            description: `${change > 0 ? '+' : ''}${change.toFixed(0)}% em relação ao mês anterior (${topProd.qty} vs ${lastMonthQty} unidades).`,
+          });
+        }
+      }
+    }
+
+    // Stock depletion warnings
+    stockAlerts.slice(0, 2).forEach(p => {
+      insights.push({
+        icon: AlertTriangle,
+        type: p.daysUntilEmpty <= 3 ? 'danger' : 'warning',
+        title: `Estoque de "${p.name}" acabará em ~${p.daysUntilEmpty} dias`,
+        description: `Taxa de venda: ${p.dailyRate.toFixed(1)}/dia. Restam ${p.stock} unidades. Reponha agora.`,
+      });
+    });
+
+    // Top customer insight
+    const customerMap = new Map<string, { name: string; total: number; count: number }>();
+    monthSales.forEach(s => {
+      const name = s.customerName || 'Consumidor Final';
+      if (name === 'Consumidor Final') return;
+      const existing = customerMap.get(name) || { name, total: 0, count: 0 };
+      existing.total += s.total;
+      existing.count++;
+      customerMap.set(name, existing);
+    });
+    const topCust = Array.from(customerMap.values()).sort((a, b) => b.total - a.total)[0];
+    if (topCust && monthRevenue > 0) {
+      const pct = (topCust.total / monthRevenue * 100).toFixed(0);
+      insights.push({
+        icon: Star,
+        type: 'info',
+        title: `Cliente VIP: ${topCust.name}`,
+        description: `Responsável por ${pct}% das vendas do mês (${formatCurrency(topCust.total)}, ${topCust.count} compras).`,
+      });
+    }
+
+    // Sales velocity
+    if (todaySales.length > 0) {
+      const hourNow = new Date().getHours();
+      const salesPerHour = hourNow > 0 ? (todaySales.length / hourNow) : todaySales.length;
+      const projectedDaily = Math.round(salesPerHour * 12);
+      insights.push({
+        icon: Activity,
+        type: projectedDaily > 20 ? 'success' : 'info',
+        title: `Ritmo de hoje: ${salesPerHour.toFixed(1)} vendas/hora`,
+        description: `Projeção para o dia: ~${projectedDaily} vendas (${formatCurrency(Math.round(avgTicket * projectedDaily))}).`,
+      });
+    }
+
+    // Growth alert
+    if (growthPercent < -20) {
+      insights.push({
+        icon: ArrowDownRight,
+        type: 'danger',
+        title: 'Queda brusca nas vendas detectada',
+        description: `As vendas caíram ${Math.abs(growthPercent).toFixed(0)}% esta semana vs semana anterior. Reveja promoções.`,
+      });
+    } else if (growthPercent > 30) {
+      insights.push({
+        icon: Zap,
+        type: 'success',
+        title: 'Crescimento acelerado!',
+        description: `Vendas cresceram +${growthPercent.toFixed(0)}% esta semana. Excelente desempenho!`,
+      });
+    }
+
+    // Inactive seller detection
+    if (topSellers.length > 1) {
+      const worstSeller = topSellers[topSellers.length - 1];
+      const bestSeller = topSellers[0];
+      if (bestSeller.revenue > 0 && worstSeller.revenue < bestSeller.revenue * 0.1) {
+        insights.push({
+          icon: Users,
+          type: 'warning',
+          title: `Vendedor "${worstSeller.name}" com baixa performance`,
+          description: `Apenas ${formatCurrency(worstSeller.revenue)} no mês (${worstSeller.sales} vendas). Considere treinamento.`,
+        });
+      }
+    }
+
+    // Recommendations
+    const promoProducts = products.filter(p => p.isActive && p.stock > 50);
+    if (promoProducts.length > 0) {
+      const bestPromo = promoProducts.sort((a, b) => b.stock - a.stock)[0];
+      insights.push({
+        icon: Lightbulb,
+        type: 'info',
+        title: `Sugestão: Promoção para "${bestPromo.name}"`,
+        description: `Estoque alto (${bestPromo.stock} unidades). Uma promoção pode acelerar a rotação.`,
+      });
+    }
+
+    if (!cashRegisterOpen) {
+      insights.push({
+        icon: Bell,
+        type: 'warning',
+        title: 'Caixa está fechado',
+        description: 'Abra o caixa para iniciar as vendas do dia.',
+      });
+    }
+
+    return insights.slice(0, 6);
+  }, [topProducts, stockAlerts, monthSales, monthRevenue, todaySales, growthPercent, topSellers, products, cashRegisterOpen, avgTicket, lastMonthSales]);
+
   const handleNewSale = () => { startNewSale(); navigate('/app/pdv'); };
 
   if (loading) {
@@ -251,7 +424,7 @@ const LocalDashboardPage: React.FC = () => {
               {user?.full_name && !/^[0-9a-f-]{36}$/i.test(user.full_name) ? ` — ${user.full_name.split(' ')[0]}` : ''}
             </h1>
             <p className="text-sm mt-1" style={{ color: 'hsl(214 32% 70%)' }}>
-              {store.name} — Inteligência Empresarial em Tempo Real
+              {store.name} — Inteligência Empresarial GOD MODE
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -268,6 +441,22 @@ const LocalDashboardPage: React.FC = () => {
 
       {/* Content */}
       <div className="px-4 md:px-8 -mt-6 md:-mt-8 pb-8 space-y-6">
+        {/* AI Insights Banner */}
+        {aiInsights.length > 0 && (
+          <Card className="p-5 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+            <h3 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
+              <Brain className="w-4 h-4 text-primary" />
+              Insights Inteligentes
+              <Badge variant="secondary" className="text-[10px] ml-1">AI</Badge>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {aiInsights.map((insight, i) => (
+                <InsightCard key={i} {...insight} />
+              ))}
+            </div>
+          </Card>
+        )}
+
         {/* KPI Grid - 8 KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard icon={ShoppingCart} label="Vendas Hoje" value={todaySales.length} color="bg-primary/10 text-primary"
@@ -290,6 +479,40 @@ const LocalDashboardPage: React.FC = () => {
             color={criticalStockProducts.length > 0 ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'}
             trend={criticalStockProducts.length > 0 ? `${criticalStockProducts.length} produtos críticos` : 'Tudo em ordem'} 
             trendUp={criticalStockProducts.length === 0} />
+        </div>
+
+        {/* Profit Forecast */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="p-5 border-success/20">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-warning" />
+              Previsão de Receita (Mês)
+            </h3>
+            <div className="flex items-end gap-3">
+              <p className="text-3xl font-bold text-foreground">{formatCurrency(profitForecast.estimatedMonthRevenue)}</p>
+              {profitForecast.revenueGrowth !== 0 && (
+                <Badge variant={profitForecast.revenueGrowth > 0 ? 'default' : 'destructive'} className="mb-1">
+                  {profitForecast.revenueGrowth > 0 ? '+' : ''}{profitForecast.revenueGrowth.toFixed(0)}% vs mês anterior
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Baseado na média diária de {formatCurrency(Math.round(monthRevenue / Math.max(new Date().getDate(), 1)))}</p>
+          </Card>
+          <Card className="p-5 border-profit/20">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-success" />
+              Previsão de Lucro (Mês)
+            </h3>
+            <div className="flex items-end gap-3">
+              <p className="text-3xl font-bold text-success">{formatCurrency(profitForecast.estimatedMonthProfit)}</p>
+              {profitForecast.profitGrowth !== 0 && (
+                <Badge variant={profitForecast.profitGrowth > 0 ? 'default' : 'destructive'} className="mb-1">
+                  {profitForecast.profitGrowth > 0 ? '+' : ''}{profitForecast.profitGrowth.toFixed(0)}% vs mês anterior
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Margem estimada: {monthRevenue > 0 ? (monthProfit / monthRevenue * 100).toFixed(1) : '0.0'}%</p>
+          </Card>
         </div>
 
         {/* Stock Prediction Alerts */}
