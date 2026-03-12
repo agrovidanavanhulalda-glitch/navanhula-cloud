@@ -233,7 +233,7 @@ const SubscriptionPage: React.FC = () => {
       <Card>
         <CardContent className="p-4">
           <p className="text-xs text-muted-foreground text-center">
-            O sistema custa 1.000 MT por mês. Em caso de não pagamento, o sistema será suspenso automaticamente. 
+            O sistema custa 1.500 MT por mês por loja ativa. Em caso de não pagamento, o sistema será suspenso automaticamente. 
             Os dados permanecem seguros e disponíveis ao reconectar o pagamento.
           </p>
         </CardContent>
