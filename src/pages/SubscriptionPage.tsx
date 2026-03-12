@@ -114,7 +114,7 @@ const SubscriptionPage: React.FC = () => {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Valor mensal</span>
-            <span className="font-semibold">{formatCurrency(subscription?.price_monthly || 1000)}</span>
+            <span className="font-semibold">{formatCurrency(subscription?.price_monthly || 1500)}</span>
           </div>
           {subscription && (
             <>
