@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Download } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { LocalSale, LocalStore } from '@/contexts/LocalPOSContext';
+import jsPDF from 'jspdf';
 
 // RELATÓRIO PDF/A4 - Layout profissional para impressão em papel A4
 
