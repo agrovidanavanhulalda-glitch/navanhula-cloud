@@ -107,7 +107,12 @@ const LocalPOSPage: React.FC = () => {
         : '';
       toast.success(`Venda concluída!${changeMsg}`);
       setShowPaymentModal(false);
+      // Auto-show receipt after sale completion
       setShowReceipt(true);
+      // Auto-print via browser print dialog
+      setTimeout(() => {
+        window.print();
+      }, 500);
     }
   };
 

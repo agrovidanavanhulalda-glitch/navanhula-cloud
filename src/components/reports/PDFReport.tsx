@@ -170,16 +170,129 @@ ${filteredSales.length > 50 ? `\n  ... e mais ${filteredSales.length - 50} venda
 `.trim();
 };
 
-// Export as text file (PDF-like)
+// Export as real PDF using jsPDF
 export const exportPDFReport = (props: PDFReportProps) => {
-  const content = generatePDFContent(props);
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `relatorio_vendas_${props.startDate}_${props.endDate}.txt`;
-  link.click();
-  URL.revokeObjectURL(url);
+  const { sales, stores, startDate, endDate, selectedStore, companyName = 'NAVANHULA ERP' } = props;
+
+  const filteredSales = sales.filter(sale => {
+    const saleDate = new Date(sale.createdAt);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    if (saleDate < start || saleDate > end) return false;
+    if (selectedStore !== 'all' && sale.storeId !== selectedStore) return false;
+    return sale.status === 'completed';
+  });
+
+  const totalRevenue = filteredSales.reduce((acc, s) => acc + s.total, 0);
+  const totalProfit = filteredSales.reduce((acc, sale) => {
+    if (sale.profit != null) return acc + sale.profit;
+    return acc + sale.items.reduce((a, i) => a + (i.product.salePrice - i.product.costPrice) * i.quantity, 0);
+  }, 0);
+  const totalDiscount = filteredSales.reduce((acc, s) => acc + s.discount, 0);
+  const averageTicket = filteredSales.length > 0 ? totalRevenue / filteredSales.length : 0;
+
+  const storeName = selectedStore === 'all'
+    ? 'Todas as Lojas'
+    : stores.find(s => s.id === selectedStore)?.name || 'Loja Principal';
+
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = 210;
+  const margin = 20;
+  const contentWidth = pageWidth - margin * 2;
+  let y = margin;
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(18);
+  doc.text(companyName, pageWidth / 2, y, { align: 'center' });
+  y += 8;
+  doc.setFontSize(14);
+  doc.text('RELATÓRIO DE VENDAS', pageWidth / 2, y, { align: 'center' });
+  y += 8;
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(10);
+  doc.text(`Período: ${new Date(startDate).toLocaleDateString('pt-MZ')} a ${new Date(endDate).toLocaleDateString('pt-MZ')}`, margin, y);
+  y += 5;
+  doc.text(`Loja: ${storeName}`, margin, y);
+  y += 5;
+  doc.text(`Gerado em: ${new Date().toLocaleString('pt-MZ')}`, margin, y);
+  y += 8;
+
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 8;
+
+  // Summary
+  doc.setFont('times', 'bold');
+  doc.setFontSize(12);
+  doc.text('RESUMO GERAL', margin, y);
+  y += 7;
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(10);
+  const summaryItems = [
+    ['Total de Vendas:', String(filteredSales.length)],
+    ['Receita Total:', formatCurrency(totalRevenue)],
+    ['Lucro Bruto:', formatCurrency(totalProfit)],
+    ['Descontos:', formatCurrency(totalDiscount)],
+    ['Ticket Médio:', formatCurrency(averageTicket)],
+    ['Margem Média:', `${totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0.0'}%`],
+  ];
+  summaryItems.forEach(([label, val]) => {
+    doc.text(label, margin, y);
+    doc.text(val, pageWidth - margin, y, { align: 'right' });
+    y += 5;
+  });
+  y += 5;
+
+  // Top products table
+  const productSales: Record<string, { name: string; qty: number; total: number; profit: number }> = {};
+  filteredSales.forEach(sale => {
+    sale.items.forEach(item => {
+      const pid = item.product.id;
+      if (!productSales[pid]) productSales[pid] = { name: item.product.name, qty: 0, total: 0, profit: 0 };
+      productSales[pid].qty += item.quantity;
+      productSales[pid].total += item.total;
+      productSales[pid].profit += (item.product.salePrice - item.product.costPrice) * item.quantity;
+    });
+  });
+  const topProducts = Object.values(productSales).sort((a, b) => b.total - a.total).slice(0, 15);
+
+  if (topProducts.length > 0) {
+    doc.setFont('times', 'bold');
+    doc.setFontSize(12);
+    doc.text('TOP PRODUTOS', margin, y);
+    y += 6;
+
+    doc.setFontSize(9);
+    doc.text('Produto', margin, y);
+    doc.text('Qtd', margin + contentWidth * 0.55, y, { align: 'center' });
+    doc.text('Total', margin + contentWidth * 0.75, y, { align: 'right' });
+    doc.text('Lucro', pageWidth - margin, y, { align: 'right' });
+    y += 2;
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 4;
+
+    doc.setFont('times', 'normal');
+    topProducts.forEach(p => {
+      if (y > 270) { doc.addPage(); y = margin; }
+      const name = p.name.length > 35 ? p.name.substring(0, 35) + '...' : p.name;
+      doc.text(name, margin, y);
+      doc.text(String(p.qty), margin + contentWidth * 0.55, y, { align: 'center' });
+      doc.text(formatCurrency(p.total), margin + contentWidth * 0.75, y, { align: 'right' });
+      doc.text(formatCurrency(p.profit), pageWidth - margin, y, { align: 'right' });
+      y += 5;
+    });
+  }
+
+  // Footer
+  const footerY = 290;
+  doc.setFont('times', 'italic');
+  doc.setFontSize(8);
+  doc.text('Documento gerado pelo NAVANHULA ERP', pageWidth / 2, footerY, { align: 'center' });
+
+  doc.save(`relatorio_vendas_${startDate}_${endDate}.pdf`);
 };
 
 // Export as Excel CSV

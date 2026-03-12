@@ -251,7 +251,7 @@ const SubscriptionPage: React.FC = () => {
           <div className="space-y-4">
             <div className="bg-primary/10 rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground">Valor</p>
-              <p className="text-3xl font-bold text-primary">{formatCurrency(subscription?.price_monthly || 1000)}</p>
+              <p className="text-3xl font-bold text-primary">{formatCurrency(subscription?.price_monthly || 1500)}</p>
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">
