@@ -114,7 +114,7 @@ const SubscriptionPage: React.FC = () => {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Valor mensal</span>
-            <span className="font-semibold">{formatCurrency(subscription?.price_monthly || 1000)}</span>
+            <span className="font-semibold">{formatCurrency(subscription?.price_monthly || 1500)}</span>
           </div>
           {subscription && (
             <>
@@ -233,7 +233,7 @@ const SubscriptionPage: React.FC = () => {
       <Card>
         <CardContent className="p-4">
           <p className="text-xs text-muted-foreground text-center">
-            O sistema custa 1.000 MT por mês. Em caso de não pagamento, o sistema será suspenso automaticamente. 
+            O sistema custa 1.500 MT por mês por loja ativa. Em caso de não pagamento, o sistema será suspenso automaticamente. 
             Os dados permanecem seguros e disponíveis ao reconectar o pagamento.
           </p>
         </CardContent>
@@ -251,7 +251,7 @@ const SubscriptionPage: React.FC = () => {
           <div className="space-y-4">
             <div className="bg-primary/10 rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground">Valor</p>
-              <p className="text-3xl font-bold text-primary">{formatCurrency(subscription?.price_monthly || 1000)}</p>
+              <p className="text-3xl font-bold text-primary">{formatCurrency(subscription?.price_monthly || 1500)}</p>
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">

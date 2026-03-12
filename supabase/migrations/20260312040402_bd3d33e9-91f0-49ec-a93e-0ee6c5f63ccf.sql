@@ -1,0 +1,1 @@
+ALTER TABLE public.subscriptions ALTER COLUMN price_monthly SET DEFAULT 1500;

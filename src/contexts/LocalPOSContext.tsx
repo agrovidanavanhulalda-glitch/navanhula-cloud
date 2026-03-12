@@ -533,12 +533,18 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const saleId = crypto.randomUUID();
 
+      // Calculate cost and profit locally
+      const costTotal = prev.cart.reduce((acc, item) => acc + item.product.costPrice * item.quantity, 0);
+      const saleProfit = total - costTotal;
+
       completedSale = {
         id: saleId,
         items: [...prev.cart],
         subtotal,
         discount,
         total,
+        costTotal,
+        profit: saleProfit,
         status: 'completed',
         paymentMethod: paymentMethodLabel,
         paymentDetails,
