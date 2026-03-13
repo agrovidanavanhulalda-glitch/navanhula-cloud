@@ -350,6 +350,9 @@ const LocalSalesHistoryPage: React.FC = () => {
           storeName={currentStore.name}
           storeAddress={currentStore.address}
           storePhone={currentStore.phone}
+          storeNuit={company?.nif || ''}
+          fiscalRegime={(company as any)?.fiscal_regime || ''}
+          companyName={company?.name || ''}
           onClose={() => {
             setShowReceipt(false);
             setSelectedSale(null);
