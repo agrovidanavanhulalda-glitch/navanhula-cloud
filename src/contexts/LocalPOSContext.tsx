@@ -264,7 +264,7 @@ const mapDbCashRegisterToLocal = (cr: any, profileName?: string): LocalCashRegis
   salesCount: 0,
 });
 
-const mapDbSaleToLocal = (s: any, items: any[]): LocalSale => {
+const mapDbSaleToLocal = (s: any, items: any[], sellerName?: string): LocalSale => {
   const costTotal = s.cost_total || items.reduce((acc: number, si: any) => acc + (si.cost_price || 0) * (si.quantity || 0), 0);
   const profit = s.profit != null ? s.profit : (s.total || 0) - costTotal;
   
@@ -273,15 +273,15 @@ const mapDbSaleToLocal = (s: any, items: any[]): LocalSale => {
     items: items.map((si: any) => ({
       product: {
         id: si.product_id,
-        name: si.product_name,
+        name: si.product_name || 'Produto',
         costPrice: si.cost_price || 0,
-        salePrice: si.unit_price,
+        salePrice: si.unit_price || 0,
         stock: 0,
         isActive: true,
       },
-      quantity: si.quantity,
+      quantity: si.quantity || 1,
       discount: si.discount_amount || 0,
-      total: si.total,
+      total: si.total || 0,
     })),
     subtotal: s.subtotal || 0,
     discount: s.discount_amount || 0,
@@ -293,6 +293,8 @@ const mapDbSaleToLocal = (s: any, items: any[]): LocalSale => {
     createdAt: new Date(s.created_at),
     storeId: s.store_id,
     sellerId: s.user_id,
+    sellerName: sellerName || s.seller_name || undefined,
+    cancellationReason: s.notes || undefined,
   };
 };
 
