@@ -33,7 +33,7 @@ import { toast } from 'sonner';
  */
 const LocalSalesHistoryPage: React.FC = () => {
   const { sales, stores, currentStore, cancelCompletedSale, currentCashRegister } = useLocalPOS();
-  const { role, user } = useAuth();
+  const { role, user, company } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
