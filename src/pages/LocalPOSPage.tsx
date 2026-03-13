@@ -43,7 +43,7 @@ const LocalPOSPage: React.FC = () => {
     getLastSale,
   } = useLocalPOS();
 
-  const { user } = useAuth();
+  const { user, company } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showManualEntry, setShowManualEntry] = useState(false);
@@ -398,6 +398,9 @@ const LocalPOSPage: React.FC = () => {
           storeName={store.name}
           storeAddress={store.address}
           storePhone={store.phone}
+          storeNuit={company?.nif || ''}
+          fiscalRegime={(company as any)?.fiscal_regime || ''}
+          companyName={company?.name || ''}
           onClose={() => setShowReceipt(false)}
         />
       )}

@@ -33,7 +33,7 @@ import { toast } from 'sonner';
  */
 const LocalSalesHistoryPage: React.FC = () => {
   const { sales, stores, currentStore, cancelCompletedSale, currentCashRegister } = useLocalPOS();
-  const { role, user } = useAuth();
+  const { role, user, company } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -350,6 +350,9 @@ const LocalSalesHistoryPage: React.FC = () => {
           storeName={currentStore.name}
           storeAddress={currentStore.address}
           storePhone={currentStore.phone}
+          storeNuit={company?.nif || ''}
+          fiscalRegime={(company as any)?.fiscal_regime || ''}
+          companyName={company?.name || ''}
           onClose={() => {
             setShowReceipt(false);
             setSelectedSale(null);
