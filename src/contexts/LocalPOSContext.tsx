@@ -376,9 +376,19 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         );
         const openRegister = cashRegisters.find(cr => cr.status === 'open') || null;
 
-        // Map sales
+        // Map sales - also fetch seller names from profiles
+        const saleUserIds = [...new Set((salesRes.data || []).map((s: any) => s.user_id).filter(Boolean))];
+        const newSellerIds = saleUserIds.filter(id => !profileMap.has(id));
+        if (newSellerIds.length > 0) {
+          const { data: sellerProfiles } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', newSellerIds);
+          (sellerProfiles || []).forEach((p: any) => profileMap.set(p.id, p.full_name));
+        }
+
         const sales: LocalSale[] = (salesRes.data || []).map((s: any) =>
-          mapDbSaleToLocal(s, s.sale_items || [])
+          mapDbSaleToLocal(s, s.sale_items || [], profileMap.get(s.user_id))
         );
 
         dataLoaded.current = true;
