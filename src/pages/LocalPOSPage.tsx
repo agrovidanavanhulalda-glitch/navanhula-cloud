@@ -43,7 +43,7 @@ const LocalPOSPage: React.FC = () => {
     getLastSale,
   } = useLocalPOS();
 
-  const { user } = useAuth();
+  const { user, company } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showManualEntry, setShowManualEntry] = useState(false);
