@@ -117,6 +117,8 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
             <div className="text-lg font-bold tracking-wide">{storeName}</div>
             {storeAddress && <div className="text-xs">{storeAddress}</div>}
             {storePhone && <div className="text-xs">Tel: {storePhone}</div>}
+            {storeNuit && <div className="text-xs font-semibold">NUIT: {storeNuit}</div>}
+            {fiscalRegime && <div className="text-xs">Regime: {fiscalRegime.toUpperCase()}</div>}
           </div>
 
           <div className="border-t border-dashed border-gray-400 my-2" />
@@ -142,28 +144,42 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
 
           <div className="border-t border-dashed border-gray-400 my-2" />
 
-          <div className="space-y-1 text-xs">
-            <div className="flex justify-between">
-              <span>Subtotal:</span>
-              <span>{formatCurrency(sale.subtotal)}</span>
-            </div>
-            {sale.discount > 0 && (
-              <div className="flex justify-between text-green-700">
-                <span>Desconto:</span>
-                <span>-{formatCurrency(sale.discount)}</span>
+          {(() => {
+            const ivaRate = fiscalRegime === 'iva' ? 0.16 : 0;
+            const subtotalSemIva = ivaRate > 0 ? sale.total / (1 + ivaRate) : sale.subtotal;
+            const ivaAmount = ivaRate > 0 ? sale.total - subtotalSemIva : 0;
+            return (
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span>{formatCurrency(ivaRate > 0 ? subtotalSemIva : sale.subtotal)}</span>
+                </div>
+                {sale.discount > 0 && (
+                  <div className="flex justify-between text-green-700">
+                    <span>Desconto:</span>
+                    <span>-{formatCurrency(sale.discount)}</span>
+                  </div>
+                )}
+                {ivaRate > 0 && (
+                  <div className="flex justify-between">
+                    <span>IVA (16%):</span>
+                    <span>{formatCurrency(ivaAmount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-base pt-1 border-t border-gray-300">
+                  <span>TOTAL:</span>
+                  <span>{formatCurrency(sale.total)}</span>
+                </div>
               </div>
-            )}
-            <div className="flex justify-between font-bold text-base pt-1 border-t border-gray-300">
-              <span>TOTAL:</span>
-              <span>{formatCurrency(sale.total)}</span>
-            </div>
-          </div>
+            );
+          })()}
 
           <div className="border-t border-dashed border-gray-400 my-2" />
 
           <div className="text-center text-xs mt-3">
             <div className="font-semibold">Obrigado pela preferência!</div>
-            <div className="mt-1 text-gray-500">{storeName}</div>
+            <div className="mt-1 text-gray-500">Documento gerado pelo NAVANHULA ERP</div>
+            {storeNuit && <div className="text-gray-400 mt-0.5">{storeName}</div>}
           </div>
         </div>
 
