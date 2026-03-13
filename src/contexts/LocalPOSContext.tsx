@@ -264,7 +264,7 @@ const mapDbCashRegisterToLocal = (cr: any, profileName?: string): LocalCashRegis
   salesCount: 0,
 });
 
-const mapDbSaleToLocal = (s: any, items: any[]): LocalSale => {
+const mapDbSaleToLocal = (s: any, items: any[], sellerName?: string): LocalSale => {
   const costTotal = s.cost_total || items.reduce((acc: number, si: any) => acc + (si.cost_price || 0) * (si.quantity || 0), 0);
   const profit = s.profit != null ? s.profit : (s.total || 0) - costTotal;
   
@@ -273,15 +273,15 @@ const mapDbSaleToLocal = (s: any, items: any[]): LocalSale => {
     items: items.map((si: any) => ({
       product: {
         id: si.product_id,
-        name: si.product_name,
+        name: si.product_name || 'Produto',
         costPrice: si.cost_price || 0,
-        salePrice: si.unit_price,
+        salePrice: si.unit_price || 0,
         stock: 0,
         isActive: true,
       },
-      quantity: si.quantity,
+      quantity: si.quantity || 1,
       discount: si.discount_amount || 0,
-      total: si.total,
+      total: si.total || 0,
     })),
     subtotal: s.subtotal || 0,
     discount: s.discount_amount || 0,
@@ -293,6 +293,8 @@ const mapDbSaleToLocal = (s: any, items: any[]): LocalSale => {
     createdAt: new Date(s.created_at),
     storeId: s.store_id,
     sellerId: s.user_id,
+    sellerName: sellerName || s.seller_name || undefined,
+    cancellationReason: s.notes || undefined,
   };
 };
 
@@ -374,9 +376,19 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         );
         const openRegister = cashRegisters.find(cr => cr.status === 'open') || null;
 
-        // Map sales
+        // Map sales - also fetch seller names from profiles
+        const saleUserIds = [...new Set((salesRes.data || []).map((s: any) => s.user_id).filter(Boolean))];
+        const newSellerIds = saleUserIds.filter(id => !profileMap.has(id));
+        if (newSellerIds.length > 0) {
+          const { data: sellerProfiles } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', newSellerIds);
+          (sellerProfiles || []).forEach((p: any) => profileMap.set(p.id, p.full_name));
+        }
+
         const sales: LocalSale[] = (salesRes.data || []).map((s: any) =>
-          mapDbSaleToLocal(s, s.sale_items || [])
+          mapDbSaleToLocal(s, s.sale_items || [], profileMap.get(s.user_id))
         );
 
         dataLoaded.current = true;
@@ -661,12 +673,15 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             }));
 
           const allItems = [...saleItems, ...manualItems];
-          // Only insert items that have valid product_id (non-manual ones need to exist in products table)
-          // For manual items, we skip sale_items insert since product_id FK would fail
-          if (saleItems.length > 0) {
-            const { error: itemsError } = await supabase.from('sale_items').insert(saleItems);
+          // Insert all sale items (manual items use their generated ID as product_id)
+          if (allItems.length > 0) {
+            const { error: itemsError } = await supabase.from('sale_items').insert(allItems);
             if (itemsError) {
               console.error('[POS] Sale items insert error:', itemsError);
+              // Fallback: try inserting only non-manual items
+              if (saleItems.length > 0) {
+                await supabase.from('sale_items').insert(saleItems);
+              }
             }
           }
 

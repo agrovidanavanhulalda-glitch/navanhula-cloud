@@ -280,11 +280,14 @@ const LocalSalesHistoryPage: React.FC = () => {
                 {/* Center: Items Summary */}
                 <div className="flex-1 px-4">
                   <p className="text-sm text-muted-foreground mb-1">
-                    {sale.items.length} itens
+                    {sale.items.length > 0 
+                      ? `${sale.items.reduce((acc, i) => acc + i.quantity, 0)} itens` 
+                      : `${formatCurrency(sale.total)}`}
                   </p>
                   <p className="text-sm truncate">
-                    {sale.items.slice(0, 3).map(i => i.product.name).join(', ')}
-                    {sale.items.length > 3 && '...'}
+                    {sale.items.length > 0 
+                      ? sale.items.slice(0, 3).map(i => i.product.name).join(', ') + (sale.items.length > 3 ? '...' : '')
+                      : 'Venda registada'}
                   </p>
                 </div>
 
