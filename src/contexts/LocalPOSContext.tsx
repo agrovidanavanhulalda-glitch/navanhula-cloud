@@ -673,12 +673,15 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             }));
 
           const allItems = [...saleItems, ...manualItems];
-          // Only insert items that have valid product_id (non-manual ones need to exist in products table)
-          // For manual items, we skip sale_items insert since product_id FK would fail
-          if (saleItems.length > 0) {
-            const { error: itemsError } = await supabase.from('sale_items').insert(saleItems);
+          // Insert all sale items (manual items use their generated ID as product_id)
+          if (allItems.length > 0) {
+            const { error: itemsError } = await supabase.from('sale_items').insert(allItems);
             if (itemsError) {
               console.error('[POS] Sale items insert error:', itemsError);
+              // Fallback: try inserting only non-manual items
+              if (saleItems.length > 0) {
+                await supabase.from('sale_items').insert(saleItems);
+              }
             }
           }
 
