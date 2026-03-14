@@ -1107,7 +1107,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
       }
     })();
-  }, [state.currentStore.id, authCompany?.id]);
+  }, [state.currentStore.id, company?.id]);
 
   const updateProduct = useCallback((id: string, updates: Partial<LocalProduct>) => {
     setState(prev => ({
