@@ -433,6 +433,7 @@ export type Database = {
       categories: {
         Row: {
           color: string | null
+          company_id: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -442,6 +443,7 @@ export type Database = {
         }
         Insert: {
           color?: string | null
+          company_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -451,6 +453,7 @@ export type Database = {
         }
         Update: {
           color?: string | null
+          company_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -458,7 +461,15 @@ export type Database = {
           name?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       commissions: {
         Row: {
@@ -1681,6 +1692,7 @@ export type Database = {
           barcode: string | null
           category_id: string | null
           code: string
+          company_id: string | null
           cost_price: number
           created_at: string | null
           description: string | null
@@ -1696,6 +1708,7 @@ export type Database = {
           barcode?: string | null
           category_id?: string | null
           code: string
+          company_id?: string | null
           cost_price?: number
           created_at?: string | null
           description?: string | null
@@ -1711,6 +1724,7 @@ export type Database = {
           barcode?: string | null
           category_id?: string | null
           code?: string
+          company_id?: string | null
           cost_price?: number
           created_at?: string | null
           description?: string | null
@@ -1728,6 +1742,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
