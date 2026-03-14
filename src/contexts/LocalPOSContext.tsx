@@ -1096,7 +1096,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         cost_price: product.costPrice,
         sale_price: product.salePrice,
         is_active: product.isActive,
-      });
+        company_id: authCompany?.id || null,
+      } as any);
       // Create stock entry
       if (state.currentStore.id) {
         await supabase.from('product_stock').insert({
