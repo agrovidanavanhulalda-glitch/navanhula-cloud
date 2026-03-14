@@ -1096,7 +1096,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         cost_price: product.costPrice,
         sale_price: product.salePrice,
         is_active: product.isActive,
-      });
+        company_id: company?.id || null,
+      } as any);
       // Create stock entry
       if (state.currentStore.id) {
         await supabase.from('product_stock').insert({
@@ -1106,7 +1107,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
       }
     })();
-  }, [state.currentStore.id]);
+  }, [state.currentStore.id, company?.id]);
 
   const updateProduct = useCallback((id: string, updates: Partial<LocalProduct>) => {
     setState(prev => ({

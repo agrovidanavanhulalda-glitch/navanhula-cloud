@@ -84,10 +84,11 @@ const AgriculturePage: React.FC = () => {
   });
 
   const fetchData = useCallback(async () => {
+    if (!company?.id) return;
     setLoading(true);
     try {
       const [cropsRes, inputsRes] = await Promise.all([
-        supabase.from('crops').select('*').order('created_at', { ascending: false }),
+        supabase.from('crops').select('*').eq('company_id', company.id).order('created_at', { ascending: false }),
         supabase.from('agro_inputs').select('*').order('created_at', { ascending: false }),
       ]);
       if (cropsRes.data) setCrops(cropsRes.data as unknown as Crop[]);
@@ -97,7 +98,7 @@ const AgriculturePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [company?.id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
