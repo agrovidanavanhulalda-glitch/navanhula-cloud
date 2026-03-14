@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/formatters';
 import {
   Bird, Plus, TrendingUp, AlertTriangle, Egg, Package,
-  BarChart3, RefreshCw, DollarSign, Skull
+  BarChart3, RefreshCw, DollarSign, Skull, Pencil, Trash2
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -73,6 +73,8 @@ const PoultryPage: React.FC = () => {
   const [showNewBatch, setShowNewBatch] = useState(false);
   const [showNewFeed, setShowNewFeed] = useState(false);
   const [showNewProd, setShowNewProd] = useState(false);
+  const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; id: string; name: string } | null>(null);
 
   const [newBatch, setNewBatch] = useState({
     batch_name: '', initial_quantity: '', start_date: new Date().toISOString().split('T')[0],
@@ -88,10 +90,11 @@ const PoultryPage: React.FC = () => {
   });
 
   const fetchData = useCallback(async () => {
+    if (!company?.id) return;
     setLoading(true);
     try {
       const [bRes, fRes, pRes] = await Promise.all([
-        supabase.from('poultry_batches').select('*').order('created_at', { ascending: false }),
+        supabase.from('poultry_batches').select('*').eq('company_id', company.id).order('created_at', { ascending: false }),
         supabase.from('poultry_feed').select('*').order('created_at', { ascending: false }),
         supabase.from('poultry_production').select('*').order('created_at', { ascending: false }),
       ]);
@@ -100,7 +103,7 @@ const PoultryPage: React.FC = () => {
       if (pRes.data) setProductions(pRes.data as unknown as Production[]);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, []);
+  }, [company?.id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -127,6 +130,88 @@ const PoultryPage: React.FC = () => {
     fetchData();
   };
 
+  // Edit batch
+  const handleOpenEdit = (batch: Batch) => {
+    setEditingBatch(batch);
+    setNewBatch({
+      batch_name: batch.batch_name,
+      initial_quantity: String(batch.initial_quantity),
+      start_date: batch.start_date,
+      expected_slaughter_date: batch.expected_slaughter_date || '',
+      total_cost: String(batch.total_cost),
+    });
+    setShowNewBatch(true);
+  };
+
+  const handleSaveBatch = async () => {
+    if (editingBatch) {
+      const newInitial = Number(newBatch.initial_quantity);
+      const oldInitial = editingBatch.initial_quantity;
+      const qtyDiff = newInitial - oldInitial;
+      const newCurrent = Math.max(0, editingBatch.current_quantity + qtyDiff);
+
+      // Log audit
+      await supabase.from('audit_logs').insert({
+        action: 'update',
+        table_name: 'poultry_batches',
+        record_id: editingBatch.id,
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        old_data: { initial_quantity: oldInitial, total_cost: editingBatch.total_cost, batch_name: editingBatch.batch_name },
+        new_data: { initial_quantity: newInitial, total_cost: Number(newBatch.total_cost), batch_name: newBatch.batch_name },
+      } as any);
+
+      const { error } = await supabase.from('poultry_batches').update({
+        batch_name: newBatch.batch_name,
+        initial_quantity: newInitial,
+        current_quantity: newCurrent,
+        start_date: newBatch.start_date,
+        expected_slaughter_date: newBatch.expected_slaughter_date || null,
+        total_cost: Number(newBatch.total_cost) || 0,
+      } as any).eq('id', editingBatch.id);
+
+      if (error) { toast.error('Erro ao atualizar lote'); return; }
+      toast.success('Lote atualizado com sucesso!');
+    } else {
+      await handleCreateBatch();
+      return;
+    }
+    setShowNewBatch(false);
+    setEditingBatch(null);
+    setNewBatch({ batch_name: '', initial_quantity: '', start_date: new Date().toISOString().split('T')[0], expected_slaughter_date: '', total_cost: '' });
+    fetchData();
+  };
+
+  // Delete with confirmation
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm) return;
+    const { type, id } = deleteConfirm;
+
+    // Log audit
+    await supabase.from('audit_logs').insert({
+      action: 'delete',
+      table_name: type === 'batch' ? 'poultry_batches' : type === 'feed' ? 'poultry_feed' : 'poultry_production',
+      record_id: id,
+      user_id: (await supabase.auth.getUser()).data.user?.id,
+    } as any);
+
+    let error;
+    if (type === 'batch') {
+      // Delete related records first
+      await supabase.from('poultry_feed').delete().eq('batch_id', id);
+      await supabase.from('poultry_production').delete().eq('batch_id', id);
+      ({ error } = await supabase.from('poultry_batches').delete().eq('id', id));
+    } else if (type === 'feed') {
+      ({ error } = await supabase.from('poultry_feed').delete().eq('id', id));
+    } else {
+      ({ error } = await supabase.from('poultry_production').delete().eq('id', id));
+    }
+
+    if (error) { toast.error('Erro ao excluir'); console.error(error); }
+    else toast.success('Registro excluído com sucesso');
+    setDeleteConfirm(null);
+    fetchData();
+  };
+
   const handleCreateFeed = async () => {
     if (!newFeed.batch_id) { toast.error('Selecione o lote'); return; }
     const { error } = await supabase.from('poultry_feed').insert({
@@ -138,7 +223,6 @@ const PoultryPage: React.FC = () => {
       usage_date: newFeed.usage_date,
     } as any);
     if (error) { toast.error('Erro ao registar ração'); console.error(error); return; }
-    // Update batch cost
     const feedCost = Number(newFeed.total_cost) || 0;
     if (feedCost > 0) {
       const batch = batches.find(b => b.id === newFeed.batch_id);
@@ -163,7 +247,6 @@ const PoultryPage: React.FC = () => {
       production_date: newProd.production_date,
     } as any);
     if (error) { toast.error('Erro ao registar produção'); console.error(error); return; }
-    // Update batch current quantity
     const sold = Number(newProd.chickens_sold) || 0;
     if (sold > 0) {
       const batch = batches.find(b => b.id === newProd.batch_id);
@@ -184,9 +267,21 @@ const PoultryPage: React.FC = () => {
     if (!qty) return;
     const batch = batches.find(b => b.id === batchId);
     if (!batch) return;
+    const newMortality = (batch.mortality || 0) + Number(qty);
+    const newCurrent = Math.max(0, batch.current_quantity - Number(qty));
+    
+    await supabase.from('audit_logs').insert({
+      action: 'mortality',
+      table_name: 'poultry_batches',
+      record_id: batchId,
+      user_id: (await supabase.auth.getUser()).data.user?.id,
+      old_data: { mortality: batch.mortality, current_quantity: batch.current_quantity },
+      new_data: { mortality: newMortality, current_quantity: newCurrent },
+    } as any);
+
     await supabase.from('poultry_batches').update({
-      mortality: (batch.mortality || 0) + Number(qty),
-      current_quantity: Math.max(0, batch.current_quantity - Number(qty)),
+      mortality: newMortality,
+      current_quantity: newCurrent,
     } as any).eq('id', batchId);
     toast.success('Mortalidade registada');
     fetchData();
@@ -283,10 +378,16 @@ const PoultryPage: React.FC = () => {
               </div>
             </DialogContent>
           </Dialog>
-          <Dialog open={showNewBatch} onOpenChange={setShowNewBatch}>
+          <Dialog open={showNewBatch} onOpenChange={(open) => {
+            setShowNewBatch(open);
+            if (!open) {
+              setEditingBatch(null);
+              setNewBatch({ batch_name: '', initial_quantity: '', start_date: new Date().toISOString().split('T')[0], expected_slaughter_date: '', total_cost: '' });
+            }
+          }}>
             <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" /> Novo Lote</Button></DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Criar Lote de Aves</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editingBatch ? 'Editar Lote' : 'Criar Lote de Aves'}</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <div><Label>Nome do Lote</Label><Input value={newBatch.batch_name} onChange={e => setNewBatch(p => ({ ...p, batch_name: e.target.value }))} placeholder="Ex: Lote Fev 2026" /></div>
                 <div><Label>Quantidade Inicial</Label><Input type="number" value={newBatch.initial_quantity} onChange={e => setNewBatch(p => ({ ...p, initial_quantity: e.target.value }))} /></div>
@@ -295,7 +396,7 @@ const PoultryPage: React.FC = () => {
                   <div><Label>Previsão Abate</Label><Input type="date" value={newBatch.expected_slaughter_date} onChange={e => setNewBatch(p => ({ ...p, expected_slaughter_date: e.target.value }))} /></div>
                 </div>
                 <div><Label>Custo Inicial (MZN)</Label><Input type="number" value={newBatch.total_cost} onChange={e => setNewBatch(p => ({ ...p, total_cost: e.target.value }))} /></div>
-                <Button className="w-full" onClick={handleCreateBatch}>Criar Lote</Button>
+                <Button className="w-full" onClick={handleSaveBatch}>{editingBatch ? 'Salvar Alterações' : 'Criar Lote'}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -338,7 +439,15 @@ const PoultryPage: React.FC = () => {
                   <Card key={batch.id} className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-lg">{batch.batch_name}</h3>
-                      <Badge className={statusColors[batch.status] || 'bg-muted'}>{statusLabels[batch.status] || batch.status}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className={statusColors[batch.status] || 'bg-muted'}>{statusLabels[batch.status] || batch.status}</Badge>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleOpenEdit(batch)}>
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => setDeleteConfirm({ type: 'batch', id: batch.id, name: batch.batch_name })}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div><span className="text-muted-foreground">Inicial:</span> {batch.initial_quantity}</div>
@@ -374,9 +483,14 @@ const PoultryPage: React.FC = () => {
                           <p className="font-medium text-sm">{f.feed_type === 'starter' ? 'Inicial' : f.feed_type === 'grower' ? 'Crescimento' : 'Acabamento'}</p>
                           <p className="text-xs text-muted-foreground">{batch?.batch_name || '—'} · {f.supplier || 'Sem fornecedor'}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-sm">{formatCurrency(f.total_cost)}</p>
-                          <p className="text-xs text-muted-foreground">{f.daily_consumption} kg/dia</p>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className="font-bold text-sm">{formatCurrency(f.total_cost)}</p>
+                            <p className="text-xs text-muted-foreground">{f.daily_consumption} kg/dia</p>
+                          </div>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => setDeleteConfirm({ type: 'feed', id: f.id, name: `Ração - ${batch?.batch_name || ''}` })}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         </div>
                       </div>
                     );
@@ -405,9 +519,14 @@ const PoultryPage: React.FC = () => {
                             {p.chickens_sold} frangos · {p.eggs_produced} ovos · {new Date(p.production_date).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-sm">{formatCurrency(p.revenue)}</p>
-                          <p className="text-xs text-green-600">Lucro: {formatCurrency(p.profit)}</p>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className="font-bold text-sm">{formatCurrency(p.revenue)}</p>
+                            <p className="text-xs text-green-600">Lucro: {formatCurrency(p.profit)}</p>
+                          </div>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => setDeleteConfirm({ type: 'production', id: p.id, name: `Produção - ${batch?.batch_name || ''}` })}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         </div>
                       </div>
                     );
@@ -440,6 +559,22 @@ const PoultryPage: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground">
+            Tem certeza que deseja excluir <strong>"{deleteConfirm?.name}"</strong>? Esta ação não pode ser desfeita.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
