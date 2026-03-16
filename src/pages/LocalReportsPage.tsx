@@ -593,7 +593,7 @@ const LocalReportsPage: React.FC = () => {
           startDate={startDate}
           endDate={endDate}
           selectedStore={selectedStore}
-          companyName="NAVANHULA ERP"
+          companyName="NAVANHULA CLOUD"
           onClose={() => setShowPDFPreview(false)}
         />
       )}
