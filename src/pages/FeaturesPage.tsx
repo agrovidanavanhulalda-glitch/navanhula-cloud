@@ -39,7 +39,7 @@ const featureGroups = [
 
 const FeaturesPage: React.FC = () => {
   useEffect(() => {
-    document.title = 'Recursos | NAVANHULA ERP';
+    document.title = 'Recursos | NAVANHULA CLOUD';
   }, []);
 
   return (
