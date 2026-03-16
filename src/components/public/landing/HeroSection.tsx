@@ -76,7 +76,7 @@ const HeroSection: React.FC = () => (
           <div className="space-y-4 rounded-[1.5rem] border border-border/60 bg-background/90 p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Painel NAVANHULA ERP</p>
+                <p className="text-sm text-muted-foreground">Painel NAVANHULA CLOUD</p>
                 <p className="text-xl font-bold">Seu negócio em tempo real</p>
               </div>
               <Badge className="rounded-full bg-success/10 text-success border-success/20">● Ao vivo</Badge>

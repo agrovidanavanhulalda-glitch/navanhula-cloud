@@ -82,7 +82,7 @@ const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
     className="min-h-screen bg-background flex flex-col items-center justify-center gap-4"
   >
     <Loader2 className="w-10 h-10 animate-spin text-primary" />
-    <p className="text-sm text-muted-foreground">NAVANHULA ERP...</p>
+    <p className="text-sm text-muted-foreground">NAVANHULA CLOUD...</p>
   </div>
 ));
 LoadingScreen.displayName = "LoadingScreen";

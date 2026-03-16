@@ -36,7 +36,7 @@ const MainLayout: React.FC = () => {
               style={{ background: 'var(--gradient-primary)' }}>
               <ShoppingCart className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-sm tracking-tight">NAVANHULA</span>
+            <span className="font-bold text-sm tracking-tight">NAVANHULA CLOUD</span>
           </div>
           
           <div className="flex items-center gap-1">

@@ -236,7 +236,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
           {isReseller && !company && (
             <div className="flex items-center gap-2 text-xs" style={{ color: 'hsl(215 16% 55%)' }}>
               <Users className="w-3 h-3 text-primary" />
-              <span className="truncate">Rede comercial NAVANHULA ERP</span>
+              <span className="truncate">Rede comercial NAVANHULA CLOUD</span>
             </div>
           )}
         </div>

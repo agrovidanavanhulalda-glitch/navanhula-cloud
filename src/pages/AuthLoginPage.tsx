@@ -76,8 +76,8 @@ const AuthLoginPage: React.FC = () => {
             <ShoppingCart className="w-8 h-8 text-primary-foreground" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-primary">NAVANHULA ERP</h1>
-        <p className="text-muted-foreground mt-2">Plataforma ERP Empresarial</p>
+        <h1 className="text-3xl font-bold text-primary">NAVANHULA CLOUD</h1>
+        <p className="text-muted-foreground mt-2">Plataforma SaaS Empresarial</p>
       </div>
 
       {/* Login card */}
