@@ -18,7 +18,7 @@ const FinalCTASection: React.FC = () => (
             Comece hoje a profissionalizar sua loja.
           </h2>
           <p className="mx-auto max-w-xl text-lg leading-8 text-muted-foreground">
-            Experimente o NAVANHULA ERP gratuitamente e descubra como organizar, vender e crescer com mais confiança.
+            Experimente o NAVANHULA CLOUD gratuitamente e descubra como organizar, vender e crescer com mais confiança.
           </p>
           <Button asChild size="lg" className="mt-2 gap-2 px-10 text-base font-bold shadow-lg">
             <Link to="/registrar">

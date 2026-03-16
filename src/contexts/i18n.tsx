@@ -73,7 +73,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Nota de Débito',
     'auth.login': 'Entrar', 'auth.signup': 'Criar Conta', 'auth.logout': 'Sair',
     'auth.email': 'Email', 'auth.password': 'Senha',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Sistema ERP Empresarial',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Plataforma SaaS Empresarial',
   },
   en: {
     'nav.dashboard': 'Dashboard', 'nav.pos': 'POS', 'nav.products': 'Products', 'nav.inventory': 'Inventory',
@@ -116,7 +116,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Debit Note',
     'auth.login': 'Login', 'auth.signup': 'Sign Up', 'auth.logout': 'Logout',
     'auth.email': 'Email', 'auth.password': 'Password',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Enterprise ERP System',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Enterprise SaaS Platform',
   },
   es: {
     'nav.dashboard': 'Panel', 'nav.pos': 'TPV', 'nav.products': 'Productos', 'nav.inventory': 'Inventario',
@@ -159,7 +159,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Nota de Débito',
     'auth.login': 'Iniciar Sesión', 'auth.signup': 'Registrarse', 'auth.logout': 'Salir',
     'auth.email': 'Correo', 'auth.password': 'Contraseña',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Sistema ERP Empresarial',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Plataforma SaaS Empresarial',
   },
   fr: {
     'nav.dashboard': 'Tableau de bord', 'nav.pos': 'PDV', 'nav.products': 'Produits', 'nav.inventory': 'Stock',
@@ -202,7 +202,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Note de Débit',
     'auth.login': 'Connexion', 'auth.signup': "S'inscrire", 'auth.logout': 'Déconnexion',
     'auth.email': 'E-mail', 'auth.password': 'Mot de passe',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Système ERP Entreprise',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Plateforme SaaS Entreprise',
   },
   de: {
     'nav.dashboard': 'Dashboard', 'nav.pos': 'Kasse', 'nav.products': 'Produkte', 'nav.inventory': 'Lager',
@@ -245,7 +245,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Lastschrift',
     'auth.login': 'Anmelden', 'auth.signup': 'Registrieren', 'auth.logout': 'Abmelden',
     'auth.email': 'E-Mail', 'auth.password': 'Passwort',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'ERP-System für Unternehmen',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'SaaS-Unternehmensplattform',
   },
   it: {
     'nav.dashboard': 'Cruscotto', 'nav.pos': 'POS', 'nav.products': 'Prodotti', 'nav.inventory': 'Magazzino',
@@ -288,7 +288,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Nota di Debito',
     'auth.login': 'Accedi', 'auth.signup': 'Registrati', 'auth.logout': 'Esci',
     'auth.email': 'Email', 'auth.password': 'Password',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Sistema ERP Aziendale',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Piattaforma SaaS Aziendale',
   },
   ar: {
     'nav.dashboard': 'لوحة القيادة', 'nav.pos': 'نقطة البيع', 'nav.products': 'المنتجات', 'nav.inventory': 'المخزون',
@@ -331,7 +331,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'إشعار مدين',
     'auth.login': 'تسجيل الدخول', 'auth.signup': 'إنشاء حساب', 'auth.logout': 'خروج',
     'auth.email': 'البريد الإلكتروني', 'auth.password': 'كلمة المرور',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'منصة ERP سحابية',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'منصة SaaS سحابية',
   },
   zh: {
     'nav.dashboard': '仪表板', 'nav.pos': '销售点', 'nav.products': '产品', 'nav.inventory': '库存',
@@ -374,7 +374,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': '借项通知',
     'auth.login': '登录', 'auth.signup': '注册', 'auth.logout': '退出',
     'auth.email': '邮箱', 'auth.password': '密码',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': '企业ERP系统',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': '企业SaaS平台',
   },
   ru: {
     'nav.dashboard': 'Панель', 'nav.pos': 'Касса', 'nav.products': 'Товары', 'nav.inventory': 'Склад',
@@ -417,7 +417,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Дебет-нота',
     'auth.login': 'Войти', 'auth.signup': 'Регистрация', 'auth.logout': 'Выйти',
     'auth.email': 'Email', 'auth.password': 'Пароль',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Облачная ERP платформа',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Облачная SaaS платформа',
   },
   hi: {
     'nav.dashboard': 'डैशबोर्ड', 'nav.pos': 'पीओएस', 'nav.products': 'उत्पाद', 'nav.inventory': 'इन्वेंट्री',
@@ -460,7 +460,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'डेबिट नोट',
     'auth.login': 'लॉगिन', 'auth.signup': 'साइन अप', 'auth.logout': 'लॉगआउट',
     'auth.email': 'ईमेल', 'auth.password': 'पासवर्ड',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'एंटरप्राइज़ ERP सिस्टम',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'एंटरप्राइज़ SaaS प्लेटफ़ॉर्म',
   },
 };
 

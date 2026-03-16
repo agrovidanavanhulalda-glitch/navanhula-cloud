@@ -1,5 +1,5 @@
 /**
- * NAVANHULA ERP - Centralized UI Labels
+ * NAVANHULA CLOUD - Centralized UI Labels
  * All user-facing text constants. Never show technical keys to users.
  */
 

@@ -10,11 +10,11 @@ import { toast } from 'sonner';
 
 const materials = [
   {
-    title: 'Apresentação do NAVANHULA ERP',
+    title: 'Apresentação do NAVANHULA CLOUD',
     description: 'Apresentação completa do sistema para mostrar a potenciais clientes. Inclui funcionalidades, benefícios e diferenciais.',
     icon: Presentation,
     type: 'Apresentação',
-    content: `NAVANHULA ERP - Sistema de Gestão Empresarial
+    content: `NAVANHULA CLOUD - Plataforma SaaS Empresarial
 
 ✅ Sistema POS completo e profissional
 ✅ Gestão de estoque em tempo real
@@ -35,7 +35,7 @@ Teste grátis: 7 dias com acesso total`,
     description: 'Lista de benefícios para convencer clientes. Ideal para conversas, WhatsApp e redes sociais.',
     icon: CheckCircle2,
     type: 'Texto de Venda',
-    content: `🚀 POR QUE ESCOLHER O NAVANHULA ERP?
+    content: `🚀 POR QUE ESCOLHER O NAVANHULA CLOUD?
 
 💰 Aumente as suas vendas com controlo total do negócio
 📊 Veja relatórios em tempo real de qualquer lugar
@@ -56,7 +56,7 @@ Teste grátis: 7 dias com acesso total`,
     description: 'Passo a passo simplificado para novos clientes começarem a usar o sistema imediatamente.',
     icon: BookOpen,
     type: 'Guia',
-    content: `GUIA RÁPIDO - NAVANHULA ERP
+    content: `GUIA RÁPIDO - NAVANHULA CLOUD
 
 1️⃣ CADASTRO
 • Acesse o site e clique em "Criar Conta"
@@ -94,7 +94,7 @@ Teste grátis: 7 dias com acesso total`,
 Olá! 👋
 Você tem um negócio e ainda controla vendas no caderno ou Excel?
 
-O NAVANHULA ERP é um sistema profissional de gestão que te ajuda a:
+O NAVANHULA CLOUD é um sistema profissional de gestão que te ajuda a:
 ✅ Registrar vendas rapidamente
 ✅ Controlar estoque automaticamente  
 ✅ Emitir faturas e recibos
@@ -107,7 +107,7 @@ Pode testar GRÁTIS por 7 dias! Quer saber mais?
 📱 MENSAGEM 2 - Follow-up:
 
 Bom dia! 😊
-Lembra que falei do NAVANHULA ERP? 
+Lembra que falei do NAVANHULA CLOUD? 
 
 Já são mais de X empresas usando o sistema em Moçambique. O preço é apenas 1.500 MT/mês por loja.
 
@@ -118,11 +118,11 @@ Posso te ajudar a criar a conta agora mesmo! É muito simples.`,
     description: 'Texto formal para apresentações a empresas maiores ou licitações.',
     icon: FileText,
     type: 'Proposta',
-    content: `PROPOSTA COMERCIAL - NAVANHULA ERP
-Sistema de Gestão Empresarial
+    content: `PROPOSTA COMERCIAL - NAVANHULA CLOUD
+Plataforma SaaS Empresarial
 
 SOBRE A SOLUÇÃO:
-O NAVANHULA ERP é um sistema de gestão empresarial desenvolvido para o mercado moçambicano, oferecendo controlo completo de operações comerciais, financeiras e fiscais.
+O NAVANHULA CLOUD é uma plataforma SaaS de gestão empresarial desenvolvida para o mercado moçambicano, oferecendo controlo completo de operações comerciais, financeiras e fiscais.
 
 MÓDULOS INCLUSOS:
 • Ponto de Venda (PDV) profissional
@@ -158,7 +158,7 @@ const SalesMaterialsPage: React.FC = () => {
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Materiais de Venda</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Recursos prontos para promover o NAVANHULA ERP junto a potenciais clientes
+          Recursos prontos para promover o NAVANHULA CLOUD junto a potenciais clientes
         </p>
       </div>
 

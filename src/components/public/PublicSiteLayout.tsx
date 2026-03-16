@@ -54,8 +54,8 @@ const PublicSiteLayout: React.FC = () => {
                 <ShoppingCart className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-lg font-bold tracking-tight">NAVANHULA ERP</p>
-                <p className="text-xs text-muted-foreground">Controle total do seu negócio em tempo real.</p>
+                <p className="text-lg font-bold tracking-tight">NAVANHULA CLOUD</p>
+                <p className="text-xs text-muted-foreground">Plataforma SaaS para gestão empresarial.</p>
               </div>
             </button>
 
@@ -111,9 +111,9 @@ const PublicSiteLayout: React.FC = () => {
       <footer className="border-t border-border bg-card/40">
         <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-end md:justify-between">
           <div className="max-w-xl space-y-3">
-            <p className="text-lg font-black tracking-tight">NAVANHULA ERP</p>
+            <p className="text-lg font-black tracking-tight">NAVANHULA CLOUD</p>
             <p className="text-sm leading-7 text-muted-foreground">
-              Sistema ERP profissional para gestão empresarial completa.
+              Plataforma SaaS profissional para gestão empresarial completa.
             </p>
             <p className="text-xs text-muted-foreground">© NAVANHULA GROUP LDA · Todos os direitos reservados.</p>
           </div>

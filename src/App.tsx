@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SaaSAuthProvider, useAuth } from "@/contexts/SaaSAuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
 import { Loader2 } from "lucide-react";
+import SubscriptionGate from "@/components/layout/SubscriptionGate";
 
 import AuthLoginPage from "./pages/AuthLoginPage";
 import AuthSignupPage from "./pages/AuthSignupPage";
@@ -82,7 +83,7 @@ const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
     className="min-h-screen bg-background flex flex-col items-center justify-center gap-4"
   >
     <Loader2 className="w-10 h-10 animate-spin text-primary" />
-    <p className="text-sm text-muted-foreground">NAVANHULA ERP...</p>
+    <p className="text-sm text-muted-foreground">NAVANHULA CLOUD...</p>
   </div>
 ));
 LoadingScreen.displayName = "LoadingScreen";
@@ -163,29 +164,29 @@ const AppRoutes = () => {
       >
         <Route index element={<AppEntryRoute />} />
         <Route path="dashboard" element={<LocalDashboardPage />} />
-        <Route path="pdv" element={<LocalPOSPage />} />
-        <Route path="lojas" element={<LocalStoresPage />} />
-        <Route path="produtos" element={<LocalProductsPage />} />
-        <Route path="estoque" element={<LocalInventoryPage />} />
+        <Route path="pdv" element={<SubscriptionGate><LocalPOSPage /></SubscriptionGate>} />
+        <Route path="lojas" element={<SubscriptionGate><LocalStoresPage /></SubscriptionGate>} />
+        <Route path="produtos" element={<SubscriptionGate><LocalProductsPage /></SubscriptionGate>} />
+        <Route path="estoque" element={<SubscriptionGate><LocalInventoryPage /></SubscriptionGate>} />
         <Route path="vendas" element={<LocalSalesHistoryPage />} />
         <Route path="relatorios" element={<LocalReportsPage />} />
         <Route path="financeiro" element={<FinancialReportsPage />} />
-        <Route path="carteira" element={<WalletPage />} />
+        <Route path="carteira" element={<SubscriptionGate><WalletPage /></SubscriptionGate>} />
         <Route path="configuracoes" element={<LocalSettingsPage />} />
         <Route path="comunidade" element={<CommunityPage />} />
 
-        <Route path="caixa" element={<LocalCashRegisterPage />} />
+        <Route path="caixa" element={<SubscriptionGate><LocalCashRegisterPage /></SubscriptionGate>} />
         <Route path="historico" element={<LocalSalesHistoryPage />} />
-        <Route path="vendedores" element={<LocalSellersPage />} />
+        <Route path="vendedores" element={<SubscriptionGate><LocalSellersPage /></SubscriptionGate>} />
         <Route path="assinatura" element={<SubscriptionPage />} />
         <Route path="ceo" element={<CEODashboardPage />} />
         <Route path="fiscal" element={<FiscalPage />} />
         <Route path="contabilidade" element={<AccountingPage />} />
-        <Route path="crm" element={<CRMPage />} />
-        <Route path="fornecedores" element={<SuppliersPage />} />
+        <Route path="crm" element={<SubscriptionGate><CRMPage /></SubscriptionGate>} />
+        <Route path="fornecedores" element={<SubscriptionGate><SuppliersPage /></SubscriptionGate>} />
         <Route path="bi" element={<BIDashboardPage />} />
-        <Route path="agricultura" element={<AgriculturePage />} />
-        <Route path="avicultura" element={<PoultryPage />} />
+        <Route path="agricultura" element={<SubscriptionGate><AgriculturePage /></SubscriptionGate>} />
+        <Route path="avicultura" element={<SubscriptionGate><PoultryPage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
         <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />

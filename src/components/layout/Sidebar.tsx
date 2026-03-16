@@ -203,7 +203,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
         {!collapsed && (
           <div>
             <h1 className="font-bold text-base text-white tracking-tight">NAVANHULA</h1>
-            <p className="text-[10px] font-medium tracking-widest uppercase" style={{ color: 'hsl(215 16% 55%)' }}>ERP Platform</p>
+            <p className="text-[10px] font-medium tracking-widest uppercase" style={{ color: 'hsl(215 16% 55%)' }}>CLOUD</p>
           </div>
         )}
       </div>
@@ -236,7 +236,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
           {isReseller && !company && (
             <div className="flex items-center gap-2 text-xs" style={{ color: 'hsl(215 16% 55%)' }}>
               <Users className="w-3 h-3 text-primary" />
-              <span className="truncate">Rede comercial NAVANHULA ERP</span>
+              <span className="truncate">Rede comercial NAVANHULA CLOUD</span>
             </div>
           )}
         </div>

@@ -29,7 +29,7 @@ const getPaymentLabel = (method: string) => {
 
 // Generate PDF content
 export const generatePDFContent = (props: PDFReportProps): string => {
-  const { sales, stores, startDate, endDate, selectedStore, companyName = 'NAVANHULA ERP' } = props;
+  const { sales, stores, startDate, endDate, selectedStore, companyName = 'NAVANHULA CLOUD' } = props;
 
   // Filter sales
   const filteredSales = sales.filter(sale => {
@@ -172,7 +172,7 @@ ${filteredSales.length > 50 ? `\n  ... e mais ${filteredSales.length - 50} venda
 
 // Export as real PDF using jsPDF
 export const exportPDFReport = (props: PDFReportProps) => {
-  const { sales, stores, startDate, endDate, selectedStore, companyName = 'NAVANHULA ERP' } = props;
+  const { sales, stores, startDate, endDate, selectedStore, companyName = 'NAVANHULA CLOUD' } = props;
 
   const filteredSales = sales.filter(sale => {
     const saleDate = new Date(sale.createdAt);
@@ -290,7 +290,7 @@ export const exportPDFReport = (props: PDFReportProps) => {
   const footerY = 290;
   doc.setFont('times', 'italic');
   doc.setFontSize(8);
-  doc.text('Documento gerado pelo NAVANHULA ERP', pageWidth / 2, footerY, { align: 'center' });
+  doc.text('Documento gerado pelo NAVANHULA CLOUD', pageWidth / 2, footerY, { align: 'center' });
 
   doc.save(`relatorio_vendas_${startDate}_${endDate}.pdf`);
 };

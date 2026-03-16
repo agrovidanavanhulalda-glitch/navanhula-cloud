@@ -27,7 +27,7 @@ const TestimonialsSection: React.FC = () => (
       <SectionHeading
         eyebrow="Prova social"
         title="Empresários que já transformaram seus negócios"
-        description="Veja o que gestores dizem sobre o NAVANHULA ERP."
+        description="Veja o que gestores dizem sobre o NAVANHULA CLOUD."
         align="center"
         className="mx-auto max-w-3xl"
       />
@@ -51,7 +51,7 @@ const TestimonialsSection: React.FC = () => (
 
       <div className="mx-auto mt-10 flex max-w-md items-center justify-center gap-3 rounded-full border border-border bg-background/80 px-6 py-3">
         <Store className="h-5 w-5 text-primary" />
-        <span className="text-sm font-semibold">+50 lojas já usam o NAVANHULA ERP</span>
+        <span className="text-sm font-semibold">+50 lojas já usam o NAVANHULA CLOUD</span>
       </div>
     </div>
   </section>

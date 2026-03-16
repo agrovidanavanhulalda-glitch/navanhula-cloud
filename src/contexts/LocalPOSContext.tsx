@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 
 /**
- * NAVANHULA ERP Context - SUPABASE BACKED
+ * NAVANHULA CLOUD Context - SUPABASE BACKED
  * 
  * - Products, sales, stores, cash registers → Supabase
  * - Cart → in-memory only (ephemeral)

@@ -322,7 +322,7 @@ class BluetoothPrinterService {
       COMMANDS.ALIGN_CENTER,
       this.encode('Obrigado pela preferência!'),
       COMMANDS.LINE,
-      this.encode('NAVANHULA ERP'),
+      this.encode('NAVANHULA CLOUD'),
       COMMANDS.LINE,
       COMMANDS.FEED_LINES(4),
       COMMANDS.PARTIAL_CUT,
