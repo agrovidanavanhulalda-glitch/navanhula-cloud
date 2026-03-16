@@ -290,7 +290,7 @@ export const exportPDFReport = (props: PDFReportProps) => {
   const footerY = 290;
   doc.setFont('times', 'italic');
   doc.setFontSize(8);
-  doc.text('Documento gerado pelo NAVANHULA ERP', pageWidth / 2, footerY, { align: 'center' });
+  doc.text('Documento gerado pelo NAVANHULA CLOUD', pageWidth / 2, footerY, { align: 'center' });
 
   doc.save(`relatorio_vendas_${startDate}_${endDate}.pdf`);
 };

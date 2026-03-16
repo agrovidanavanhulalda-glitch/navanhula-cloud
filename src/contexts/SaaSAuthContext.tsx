@@ -4,7 +4,7 @@ import type { Profile, Store, Company, AppRole, AuthContextType } from '@/types/
 import { toast } from 'sonner';
 
 /**
- * NAVANHULA ERP - EMERGENCY MODE Auth Context
+ * NAVANHULA CLOUD - Auth Context
  * 
  * REGRAS:
  * 1. SEM ONBOARDING - empresa criada automaticamente

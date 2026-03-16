@@ -178,7 +178,7 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
 
           <div className="text-center text-xs mt-3">
             <div className="font-semibold">Obrigado pela preferência!</div>
-            <div className="mt-1 text-gray-500">Documento gerado pelo NAVANHULA ERP</div>
+            <div className="mt-1 text-gray-500">Documento gerado pelo NAVANHULA CLOUD</div>
             {storeNuit && <div className="text-gray-400 mt-0.5">{storeName}</div>}
           </div>
         </div>
