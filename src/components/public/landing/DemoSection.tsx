@@ -9,7 +9,7 @@ const DemoSection: React.FC = () => (
     <div className="container grid gap-10 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-24">
       <SectionHeading
         eyebrow="Demonstração"
-        title="Veja o NAVANHULA ERP em funcionamento"
+        title="Veja o NAVANHULA CLOUD em funcionamento"
         description="Assista à demonstração e descubra como o sistema pode transformar a gestão do seu negócio."
       />
 

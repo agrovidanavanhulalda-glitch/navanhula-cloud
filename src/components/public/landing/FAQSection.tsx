@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/accordion';
 
 const faqs = [
-  { q: 'O sistema funciona no celular?', a: 'Sim. O NAVANHULA ERP adapta automaticamente para celular, tablet e computador. Pode usá-lo de qualquer dispositivo com navegador.' },
+  { q: 'O sistema funciona no celular?', a: 'Sim. O NAVANHULA CLOUD adapta automaticamente para celular, tablet e computador. Pode usá-lo de qualquer dispositivo com navegador.' },
   { q: 'Preciso instalar algo?', a: 'Não. O sistema funciona diretamente no navegador. Basta aceder ao site, fazer login e começar a usar.' },
   { q: 'Posso cancelar quando quiser?', a: 'Sim. A assinatura pode ser cancelada a qualquer momento, sem multas ou compromissos.' },
   { q: 'Posso gerir mais de uma loja?', a: 'Sim. O sistema suporta múltiplas lojas com dashboards e relatórios independentes para cada uma.' },

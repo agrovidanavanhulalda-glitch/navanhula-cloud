@@ -27,7 +27,7 @@ const TestimonialsSection: React.FC = () => (
       <SectionHeading
         eyebrow="Prova social"
         title="Empresários que já transformaram seus negócios"
-        description="Veja o que gestores dizem sobre o NAVANHULA ERP."
+        description="Veja o que gestores dizem sobre o NAVANHULA CLOUD."
         align="center"
         className="mx-auto max-w-3xl"
       />
