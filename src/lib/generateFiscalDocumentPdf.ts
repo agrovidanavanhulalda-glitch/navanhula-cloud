@@ -257,7 +257,7 @@ export const generateFiscalDocumentPdf = async ({ document, company, store }: Ge
   doc.line(margin, footerY - 8, pageWidth - margin, footerY - 8);
   doc.setFont('times', 'italic');
   doc.setFontSize(8);
-  doc.text('Documento gerado pelo NAVANHULA ERP', pageWidth / 2, footerY - 3, { align: 'center' });
+  doc.text('Documento gerado pelo NAVANHULA CLOUD', pageWidth / 2, footerY - 3, { align: 'center' });
   doc.text('Use este ficheiro para partilha com o cliente ou arquivo interno', pageWidth / 2, footerY + 1, { align: 'center' });
 
   return doc;

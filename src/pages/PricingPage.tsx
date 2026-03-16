@@ -31,7 +31,7 @@ const plans = [
 
 const PricingPage: React.FC = () => {
   useEffect(() => {
-    document.title = 'Preços | NAVANHULA ERP';
+    document.title = 'Preços | NAVANHULA CLOUD';
   }, []);
 
   return (
