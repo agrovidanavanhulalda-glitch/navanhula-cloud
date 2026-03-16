@@ -211,7 +211,7 @@ const LocalReportsPage: React.FC = () => {
       startDate,
       endDate,
       selectedStore,
-      companyName: 'NAVANHULA ERP',
+      companyName: 'NAVANHULA CLOUD',
     });
   };
 
