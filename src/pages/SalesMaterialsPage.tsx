@@ -158,7 +158,7 @@ const SalesMaterialsPage: React.FC = () => {
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Materiais de Venda</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Recursos prontos para promover o NAVANHULA ERP junto a potenciais clientes
+          Recursos prontos para promover o NAVANHULA CLOUD junto a potenciais clientes
         </p>
       </div>
 
