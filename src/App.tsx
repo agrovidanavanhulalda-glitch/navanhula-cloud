@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SaaSAuthProvider, useAuth } from "@/contexts/SaaSAuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
 import { Loader2 } from "lucide-react";
+import SubscriptionGate from "@/components/layout/SubscriptionGate";
 
 import AuthLoginPage from "./pages/AuthLoginPage";
 import AuthSignupPage from "./pages/AuthSignupPage";
