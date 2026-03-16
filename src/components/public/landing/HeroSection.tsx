@@ -36,7 +36,7 @@ const HeroSection: React.FC = () => (
         </Badge>
 
         <h1 className="max-w-[640px] text-4xl font-black leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.5rem]">
-          O ERP inteligente que ajuda sua loja a vender mais e controlar tudo em um{' '}
+          A plataforma SaaS que ajuda sua empresa a vender mais e controlar tudo em um{' '}
           <span className="text-gradient-primary">só lugar</span>.
         </h1>
 
