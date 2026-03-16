@@ -288,7 +288,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Nota di Debito',
     'auth.login': 'Accedi', 'auth.signup': 'Registrati', 'auth.logout': 'Esci',
     'auth.email': 'Email', 'auth.password': 'Password',
-    'app.title': 'NAVANHULA ERP', 'app.subtitle': 'Sistema ERP Aziendale',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Piattaforma SaaS Aziendale',
   },
   ar: {
     'nav.dashboard': 'لوحة القيادة', 'nav.pos': 'نقطة البيع', 'nav.products': 'المنتجات', 'nav.inventory': 'المخزون',
