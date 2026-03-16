@@ -107,7 +107,7 @@ Pode testar GRÁTIS por 7 dias! Quer saber mais?
 📱 MENSAGEM 2 - Follow-up:
 
 Bom dia! 😊
-Lembra que falei do NAVANHULA ERP? 
+Lembra que falei do NAVANHULA CLOUD? 
 
 Já são mais de X empresas usando o sistema em Moçambique. O preço é apenas 1.500 MT/mês por loja.
 
