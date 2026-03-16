@@ -20,9 +20,9 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
       manifest: {
-        name: 'NAVANHULA ERP',
-        short_name: 'NAVANHULA',
-        description: 'Sistema de Gestão Empresarial',
+        name: 'NAVANHULA CLOUD',
+        short_name: 'NAVANHULA CLOUD',
+        description: 'Plataforma SaaS Empresarial',
         theme_color: '#1e3a8a',
         background_color: '#0f172a',
         display: 'standalone',
