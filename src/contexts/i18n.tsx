@@ -159,7 +159,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Nota de Débito',
     'auth.login': 'Iniciar Sesión', 'auth.signup': 'Registrarse', 'auth.logout': 'Salir',
     'auth.email': 'Correo', 'auth.password': 'Contraseña',
-    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Plataforma SaaS Empresarial',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Sistema Empresarial',
   },
   fr: {
     'nav.dashboard': 'Tableau de bord', 'nav.pos': 'PDV', 'nav.products': 'Produits', 'nav.inventory': 'Stock',
