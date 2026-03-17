@@ -374,7 +374,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': '借项通知',
     'auth.login': '登录', 'auth.signup': '注册', 'auth.logout': '退出',
     'auth.email': '邮箱', 'auth.password': '密码',
-    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': '企业SaaS平台',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': '企业系统平台',
   },
   ru: {
     'nav.dashboard': 'Панель', 'nav.pos': 'Касса', 'nav.products': 'Товары', 'nav.inventory': 'Склад',
