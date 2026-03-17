@@ -7,7 +7,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Settings, Store, LogOut,
   WalletCards, History, BarChart3, TrendingUp, Boxes, Shield, User,
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
-  UserCheck, Truck, PieChart, Sprout, Egg,
+  UserCheck, Truck, PieChart, Sprout, Egg, Brain,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
