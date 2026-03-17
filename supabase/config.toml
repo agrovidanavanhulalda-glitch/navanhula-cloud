@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.create-seller]
 verify_jwt = false
+
+[functions.ai-business-insights]
+verify_jwt = false

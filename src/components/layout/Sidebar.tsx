@@ -7,7 +7,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Settings, Store, LogOut,
   WalletCards, History, BarChart3, TrendingUp, Boxes, Shield, User,
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
-  UserCheck, Truck, PieChart, Sprout, Egg,
+  UserCheck, Truck, PieChart, Sprout, Egg, Brain,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
@@ -67,6 +67,7 @@ const navSections: NavSection[] = [
       { label: 'Fiscal', href: '/app/fiscal', icon: <FileText className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
       { label: 'Carteira', href: '/app/carteira', icon: <WalletCards className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
       { label: 'BI Analytics', href: '/app/bi', icon: <PieChart className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+      { label: 'AI Engine', href: '/app/ai', icon: <Brain className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
     ],
   },
   {
