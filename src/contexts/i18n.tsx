@@ -417,7 +417,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Дебет-нота',
     'auth.login': 'Войти', 'auth.signup': 'Регистрация', 'auth.logout': 'Выйти',
     'auth.email': 'Email', 'auth.password': 'Пароль',
-    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Облачная SaaS платформа',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Облачная платформа для бизнеса',
   },
   hi: {
     'nav.dashboard': 'डैशबोर्ड', 'nav.pos': 'पीओएस', 'nav.products': 'उत्पाद', 'nav.inventory': 'इन्वेंट्री',
