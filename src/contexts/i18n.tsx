@@ -460,7 +460,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'डेबिट नोट',
     'auth.login': 'लॉगिन', 'auth.signup': 'साइन अप', 'auth.logout': 'लॉगआउट',
     'auth.email': 'ईमेल', 'auth.password': 'पासवर्ड',
-    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'एंटरप्राइज़ SaaS प्लेटफ़ॉर्म',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'एंटरप्राइज़ सिस्टम प्लेटफ़ॉर्म',
   },
 };
 
