@@ -19,7 +19,7 @@ const features = [
   { icon: BarChart3, title: 'Relatórios automáticos', desc: 'Vendas, lucros e desempenho em gráficos claros e exportáveis.' },
   { icon: FileSpreadsheet, title: 'Documentos profissionais', desc: 'Faturas, cotações, proformas e recibos com layout empresarial.' },
   { icon: Landmark, title: 'Painel CEO global', desc: 'Visão completa de todas as lojas, faturamento e crescimento.' },
-  { icon: Building2, title: 'Sistema SaaS multi-loja', desc: 'Cada loja com dashboard, usuários e relatórios próprios.' },
+  { icon: Building2, title: 'Sistema multi-loja', desc: 'Cada loja com dashboard, usuários e relatórios próprios.' },
   { icon: Globe, title: 'Suporte multi-idioma', desc: 'Interface em Português e English com troca instantânea.' },
 ];
 

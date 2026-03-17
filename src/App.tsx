@@ -32,6 +32,7 @@ import AccountingPage from "./pages/AccountingPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import BIDashboardPage from "./pages/BIDashboardPage";
 import AIBusinessEnginePage from "./pages/AIBusinessEnginePage";
+import DocumentsCenterPage from "./pages/DocumentsCenterPage";
 import AgriculturePage from "./pages/AgriculturePage";
 import PoultryPage from "./pages/PoultryPage";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
@@ -187,6 +188,7 @@ const AppRoutes = () => {
         <Route path="fornecedores" element={<SubscriptionGate><SuppliersPage /></SubscriptionGate>} />
         <Route path="bi" element={<BIDashboardPage />} />
         <Route path="ai" element={<SubscriptionGate><AIBusinessEnginePage /></SubscriptionGate>} />
+        <Route path="documentos" element={<SubscriptionGate><DocumentsCenterPage /></SubscriptionGate>} />
         <Route path="agricultura" element={<SubscriptionGate><AgriculturePage /></SubscriptionGate>} />
         <Route path="avicultura" element={<SubscriptionGate><PoultryPage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />

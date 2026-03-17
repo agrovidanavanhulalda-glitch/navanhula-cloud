@@ -65,6 +65,7 @@ const navSections: NavSection[] = [
       { label: 'Financeiro', href: '/app/financeiro', icon: <TrendingUp className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
       { label: 'Contabilidade', href: '/app/contabilidade', icon: <BookOpen className="w-5 h-5" />, roles: ['admin', 'ceo'] },
       { label: 'Fiscal', href: '/app/fiscal', icon: <FileText className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+      { label: 'Documentos', href: '/app/documentos', icon: <FileText className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
       { label: 'Carteira', href: '/app/carteira', icon: <WalletCards className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
       { label: 'BI Analytics', href: '/app/bi', icon: <PieChart className="w-5 h-5" />, roles: ['admin', 'ceo'] },
       { label: 'AI Engine', href: '/app/ai', icon: <Brain className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
