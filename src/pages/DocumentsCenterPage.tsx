@@ -148,10 +148,15 @@ const DocumentsCenterPage: React.FC = () => {
     setItems([...items, {
       description: product.name,
       quantity: 1,
-      unit_price: product.sale_price,
+      unit_price: product.salePrice,
       tax_rate: taxRate,
     }]);
   };
+
+  const productOptions: DocumentProductOption[] = useMemo(() => {
+    // Will be populated from context if available
+    return [];
+  }, []);
 
   const handleSaveDocument = async () => {
     if (!customerName.trim()) { toast.error('Informe o nome do cliente'); return; }
