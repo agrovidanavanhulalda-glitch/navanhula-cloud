@@ -31,6 +31,7 @@ import CRMPage from "./pages/CRMPage";
 import AccountingPage from "./pages/AccountingPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import BIDashboardPage from "./pages/BIDashboardPage";
+import AIBusinessEnginePage from "./pages/AIBusinessEnginePage";
 import AgriculturePage from "./pages/AgriculturePage";
 import PoultryPage from "./pages/PoultryPage";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
