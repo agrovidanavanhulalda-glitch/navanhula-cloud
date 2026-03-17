@@ -392,7 +392,7 @@ const DocumentsCenterPage: React.FC = () => {
                     <Calculator className="w-4 h-4 text-primary" /> Itens
                   </h4>
                   <div className="flex gap-2">
-                    <DocumentProductPicker onSelect={handleProductSelect} />
+                    <DocumentProductPicker products={productOptions} onSelect={handleProductSelect} />
                     <Button variant="outline" size="sm" onClick={addItem} className="gap-1">
                       <Plus className="w-3 h-3" /> Item Manual
                     </Button>
