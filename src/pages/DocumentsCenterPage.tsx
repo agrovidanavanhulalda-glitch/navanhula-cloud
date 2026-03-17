@@ -274,25 +274,41 @@ const DocumentsCenterPage: React.FC = () => {
       .eq('document_id', doc.id);
 
     const pdfRecord: FiscalDocumentPdfRecord = {
-      ...doc,
-      items: (docItems || []).map((i: any) => ({
+      id: doc.id,
+      document_type: doc.document_type,
+      document_number: doc.document_number,
+      customer_name: doc.customer_name,
+      customer_nuit: doc.customer_nuit,
+      customer_phone: doc.customer_phone,
+      customer_email: doc.customer_email,
+      customer_address: doc.customer_address,
+      issue_date: doc.issue_date,
+      valid_until: doc.valid_until,
+      subtotal: doc.subtotal,
+      tax_rate: doc.tax_rate,
+      tax_amount: doc.tax_amount,
+      discount_amount: doc.discount_amount,
+      total: doc.total,
+      notes: doc.notes,
+      fiscal_document_items: (docItems || []).map((i: any) => ({
         description: i.description,
         quantity: i.quantity,
         unit_price: i.unit_price,
         tax_rate: i.tax_rate,
         line_total: i.line_total,
       })),
-      company: {
-        name: company?.name || '',
-        nif: (company as any)?.nif || '',
-        address: (company as any)?.address || '',
-        phone: (company as any)?.phone || '',
-        email: (company as any)?.email || '',
-        logo_url: (company as any)?.logo_url || null,
-      },
     };
 
-    downloadFiscalDocumentPdf(pdfRecord);
+    const pdfCompany = company ? {
+      name: company.name,
+      nif: (company as any)?.nif || null,
+      address: (company as any)?.address || null,
+      phone: (company as any)?.phone || null,
+      email: (company as any)?.email || null,
+      logo_url: (company as any)?.logo_url || null,
+    } : null;
+
+    downloadFiscalDocumentPdf({ document: pdfRecord, company: pdfCompany });
   };
 
   return (
