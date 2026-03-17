@@ -331,7 +331,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'إشعار مدين',
     'auth.login': 'تسجيل الدخول', 'auth.signup': 'إنشاء حساب', 'auth.logout': 'خروج',
     'auth.email': 'البريد الإلكتروني', 'auth.password': 'كلمة المرور',
-    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'منصة SaaS سحابية',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'منصة سحابية للأعمال',
   },
   zh: {
     'nav.dashboard': '仪表板', 'nav.pos': '销售点', 'nav.products': '产品', 'nav.inventory': '库存',
