@@ -420,11 +420,10 @@ const LocalDashboardPage: React.FC = () => {
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-white">
-              Dashboard Titan
-              {user?.full_name && !/^[0-9a-f-]{36}$/i.test(user.full_name) ? ` — ${user.full_name.split(' ')[0]}` : ''}
+              {store.name}
             </h1>
             <p className="text-sm mt-1" style={{ color: 'hsl(214 32% 70%)' }}>
-              {store.name} — Inteligência Empresarial GOD MODE
+              Inteligência Empresarial
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -441,15 +440,15 @@ const LocalDashboardPage: React.FC = () => {
 
       {/* Content */}
       <div className="px-4 md:px-8 -mt-6 md:-mt-8 pb-8 space-y-6">
-        {/* AI Insights Banner */}
+        {/* AI Insights Panel */}
         {aiInsights.length > 0 && (
-          <Card className="p-5 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+          <Card className="p-5 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent overflow-visible">
             <h3 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
               <Brain className="w-4 h-4 text-primary" />
               Insights Inteligentes
               <Badge variant="secondary" className="text-[10px] ml-1">AI</Badge>
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {aiInsights.map((insight, i) => (
                 <InsightCard key={i} {...insight} />
               ))}
