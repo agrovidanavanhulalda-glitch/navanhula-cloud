@@ -245,7 +245,7 @@ const translations: Record<Language, Record<string, string>> = {
     'doc.debitNote': 'Lastschrift',
     'auth.login': 'Anmelden', 'auth.signup': 'Registrieren', 'auth.logout': 'Abmelden',
     'auth.email': 'E-Mail', 'auth.password': 'Passwort',
-    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'SaaS-Unternehmensplattform',
+    'app.title': 'NAVANHULA CLOUD', 'app.subtitle': 'Unternehmensplattform',
   },
   it: {
     'nav.dashboard': 'Cruscotto', 'nav.pos': 'POS', 'nav.products': 'Prodotti', 'nav.inventory': 'Magazzino',
