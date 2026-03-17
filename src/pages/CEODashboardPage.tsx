@@ -160,9 +160,9 @@ const CEODashboardPage: React.FC = () => {
             <Crown className="w-7 h-7 text-warning" />
             Painel CEO Supremo
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            NAVANHULA GROUP LDA — Comando Global da Plataforma ERP
-          </p>
+           <p className="text-sm text-muted-foreground mt-1">
+             NAVANHULA GROUP LDA — Comando Global da Plataforma
+           </p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-2">
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
