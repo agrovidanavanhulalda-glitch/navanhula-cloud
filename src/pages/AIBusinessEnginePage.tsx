@@ -90,7 +90,8 @@ const AIBusinessEnginePage: React.FC = () => {
         const sold = productSales[p.id]?.qty || 0;
         const dailyRate = sold / Math.max(daysInMonth, 1);
         const daysLeft = dailyRate > 0 ? Math.floor(p.stock / dailyRate) : 999;
-        return { product: p.name, stock: p.stock, dailyRate: +dailyRate.toFixed(1), daysLeft, lowThreshold: p.lowStockThreshold || 10 };
+        const threshold = 10;
+        return { product: p.name, stock: p.stock, dailyRate: +dailyRate.toFixed(1), daysLeft, lowThreshold: threshold };
       })
       .filter(p => p.stock <= p.lowThreshold || p.daysLeft <= 14)
       .sort((a, b) => a.daysLeft - b.daysLeft)
@@ -127,6 +128,12 @@ const AIBusinessEnginePage: React.FC = () => {
   }, [sales, products]);
 
   const generateInsights = async () => {
+    // Check if there's enough data
+    if (sales.length === 0 && products.length === 0) {
+      toast({ title: 'Sem dados suficientes', description: 'Registre vendas e produtos para gerar insights.', variant: 'default' });
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-business-insights', {
@@ -142,6 +149,9 @@ const AIBusinessEnginePage: React.FC = () => {
       if (error) throw error;
       if (data?.error) {
         toast({ title: 'Aviso', description: data.error, variant: 'destructive' });
+        // Generate basic fallback insights from local data
+        setInsights(generateLocalFallbackInsights());
+        setLastUpdated(new Date());
         return;
       }
 
@@ -150,13 +160,55 @@ const AIBusinessEnginePage: React.FC = () => {
       toast({ title: 'AI Business Engine', description: 'Insights gerados com sucesso!' });
     } catch (e: any) {
       console.error('AI insights error:', e);
-      toast({ title: 'Erro', description: 'Não foi possível gerar insights. Tente novamente.', variant: 'destructive' });
+      // Fallback to local insights
+      const fallback = generateLocalFallbackInsights();
+      if (fallback.dailyTip) {
+        setInsights(fallback);
+        setLastUpdated(new Date());
+        toast({ title: 'Insights Locais', description: 'Insights gerados com dados locais (IA indisponível).' });
+      } else {
+        toast({ title: 'Erro', description: 'Não foi possível gerar insights. Tente novamente.', variant: 'destructive' });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { generateInsights(); }, []);
+  const generateLocalFallbackInsights = (): AIInsights => {
+    const { salesSummary, topProducts, profitData, stockAlerts } = dataSummary;
+    const avgTicket = salesSummary.monthSales > 0 ? salesSummary.monthRevenue / salesSummary.monthSales : 0;
+    const revenueChange = salesSummary.lastMonthRevenue > 0
+      ? ((salesSummary.monthRevenue - salesSummary.lastMonthRevenue) / salesSummary.lastMonthRevenue * 100)
+      : 0;
+
+    return {
+      salesAnalysis: {
+        summary: `Este mês: ${salesSummary.monthSales} vendas, total de ${formatCurrency(salesSummary.monthRevenue)}. Ticket médio: ${formatCurrency(avgTicket)}.`,
+        trend: revenueChange > 5 ? 'up' : revenueChange < -5 ? 'down' : 'stable',
+        changePercent: Math.round(revenueChange),
+      },
+      forecast: null,
+      stockAlerts: stockAlerts.slice(0, 5).map(a => ({
+        product: a.product,
+        severity: a.daysLeft <= 3 ? 'critical' : a.daysLeft <= 7 ? 'warning' : 'info',
+        message: `Estoque: ${a.stock} unidades. Taxa de venda: ${a.dailyRate}/dia.`,
+        suggestedAction: `Repor em ${a.daysLeft} dias para evitar ruptura.`,
+      })),
+      staleProducts: [],
+      restockSuggestions: [],
+      profitInsights: profitData.productProfits.length > 0 ? {
+        topProfitable: profitData.productProfits[0]?.name || 'N/A',
+        leastProfitable: profitData.productProfits[profitData.productProfits.length - 1]?.name || 'N/A',
+        suggestion: `Lucro do mês: ${formatCurrency(profitData.monthProfit)}.`,
+      } : null,
+      promotionSuggestions: [],
+      dailyTip: salesSummary.todaySales > 0
+        ? `Hoje você já realizou ${salesSummary.todaySales} vendas totalizando ${formatCurrency(salesSummary.todayRevenue)}. Continue assim!`
+        : 'Nenhuma venda registrada hoje. Abra o caixa e comece a vender!',
+    };
+  };
+
+  useEffect(() => { if (sales.length > 0 || products.length > 0) generateInsights(); }, []);
 
   const SectionCard: React.FC<{ icon: React.ElementType; title: string; iconColor?: string; children: React.ReactNode }> = ({ icon: Icon, title, iconColor = 'text-primary', children }) => (
     <Card>
