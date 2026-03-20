@@ -564,8 +564,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         changeGiven: paymentDetails.change,
         createdAt: new Date(),
         storeId: prev.currentStore.id,
-        sellerId: prev.currentCashRegister?.sellerId,
-        sellerName: prev.currentCashRegister?.sellerName,
+        sellerId: prev.currentCashRegister?.sellerId || user?.id,
+        sellerName: prev.currentCashRegister?.sellerName || user?.full_name || 'Vendedor',
       };
 
       // Update local stock optimistically
