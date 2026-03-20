@@ -192,6 +192,7 @@ const AppRoutes = () => {
         <Route path="documentos" element={<SubscriptionGate><DocumentsCenterPage /></SubscriptionGate>} />
         <Route path="agricultura" element={<SubscriptionGate><AgriculturePage /></SubscriptionGate>} />
         <Route path="avicultura" element={<SubscriptionGate><PoultryPage /></SubscriptionGate>} />
+        <Route path="ecommerce" element={<SubscriptionGate><ECommercePage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
         <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />
