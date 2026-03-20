@@ -34,6 +34,7 @@ import BIDashboardPage from "./pages/BIDashboardPage";
 import AIBusinessEnginePage from "./pages/AIBusinessEnginePage";
 import DocumentsCenterPage from "./pages/DocumentsCenterPage";
 import AgriculturePage from "./pages/AgriculturePage";
+import ECommercePage from "./pages/ECommercePage";
 import PoultryPage from "./pages/PoultryPage";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
