@@ -7,7 +7,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Settings, Store, LogOut,
   WalletCards, History, BarChart3, TrendingUp, Boxes, Shield, User,
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
-  UserCheck, Truck, PieChart, Sprout, Egg, Brain,
+  UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
@@ -39,6 +39,7 @@ const navSections: NavSection[] = [
       { label: 'PDV', href: '/app/pdv', icon: <ShoppingCart className="w-5 h-5" /> },
       { label: 'Caixa', href: '/app/caixa', icon: <WalletCards className="w-5 h-5" /> },
       { label: 'Histórico', href: '/app/vendas', icon: <History className="w-5 h-5" /> },
+      { label: 'Loja Online', href: '/app/ecommerce', icon: <ShoppingBag className="w-5 h-5" /> },
     ],
   },
   {
