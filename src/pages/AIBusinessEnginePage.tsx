@@ -208,7 +208,7 @@ const AIBusinessEnginePage: React.FC = () => {
     };
   };
 
-  useEffect(() => { generateInsights(); }, []);
+  useEffect(() => { if (sales.length > 0 || products.length > 0) generateInsights(); }, []);
 
   const SectionCard: React.FC<{ icon: React.ElementType; title: string; iconColor?: string; children: React.ReactNode }> = ({ icon: Icon, title, iconColor = 'text-primary', children }) => (
     <Card>
