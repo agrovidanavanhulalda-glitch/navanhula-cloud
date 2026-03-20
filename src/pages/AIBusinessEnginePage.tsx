@@ -90,7 +90,8 @@ const AIBusinessEnginePage: React.FC = () => {
         const sold = productSales[p.id]?.qty || 0;
         const dailyRate = sold / Math.max(daysInMonth, 1);
         const daysLeft = dailyRate > 0 ? Math.floor(p.stock / dailyRate) : 999;
-        return { product: p.name, stock: p.stock, dailyRate: +dailyRate.toFixed(1), daysLeft, lowThreshold: p.lowStockThreshold || 10 };
+        const threshold = 10;
+        return { product: p.name, stock: p.stock, dailyRate: +dailyRate.toFixed(1), daysLeft, lowThreshold: threshold };
       })
       .filter(p => p.stock <= p.lowThreshold || p.daysLeft <= 14)
       .sort((a, b) => a.daysLeft - b.daysLeft)
