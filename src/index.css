@@ -333,7 +333,7 @@
   }
 
   .glow-success {
-    box-shadow: 0 0 20px -5px hsl(160 84% 39% / 0.3);
+    box-shadow: var(--shadow-glow-success);
   }
 
   /* Safe area for mobile */
@@ -356,5 +356,46 @@
 
   .elevation-3 {
     box-shadow: var(--shadow-lg);
+  }
+
+  /* Premium hover lift */
+  .hover-lift {
+    transition: transform var(--duration-normal) var(--ease-out),
+                box-shadow var(--duration-normal) var(--ease-out);
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Smooth press effect */
+  .press-scale {
+    transition: transform var(--duration-fast) var(--ease-spring);
+  }
+  .press-scale:active {
+    transform: scale(0.97);
+  }
+
+  /* Stagger animation for lists */
+  .stagger-item {
+    animation: stagger-fade-in var(--duration-slow) var(--ease-out) both;
+  }
+  @keyframes stagger-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Subtle pulse for live indicators */
+  .pulse-live {
+    animation: pulse-live 2s ease-in-out infinite;
+  }
+  @keyframes pulse-live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Number counter animation */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }
