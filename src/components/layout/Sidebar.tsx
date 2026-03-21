@@ -56,6 +56,7 @@ const navSections: NavSection[] = [
       { label: 'Clientes', href: '/app/crm', icon: <UserCheck className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
       { label: 'Vendedores', href: '/app/vendedores', icon: <Users className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
       { label: 'Fornecedores', href: '/app/fornecedores', icon: <Truck className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+      { label: 'RH', href: '/app/rh', icon: <User className="w-5 h-5" />, roles: ['admin', 'ceo'] },
     ],
   },
   {
