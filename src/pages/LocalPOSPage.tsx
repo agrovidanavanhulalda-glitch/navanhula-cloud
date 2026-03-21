@@ -22,6 +22,7 @@ import ThermalReceipt from '@/components/reports/ThermalReceipt';
 import PaymentModal from '@/components/pos/PaymentModal';
 import BarcodeScanner from '@/components/pos/BarcodeScanner';
 import BluetoothPrintButton from '@/components/pos/BluetoothPrintButton';
+import PostSaleModal from '@/components/pos/PostSaleModal';
 
 // HYBRID: Local POS data + SaaS Auth
 
@@ -52,6 +53,7 @@ const LocalPOSPage: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showPostSaleModal, setShowPostSaleModal] = useState(false);
 
   // Handle barcode scan result
   const handleBarcodeScan = useCallback((code: string) => {
@@ -107,13 +109,23 @@ const LocalPOSPage: React.FC = () => {
         : '';
       toast.success(`Venda concluída!${changeMsg}`);
       setShowPaymentModal(false);
-      // Auto-show receipt after sale completion
-      setShowReceipt(true);
-      // Auto-print via browser print dialog
-      setTimeout(() => {
-        window.print();
-      }, 500);
+
+      // Check user preference for skip modal
+      const skipModal = localStorage.getItem('navanhula_skip_post_sale_modal') === 'true';
+      if (skipModal) {
+        setShowReceipt(true);
+        setTimeout(() => window.print(), 500);
+      } else {
+        setShowPostSaleModal(true);
+      }
     }
+  };
+
+  // Handle receipt print from post-sale modal
+  const handlePostSalePrintReceipt = () => {
+    setShowPostSaleModal(false);
+    setShowReceipt(true);
+    setTimeout(() => window.print(), 400);
   };
 
   const lastSale = getLastSale();
@@ -411,6 +423,22 @@ const LocalPOSPage: React.FC = () => {
         onClose={() => setShowBarcodeScanner(false)}
         onScan={handleBarcodeScan}
       />
+
+      {/* Post-Sale Professional Modal */}
+      {lastSale && (
+        <PostSaleModal
+          isOpen={showPostSaleModal}
+          onClose={() => setShowPostSaleModal(false)}
+          sale={lastSale}
+          storeName={store.name}
+          storeAddress={store.address}
+          storePhone={store.phone}
+          storeNuit={company?.nif || ''}
+          fiscalRegime={(company as any)?.fiscal_regime || ''}
+          companyName={company?.name || ''}
+          onPrintReceipt={handlePostSalePrintReceipt}
+        />
+      )}
     </div>
   );
 };
