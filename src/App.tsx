@@ -188,6 +188,7 @@ const AppRoutes = () => {
         <Route path="contabilidade" element={<AccountingPage />} />
         <Route path="crm" element={<SubscriptionGate><CRMPage /></SubscriptionGate>} />
         <Route path="fornecedores" element={<SubscriptionGate><SuppliersPage /></SubscriptionGate>} />
+        <Route path="rh" element={<SubscriptionGate><HRDashboardPage /></SubscriptionGate>} />
         <Route path="bi" element={<BIDashboardPage />} />
         <Route path="ai" element={<SubscriptionGate><AIBusinessEnginePage /></SubscriptionGate>} />
         <Route path="documentos" element={<SubscriptionGate><DocumentsCenterPage /></SubscriptionGate>} />
