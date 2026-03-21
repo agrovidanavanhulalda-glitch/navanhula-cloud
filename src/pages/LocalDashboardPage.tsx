@@ -76,25 +76,28 @@ const QuickAction: React.FC<{
   title: string;
   description: string;
   onClick: () => void;
-}> = ({ icon: Icon, title, description, onClick }) => (
-  <Card 
-    className="p-4 cursor-pointer hover:translate-y-[-1px] transition-all duration-200 group border-transparent"
-    style={{ boxShadow: 'var(--shadow-card)' }}
-    onClick={onClick}
-  >
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-all duration-200">
-          <Icon className="w-5 h-5 text-primary" />
+  index?: number;
+}> = ({ icon: Icon, title, description, onClick, index = 0 }) => (
+  <motion.div custom={index} variants={fadeInUp} initial="hidden" animate="visible">
+    <Card 
+      className="p-4 cursor-pointer hover-lift press-scale group border-transparent"
+      style={{ boxShadow: 'var(--shadow-card)' }}
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-all duration-200">
+            <Icon className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground text-sm">{title}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-semibold text-foreground text-sm">{title}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-        </div>
+        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" />
       </div>
-      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" />
-    </div>
-  </Card>
+    </Card>
+  </motion.div>
 );
 
 // AI Insight Card
