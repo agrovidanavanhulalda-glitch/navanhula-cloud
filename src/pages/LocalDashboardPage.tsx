@@ -485,22 +485,22 @@ const LocalDashboardPage: React.FC = () => {
 
         {/* KPI Grid - 8 KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard icon={ShoppingCart} label="Vendas Hoje" value={todaySales.length} color="bg-primary/10 text-primary"
+          <KPICard index={0} icon={ShoppingCart} label="Vendas Hoje" value={todaySales.length} color="bg-primary/10 text-primary"
             trend={`${weekSales.length} esta semana`} />
-          <KPICard icon={DollarSign} label="Receita Hoje" value={formatCurrency(totalRevenue)} color="bg-success/10 text-success"
+          <KPICard index={1} icon={DollarSign} label="Receita Hoje" value={formatCurrency(totalRevenue)} color="bg-success/10 text-success"
             sub={`Semana: ${formatCurrency(weekRevenue)}`} />
-          <KPICard icon={TrendingUp} label="Lucro Hoje" value={formatCurrency(todayProfit)} color="bg-profit/10 text-profit"
+          <KPICard index={2} icon={TrendingUp} label="Lucro Hoje" value={formatCurrency(todayProfit)} color="bg-profit/10 text-profit"
             trend={todayProfit > 0 ? 'Positivo' : 'Sem lucro'} trendUp={todayProfit > 0 ? true : null} />
-          <KPICard icon={Target} label="Ticket Médio" value={formatCurrency(avgTicket)} color="bg-primary/10 text-primary" />
-          <KPICard icon={Calendar} label="Receita Mensal" value={formatCurrency(monthRevenue)} color="bg-success/10 text-success"
+          <KPICard index={3} icon={Target} label="Ticket Médio" value={formatCurrency(avgTicket)} color="bg-primary/10 text-primary" />
+          <KPICard index={4} icon={Calendar} label="Receita Mensal" value={formatCurrency(monthRevenue)} color="bg-success/10 text-success"
             sub={`Lucro: ${formatCurrency(monthProfit)}`} />
-          <KPICard icon={BarChart3} label="Crescimento" 
+          <KPICard index={5} icon={BarChart3} label="Crescimento" 
             value={`${growthPercent >= 0 ? '+' : ''}${growthPercent.toFixed(1)}%`} 
             color={growthPercent >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}
             trend="vs semana anterior" trendUp={growthPercent >= 0} />
-          <KPICard icon={Package} label="Produtos Ativos" value={products.filter(p => p.isActive).length} color="bg-primary/10 text-primary"
+          <KPICard index={6} icon={Package} label="Produtos Ativos" value={products.filter(p => p.isActive).length} color="bg-primary/10 text-primary"
             sub={`${lowStockProducts.length} com estoque baixo`} />
-          <KPICard icon={AlertTriangle} label="Alertas Críticos" 
+          <KPICard index={7} icon={AlertTriangle} label="Alertas Críticos" 
             value={criticalStockProducts.length + (cashRegisterOpen ? 0 : 1)} 
             color={criticalStockProducts.length > 0 ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'}
             trend={criticalStockProducts.length > 0 ? `${criticalStockProducts.length} produtos críticos` : 'Tudo em ordem'} 
