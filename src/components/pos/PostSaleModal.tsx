@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,11 +7,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { 
   Printer, FileText, Mail, Download, StickyNote, 
-  CheckCircle2, X, Loader2 
+  CheckCircle2, X, Loader2, MessageCircle, DoorOpen
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { LocalSale } from '@/contexts/LocalPOSContext';
 import { downloadPdfA4 } from '@/lib/generatePdfA4';
+import { bluetoothPrinter } from '@/services/BluetoothPrinterService';
 import { toast } from 'sonner';
 
 interface PostSaleModalProps {
@@ -27,6 +28,14 @@ interface PostSaleModalProps {
   onPrintReceipt: () => void;
 }
 
+/** Read POS automation preferences from localStorage */
+const getAutomationPrefs = () => {
+  try {
+    const raw = localStorage.getItem('navanhula_pos_automation');
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+};
+
 const PostSaleModal: React.FC<PostSaleModalProps> = ({
   isOpen,
   onClose,
@@ -41,14 +50,33 @@ const PostSaleModal: React.FC<PostSaleModalProps> = ({
 }) => {
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [email, setEmail] = useState('');
+  const [showWhatsAppInput, setShowWhatsAppInput] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [completedActions, setCompletedActions] = useState<string[]>([]);
+  const [drawerOpened, setDrawerOpened] = useState(false);
+
+  // Auto-open cash drawer for cash payments
+  useEffect(() => {
+    if (!isOpen || drawerOpened) return;
+    const prefs = getAutomationPrefs();
+    const isCash = (sale.paymentMethod || 'cash') === 'cash';
+    if (isCash && prefs.autoDrawer && bluetoothPrinter.isConnected()) {
+      bluetoothPrinter.openCashDrawer()
+        .then(() => {
+          toast.success('Gaveta aberta automaticamente');
+          setDrawerOpened(true);
+          markAction('drawer');
+        })
+        .catch(() => { /* silent */ });
+    }
+  }, [isOpen]);
 
   const markAction = (action: string) => {
-    setCompletedActions(prev => [...prev, action]);
+    setCompletedActions(prev => prev.includes(action) ? prev : [...prev, action]);
   };
 
   const handlePrintReceipt = () => {
@@ -58,18 +86,9 @@ const PostSaleModal: React.FC<PostSaleModalProps> = ({
   };
 
   const handlePrintInvoice = () => {
-    downloadPdfA4({
-      sale,
-      storeName,
-      storeAddress,
-      storePhone,
-      storeNuit,
-      fiscalRegime,
-      companyName,
-    });
+    downloadPdfA4({ sale, storeName, storeAddress, storePhone, storeNuit, fiscalRegime, companyName });
     markAction('invoice');
     toast.success('Fatura gerada com sucesso');
-    // Trigger print dialog for the downloaded PDF
     setTimeout(() => window.print(), 500);
   };
 
@@ -80,18 +99,9 @@ const PostSaleModal: React.FC<PostSaleModalProps> = ({
     }
     setSendingEmail(true);
     try {
-      // For now, generate and download PDF - email integration can be added later
-      downloadPdfA4({
-        sale,
-        storeName,
-        storeAddress,
-        storePhone,
-        storeNuit,
-        fiscalRegime,
-        companyName,
-      });
+      downloadPdfA4({ sale, storeName, storeAddress, storePhone, storeNuit, fiscalRegime, companyName });
       markAction('email');
-      toast.success(`Documento gerado. Envio por email será implementado em breve.`);
+      toast.success('Documento gerado. Envio por email será implementado em breve.');
       setShowEmailInput(false);
     } catch {
       toast.error('Erro ao processar documento');
@@ -101,17 +111,45 @@ const PostSaleModal: React.FC<PostSaleModalProps> = ({
   };
 
   const handleDownloadPdf = () => {
-    downloadPdfA4({
-      sale,
-      storeName,
-      storeAddress,
-      storePhone,
-      storeNuit,
-      fiscalRegime,
-      companyName,
-    });
+    downloadPdfA4({ sale, storeName, storeAddress, storePhone, storeNuit, fiscalRegime, companyName });
     markAction('pdf');
     toast.success('PDF baixado com sucesso');
+  };
+
+  const handleSendWhatsApp = () => {
+    let num = whatsappNumber.replace(/\D/g, '');
+    if (num.length < 9) {
+      toast.error('Número inválido');
+      return;
+    }
+    // Prepend Mozambique code if not present
+    if (!num.startsWith('258') && num.length <= 9) {
+      num = '258' + num;
+    }
+    const msg = encodeURIComponent(
+      `Olá, aqui está o seu recibo da ${storeName}.\n` +
+      `Total: ${formatCurrency(sale.total)}\n` +
+      `Data: ${new Date(sale.createdAt).toLocaleDateString('pt-MZ')}\n` +
+      `Obrigado pela preferência!`
+    );
+    window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+    markAction('whatsapp');
+    setShowWhatsAppInput(false);
+    toast.success('WhatsApp aberto');
+  };
+
+  const handleOpenDrawer = async () => {
+    if (!bluetoothPrinter.isConnected()) {
+      toast.error('Impressora Bluetooth não conectada');
+      return;
+    }
+    try {
+      await bluetoothPrinter.openCashDrawer();
+      markAction('drawer');
+      toast.success('Gaveta aberta');
+    } catch {
+      toast.error('Erro ao abrir gaveta');
+    }
   };
 
   const handleSaveNotes = () => {
@@ -126,6 +164,7 @@ const PostSaleModal: React.FC<PostSaleModalProps> = ({
     if (dontShowAgain) {
       localStorage.setItem('navanhula_skip_post_sale_modal', 'true');
     }
+    setDrawerOpened(false);
     onClose();
   };
 
@@ -136,6 +175,8 @@ const PostSaleModal: React.FC<PostSaleModalProps> = ({
     };
     return labels[method || 'cash'] || 'Outro';
   };
+
+  const isCashPayment = (sale.paymentMethod || 'cash') === 'cash';
 
   const actionButtons = [
     {
@@ -153,6 +194,13 @@ const PostSaleModal: React.FC<PostSaleModalProps> = ({
       onClick: handlePrintInvoice,
     },
     {
+      id: 'whatsapp',
+      icon: MessageCircle,
+      label: 'Enviar via WhatsApp',
+      description: 'Enviar recibo ao cliente',
+      onClick: () => setShowWhatsAppInput(true),
+    },
+    {
       id: 'email',
       icon: Mail,
       label: 'Enviar por Email',
@@ -166,6 +214,13 @@ const PostSaleModal: React.FC<PostSaleModalProps> = ({
       description: 'Download direto do documento',
       onClick: handleDownloadPdf,
     },
+    ...(isCashPayment ? [{
+      id: 'drawer',
+      icon: DoorOpen,
+      label: 'Abrir Gaveta',
+      description: 'Comando ESC/POS para gaveta',
+      onClick: handleOpenDrawer,
+    }] : []),
   ];
 
   return (
@@ -253,6 +308,26 @@ const PostSaleModal: React.FC<PostSaleModalProps> = ({
               );
             })}
           </div>
+
+          {/* WhatsApp input */}
+          {showWhatsAppInput && (
+            <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
+              <Input
+                type="tel"
+                placeholder="84 123 4567"
+                value={whatsappNumber}
+                onChange={(e) => setWhatsappNumber(e.target.value)}
+                className="flex-1"
+                autoFocus
+              />
+              <Button onClick={handleSendWhatsApp} size="sm" className="h-10">
+                Enviar
+              </Button>
+              <Button variant="ghost" size="sm" className="h-10" onClick={() => setShowWhatsAppInput(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
 
           {/* Email input */}
           {showEmailInput && (
