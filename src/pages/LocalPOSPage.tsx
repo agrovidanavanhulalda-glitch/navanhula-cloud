@@ -423,6 +423,22 @@ const LocalPOSPage: React.FC = () => {
         onClose={() => setShowBarcodeScanner(false)}
         onScan={handleBarcodeScan}
       />
+
+      {/* Post-Sale Professional Modal */}
+      {lastSale && (
+        <PostSaleModal
+          isOpen={showPostSaleModal}
+          onClose={() => setShowPostSaleModal(false)}
+          sale={lastSale}
+          storeName={store.name}
+          storeAddress={store.address}
+          storePhone={store.phone}
+          storeNuit={company?.nif || ''}
+          fiscalRegime={(company as any)?.fiscal_regime || ''}
+          companyName={company?.name || ''}
+          onPrintReceipt={handlePostSalePrintReceipt}
+        />
+      )}
     </div>
   );
 };
