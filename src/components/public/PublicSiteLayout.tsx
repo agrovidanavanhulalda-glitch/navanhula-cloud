@@ -3,8 +3,6 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 const navItems = [
   { label: 'Home', hash: '#top' },
