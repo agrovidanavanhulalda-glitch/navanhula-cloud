@@ -25,6 +25,8 @@ const COMMANDS = {
   PARTIAL_CUT: new Uint8Array([GS, 0x56, 0x01]),
   FEED_LINES: (n: number) => new Uint8Array([ESC, 0x64, n]),
   LINE: new Uint8Array([LF]),
+  // Cash drawer kick: ESC p 0 25 250
+  OPEN_DRAWER: new Uint8Array([ESC, 0x70, 0x00, 0x19, 0xFA]),
 };
 
 export interface PrinterDevice {
@@ -330,6 +332,13 @@ class BluetoothPrinterService {
 
     const receipt = this.concat(...parts);
     await this.sendData(receipt);
+  }
+
+  /**
+   * Open cash drawer via ESC/POS pulse command
+   */
+  async openCashDrawer(): Promise<void> {
+    await this.sendData(COMMANDS.OPEN_DRAWER);
   }
 }
 

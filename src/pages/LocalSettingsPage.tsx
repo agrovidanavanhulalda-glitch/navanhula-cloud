@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   Settings, Building2, Receipt, Shield, Plug, Save, Loader2,
-  AlertTriangle, CheckCircle, RefreshCw, Lock, Globe, Package, Image, FileText
+  AlertTriangle, CheckCircle, RefreshCw, Lock, Globe, Package, Image, FileText, Printer
 } from 'lucide-react';
 import { toast } from 'sonner';
 import LogoUpload from '@/components/settings/LogoUpload';
@@ -49,6 +49,24 @@ const LocalSettingsPage: React.FC = () => {
     qrcode_enabled: true,
     community_enabled: true,
   });
+
+  // POS Automation prefs (localStorage)
+  const [automationForm, setAutomationForm] = useState(() => {
+    try {
+      const raw = localStorage.getItem('navanhula_pos_automation');
+      return raw ? JSON.parse(raw) : {
+        autoPrint: false,
+        autoDrawer: false,
+        autoWhatsApp: false,
+        autoEmail: false,
+      };
+    } catch { return { autoPrint: false, autoDrawer: false, autoWhatsApp: false, autoEmail: false }; }
+  });
+
+  const handleSaveAutomation = () => {
+    localStorage.setItem('navanhula_pos_automation', JSON.stringify(automationForm));
+    toast.success('Preferências de automação salvas');
+  };
 
   const isAdmin = role === 'admin' || role === 'manager' || (role as string) === 'ceo';
 
@@ -161,10 +179,11 @@ const LocalSettingsPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="empresa" className="space-y-6">
-        <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full">
           <TabsTrigger value="empresa" className="gap-1"><Building2 className="w-4 h-4" /> Empresa</TabsTrigger>
           <TabsTrigger value="fiscal" className="gap-1"><Receipt className="w-4 h-4" /> Fiscal</TabsTrigger>
           <TabsTrigger value="documentos" className="gap-1"><FileText className="w-4 h-4" /> Documentos</TabsTrigger>
+          <TabsTrigger value="automacao" className="gap-1"><Printer className="w-4 h-4" /> Automação</TabsTrigger>
           <TabsTrigger value="sistema" className="gap-1"><Globe className="w-4 h-4" /> Sistema</TabsTrigger>
           <TabsTrigger value="seguranca" className="gap-1"><Shield className="w-4 h-4" /> Segurança</TabsTrigger>
           <TabsTrigger value="integracoes" className="gap-1"><Plug className="w-4 h-4" /> Integrações</TabsTrigger>
@@ -272,6 +291,44 @@ const LocalSettingsPage: React.FC = () => {
         {/* DOCUMENTOS */}
         <TabsContent value="documentos">
           <FiscalDocumentsManager />
+        </TabsContent>
+
+        {/* AUTOMAÇÃO POS */}
+        <TabsContent value="automacao">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Printer className="w-5 h-5" /> Automação POS</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <p className="text-sm text-muted-foreground">
+                Configure ações automáticas após cada venda finalizada.
+              </p>
+              <div className="space-y-4">
+                {[
+                  { key: 'autoPrint', label: 'Imprimir recibo automaticamente', desc: 'Envia o recibo para impressora térmica após cada venda' },
+                  { key: 'autoDrawer', label: 'Abrir gaveta automaticamente', desc: 'Abre a gaveta de dinheiro (ESC/POS) quando pagamento = Dinheiro' },
+                  { key: 'autoWhatsApp', label: 'Enviar recibo via WhatsApp', desc: 'Solicitar número do cliente e enviar recibo após venda' },
+                  { key: 'autoEmail', label: 'Enviar recibo por email', desc: 'Solicitar email do cliente e enviar PDF automaticamente' },
+                ].map(item => (
+                  <div key={item.key} className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </div>
+                    <Switch
+                      checked={automationForm[item.key as keyof typeof automationForm]}
+                      onCheckedChange={v => setAutomationForm((p: typeof automationForm) => ({ ...p, [item.key]: v }))}
+                    />
+                  </div>
+                ))}
+              </div>
+              <Separator />
+              <Button onClick={handleSaveAutomation}>
+                <Save className="w-4 h-4 mr-2" />
+                Salvar Automação
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* SISTEMA */}
