@@ -2946,6 +2946,10 @@ export type Database = {
         }
         Returns: Json
       }
+      decrement_product_stock: {
+        Args: { p_product_id: string; p_quantity: number; p_store_id: string }
+        Returns: undefined
+      }
       generate_reseller_code: { Args: never; Returns: string }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
       get_platform_stats: { Args: never; Returns: Json }
