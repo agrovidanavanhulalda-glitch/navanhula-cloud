@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   Settings, Building2, Receipt, Shield, Plug, Save, Loader2,
-  AlertTriangle, CheckCircle, RefreshCw, Lock, Globe, Package, Image, FileText
+  AlertTriangle, CheckCircle, RefreshCw, Lock, Globe, Package, Image, FileText, Printer
 } from 'lucide-react';
 import { toast } from 'sonner';
 import LogoUpload from '@/components/settings/LogoUpload';
