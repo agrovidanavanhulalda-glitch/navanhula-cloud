@@ -23,6 +23,7 @@ import PaymentModal from '@/components/pos/PaymentModal';
 import BarcodeScanner from '@/components/pos/BarcodeScanner';
 import BluetoothPrintButton from '@/components/pos/BluetoothPrintButton';
 import PostSaleModal from '@/components/pos/PostSaleModal';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // HYBRID: Local POS data + SaaS Auth
 
@@ -215,33 +216,39 @@ const LocalPOSPage: React.FC = () => {
 
         {/* Products Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {filteredProducts.map((product) => (
-            <Card
+          {filteredProducts.map((product, i) => (
+            <motion.div
               key={product.id}
-              className={`p-4 cursor-pointer hover:bg-accent/50 transition-colors ${
-                product.stock <= 0 ? 'opacity-50' : ''
-              }`}
-              onClick={() => product.stock > 0 && handleAddToCart(product)}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: Math.min(i * 0.02, 0.3), duration: 0.25 }}
             >
-              <div className="text-center">
-                {product.imageUrl ? (
-                  <div className="w-14 h-14 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
-                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
-                    <ShoppingCart className="w-6 h-6 text-primary" />
-                  </div>
-                )}
-                <h3 className="font-medium text-sm truncate">{product.name}</h3>
-                <p className="text-lg font-bold text-primary mt-1">
-                  {formatCurrency(product.salePrice)}
-                </p>
-                <p className={`text-xs ${product.stock <= 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                  Estoque: {product.stock}
-                </p>
-              </div>
-            </Card>
+              <Card
+                className={`p-4 cursor-pointer hover-lift press-scale transition-colors ${
+                  product.stock <= 0 ? 'opacity-50' : ''
+                }`}
+                onClick={() => product.stock > 0 && handleAddToCart(product)}
+              >
+                <div className="text-center">
+                  {product.imageUrl ? (
+                    <div className="w-14 h-14 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
+                      <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
+                      <ShoppingCart className="w-6 h-6 text-primary" />
+                    </div>
+                  )}
+                  <h3 className="font-medium text-sm truncate">{product.name}</h3>
+                  <p className="text-lg font-bold text-primary mt-1 tabular-nums">
+                    {formatCurrency(product.salePrice)}
+                  </p>
+                  <p className={`text-xs ${product.stock <= 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    Estoque: {product.stock}
+                  </p>
+                </div>
+              </Card>
+            </motion.div>
           ))}
         </div>
 
@@ -275,49 +282,58 @@ const LocalPOSPage: React.FC = () => {
               <p className="text-sm">Clique nos produtos para adicionar</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <AnimatePresence mode="popLayout">
               {cart.map((item) => (
-                <Card key={item.product.id} className="p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm truncate flex-1">
-                      {item.product.name}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive h-6 w-6 p-0"
-                      onClick={() => removeFromCart(item.product.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                <motion.div
+                  key={item.product.id}
+                  layout
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-sm truncate flex-1">
+                        {item.product.name}
+                      </span>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        className="text-destructive h-6 w-6 p-0"
+                        onClick={() => removeFromCart(item.product.id)}
                       >
-                        <Minus className="w-3 h-3" />
-                      </Button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                      >
-                        <Plus className="w-3 h-3" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                    <span className="font-bold text-primary">
-                      {formatCurrency(item.total)}
-                    </span>
-                  </div>
-                </Card>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 press-scale"
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-8 text-center font-medium tabular-nums">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 press-scale"
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <span className="font-bold text-primary tabular-nums">
+                        {formatCurrency(item.total)}
+                      </span>
+                    </div>
+                  </Card>
+                </motion.div>
               ))}
-            </div>
+            </AnimatePresence>
           )}
         </div>
 
@@ -337,7 +353,14 @@ const LocalPOSPage: React.FC = () => {
             )}
             <div className="flex justify-between text-xl font-bold pt-2 border-t">
               <span>Total</span>
-              <span className="text-primary">{formatCurrency(getTotal())}</span>
+              <motion.span 
+                key={getTotal()} 
+                initial={{ scale: 1.1 }} 
+                animate={{ scale: 1 }} 
+                className="text-primary tabular-nums"
+              >
+                {formatCurrency(getTotal())}
+              </motion.span>
             </div>
           </div>
 
@@ -363,9 +386,10 @@ const LocalPOSPage: React.FC = () => {
             </div>
           )}
           <Button 
-            className="w-full h-14 text-lg"
+            className="w-full h-14 text-lg press-scale font-semibold"
             disabled={cart.length === 0 || !cashRegisterOpen}
             onClick={() => setShowPaymentModal(true)}
+            style={cart.length > 0 && cashRegisterOpen ? { boxShadow: 'var(--shadow-glow)' } : undefined}
           >
             <CreditCard className="w-5 h-5 mr-2" />
             Finalizar Venda

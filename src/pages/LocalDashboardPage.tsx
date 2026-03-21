@@ -20,6 +20,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
   LineChart, Line, AreaChart, Area
 } from 'recharts';
+import { motion } from 'framer-motion';
 
 const CHART_COLORS = [
   'hsl(217, 91%, 53%)',
@@ -30,6 +31,14 @@ const CHART_COLORS = [
   'hsl(0, 84%, 60%)',
 ];
 
+const fadeInUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] }
+  }),
+};
+
 const KPICard: React.FC<{
   icon: React.ElementType;
   label: string;
@@ -38,25 +47,28 @@ const KPICard: React.FC<{
   trendUp?: boolean | null;
   color: string;
   sub?: string;
-}> = ({ icon: Icon, label, value, trend, trendUp, color, sub }) => (
-  <Card className="p-5 hover:translate-y-[-2px] transition-all duration-200 group border-transparent"
-    style={{ boxShadow: 'var(--shadow-card)' }}>
-    <div className="flex items-center justify-between mb-3">
-      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${color}`}>
-        <Icon className="w-4.5 h-4.5" />
+  index?: number;
+}> = ({ icon: Icon, label, value, trend, trendUp, color, sub, index = 0 }) => (
+  <motion.div custom={index} variants={fadeInUp} initial="hidden" animate="visible">
+    <Card className="p-5 hover-lift group border-transparent"
+      style={{ boxShadow: 'var(--shadow-card)' }}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${color}`}>
+          <Icon className="w-4.5 h-4.5" />
+        </div>
       </div>
-    </div>
-    <p className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">{value}</p>
-    {trend && (
-      <p className={`text-xs mt-1.5 flex items-center gap-1 font-medium ${trendUp === true ? 'text-success' : trendUp === false ? 'text-destructive' : 'text-muted-foreground'}`}>
-        {trendUp === true && <ArrowUpRight className="w-3 h-3" />}
-        {trendUp === false && <ArrowDownRight className="w-3 h-3" />}
-        {trend}
-      </p>
-    )}
-    {sub && <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>}
-  </Card>
+      <p className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground tabular-nums">{value}</p>
+      {trend && (
+        <p className={`text-xs mt-1.5 flex items-center gap-1 font-medium ${trendUp === true ? 'text-success' : trendUp === false ? 'text-destructive' : 'text-muted-foreground'}`}>
+          {trendUp === true && <ArrowUpRight className="w-3 h-3" />}
+          {trendUp === false && <ArrowDownRight className="w-3 h-3" />}
+          {trend}
+        </p>
+      )}
+      {sub && <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>}
+    </Card>
+  </motion.div>
 );
 
 const QuickAction: React.FC<{
@@ -64,25 +76,28 @@ const QuickAction: React.FC<{
   title: string;
   description: string;
   onClick: () => void;
-}> = ({ icon: Icon, title, description, onClick }) => (
-  <Card 
-    className="p-4 cursor-pointer hover:translate-y-[-1px] transition-all duration-200 group border-transparent"
-    style={{ boxShadow: 'var(--shadow-card)' }}
-    onClick={onClick}
-  >
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-all duration-200">
-          <Icon className="w-5 h-5 text-primary" />
+  index?: number;
+}> = ({ icon: Icon, title, description, onClick, index = 0 }) => (
+  <motion.div custom={index} variants={fadeInUp} initial="hidden" animate="visible">
+    <Card 
+      className="p-4 cursor-pointer hover-lift press-scale group border-transparent"
+      style={{ boxShadow: 'var(--shadow-card)' }}
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-all duration-200">
+            <Icon className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground text-sm">{title}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-semibold text-foreground text-sm">{title}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-        </div>
+        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" />
       </div>
-      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" />
-    </div>
-  </Card>
+    </Card>
+  </motion.div>
 );
 
 // AI Insight Card
@@ -105,13 +120,18 @@ const InsightCard: React.FC<{
     danger: 'text-destructive',
   };
   return (
-    <div className={`flex items-start gap-3 p-3.5 rounded-xl border ${styles[type]}`}>
+    <motion.div 
+      className={`flex items-start gap-3 p-3.5 rounded-xl border ${styles[type]}`}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+    >
       <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconColors[type]}`} />
       <div className="min-w-0">
         <p className="font-semibold text-foreground text-sm">{title}</p>
         <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -414,9 +434,14 @@ const LocalDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
       {/* Hero Section */}
-      <div className="dashboard-hero px-4 md:px-8 pt-6 pb-10 md:pt-8 md:pb-14">
+      <motion.div 
+        className="dashboard-hero px-4 md:px-8 pt-6 pb-10 md:pt-8 md:pb-14"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-white">
@@ -428,52 +453,54 @@ const LocalDashboardPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             <Badge variant={cashRegisterOpen ? 'default' : 'destructive'} className="text-xs py-1.5 px-4 font-medium rounded-full">
-              <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${cashRegisterOpen ? 'bg-success animate-pulse' : 'bg-destructive/60'}`} />
+              <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${cashRegisterOpen ? 'bg-success pulse-live' : 'bg-destructive/60'}`} />
               Caixa {cashRegisterOpen ? 'Aberto' : 'Fechado'}
             </Badge>
-            <Button size="default" onClick={handleNewSale} className="gap-2 rounded-lg font-semibold" style={{ boxShadow: 'var(--shadow-glow)' }}>
+            <Button size="default" onClick={handleNewSale} className="gap-2 rounded-lg font-semibold press-scale" style={{ boxShadow: 'var(--shadow-glow)' }}>
               <Plus className="w-4 h-4" /> Nova Venda
             </Button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Content */}
       <div className="px-4 md:px-8 -mt-6 md:-mt-8 pb-8 space-y-6">
         {/* AI Insights Panel */}
         {aiInsights.length > 0 && (
-          <Card className="p-5 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent overflow-visible">
-            <h3 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
-              <Brain className="w-4 h-4 text-primary" />
-              Insights Inteligentes
-              <Badge variant="secondary" className="text-[10px] ml-1">AI</Badge>
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              {aiInsights.map((insight, i) => (
-                <InsightCard key={i} {...insight} />
-              ))}
-            </div>
-          </Card>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.5 }}>
+            <Card className="p-5 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent overflow-visible">
+              <h3 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
+                <Brain className="w-4 h-4 text-primary" />
+                Insights Inteligentes
+                <Badge variant="secondary" className="text-[10px] ml-1">AI</Badge>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {aiInsights.map((insight, i) => (
+                  <InsightCard key={i} {...insight} />
+                ))}
+              </div>
+            </Card>
+          </motion.div>
         )}
 
         {/* KPI Grid - 8 KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard icon={ShoppingCart} label="Vendas Hoje" value={todaySales.length} color="bg-primary/10 text-primary"
+          <KPICard index={0} icon={ShoppingCart} label="Vendas Hoje" value={todaySales.length} color="bg-primary/10 text-primary"
             trend={`${weekSales.length} esta semana`} />
-          <KPICard icon={DollarSign} label="Receita Hoje" value={formatCurrency(totalRevenue)} color="bg-success/10 text-success"
+          <KPICard index={1} icon={DollarSign} label="Receita Hoje" value={formatCurrency(totalRevenue)} color="bg-success/10 text-success"
             sub={`Semana: ${formatCurrency(weekRevenue)}`} />
-          <KPICard icon={TrendingUp} label="Lucro Hoje" value={formatCurrency(todayProfit)} color="bg-profit/10 text-profit"
+          <KPICard index={2} icon={TrendingUp} label="Lucro Hoje" value={formatCurrency(todayProfit)} color="bg-profit/10 text-profit"
             trend={todayProfit > 0 ? 'Positivo' : 'Sem lucro'} trendUp={todayProfit > 0 ? true : null} />
-          <KPICard icon={Target} label="Ticket Médio" value={formatCurrency(avgTicket)} color="bg-primary/10 text-primary" />
-          <KPICard icon={Calendar} label="Receita Mensal" value={formatCurrency(monthRevenue)} color="bg-success/10 text-success"
+          <KPICard index={3} icon={Target} label="Ticket Médio" value={formatCurrency(avgTicket)} color="bg-primary/10 text-primary" />
+          <KPICard index={4} icon={Calendar} label="Receita Mensal" value={formatCurrency(monthRevenue)} color="bg-success/10 text-success"
             sub={`Lucro: ${formatCurrency(monthProfit)}`} />
-          <KPICard icon={BarChart3} label="Crescimento" 
+          <KPICard index={5} icon={BarChart3} label="Crescimento" 
             value={`${growthPercent >= 0 ? '+' : ''}${growthPercent.toFixed(1)}%`} 
             color={growthPercent >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}
             trend="vs semana anterior" trendUp={growthPercent >= 0} />
-          <KPICard icon={Package} label="Produtos Ativos" value={products.filter(p => p.isActive).length} color="bg-primary/10 text-primary"
+          <KPICard index={6} icon={Package} label="Produtos Ativos" value={products.filter(p => p.isActive).length} color="bg-primary/10 text-primary"
             sub={`${lowStockProducts.length} com estoque baixo`} />
-          <KPICard icon={AlertTriangle} label="Alertas Críticos" 
+          <KPICard index={7} icon={AlertTriangle} label="Alertas Críticos" 
             value={criticalStockProducts.length + (cashRegisterOpen ? 0 : 1)} 
             color={criticalStockProducts.length > 0 ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'}
             trend={criticalStockProducts.length > 0 ? `${criticalStockProducts.length} produtos críticos` : 'Tudo em ordem'} 
@@ -725,7 +752,7 @@ const LocalDashboardPage: React.FC = () => {
           )}
         </Card>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
