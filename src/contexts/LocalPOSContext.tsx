@@ -293,7 +293,7 @@ const mapDbSaleToLocal = (s: any, items: any[], sellerName?: string): LocalSale 
     createdAt: new Date(s.created_at),
     storeId: s.store_id,
     sellerId: s.user_id,
-    sellerName: sellerName || s.seller_name || undefined,
+    sellerName: s.seller_name || sellerName || undefined,
     cancellationReason: s.notes || undefined,
   };
 };
@@ -620,7 +620,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const costTotal = sale.items.reduce((acc, item) => acc + item.product.costPrice * item.quantity, 0);
           const saleProfit = sale.total - costTotal;
 
-          // Insert sale
+          // Insert sale (with seller_name persisted)
           const { error: saleError } = await supabase.from('sales').insert({
             id: sale.id,
             store_id: storeId,
@@ -633,21 +633,22 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             profit: saleProfit,
             payment_method: dbPaymentMethod as any,
             status: 'completed',
+            seller_name: sale.sellerName || user.full_name || 'Vendedor',
             customer_name: sale.paymentDetails?.voucherDetails?.customerName || null,
             customer_phone: sale.paymentDetails?.voucherDetails?.phoneNumber || null,
-          });
+          } as any);
 
           if (saleError) {
             console.error('[POS] Sale insert error:', saleError);
             return;
           }
 
-          // Insert sale items (only non-manual items — manual items lack a valid product FK)
-          const saleItems = sale.items
-            .filter(item => !item.product.id.startsWith('manual-'))
-            .map(item => ({
+          // Insert ALL sale items (including manual items with null product_id)
+          const saleItems = sale.items.map(item => {
+            const isManual = item.product.id.startsWith('manual-');
+            return {
               sale_id: sale.id,
-              product_id: item.product.id,
+              product_id: isManual ? null : item.product.id,
               product_name: item.product.name,
               quantity: item.quantity,
               unit_price: item.product.salePrice,
@@ -655,10 +656,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               discount_amount: item.discount,
               total: item.total,
               profit: (item.product.salePrice - item.product.costPrice) * item.quantity - item.discount,
-            }));
+            };
+          });
 
           if (saleItems.length > 0) {
-            const { error: itemsError } = await supabase.from('sale_items').insert(saleItems);
+            const { error: itemsError } = await supabase.from('sale_items').insert(saleItems as any);
             if (itemsError) {
               console.error('[POS] Sale items insert error:', itemsError);
             }
