@@ -293,7 +293,7 @@ const mapDbSaleToLocal = (s: any, items: any[], sellerName?: string): LocalSale 
     createdAt: new Date(s.created_at),
     storeId: s.store_id,
     sellerId: s.user_id,
-    sellerName: sellerName || s.seller_name || undefined,
+    sellerName: s.seller_name || sellerName || undefined,
     cancellationReason: s.notes || undefined,
   };
 };
