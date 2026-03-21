@@ -666,13 +666,16 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             }
           }
 
-          // Update stock in Supabase for non-manual items
+          // Update stock atomically in Supabase for non-manual items
           for (const item of sale.items.filter(i => !i.product.id.startsWith('manual-'))) {
-            await supabase
-              .from('product_stock')
-              .update({ quantity: item.product.stock - item.quantity, updated_at: new Date().toISOString() })
-              .eq('product_id', item.product.id)
-              .eq('store_id', storeId);
+            const { error: stockError } = await supabase.rpc('decrement_product_stock', {
+              p_product_id: item.product.id,
+              p_store_id: storeId,
+              p_quantity: item.quantity,
+            });
+            if (stockError) {
+              console.error('[POS] Stock decrement error for', item.product.name, ':', stockError);
+            }
           }
 
           // Credit wallet
