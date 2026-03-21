@@ -53,6 +53,7 @@ const LocalPOSPage: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showPostSaleModal, setShowPostSaleModal] = useState(false);
 
   // Handle barcode scan result
   const handleBarcodeScan = useCallback((code: string) => {
