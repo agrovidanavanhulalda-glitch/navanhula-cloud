@@ -216,33 +216,39 @@ const LocalPOSPage: React.FC = () => {
 
         {/* Products Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {filteredProducts.map((product) => (
-            <Card
+          {filteredProducts.map((product, i) => (
+            <motion.div
               key={product.id}
-              className={`p-4 cursor-pointer hover:bg-accent/50 transition-colors ${
-                product.stock <= 0 ? 'opacity-50' : ''
-              }`}
-              onClick={() => product.stock > 0 && handleAddToCart(product)}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: Math.min(i * 0.02, 0.3), duration: 0.25 }}
             >
-              <div className="text-center">
-                {product.imageUrl ? (
-                  <div className="w-14 h-14 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
-                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
-                    <ShoppingCart className="w-6 h-6 text-primary" />
-                  </div>
-                )}
-                <h3 className="font-medium text-sm truncate">{product.name}</h3>
-                <p className="text-lg font-bold text-primary mt-1">
-                  {formatCurrency(product.salePrice)}
-                </p>
-                <p className={`text-xs ${product.stock <= 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                  Estoque: {product.stock}
-                </p>
-              </div>
-            </Card>
+              <Card
+                className={`p-4 cursor-pointer hover-lift press-scale transition-colors ${
+                  product.stock <= 0 ? 'opacity-50' : ''
+                }`}
+                onClick={() => product.stock > 0 && handleAddToCart(product)}
+              >
+                <div className="text-center">
+                  {product.imageUrl ? (
+                    <div className="w-14 h-14 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
+                      <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
+                      <ShoppingCart className="w-6 h-6 text-primary" />
+                    </div>
+                  )}
+                  <h3 className="font-medium text-sm truncate">{product.name}</h3>
+                  <p className="text-lg font-bold text-primary mt-1 tabular-nums">
+                    {formatCurrency(product.salePrice)}
+                  </p>
+                  <p className={`text-xs ${product.stock <= 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    Estoque: {product.stock}
+                  </p>
+                </div>
+              </Card>
+            </motion.div>
           ))}
         </div>
 
