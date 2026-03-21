@@ -565,7 +565,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         createdAt: new Date(),
         storeId: prev.currentStore.id,
         sellerId: prev.currentCashRegister?.sellerId || user?.id,
-        sellerName: prev.currentCashRegister?.sellerName || user?.full_name || 'Vendedor',
+        sellerName: prev.currentCashRegister?.sellerName || user?.full_name || (user?.email ? user.email.split('@')[0] : 'Vendedor'),
       };
 
       // Update local stock optimistically
