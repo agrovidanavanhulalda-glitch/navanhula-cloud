@@ -120,13 +120,18 @@ const InsightCard: React.FC<{
     danger: 'text-destructive',
   };
   return (
-    <div className={`flex items-start gap-3 p-3.5 rounded-xl border ${styles[type]}`}>
+    <motion.div 
+      className={`flex items-start gap-3 p-3.5 rounded-xl border ${styles[type]}`}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+    >
       <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconColors[type]}`} />
       <div className="min-w-0">
         <p className="font-semibold text-foreground text-sm">{title}</p>
         <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
