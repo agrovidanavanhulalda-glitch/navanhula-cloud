@@ -20,6 +20,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
   LineChart, Line, AreaChart, Area
 } from 'recharts';
+import { motion } from 'framer-motion';
 
 const CHART_COLORS = [
   'hsl(217, 91%, 53%)',
@@ -30,6 +31,14 @@ const CHART_COLORS = [
   'hsl(0, 84%, 60%)',
 ];
 
+const fadeInUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] }
+  }),
+};
+
 const KPICard: React.FC<{
   icon: React.ElementType;
   label: string;
@@ -38,25 +47,28 @@ const KPICard: React.FC<{
   trendUp?: boolean | null;
   color: string;
   sub?: string;
-}> = ({ icon: Icon, label, value, trend, trendUp, color, sub }) => (
-  <Card className="p-5 hover:translate-y-[-2px] transition-all duration-200 group border-transparent"
-    style={{ boxShadow: 'var(--shadow-card)' }}>
-    <div className="flex items-center justify-between mb-3">
-      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${color}`}>
-        <Icon className="w-4.5 h-4.5" />
+  index?: number;
+}> = ({ icon: Icon, label, value, trend, trendUp, color, sub, index = 0 }) => (
+  <motion.div custom={index} variants={fadeInUp} initial="hidden" animate="visible">
+    <Card className="p-5 hover-lift group border-transparent"
+      style={{ boxShadow: 'var(--shadow-card)' }}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${color}`}>
+          <Icon className="w-4.5 h-4.5" />
+        </div>
       </div>
-    </div>
-    <p className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">{value}</p>
-    {trend && (
-      <p className={`text-xs mt-1.5 flex items-center gap-1 font-medium ${trendUp === true ? 'text-success' : trendUp === false ? 'text-destructive' : 'text-muted-foreground'}`}>
-        {trendUp === true && <ArrowUpRight className="w-3 h-3" />}
-        {trendUp === false && <ArrowDownRight className="w-3 h-3" />}
-        {trend}
-      </p>
-    )}
-    {sub && <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>}
-  </Card>
+      <p className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground tabular-nums">{value}</p>
+      {trend && (
+        <p className={`text-xs mt-1.5 flex items-center gap-1 font-medium ${trendUp === true ? 'text-success' : trendUp === false ? 'text-destructive' : 'text-muted-foreground'}`}>
+          {trendUp === true && <ArrowUpRight className="w-3 h-3" />}
+          {trendUp === false && <ArrowDownRight className="w-3 h-3" />}
+          {trend}
+        </p>
+      )}
+      {sub && <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>}
+    </Card>
+  </motion.div>
 );
 
 const QuickAction: React.FC<{
