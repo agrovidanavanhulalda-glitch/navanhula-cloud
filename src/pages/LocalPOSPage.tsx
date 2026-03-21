@@ -22,6 +22,7 @@ import ThermalReceipt from '@/components/reports/ThermalReceipt';
 import PaymentModal from '@/components/pos/PaymentModal';
 import BarcodeScanner from '@/components/pos/BarcodeScanner';
 import BluetoothPrintButton from '@/components/pos/BluetoothPrintButton';
+import PostSaleModal from '@/components/pos/PostSaleModal';
 
 // HYBRID: Local POS data + SaaS Auth
 
