@@ -293,6 +293,44 @@ const LocalSettingsPage: React.FC = () => {
           <FiscalDocumentsManager />
         </TabsContent>
 
+        {/* AUTOMAÇÃO POS */}
+        <TabsContent value="automacao">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Printer className="w-5 h-5" /> Automação POS</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <p className="text-sm text-muted-foreground">
+                Configure ações automáticas após cada venda finalizada.
+              </p>
+              <div className="space-y-4">
+                {[
+                  { key: 'autoPrint', label: 'Imprimir recibo automaticamente', desc: 'Envia o recibo para impressora térmica após cada venda' },
+                  { key: 'autoDrawer', label: 'Abrir gaveta automaticamente', desc: 'Abre a gaveta de dinheiro (ESC/POS) quando pagamento = Dinheiro' },
+                  { key: 'autoWhatsApp', label: 'Enviar recibo via WhatsApp', desc: 'Solicitar número do cliente e enviar recibo após venda' },
+                  { key: 'autoEmail', label: 'Enviar recibo por email', desc: 'Solicitar email do cliente e enviar PDF automaticamente' },
+                ].map(item => (
+                  <div key={item.key} className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </div>
+                    <Switch
+                      checked={automationForm[item.key as keyof typeof automationForm]}
+                      onCheckedChange={v => setAutomationForm((p: typeof automationForm) => ({ ...p, [item.key]: v }))}
+                    />
+                  </div>
+                ))}
+              </div>
+              <Separator />
+              <Button onClick={handleSaveAutomation}>
+                <Save className="w-4 h-4 mr-2" />
+                Salvar Automação
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* SISTEMA */}
         <TabsContent value="sistema">
           <Card>
