@@ -6,8 +6,6 @@ import { formatCurrency } from '@/lib/formatters';
 import { LocalSale } from '@/contexts/LocalPOSContext';
 import { downloadPdfA4 } from '@/lib/generatePdfA4';
 
-// RECIBO TÉRMICO + PDF A4
-
 interface ThermalReceiptProps {
   sale: LocalSale;
   storeName?: string;
@@ -59,9 +57,11 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
             .item { display: flex; justify-content: space-between; margin: 4px 0; }
             .total-line { font-weight: bold; font-size: 14px; margin-top: 8px; }
             .footer { text-align: center; margin-top: 15px; font-size: 11px; }
+            .no-print { display: none !important; }
             @media print {
               body { width: 100%; padding: 0; }
               @page { margin: 0; size: 80mm auto; }
+              .no-print { display: none !important; }
             }
           </style>
         </head>
@@ -100,11 +100,20 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
 
   const receiptNumber = `${new Date(sale.createdAt).getTime().toString(36).toUpperCase().slice(-6)}`;
 
+  // Resolve seller name — never show UUID or generic fallback
+  const resolvedSellerName = (() => {
+    const name = sale.sellerName;
+    if (!name || name === 'Vendedor' || name === 'Usuário') return undefined;
+    // Check if it looks like a UUID
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(name)) return undefined;
+    return name;
+  })();
+
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm bg-card border shadow-xl">
-        {/* Actions */}
-        <div className="flex items-center justify-between p-4 border-b">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:bg-transparent print:backdrop-blur-none">
+      <Card className="w-full max-w-sm bg-card border shadow-xl print:shadow-none print:border-none print:max-w-none">
+        {/* Actions - hidden on print */}
+        <div className="flex items-center justify-between p-4 border-b print:hidden">
           <h2 className="font-semibold text-lg">Recibo de Venda</h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="w-5 h-5" />
@@ -127,17 +136,22 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
             <div>Data: {formatDate(sale.createdAt)}</div>
             <div>Recibo: #{receiptNumber}</div>
             <div>Pagamento: {getPaymentMethodName(sale.paymentMethod || 'cash')}</div>
-            {sale.sellerName && <div>Vendedor: {sale.sellerName}</div>}
+            {resolvedSellerName && <div>Vendedor: {resolvedSellerName}</div>}
           </div>
 
           <div className="border-t border-dashed border-gray-400 my-2" />
 
+          {/* Items table with proper alignment */}
           <div className="space-y-1">
             {sale.items.map((item, index) => (
-              <div key={index} className="flex justify-between text-xs">
-                <span className="flex-1 truncate max-w-[140px]">{item.product.name}</span>
-                <span className="w-8 text-center">{item.quantity}x</span>
-                <span className="w-16 text-right">{formatCurrency(item.total)}</span>
+              <div key={index} className="text-xs">
+                <div className="flex justify-between">
+                  <span className="flex-1 truncate max-w-[160px]">{item.product.name}</span>
+                </div>
+                <div className="flex justify-between pl-2">
+                  <span>{item.quantity}x {formatCurrency(item.product.salePrice)}</span>
+                  <span className="font-medium">{formatCurrency(item.total)}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -170,6 +184,18 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
                   <span>TOTAL:</span>
                   <span>{formatCurrency(sale.total)}</span>
                 </div>
+                {sale.amountReceived && sale.amountReceived > sale.total && (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Recebido:</span>
+                      <span>{formatCurrency(sale.amountReceived)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Troco:</span>
+                      <span>{formatCurrency(sale.changeGiven || 0)}</span>
+                    </div>
+                  </>
+                )}
               </div>
             );
           })()}
@@ -183,8 +209,8 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="p-4 border-t space-y-2">
+        {/* Action Buttons - hidden on print */}
+        <div className="p-4 border-t space-y-2 print:hidden">
           <Button onClick={handlePrint} className="w-full h-12 text-lg">
             <Printer className="w-5 h-5 mr-2" />
             Imprimir Térmico

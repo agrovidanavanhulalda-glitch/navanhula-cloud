@@ -565,7 +565,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         createdAt: new Date(),
         storeId: prev.currentStore.id,
         sellerId: prev.currentCashRegister?.sellerId || user?.id,
-        sellerName: prev.currentCashRegister?.sellerName || user?.full_name || 'Vendedor',
+        sellerName: prev.currentCashRegister?.sellerName || user?.full_name || (user?.email ? user.email.split('@')[0] : 'Vendedor'),
       };
 
       // Update local stock optimistically
@@ -633,7 +633,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             profit: saleProfit,
             payment_method: dbPaymentMethod as any,
             status: 'completed',
-            seller_name: sale.sellerName || user.full_name || 'Vendedor',
+            seller_name: sale.sellerName || user.full_name || (user.email ? user.email.split('@')[0] : 'Vendedor'),
             customer_name: sale.paymentDetails?.voucherDetails?.customerName || null,
             customer_phone: sale.paymentDetails?.voucherDetails?.phoneNumber || null,
           } as any);
