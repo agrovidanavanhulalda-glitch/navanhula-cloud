@@ -434,9 +434,14 @@ const LocalDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
       {/* Hero Section */}
-      <div className="dashboard-hero px-4 md:px-8 pt-6 pb-10 md:pt-8 md:pb-14">
+      <motion.div 
+        className="dashboard-hero px-4 md:px-8 pt-6 pb-10 md:pt-8 md:pb-14"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-white">
@@ -448,32 +453,34 @@ const LocalDashboardPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             <Badge variant={cashRegisterOpen ? 'default' : 'destructive'} className="text-xs py-1.5 px-4 font-medium rounded-full">
-              <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${cashRegisterOpen ? 'bg-success animate-pulse' : 'bg-destructive/60'}`} />
+              <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${cashRegisterOpen ? 'bg-success pulse-live' : 'bg-destructive/60'}`} />
               Caixa {cashRegisterOpen ? 'Aberto' : 'Fechado'}
             </Badge>
-            <Button size="default" onClick={handleNewSale} className="gap-2 rounded-lg font-semibold" style={{ boxShadow: 'var(--shadow-glow)' }}>
+            <Button size="default" onClick={handleNewSale} className="gap-2 rounded-lg font-semibold press-scale" style={{ boxShadow: 'var(--shadow-glow)' }}>
               <Plus className="w-4 h-4" /> Nova Venda
             </Button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Content */}
       <div className="px-4 md:px-8 -mt-6 md:-mt-8 pb-8 space-y-6">
         {/* AI Insights Panel */}
         {aiInsights.length > 0 && (
-          <Card className="p-5 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent overflow-visible">
-            <h3 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
-              <Brain className="w-4 h-4 text-primary" />
-              Insights Inteligentes
-              <Badge variant="secondary" className="text-[10px] ml-1">AI</Badge>
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              {aiInsights.map((insight, i) => (
-                <InsightCard key={i} {...insight} />
-              ))}
-            </div>
-          </Card>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.5 }}>
+            <Card className="p-5 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent overflow-visible">
+              <h3 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
+                <Brain className="w-4 h-4 text-primary" />
+                Insights Inteligentes
+                <Badge variant="secondary" className="text-[10px] ml-1">AI</Badge>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {aiInsights.map((insight, i) => (
+                  <InsightCard key={i} {...insight} />
+                ))}
+              </div>
+            </Card>
+          </motion.div>
         )}
 
         {/* KPI Grid - 8 KPIs */}
