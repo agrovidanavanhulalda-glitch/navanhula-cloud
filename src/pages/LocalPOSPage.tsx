@@ -353,7 +353,14 @@ const LocalPOSPage: React.FC = () => {
             )}
             <div className="flex justify-between text-xl font-bold pt-2 border-t">
               <span>Total</span>
-              <span className="text-primary">{formatCurrency(getTotal())}</span>
+              <motion.span 
+                key={getTotal()} 
+                initial={{ scale: 1.1 }} 
+                animate={{ scale: 1 }} 
+                className="text-primary tabular-nums"
+              >
+                {formatCurrency(getTotal())}
+              </motion.span>
             </div>
           </div>
 
