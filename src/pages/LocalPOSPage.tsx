@@ -386,9 +386,10 @@ const LocalPOSPage: React.FC = () => {
             </div>
           )}
           <Button 
-            className="w-full h-14 text-lg"
+            className="w-full h-14 text-lg press-scale font-semibold"
             disabled={cart.length === 0 || !cashRegisterOpen}
             onClick={() => setShowPaymentModal(true)}
+            style={cart.length > 0 && cashRegisterOpen ? { boxShadow: 'var(--shadow-glow)' } : undefined}
           >
             <CreditCard className="w-5 h-5 mr-2" />
             Finalizar Venda
