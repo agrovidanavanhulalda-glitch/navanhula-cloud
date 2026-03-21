@@ -50,6 +50,24 @@ const LocalSettingsPage: React.FC = () => {
     community_enabled: true,
   });
 
+  // POS Automation prefs (localStorage)
+  const [automationForm, setAutomationForm] = useState(() => {
+    try {
+      const raw = localStorage.getItem('navanhula_pos_automation');
+      return raw ? JSON.parse(raw) : {
+        autoPrint: false,
+        autoDrawer: false,
+        autoWhatsApp: false,
+        autoEmail: false,
+      };
+    } catch { return { autoPrint: false, autoDrawer: false, autoWhatsApp: false, autoEmail: false }; }
+  });
+
+  const handleSaveAutomation = () => {
+    localStorage.setItem('navanhula_pos_automation', JSON.stringify(automationForm));
+    toast.success('Preferências de automação salvas');
+  };
+
   const isAdmin = role === 'admin' || role === 'manager' || (role as string) === 'ceo';
 
   // Load data
