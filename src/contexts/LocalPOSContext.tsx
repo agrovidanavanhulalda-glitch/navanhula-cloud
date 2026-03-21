@@ -620,7 +620,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const costTotal = sale.items.reduce((acc, item) => acc + item.product.costPrice * item.quantity, 0);
           const saleProfit = sale.total - costTotal;
 
-          // Insert sale
+          // Insert sale (with seller_name persisted)
           const { error: saleError } = await supabase.from('sales').insert({
             id: sale.id,
             store_id: storeId,
@@ -633,9 +633,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             profit: saleProfit,
             payment_method: dbPaymentMethod as any,
             status: 'completed',
+            seller_name: sale.sellerName || user.full_name || 'Vendedor',
             customer_name: sale.paymentDetails?.voucherDetails?.customerName || null,
             customer_phone: sale.paymentDetails?.voucherDetails?.phoneNumber || null,
-          });
+          } as any);
 
           if (saleError) {
             console.error('[POS] Sale insert error:', saleError);
