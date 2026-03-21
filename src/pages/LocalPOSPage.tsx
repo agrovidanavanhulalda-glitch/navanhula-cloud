@@ -282,49 +282,58 @@ const LocalPOSPage: React.FC = () => {
               <p className="text-sm">Clique nos produtos para adicionar</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <AnimatePresence mode="popLayout">
               {cart.map((item) => (
-                <Card key={item.product.id} className="p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm truncate flex-1">
-                      {item.product.name}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive h-6 w-6 p-0"
-                      onClick={() => removeFromCart(item.product.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                <motion.div
+                  key={item.product.id}
+                  layout
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-sm truncate flex-1">
+                        {item.product.name}
+                      </span>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        className="text-destructive h-6 w-6 p-0"
+                        onClick={() => removeFromCart(item.product.id)}
                       >
-                        <Minus className="w-3 h-3" />
-                      </Button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                      >
-                        <Plus className="w-3 h-3" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                    <span className="font-bold text-primary">
-                      {formatCurrency(item.total)}
-                    </span>
-                  </div>
-                </Card>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 press-scale"
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-8 text-center font-medium tabular-nums">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 press-scale"
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <span className="font-bold text-primary tabular-nums">
+                        {formatCurrency(item.total)}
+                      </span>
+                    </div>
+                  </Card>
+                </motion.div>
               ))}
-            </div>
+            </AnimatePresence>
           )}
         </div>
 
