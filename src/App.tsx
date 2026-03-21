@@ -36,6 +36,7 @@ import DocumentsCenterPage from "./pages/DocumentsCenterPage";
 import AgriculturePage from "./pages/AgriculturePage";
 import ECommercePage from "./pages/ECommercePage";
 import PoultryPage from "./pages/PoultryPage";
+import HRDashboardPage from "./pages/HRDashboardPage";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
 import Index from "./pages/Index";
