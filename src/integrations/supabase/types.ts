@@ -2365,7 +2365,7 @@ export type Database = {
           created_at: string | null
           discount_amount: number | null
           id: string
-          product_id: string
+          product_id: string | null
           product_name: string
           profit: number | null
           quantity: number
@@ -2378,7 +2378,7 @@ export type Database = {
           created_at?: string | null
           discount_amount?: number | null
           id?: string
-          product_id: string
+          product_id?: string | null
           product_name: string
           profit?: number | null
           quantity?: number
@@ -2391,7 +2391,7 @@ export type Database = {
           created_at?: string | null
           discount_amount?: number | null
           id?: string
-          product_id?: string
+          product_id?: string | null
           product_name?: string
           profit?: number | null
           quantity?: number
@@ -2429,6 +2429,7 @@ export type Database = {
           notes: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           profit: number
+          seller_name: string | null
           status: Database["public"]["Enums"]["sale_status"] | null
           store_id: string
           subtotal: number
@@ -2449,6 +2450,7 @@ export type Database = {
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           profit?: number
+          seller_name?: string | null
           status?: Database["public"]["Enums"]["sale_status"] | null
           store_id: string
           subtotal?: number
@@ -2469,6 +2471,7 @@ export type Database = {
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           profit?: number
+          seller_name?: string | null
           status?: Database["public"]["Enums"]["sale_status"] | null
           store_id?: string
           subtotal?: number
