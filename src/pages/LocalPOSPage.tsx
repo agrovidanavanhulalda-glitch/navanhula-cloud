@@ -23,6 +23,7 @@ import PaymentModal from '@/components/pos/PaymentModal';
 import BarcodeScanner from '@/components/pos/BarcodeScanner';
 import BluetoothPrintButton from '@/components/pos/BluetoothPrintButton';
 import PostSaleModal from '@/components/pos/PostSaleModal';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // HYBRID: Local POS data + SaaS Auth
 
