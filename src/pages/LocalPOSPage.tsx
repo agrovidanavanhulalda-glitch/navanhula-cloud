@@ -109,13 +109,23 @@ const LocalPOSPage: React.FC = () => {
         : '';
       toast.success(`Venda concluída!${changeMsg}`);
       setShowPaymentModal(false);
-      // Auto-show receipt after sale completion
-      setShowReceipt(true);
-      // Auto-print via browser print dialog
-      setTimeout(() => {
-        window.print();
-      }, 500);
+
+      // Check user preference for skip modal
+      const skipModal = localStorage.getItem('navanhula_skip_post_sale_modal') === 'true';
+      if (skipModal) {
+        setShowReceipt(true);
+        setTimeout(() => window.print(), 500);
+      } else {
+        setShowPostSaleModal(true);
+      }
     }
+  };
+
+  // Handle receipt print from post-sale modal
+  const handlePostSalePrintReceipt = () => {
+    setShowPostSaleModal(false);
+    setShowReceipt(true);
+    setTimeout(() => window.print(), 400);
   };
 
   const lastSale = getLastSale();
