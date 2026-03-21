@@ -333,6 +333,13 @@ class BluetoothPrinterService {
     const receipt = this.concat(...parts);
     await this.sendData(receipt);
   }
+
+  /**
+   * Open cash drawer via ESC/POS pulse command
+   */
+  async openCashDrawer(): Promise<void> {
+    await this.sendData(COMMANDS.OPEN_DRAWER);
+  }
 }
 
 // Singleton instance
