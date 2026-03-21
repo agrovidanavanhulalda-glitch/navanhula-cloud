@@ -752,7 +752,7 @@ const LocalDashboardPage: React.FC = () => {
           )}
         </Card>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
