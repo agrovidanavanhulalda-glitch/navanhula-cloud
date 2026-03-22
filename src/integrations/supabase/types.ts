@@ -2545,6 +2545,82 @@ export type Database = {
           },
         ]
       }
+      stock_movements: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          new_stock: number
+          previous_stock: number
+          product_id: string
+          quantity: number
+          reason: string | null
+          reference_id: string | null
+          reference_type: string | null
+          store_id: string
+          total_cost: number
+          type: string
+          unit_cost: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          new_stock?: number
+          previous_stock?: number
+          product_id: string
+          quantity: number
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          store_id: string
+          total_cost?: number
+          type: string
+          unit_cost?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          new_stock?: number
+          previous_stock?: number
+          product_id?: string
+          quantity?: number
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          store_id?: string
+          total_cost?: number
+          type?: string
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           address: string | null
@@ -3022,6 +3098,19 @@ export type Database = {
           p_phone_number?: string
           p_reference_id: string
           p_subscription_id: string
+        }
+        Returns: Json
+      }
+      record_stock_movement: {
+        Args: {
+          p_product_id: string
+          p_quantity: number
+          p_reason?: string
+          p_reference_id?: string
+          p_reference_type?: string
+          p_store_id: string
+          p_type: string
+          p_unit_cost?: number
         }
         Returns: Json
       }
