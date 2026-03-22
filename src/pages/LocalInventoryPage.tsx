@@ -1,158 +1,257 @@
-import React, { useState } from 'react';
-import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
+import React, { useState, useEffect, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { 
-  Package, 
-  Search,
-  AlertTriangle,
-  Plus,
-  Minus,
-  TrendingDown
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Package, Search, AlertTriangle, Plus, Minus, TrendingDown,
+  History, RefreshCw, ArrowDownToLine, ArrowUpFromLine, XCircle,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
+import StockMovementHistory from '@/components/inventory/StockMovementHistory';
 
-// 100% LOCAL - NO ASYNC, NO BACKEND
+interface InventoryProduct {
+  id: string;
+  name: string;
+  code: string;
+  cost_price: number;
+  sale_price: number;
+  low_stock_threshold: number;
+  is_active: boolean;
+  stock_qty: number;
+}
 
 type AdjustmentType = 'add' | 'remove' | 'set';
 
 const LocalInventoryPage: React.FC = () => {
-  const { products, updateProduct } = useLocalPOS();
-
+  const { user, store } = useAuth();
+  const [products, setProducts] = useState<InventoryProduct[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLowStock, setFilterLowStock] = useState(false);
+
+  // Adjust dialog
   const [showAdjustDialog, setShowAdjustDialog] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<LocalProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<InventoryProduct | null>(null);
   const [adjustmentType, setAdjustmentType] = useState<AdjustmentType>('add');
   const [adjustmentQty, setAdjustmentQty] = useState('');
   const [adjustmentReason, setAdjustmentReason] = useState('');
+  const [adjustmentNotes, setAdjustmentNotes] = useState('');
+  const [adjusting, setAdjusting] = useState(false);
 
-  // Filter products
-  const filteredProducts = products
-    .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    .filter(p => !filterLowStock || p.stock <= 10)
-    .sort((a, b) => a.stock - b.stock);
+  // Movement history
+  const [historyProductId, setHistoryProductId] = useState('');
+  const [historyProductName, setHistoryProductName] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
 
-  // Count low stock
-  const lowStockCount = products.filter(p => p.stock <= 10 && p.isActive).length;
+  useEffect(() => {
+    loadProducts();
+  }, [store]);
 
-  // Total inventory value
-  const totalInventoryValue = products.reduce((acc, p) => acc + (p.costPrice * p.stock), 0);
-  const totalSaleValue = products.reduce((acc, p) => acc + (p.salePrice * p.stock), 0);
+  const loadProducts = async () => {
+    if (!store?.id) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from('products')
+      .select('id, name, code, cost_price, sale_price, low_stock_threshold, is_active, product_stock!inner(quantity)')
+      .eq('product_stock.store_id', store.id)
+      .eq('is_active', true)
+      .order('name');
 
-  // Handle adjust stock
-  const handleOpenAdjust = (product: LocalProduct) => {
+    const mapped: InventoryProduct[] = (data || []).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      code: p.code,
+      cost_price: p.cost_price,
+      sale_price: p.sale_price,
+      low_stock_threshold: p.low_stock_threshold ?? 10,
+      is_active: p.is_active,
+      stock_qty: p.product_stock?.[0]?.quantity ?? 0,
+    }));
+    setProducts(mapped);
+    setLoading(false);
+  };
+
+  // Computed
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase()))
+      .filter(p => !filterLowStock || p.stock_qty <= p.low_stock_threshold)
+      .sort((a, b) => a.stock_qty - b.stock_qty);
+  }, [products, searchTerm, filterLowStock]);
+
+  const lowStockCount = products.filter(p => p.stock_qty > 0 && p.stock_qty <= p.low_stock_threshold).length;
+  const outOfStockCount = products.filter(p => p.stock_qty <= 0).length;
+  const totalInventoryValue = products.reduce((acc, p) => acc + (p.cost_price * p.stock_qty), 0);
+  const totalSaleValue = products.reduce((acc, p) => acc + (p.sale_price * p.stock_qty), 0);
+
+  // Adjust stock
+  const handleOpenAdjust = (product: InventoryProduct) => {
     setSelectedProduct(product);
     setAdjustmentType('add');
     setAdjustmentQty('');
     setAdjustmentReason('');
+    setAdjustmentNotes('');
     setShowAdjustDialog(true);
   };
 
-  const handleAdjustStock = () => {
-    if (!selectedProduct) return;
-
+  const handleAdjustStock = async () => {
+    if (!selectedProduct || !store?.id) return;
     const qty = parseInt(adjustmentQty);
-    if (isNaN(qty) || qty <= 0) {
-      toast.error('Quantidade inválida');
-      return;
-    }
+    if (isNaN(qty) || qty <= 0) { toast.error('Quantidade inválida'); return; }
+    if (!adjustmentReason) { toast.error('Selecione o motivo'); return; }
 
-    if (!adjustmentReason.trim()) {
-      toast.error('Informe o motivo do ajuste');
-      return;
-    }
+    setAdjusting(true);
+    try {
+      let movType: string;
+      let movQty: number;
 
-    let newStock = selectedProduct.stock;
-    switch (adjustmentType) {
-      case 'add':
-        newStock = selectedProduct.stock + qty;
-        break;
-      case 'remove':
-        newStock = Math.max(0, selectedProduct.stock - qty);
-        break;
-      case 'set':
-        newStock = qty;
-        break;
-    }
+      if (adjustmentType === 'add') {
+        movType = 'entrada';
+        movQty = qty;
+      } else if (adjustmentType === 'remove') {
+        movType = 'saida';
+        movQty = qty;
+      } else {
+        movType = 'ajuste';
+        movQty = qty;
+      }
 
-    updateProduct(selectedProduct.id, { stock: newStock });
-    toast.success(`Estoque atualizado: ${selectedProduct.name} → ${newStock} unidades`);
-    setShowAdjustDialog(false);
+      const { data, error } = await supabase.rpc('record_stock_movement', {
+        p_product_id: selectedProduct.id,
+        p_store_id: store.id,
+        p_type: movType,
+        p_quantity: movQty,
+        p_unit_cost: selectedProduct.cost_price,
+        p_reference_type: 'manual',
+        p_reason: `${adjustmentReason}${adjustmentNotes ? ': ' + adjustmentNotes : ''}`,
+      });
+
+      if (error) throw error;
+      const result = data as any;
+      if (result?.success) {
+        toast.success(`Estoque atualizado: ${selectedProduct.name} → ${result.new_stock} unidades`);
+        setShowAdjustDialog(false);
+        loadProducts();
+      } else {
+        toast.error(result?.message || 'Erro ao ajustar estoque');
+      }
+    } catch (err: any) {
+      toast.error('Erro: ' + err.message);
+    } finally {
+      setAdjusting(false);
+    }
   };
 
+  const handleOpenHistory = (product: InventoryProduct) => {
+    setHistoryProductId(product.id);
+    setHistoryProductName(product.name);
+    setShowHistory(true);
+  };
+
+  const getStockBadge = (product: InventoryProduct) => {
+    if (product.stock_qty <= 0) {
+      return <Badge variant="destructive">Esgotado</Badge>;
+    }
+    if (product.stock_qty <= product.low_stock_threshold) {
+      return <Badge className="bg-orange-100 text-orange-700 border-orange-300">Baixo</Badge>;
+    }
+    return <Badge className="bg-green-100 text-green-700 border-green-300">Normal</Badge>;
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[50vh]">
+        <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Package className="w-6 h-6" />
             Estoque
           </h1>
           <p className="text-muted-foreground">
-            {products.length} produtos | {lowStockCount} com estoque baixo
+            {products.length} produtos | {lowStockCount} baixo | {outOfStockCount} esgotados
           </p>
         </div>
+        <Button variant="outline" onClick={loadProducts} size="sm">
+          <RefreshCw className="w-4 h-4 mr-1" /> Atualizar
+        </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Valor em Estoque (Custo)</p>
-              <p className="text-2xl font-bold">{formatCurrency(totalInventoryValue)}</p>
-            </div>
-            <Package className="w-8 h-8 text-muted-foreground/50" />
-          </div>
+          <p className="text-sm text-muted-foreground">Valor em Estoque (Custo)</p>
+          <p className="text-2xl font-bold">{formatCurrency(totalInventoryValue)}</p>
         </Card>
-
         <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Valor em Estoque (Venda)</p>
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(totalSaleValue)}</p>
-            </div>
-            <TrendingDown className="w-8 h-8 text-muted-foreground/50" />
-          </div>
+          <p className="text-sm text-muted-foreground">Valor em Estoque (Venda)</p>
+          <p className="text-2xl font-bold text-green-600">{formatCurrency(totalSaleValue)}</p>
         </Card>
-
-        <Card className={`p-4 ${lowStockCount > 0 ? 'border-destructive/50 bg-destructive/5' : ''}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Produtos Críticos</p>
-              <p className="text-2xl font-bold text-destructive">{lowStockCount}</p>
-            </div>
-            <AlertTriangle className={`w-8 h-8 ${lowStockCount > 0 ? 'text-destructive' : 'text-muted-foreground/50'}`} />
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Margem Potencial</p>
+          <p className="text-2xl font-bold text-blue-600">{formatCurrency(totalSaleValue - totalInventoryValue)}</p>
+        </Card>
+        <Card className={`p-4 ${(lowStockCount + outOfStockCount) > 0 ? 'border-destructive/50 bg-destructive/5' : ''}`}>
+          <p className="text-sm text-muted-foreground">Produtos Críticos</p>
+          <p className="text-2xl font-bold text-destructive">{lowStockCount + outOfStockCount}</p>
+          <div className="flex gap-2 mt-1">
+            {lowStockCount > 0 && <span className="text-xs text-orange-600">{lowStockCount} baixo</span>}
+            {outOfStockCount > 0 && <span className="text-xs text-destructive">{outOfStockCount} esgotado</span>}
           </div>
         </Card>
       </div>
+
+      {/* Smart Insights */}
+      {(lowStockCount > 0 || outOfStockCount > 0) && (
+        <Card className="p-4 border-orange-200 bg-orange-50/50">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              {outOfStockCount > 0 && (
+                <p className="text-sm font-medium text-orange-800">
+                  ⚠️ {outOfStockCount} produto(s) esgotado(s) — pode estar a perder vendas!
+                </p>
+              )}
+              {lowStockCount > 0 && (
+                <p className="text-sm text-orange-700">
+                  {lowStockCount} produto(s) com estoque baixo — considere repor.
+                </p>
+              )}
+              {totalInventoryValue > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Capital em estoque: {formatCurrency(totalInventoryValue)} — margem potencial de {formatCurrency(totalSaleValue - totalInventoryValue)}
+                </p>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Search and Filter */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
-            placeholder="Buscar produto..."
+            placeholder="Buscar produto ou código..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -175,7 +274,7 @@ const LocalInventoryPage: React.FC = () => {
               <tr>
                 <th className="text-left p-4 font-medium">Produto</th>
                 <th className="text-right p-4 font-medium">Estoque</th>
-                <th className="text-right p-4 font-medium">Custo Unit.</th>
+                <th className="text-right p-4 font-medium">Custo Médio</th>
                 <th className="text-right p-4 font-medium">Valor Estoque</th>
                 <th className="text-center p-4 font-medium">Status</th>
                 <th className="text-center p-4 font-medium">Ações</th>
@@ -186,35 +285,30 @@ const LocalInventoryPage: React.FC = () => {
                 <tr key={product.id} className="hover:bg-muted/30">
                   <td className="p-4">
                     <div className="font-medium">{product.name}</div>
+                    <div className="text-xs text-muted-foreground">{product.code}</div>
                   </td>
                   <td className="p-4 text-right">
-                    <span className={`font-bold ${product.stock <= 10 ? 'text-destructive' : ''}`}>
-                      {product.stock}
+                    <span className={`font-bold ${product.stock_qty <= product.low_stock_threshold ? 'text-destructive' : ''}`}>
+                      {product.stock_qty}
                     </span>
+                    <span className="text-xs text-muted-foreground ml-1">/ mín {product.low_stock_threshold}</span>
                   </td>
                   <td className="p-4 text-right text-muted-foreground">
-                    {formatCurrency(product.costPrice)}
+                    {formatCurrency(product.cost_price)}
                   </td>
                   <td className="p-4 text-right font-medium">
-                    {formatCurrency(product.costPrice * product.stock)}
+                    {formatCurrency(product.cost_price * product.stock_qty)}
                   </td>
+                  <td className="p-4 text-center">{getStockBadge(product)}</td>
                   <td className="p-4 text-center">
-                    {product.stock <= 0 ? (
-                      <Badge variant="destructive">Esgotado</Badge>
-                    ) : product.stock <= 10 ? (
-                      <Badge variant="outline" className="border-orange-500 text-orange-600">Baixo</Badge>
-                    ) : (
-                      <Badge variant="secondary">Normal</Badge>
-                    )}
-                  </td>
-                  <td className="p-4 text-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenAdjust(product)}
-                    >
-                      Ajustar
-                    </Button>
+                    <div className="flex items-center justify-center gap-1">
+                      <Button variant="outline" size="sm" onClick={() => handleOpenAdjust(product)}>
+                        <RefreshCw className="w-3 h-3 mr-1" /> Ajustar
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleOpenHistory(product)}>
+                        <History className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -242,72 +336,51 @@ const LocalInventoryPage: React.FC = () => {
               <div className="p-4 bg-muted/50 rounded-lg">
                 <p className="font-medium">{selectedProduct.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  Estoque atual: <span className="font-bold">{selectedProduct.stock}</span> unidades
+                  Estoque atual: <span className="font-bold">{selectedProduct.stock_qty}</span> unidades
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label>Tipo de Ajuste</Label>
-                <Select
-                  value={adjustmentType}
-                  onValueChange={(value: AdjustmentType) => setAdjustmentType(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                <Select value={adjustmentType} onValueChange={(v: AdjustmentType) => setAdjustmentType(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="add">
-                      <div className="flex items-center gap-2">
-                        <Plus className="w-4 h-4 text-green-600" />
-                        Adicionar
-                      </div>
+                      <div className="flex items-center gap-2"><ArrowDownToLine className="w-4 h-4 text-green-600" /> Adicionar (Entrada)</div>
                     </SelectItem>
                     <SelectItem value="remove">
-                      <div className="flex items-center gap-2">
-                        <Minus className="w-4 h-4 text-destructive" />
-                        Remover
-                      </div>
+                      <div className="flex items-center gap-2"><ArrowUpFromLine className="w-4 h-4 text-destructive" /> Remover (Saída)</div>
                     </SelectItem>
                     <SelectItem value="set">
-                      <div className="flex items-center gap-2">
-                        <Package className="w-4 h-4" />
-                        Definir Valor
-                      </div>
+                      <div className="flex items-center gap-2"><RefreshCw className="w-4 h-4 text-blue-600" /> Definir Valor (Ajuste)</div>
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="qty">Quantidade</Label>
-                <Input
-                  id="qty"
-                  type="number"
-                  min="1"
-                  value={adjustmentQty}
-                  onChange={(e) => setAdjustmentQty(e.target.value)}
-                  placeholder="0"
-                />
+                <Label>Quantidade</Label>
+                <Input type="number" min="1" value={adjustmentQty} onChange={(e) => setAdjustmentQty(e.target.value)} placeholder="0" />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="reason">Motivo do Ajuste *</Label>
-                <Select
-                  value={adjustmentReason}
-                  onValueChange={setAdjustmentReason}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o motivo" />
-                  </SelectTrigger>
+                <Label>Motivo *</Label>
+                <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o motivo" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="reposicao">Reposição de Estoque</SelectItem>
-                    <SelectItem value="inventario">Correção de Inventário</SelectItem>
-                    <SelectItem value="perda">Perda / Avaria</SelectItem>
-                    <SelectItem value="roubo">Roubo / Furto</SelectItem>
-                    <SelectItem value="devolucao">Devolução de Cliente</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
+                    <SelectItem value="Reposição de Estoque">Reposição de Estoque</SelectItem>
+                    <SelectItem value="Correção de Inventário">Correção de Inventário</SelectItem>
+                    <SelectItem value="Perda / Avaria">Perda / Avaria</SelectItem>
+                    <SelectItem value="Roubo / Furto">Roubo / Furto</SelectItem>
+                    <SelectItem value="Devolução de Cliente">Devolução de Cliente</SelectItem>
+                    <SelectItem value="Outro">Outro</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observações (opcional)</Label>
+                <Textarea value={adjustmentNotes} onChange={(e) => setAdjustmentNotes(e.target.value)} placeholder="Detalhes adicionais..." rows={2} />
               </div>
 
               {adjustmentQty && (
@@ -315,10 +388,10 @@ const LocalInventoryPage: React.FC = () => {
                   <p className="text-sm">
                     Novo estoque:{' '}
                     <span className="font-bold">
-                      {adjustmentType === 'add' 
-                        ? selectedProduct.stock + parseInt(adjustmentQty || '0')
+                      {adjustmentType === 'add'
+                        ? selectedProduct.stock_qty + parseInt(adjustmentQty || '0')
                         : adjustmentType === 'remove'
-                        ? Math.max(0, selectedProduct.stock - parseInt(adjustmentQty || '0'))
+                        ? Math.max(0, selectedProduct.stock_qty - parseInt(adjustmentQty || '0'))
                         : parseInt(adjustmentQty || '0')
                       } unidades
                     </span>
@@ -329,15 +402,21 @@ const LocalInventoryPage: React.FC = () => {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAdjustDialog(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleAdjustStock}>
-              Confirmar Ajuste
+            <Button variant="outline" onClick={() => setShowAdjustDialog(false)}>Cancelar</Button>
+            <Button onClick={handleAdjustStock} disabled={adjusting}>
+              {adjusting ? 'Salvando...' : 'Confirmar Ajuste'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Movement History */}
+      <StockMovementHistory
+        productId={historyProductId}
+        productName={historyProductName}
+        open={showHistory}
+        onOpenChange={setShowHistory}
+      />
     </div>
   );
 };
