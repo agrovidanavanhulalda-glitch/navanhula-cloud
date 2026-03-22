@@ -10,9 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Truck, Plus, Search, RefreshCw, Package, ClipboardList, Phone, Mail, AlertTriangle } from 'lucide-react';
+import { Truck, Plus, Search, RefreshCw, Package, ClipboardList, Phone, Mail, AlertTriangle, Eye } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
+import PurchaseOrderDetail from '@/components/suppliers/PurchaseOrderDetail';
 
 interface Supplier {
   id: string;
@@ -50,6 +51,10 @@ const SuppliersPage: React.FC = () => {
   // Order form
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [orderData, setOrderData] = useState({ supplier_id: '', notes: '' });
+
+  // Order detail
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [showOrderDetail, setShowOrderDetail] = useState(false);
 
   const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo';
 
@@ -110,35 +115,26 @@ const SuppliersPage: React.FC = () => {
   const handleCreateOrder = async () => {
     if (!orderData.supplier_id) { toast.error('Selecione um fornecedor'); return; }
     try {
-      const { error } = await supabase.from('purchase_orders').insert({
+      const { data, error } = await supabase.from('purchase_orders').insert({
         supplier_id: orderData.supplier_id,
         store_id: user?.store_id,
         company_id: company?.id,
         ordered_by: user?.id,
         notes: orderData.notes || null,
         status: 'draft',
-      });
+      }).select('id').single();
       if (error) throw error;
       toast.success('Pedido criado como rascunho');
       setShowOrderForm(false);
       setOrderData({ supplier_id: '', notes: '' });
       loadData();
+      // Open order detail immediately
+      if (data?.id) {
+        setSelectedOrderId(data.id);
+        setShowOrderDetail(true);
+      }
     } catch (e: any) {
       toast.error(e.message || 'Erro ao criar pedido');
-    }
-  };
-
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    try {
-      const updateData: any = { status: newStatus };
-      if (newStatus === 'approved') updateData.approved_by = user?.id;
-      if (newStatus === 'received') updateData.received_at = new Date().toISOString();
-      const { error } = await supabase.from('purchase_orders').update(updateData).eq('id', orderId);
-      if (error) throw error;
-      toast.success(`Pedido ${newStatus === 'approved' ? 'aprovado' : newStatus === 'received' ? 'recebido' : 'atualizado'}`);
-      loadData();
-    } catch (e: any) {
-      toast.error(e.message);
     }
   };
 
@@ -147,10 +143,12 @@ const SuppliersPage: React.FC = () => {
 
   const STATUS_MAP: Record<string, { label: string; class: string }> = {
     draft: { label: 'Rascunho', class: 'bg-muted text-muted-foreground' },
-    pending: { label: 'Pendente', class: 'bg-warning/20 text-warning' },
-    approved: { label: 'Aprovado', class: 'bg-primary/20 text-primary' },
-    received: { label: 'Recebido', class: 'bg-success/20 text-success' },
-    cancelled: { label: 'Cancelado', class: 'bg-destructive/20 text-destructive' },
+    pending: { label: 'Pendente', class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+    sent: { label: 'Enviado', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+    confirmed: { label: 'Confirmado', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
+    approved: { label: 'Aprovado', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
+    received: { label: 'Recebido', class: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
+    cancelled: { label: 'Cancelado', class: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   };
 
   return (
@@ -179,19 +177,19 @@ const SuppliersPage: React.FC = () => {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="pos-stat">
+        <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm"><Truck className="w-4 h-4" /> Fornecedores</div>
           <p className="text-2xl font-bold">{suppliers.length}</p>
         </Card>
-        <Card className="pos-stat">
+        <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm"><ClipboardList className="w-4 h-4" /> Pedidos</div>
           <p className="text-2xl font-bold">{orders.length}</p>
         </Card>
-        <Card className="pos-stat">
+        <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm"><Package className="w-4 h-4" /> Pendentes</div>
-          <p className="text-2xl font-bold text-warning">{orders.filter(o => o.status === 'pending' || o.status === 'draft').length}</p>
+          <p className="text-2xl font-bold text-yellow-600">{orders.filter(o => ['pending', 'draft', 'sent'].includes(o.status)).length}</p>
         </Card>
-        <Card className="pos-stat">
+        <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm"><AlertTriangle className="w-4 h-4" /> Dívida Total</div>
           <p className={`text-2xl font-bold ${totalDebt > 0 ? 'text-destructive' : ''}`}>{formatCurrency(totalDebt)}</p>
         </Card>
@@ -250,24 +248,25 @@ const SuppliersPage: React.FC = () => {
               const supplier = suppliers.find(s => s.id === o.supplier_id);
               const st = STATUS_MAP[o.status] || STATUS_MAP.draft;
               return (
-                <Card key={o.id} className="p-4">
+                <Card key={o.id} className="p-4 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => {
+                  setSelectedOrderId(o.id);
+                  setShowOrderDetail(true);
+                }}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{supplier?.name || 'Fornecedor'}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString('pt-BR')} — {o.notes || 'Sem notas'}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{supplier?.name || 'Fornecedor'}</p>
+                        <Badge className={st.class}>{st.label}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(o.created_at).toLocaleDateString('pt-MZ')} — #{o.id.slice(0, 8).toUpperCase()}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={st.class}>{st.label}</Badge>
-                      <span className="font-bold pos-money">{formatCurrency(Number(o.total))}</span>
-                      {isAdmin && o.status === 'draft' && (
-                        <Button size="sm" variant="outline" onClick={() => updateOrderStatus(o.id, 'pending')}>Enviar</Button>
-                      )}
-                      {isAdmin && o.status === 'pending' && (
-                        <Button size="sm" onClick={() => updateOrderStatus(o.id, 'approved')}>Aprovar</Button>
-                      )}
-                      {isAdmin && o.status === 'approved' && (
-                        <Button size="sm" variant="outline" onClick={() => updateOrderStatus(o.id, 'received')}>Recebido</Button>
-                      )}
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-lg">{formatCurrency(Number(o.total))}</span>
+                      <Button size="sm" variant="ghost">
+                        <Eye className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 </Card>
@@ -323,6 +322,14 @@ const SuppliersPage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Order Detail Modal */}
+      <PurchaseOrderDetail
+        orderId={selectedOrderId}
+        open={showOrderDetail}
+        onClose={() => { setShowOrderDetail(false); setSelectedOrderId(null); }}
+        onUpdated={loadData}
+      />
     </div>
   );
 };
