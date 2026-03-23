@@ -20,6 +20,7 @@ import {
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import StockMovementHistory from '@/components/inventory/StockMovementHistory';
+import StockAlertsPanel from '@/components/inventory/StockAlertsPanel';
 
 interface InventoryProduct {
   id: string;
@@ -245,6 +246,9 @@ const LocalInventoryPage: React.FC = () => {
           </div>
         </Card>
       )}
+
+      {/* Stock Alerts */}
+      <StockAlertsPanel />
 
       {/* Search and Filter */}
       <div className="flex items-center gap-4">
