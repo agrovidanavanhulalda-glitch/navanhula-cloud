@@ -1699,8 +1699,12 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          last_sale_date: string | null
           low_stock_threshold: number | null
+          max_stock: number | null
+          min_stock: number | null
           name: string
+          reorder_point: number | null
           sale_price: number
           updated_at: string | null
         }
@@ -1715,8 +1719,12 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          last_sale_date?: string | null
           low_stock_threshold?: number | null
+          max_stock?: number | null
+          min_stock?: number | null
           name: string
+          reorder_point?: number | null
           sale_price?: number
           updated_at?: string | null
         }
@@ -1731,8 +1739,12 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          last_sale_date?: string | null
           low_stock_threshold?: number | null
+          max_stock?: number | null
+          min_stock?: number | null
           name?: string
+          reorder_point?: number | null
           sale_price?: number
           updated_at?: string | null
         }
@@ -2545,6 +2557,64 @@ export type Database = {
           },
         ]
       }
+      stock_alerts: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          message: string
+          product_id: string
+          resolved_at: string | null
+          status: string
+          store_id: string
+          type: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          message: string
+          product_id: string
+          resolved_at?: string | null
+          status?: string
+          store_id: string
+          type: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          product_id?: string
+          resolved_at?: string | null
+          status?: string
+          store_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_alerts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           company_id: string
@@ -3026,6 +3096,7 @@ export type Database = {
         Args: { p_product_id: string; p_quantity: number; p_store_id: string }
         Returns: undefined
       }
+      evaluate_stock_alerts: { Args: { p_store_id: string }; Returns: Json }
       generate_reseller_code: { Args: never; Returns: string }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
       get_platform_stats: { Args: never; Returns: Json }
