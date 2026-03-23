@@ -20,6 +20,7 @@ import {
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import StockMovementHistory from '@/components/inventory/StockMovementHistory';
+import StockAlertsPanel from '@/components/inventory/StockAlertsPanel';
 
 interface InventoryProduct {
   id: string;
