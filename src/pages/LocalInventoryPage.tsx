@@ -247,6 +247,9 @@ const LocalInventoryPage: React.FC = () => {
         </Card>
       )}
 
+      {/* Stock Alerts */}
+      <StockAlertsPanel />
+
       {/* Search and Filter */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
