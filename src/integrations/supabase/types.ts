@@ -1369,6 +1369,78 @@ export type Database = {
           },
         ]
       }
+      payouts: {
+        Row: {
+          amount: number
+          bank_account: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          fee_amount: number
+          id: string
+          net_amount: number
+          notes: string | null
+          payment_method: string
+          phone_number: string | null
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          bank_account?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          fee_amount?: number
+          id?: string
+          net_amount?: number
+          notes?: string | null
+          payment_method?: string
+          phone_number?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bank_account?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          fee_amount?: number
+          id?: string
+          net_amount?: number
+          notes?: string | null
+          payment_method?: string
+          phone_number?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payouts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payroll_runs: {
         Row: {
           base_salary: number
@@ -1455,6 +1527,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_fees: {
+        Row: {
+          created_at: string
+          fee_fixed: number
+          fee_percentage: number
+          fee_type: string
+          id: string
+          is_active: boolean
+          max_amount: number | null
+          min_amount: number
+          provider: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fee_fixed?: number
+          fee_percentage?: number
+          fee_type?: string
+          id?: string
+          is_active?: boolean
+          max_amount?: number | null
+          min_amount?: number
+          provider?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fee_fixed?: number
+          fee_percentage?: number
+          fee_type?: string
+          id?: string
+          is_active?: boolean
+          max_amount?: number | null
+          min_amount?: number
+          provider?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       poultry_batches: {
         Row: {
@@ -2903,10 +3014,15 @@ export type Database = {
         Row: {
           amount: number
           balance_after: number
+          company_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
+          fee_amount: number | null
           id: string
+          net_amount: number | null
+          provider: string | null
+          reference: string | null
           sale_id: string | null
           store_id: string
           type: string
@@ -2915,10 +3031,15 @@ export type Database = {
         Insert: {
           amount: number
           balance_after?: number
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          fee_amount?: number | null
           id?: string
+          net_amount?: number | null
+          provider?: string | null
+          reference?: string | null
           sale_id?: string | null
           store_id: string
           type: string
@@ -2927,16 +3048,28 @@ export type Database = {
         Update: {
           amount?: number
           balance_after?: number
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          fee_amount?: number | null
           id?: string
+          net_amount?: number | null
+          provider?: string | null
+          reference?: string | null
           sale_id?: string | null
           store_id?: string
           type?: string
           wallet_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "wallet_transactions_sale_id_fkey"
             columns: ["sale_id"]
@@ -3159,6 +3292,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      process_nava_payment: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_payment_method: string
+          p_provider?: string
+          p_reference?: string
+          p_store_id: string
+        }
+        Returns: Json
+      }
       process_reseller_commission: {
         Args: { _payment_transaction_id: string }
         Returns: undefined
@@ -3182,6 +3326,15 @@ export type Database = {
           p_store_id: string
           p_type: string
           p_unit_cost?: number
+        }
+        Returns: Json
+      }
+      request_payout: {
+        Args: {
+          p_amount: number
+          p_payment_method?: string
+          p_phone_number?: string
+          p_store_id: string
         }
         Returns: Json
       }
