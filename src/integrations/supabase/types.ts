@@ -1246,16 +1246,80 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_logs: {
+        Row: {
+          action: string
+          company_id: string | null
+          created_at: string | null
+          error_message: string | null
+          http_status: number | null
+          id: string
+          ip_address: string | null
+          provider: string
+          request_payload: Json | null
+          response_payload: Json | null
+          status: string | null
+          transaction_id: string | null
+        }
+        Insert: {
+          action: string
+          company_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          http_status?: number | null
+          id?: string
+          ip_address?: string | null
+          provider: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string | null
+          transaction_id?: string | null
+        }
+        Update: {
+          action?: string
+          company_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          http_status?: number | null
+          id?: string
+          ip_address?: string | null
+          provider?: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string | null
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_logs_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_transactions: {
         Row: {
           amount: number
           company_id: string
           created_at: string
           id: string
+          last_checked_at: string | null
           paid_at: string | null
           payment_method: Database["public"]["Enums"]["billing_payment_method"]
           phone_number: string | null
+          provider_response: Json | null
+          provider_transaction_id: string | null
           reference_id: string | null
+          retry_count: number | null
           status: string
           subscription_id: string
           updated_at: string
@@ -1265,10 +1329,14 @@ export type Database = {
           company_id: string
           created_at?: string
           id?: string
+          last_checked_at?: string | null
           paid_at?: string | null
           payment_method: Database["public"]["Enums"]["billing_payment_method"]
           phone_number?: string | null
+          provider_response?: Json | null
+          provider_transaction_id?: string | null
           reference_id?: string | null
+          retry_count?: number | null
           status?: string
           subscription_id: string
           updated_at?: string
@@ -1278,10 +1346,14 @@ export type Database = {
           company_id?: string
           created_at?: string
           id?: string
+          last_checked_at?: string | null
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["billing_payment_method"]
           phone_number?: string | null
+          provider_response?: Json | null
+          provider_transaction_id?: string | null
           reference_id?: string | null
+          retry_count?: number | null
           status?: string
           subscription_id?: string
           updated_at?: string
