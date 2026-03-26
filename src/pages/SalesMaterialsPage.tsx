@@ -14,7 +14,7 @@ const materials = [
     description: 'Apresentação completa do sistema para mostrar a potenciais clientes. Inclui funcionalidades, benefícios e diferenciais.',
     icon: Presentation,
     type: 'Apresentação',
-    content: `NAVANHULA CLOUD - Plataforma SaaS Empresarial
+    content: `NAVANHULA CLOUD - Sistema Empresarial
 
 ✅ Sistema POS completo e profissional
 ✅ Gestão de estoque em tempo real
@@ -119,10 +119,10 @@ Posso te ajudar a criar a conta agora mesmo! É muito simples.`,
     icon: FileText,
     type: 'Proposta',
     content: `PROPOSTA COMERCIAL - NAVANHULA CLOUD
-Plataforma SaaS Empresarial
+Sistema Empresarial
 
 SOBRE A SOLUÇÃO:
-O NAVANHULA CLOUD é uma plataforma SaaS de gestão empresarial desenvolvida para o mercado moçambicano, oferecendo controlo completo de operações comerciais, financeiras e fiscais.
+O NAVANHULA CLOUD é uma plataforma de gestão empresarial desenvolvida para o mercado moçambicano, oferecendo controlo completo de operações comerciais, financeiras e fiscais.
 
 MÓDULOS INCLUSOS:
 • Ponto de Venda (PDV) profissional

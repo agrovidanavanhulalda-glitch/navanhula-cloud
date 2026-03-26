@@ -185,7 +185,7 @@ export interface DashboardStats {
   activeRegisters: number;
 }
 
-// Auth context - SaaS version
+// Auth context
 export interface AuthContextType {
   user: Profile | null;
   role: AppRole | null;
