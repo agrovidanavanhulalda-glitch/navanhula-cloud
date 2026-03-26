@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.ai-business-insights]
 verify_jwt = false
+
+[functions.process-payout]
+verify_jwt = false
+
+[functions.check-payment-status]
+verify_jwt = false
