@@ -21,14 +21,42 @@ const MPESA_PUBLIC_KEY = Deno.env.get("MPESA_PUBLIC_KEY") || "";
 const MPESA_SERVICE_PROVIDER_CODE = Deno.env.get("MPESA_SERVICE_PROVIDER_CODE") || "";
 
 async function getMpesaBearerToken(): Promise<string> {
-  if (!MPESA_API_KEY || !MPESA_PUBLIC_KEY) {
-    throw new Error("M-Pesa API credentials not configured");
-  }
+  if (!MPESA_API_KEY || !MPESA_PUBLIC_KEY) throw new Error("M-Pesa API credentials not configured");
   const pemContents = MPESA_PUBLIC_KEY.replace(/\s/g, "");
   const binaryDer = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
   const publicKey = await crypto.subtle.importKey("spki", binaryDer, { name: "RSA-OAEP", hash: "SHA-1" }, false, ["encrypt"]);
   const encrypted = await crypto.subtle.encrypt({ name: "RSA-OAEP" }, publicKey, new TextEncoder().encode(MPESA_API_KEY));
   return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+}
+
+async function logPayment(serviceClient: any, data: {
+  transaction_id?: string;
+  company_id: string;
+  provider: string;
+  action: string;
+  request_payload?: any;
+  response_payload?: any;
+  http_status?: number;
+  status: string;
+  error_message?: string;
+  ip_address?: string;
+}) {
+  try {
+    await serviceClient.from("payment_logs").insert({
+      transaction_id: data.transaction_id || null,
+      company_id: data.company_id,
+      provider: data.provider,
+      action: data.action,
+      request_payload: data.request_payload || null,
+      response_payload: data.response_payload || null,
+      http_status: data.http_status || null,
+      status: data.status,
+      error_message: data.error_message || null,
+      ip_address: data.ip_address || null,
+    });
+  } catch (e) {
+    console.error("Failed to write payment log:", e);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -71,32 +99,91 @@ Deno.serve(async (req) => {
     const transactionRef = `NAV-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     const serviceClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: tx, error: txError } = await serviceClient.from("payment_transactions").insert({ subscription_id, company_id: sub.company_id, amount: paymentAmount, payment_method: "mpesa", phone_number: formattedPhone, reference_id: transactionRef, status: "pending" }).select().single();
+    const { data: tx, error: txError } = await serviceClient.from("payment_transactions").insert({
+      subscription_id, company_id: sub.company_id, amount: paymentAmount,
+      payment_method: "mpesa", phone_number: formattedPhone,
+      reference_id: transactionRef, status: "pending"
+    }).select().single();
 
     if (txError) {
       return new Response(JSON.stringify({ error: "Erro ao criar transação" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const clientIp = req.headers.get("x-forwarded-for") || "unknown";
+
+    // Test mode
     if (!MPESA_API_KEY || !MPESA_PUBLIC_KEY) {
+      await logPayment(serviceClient, {
+        transaction_id: tx.id, company_id: sub.company_id,
+        provider: "mpesa", action: "initiate",
+        request_payload: { phone: formattedPhone, amount: paymentAmount, reference: transactionRef },
+        status: "success", ip_address: clientIp,
+        response_payload: { test_mode: true },
+      });
       return new Response(JSON.stringify({ success: true, transaction_id: tx.id, reference: transactionRef, status: "pending", message: "Pagamento M-Pesa iniciado (modo teste).", test_mode: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Real M-Pesa call
     const bearerToken = await getMpesaBearerToken();
-    const mpesaPayload = { input_TransactionReference: transactionRef, input_CustomerMSISDN: formattedPhone, input_Amount: paymentAmount.toString(), input_ThirdPartyReference: `NAVPOS-${tx.id.substring(0, 8)}`, input_ServiceProviderCode: MPESA_SERVICE_PROVIDER_CODE };
+    const mpesaPayload = {
+      input_TransactionReference: transactionRef,
+      input_CustomerMSISDN: formattedPhone,
+      input_Amount: paymentAmount.toString(),
+      input_ThirdPartyReference: `NAVPOS-${tx.id.substring(0, 8)}`,
+      input_ServiceProviderCode: MPESA_SERVICE_PROVIDER_CODE,
+    };
 
-    const mpesaResponse = await fetch(`${MPESA_BASE_URL}:18352/ipg/v1x/c2bPayment/singleStage/`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${bearerToken}`, Origin: ALLOWED_ORIGINS[0] }, body: JSON.stringify(mpesaPayload) });
+    await logPayment(serviceClient, {
+      transaction_id: tx.id, company_id: sub.company_id,
+      provider: "mpesa", action: "initiate",
+      request_payload: { ...mpesaPayload, phone: formattedPhone },
+      status: "sent", ip_address: clientIp,
+    });
+
+    const mpesaResponse = await fetch(`${MPESA_BASE_URL}:18352/ipg/v1x/c2bPayment/singleStage/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${bearerToken}`, Origin: ALLOWED_ORIGINS[0] },
+      body: JSON.stringify(mpesaPayload),
+    });
     const mpesaResult = await mpesaResponse.json();
 
+    await logPayment(serviceClient, {
+      transaction_id: tx.id, company_id: sub.company_id,
+      provider: "mpesa", action: "initiate",
+      response_payload: mpesaResult, http_status: mpesaResponse.status,
+      status: mpesaResult.output_ResponseCode === "INS-0" ? "success" : "error",
+      error_message: mpesaResult.output_ResponseCode !== "INS-0" ? mpesaResult.output_ResponseDesc : null,
+      ip_address: clientIp,
+    });
+
     if (mpesaResult.output_ResponseCode === "INS-0") {
-      await serviceClient.from("payment_transactions").update({ status: "completed", paid_at: new Date().toISOString(), reference_id: mpesaResult.output_TransactionID || transactionRef }).eq("id", tx.id);
-      await serviceClient.rpc("process_subscription_payment", { p_subscription_id: subscription_id, p_payment_method: "mpesa", p_reference_id: mpesaResult.output_TransactionID || transactionRef, p_phone_number: formattedPhone });
+      await serviceClient.from("payment_transactions").update({
+        status: "completed",
+        paid_at: new Date().toISOString(),
+        provider_transaction_id: mpesaResult.output_TransactionID || null,
+        provider_response: mpesaResult,
+        reference_id: mpesaResult.output_TransactionID || transactionRef,
+      }).eq("id", tx.id);
+
+      await serviceClient.rpc("process_subscription_payment", {
+        p_subscription_id: subscription_id,
+        p_payment_method: "mpesa",
+        p_reference_id: mpesaResult.output_TransactionID || transactionRef,
+        p_phone_number: formattedPhone,
+      });
+
       return new Response(JSON.stringify({ success: true, transaction_id: tx.id, reference: mpesaResult.output_TransactionID || transactionRef, status: "completed", message: "Pagamento M-Pesa processado com sucesso!" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } else {
-      await serviceClient.from("payment_transactions").update({ status: "failed" }).eq("id", tx.id);
+      await serviceClient.from("payment_transactions").update({
+        status: "failed",
+        provider_response: mpesaResult,
+      }).eq("id", tx.id);
+
       return new Response(JSON.stringify({ success: false, transaction_id: tx.id, error: mpesaResult.output_ResponseDesc || "Pagamento M-Pesa falhou" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   } catch (error) {
     const corsHeaders = getCorsHeaders(req);
+    console.error("M-Pesa error:", error);
     return new Response(JSON.stringify({ error: "Erro interno no processamento M-Pesa" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

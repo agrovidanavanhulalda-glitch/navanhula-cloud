@@ -15,21 +15,46 @@ function getCorsHeaders(req: Request) {
   };
 }
 
-// Verify webhook signature using HMAC-SHA256
 async function verifySignature(body: string, signature: string, secret: string): Promise<boolean> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
+    "raw", encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
   );
   const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
   const expectedSig = Array.from(new Uint8Array(sig))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, "0")).join("");
   return expectedSig === signature;
+}
+
+async function logPayment(serviceClient: any, data: {
+  transaction_id?: string;
+  company_id?: string;
+  provider: string;
+  action: string;
+  request_payload?: any;
+  response_payload?: any;
+  http_status?: number;
+  status: string;
+  error_message?: string;
+  ip_address?: string;
+}) {
+  try {
+    await serviceClient.from("payment_logs").insert({
+      transaction_id: data.transaction_id || null,
+      company_id: data.company_id || null,
+      provider: data.provider,
+      action: data.action,
+      request_payload: data.request_payload || null,
+      response_payload: data.response_payload || null,
+      http_status: data.http_status || null,
+      status: data.status,
+      error_message: data.error_message || null,
+      ip_address: data.ip_address || null,
+    });
+  } catch (e) {
+    console.error("Failed to write payment log:", e);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -39,10 +64,14 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const serviceClient = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  );
+  const clientIp = req.headers.get("x-forwarded-for") || "unknown";
+
   try {
     const rawBody = await req.text();
-
-    // Verify webhook signature
     const signature = req.headers.get("x-signature");
     const webhookSecret = Deno.env.get("WEBHOOK_SECRET");
 
@@ -55,9 +84,11 @@ Deno.serve(async (req) => {
     }
 
     if (!signature) {
-      console.warn("Webhook rejected: missing x-signature header", {
-        ip: req.headers.get("x-forwarded-for"),
-        ua: req.headers.get("user-agent"),
+      await logPayment(serviceClient, {
+        provider: "webhook", action: "webhook_received",
+        request_payload: { headers: { ip: clientIp, ua: req.headers.get("user-agent") } },
+        status: "error", error_message: "Missing x-signature header",
+        ip_address: clientIp,
       });
       return new Response(
         JSON.stringify({ error: "Missing signature" }),
@@ -67,9 +98,11 @@ Deno.serve(async (req) => {
 
     const isValid = await verifySignature(rawBody, signature, webhookSecret);
     if (!isValid) {
-      console.warn("Webhook rejected: invalid signature", {
-        ip: req.headers.get("x-forwarded-for"),
-        ua: req.headers.get("user-agent"),
+      await logPayment(serviceClient, {
+        provider: "webhook", action: "webhook_received",
+        request_payload: { headers: { ip: clientIp, ua: req.headers.get("user-agent") } },
+        status: "error", error_message: "Invalid signature",
+        ip_address: clientIp,
       });
       return new Response(
         JSON.stringify({ error: "Invalid signature" }),
@@ -87,11 +120,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const serviceClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
     const { data: tx, error: txError } = await serviceClient
       .from("payment_transactions")
       .select("*, subscriptions(*)")
@@ -100,6 +128,12 @@ Deno.serve(async (req) => {
       .single();
 
     if (txError || !tx) {
+      await logPayment(serviceClient, {
+        provider, action: "webhook_received",
+        request_payload: body,
+        status: "error", error_message: `Transaction not found: ${reference_id}`,
+        ip_address: clientIp,
+      });
       return new Response(
         JSON.stringify({ error: "Transaction not found", reference_id }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -108,12 +142,23 @@ Deno.serve(async (req) => {
 
     const isSuccess = status === "success" || status === "completed" || status === "0" || status === "INS-0";
 
+    await logPayment(serviceClient, {
+      transaction_id: tx.id, company_id: tx.company_id,
+      provider, action: "webhook_received",
+      request_payload: body,
+      status: isSuccess ? "success" : "error",
+      error_message: isSuccess ? null : `Payment status: ${status}`,
+      ip_address: clientIp,
+    });
+
     if (isSuccess) {
       await serviceClient
         .from("payment_transactions")
         .update({
           status: "completed",
           paid_at: new Date().toISOString(),
+          provider_transaction_id: transaction_id || null,
+          provider_response: body,
           reference_id: transaction_id || reference_id,
         })
         .eq("id", tx.id);
@@ -133,7 +178,7 @@ Deno.serve(async (req) => {
     } else {
       await serviceClient
         .from("payment_transactions")
-        .update({ status: "failed" })
+        .update({ status: "failed", provider_response: body })
         .eq("id", tx.id);
 
       return new Response(
@@ -142,7 +187,7 @@ Deno.serve(async (req) => {
       );
     }
   } catch (error) {
-    const corsHeaders = getCorsHeaders(req);
+    console.error("Webhook error:", error);
     return new Response(
       JSON.stringify({ error: "Internal webhook error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
