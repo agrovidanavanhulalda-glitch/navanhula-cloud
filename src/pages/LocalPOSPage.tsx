@@ -25,7 +25,7 @@ import BluetoothPrintButton from '@/components/pos/BluetoothPrintButton';
 import PostSaleModal from '@/components/pos/PostSaleModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// HYBRID: Local POS data + SaaS Auth
+// HYBRID: Local POS data + Cloud Auth
 
 const LocalPOSPage: React.FC = () => {
   const {

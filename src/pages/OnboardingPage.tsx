@@ -108,7 +108,7 @@ const OnboardingPage: React.FC = () => {
           </div>
         </div>
         <h1 className="text-3xl font-bold text-primary">NAVANHULA CLOUD</h1>
-        <p className="text-muted-foreground mt-2">Plataforma SaaS Empresarial</p>
+        <p className="text-muted-foreground mt-2">Sistema Empresarial</p>
       </div>
 
       {/* Onboarding card */}

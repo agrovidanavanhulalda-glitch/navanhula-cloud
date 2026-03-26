@@ -14,7 +14,7 @@ const materials = [
     description: 'Apresentação completa do sistema para mostrar a potenciais clientes. Inclui funcionalidades, benefícios e diferenciais.',
     icon: Presentation,
     type: 'Apresentação',
-    content: `NAVANHULA CLOUD - Plataforma SaaS Empresarial
+    content: `NAVANHULA CLOUD - Sistema Empresarial
 
 ✅ Sistema POS completo e profissional
 ✅ Gestão de estoque em tempo real
