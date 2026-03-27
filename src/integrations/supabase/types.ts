@@ -1217,11 +1217,15 @@ export type Database = {
           confirmed_at: string | null
           confirmed_by: string | null
           created_at: string
+          fraud_flag: boolean
+          fraud_reason: string | null
           id: string
           phone: string
+          proof_image_url: string | null
           provider: string
           reference: string
           rejection_reason: string | null
+          risk_score: number
           sale_id: string | null
           status: string
           store_id: string | null
@@ -1233,11 +1237,15 @@ export type Database = {
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string
+          fraud_flag?: boolean
+          fraud_reason?: string | null
           id?: string
           phone: string
+          proof_image_url?: string | null
           provider: string
           reference: string
           rejection_reason?: string | null
+          risk_score?: number
           sale_id?: string | null
           status?: string
           store_id?: string | null
@@ -1249,11 +1257,15 @@ export type Database = {
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string
+          fraud_flag?: boolean
+          fraud_reason?: string | null
           id?: string
           phone?: string
+          proof_image_url?: string | null
           provider?: string
           reference?: string
           rejection_reason?: string | null
+          risk_score?: number
           sale_id?: string | null
           status?: string
           store_id?: string | null
@@ -3378,6 +3390,7 @@ export type Database = {
         Args: { p_product_id: string; p_quantity: number; p_store_id: string }
         Returns: undefined
       }
+      evaluate_payment_fraud: { Args: { p_payment_id: string }; Returns: Json }
       evaluate_stock_alerts: { Args: { p_store_id: string }; Returns: Json }
       generate_nava_reference: { Args: never; Returns: string }
       generate_reseller_code: { Args: never; Returns: string }
