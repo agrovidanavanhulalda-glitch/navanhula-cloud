@@ -1210,6 +1210,79 @@ export type Database = {
           },
         ]
       }
+      manual_payments: {
+        Row: {
+          amount: number
+          company_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          phone: string
+          provider: string
+          reference: string
+          rejection_reason: string | null
+          sale_id: string | null
+          status: string
+          store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          phone: string
+          provider: string
+          reference: string
+          rejection_reason?: string | null
+          sale_id?: string | null
+          status?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          phone?: string
+          provider?: string
+          reference?: string
+          rejection_reason?: string | null
+          sale_id?: string | null
+          status?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_payments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_payments_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_payments_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           category: string
@@ -3288,6 +3361,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      confirm_manual_payment: {
+        Args: { p_confirmed_by: string; p_payment_id: string }
+        Returns: Json
+      }
       credit_wallet_from_sale: {
         Args: {
           p_amount: number
@@ -3302,6 +3379,7 @@ export type Database = {
         Returns: undefined
       }
       evaluate_stock_alerts: { Args: { p_store_id: string }; Returns: Json }
+      generate_nava_reference: { Args: never; Returns: string }
       generate_reseller_code: { Args: never; Returns: string }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
       get_platform_stats: { Args: never; Returns: Json }
@@ -3399,6 +3477,10 @@ export type Database = {
           p_type: string
           p_unit_cost?: number
         }
+        Returns: Json
+      }
+      reject_manual_payment: {
+        Args: { p_payment_id: string; p_reason?: string; p_rejected_by: string }
         Returns: Json
       }
       request_payout: {
