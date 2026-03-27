@@ -25,6 +25,7 @@ import SubscriptionPage from "./pages/SubscriptionPage";
 import CEODashboardPage from "./pages/CEODashboardPage";
 import FiscalPage from "./pages/FiscalPage";
 import WalletPage from "./pages/WalletPage";
+import ManualPaymentsPage from "./pages/ManualPaymentsPage";
 import CommunityPage from "./pages/CommunityPage";
 import FinancialReportsPage from "./pages/FinancialReportsPage";
 import CRMPage from "./pages/CRMPage";
@@ -176,6 +177,7 @@ const AppRoutes = () => {
         <Route path="relatorios" element={<LocalReportsPage />} />
         <Route path="financeiro" element={<FinancialReportsPage />} />
         <Route path="carteira" element={<SubscriptionGate><WalletPage /></SubscriptionGate>} />
+        <Route path="pagamentos-manuais" element={<SubscriptionGate><ManualPaymentsPage /></SubscriptionGate>} />
         <Route path="configuracoes" element={<LocalSettingsPage />} />
         <Route path="comunidade" element={<CommunityPage />} />
 
