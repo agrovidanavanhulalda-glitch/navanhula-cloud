@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Smartphone, CheckCircle, XCircle, RefreshCw, Clock, Search, AlertTriangle,
+  Smartphone, CheckCircle, XCircle, RefreshCw, Clock, Search, AlertTriangle, ShieldAlert, Shield, Eye, Upload,
 } from 'lucide-react';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { toast } from 'sonner';
@@ -28,6 +28,10 @@ interface ManualPayment {
   confirmed_by: string | null;
   confirmed_at: string | null;
   rejection_reason: string | null;
+  fraud_flag: boolean;
+  fraud_reason: string | null;
+  risk_score: number;
+  proof_image_url: string | null;
   created_at: string;
 }
 
@@ -35,6 +39,19 @@ const PROVIDER_LABELS: Record<string, string> = {
   mpesa: 'M-Pesa',
   emola: 'e-Mola',
   mkesh: 'mKesh',
+};
+
+const getRiskBadge = (score: number, fraudFlag: boolean) => {
+  if (fraudFlag || score > 50) {
+    return <Badge variant="destructive" className="gap-1"><ShieldAlert className="w-3 h-3" />Alto Risco ({score})</Badge>;
+  }
+  if (score > 20) {
+    return <Badge variant="secondary" className="gap-1 bg-yellow-100 text-yellow-800 border-yellow-300"><AlertTriangle className="w-3 h-3" />Médio ({score})</Badge>;
+  }
+  if (score > 0) {
+    return <Badge variant="outline" className="gap-1"><Shield className="w-3 h-3" />Baixo ({score})</Badge>;
+  }
+  return <Badge variant="outline" className="gap-1 text-green-700 border-green-300"><Shield className="w-3 h-3" />Seguro</Badge>;
 };
 
 const ManualPaymentsPage: React.FC = () => {
@@ -45,6 +62,8 @@ const ManualPaymentsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [rejectDialog, setRejectDialog] = useState<{ open: boolean; paymentId: string }>({ open: false, paymentId: '' });
   const [rejectReason, setRejectReason] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; payment: ManualPayment | null }>({ open: false, payment: null });
+  const [proofDialog, setProofDialog] = useState<{ open: boolean; url: string }>({ open: false, url: '' });
   const [processing, setProcessing] = useState<string | null>(null);
 
   useEffect(() => {
@@ -75,18 +94,24 @@ const ManualPaymentsPage: React.FC = () => {
     }
   };
 
-  const handleConfirm = async (paymentId: string) => {
-    if (!user?.id) return;
-    setProcessing(paymentId);
+  const openConfirmDialog = (payment: ManualPayment) => {
+    setConfirmDialog({ open: true, payment });
+  };
+
+  const handleConfirm = async () => {
+    const payment = confirmDialog.payment;
+    if (!user?.id || !payment) return;
+    setProcessing(payment.id);
     try {
       const { data, error } = await supabase.rpc('confirm_manual_payment', {
-        p_payment_id: paymentId,
+        p_payment_id: payment.id,
         p_confirmed_by: user.id,
       });
       if (error) throw error;
       const result = data as any;
       if (result.success) {
         toast.success(result.message);
+        setConfirmDialog({ open: false, payment: null });
         loadPayments();
       } else {
         toast.error(result.message);
@@ -130,6 +155,7 @@ const ManualPaymentsPage: React.FC = () => {
   );
 
   const pendingCount = payments.filter(p => p.status === 'pending').length;
+  const highRiskCount = payments.filter(p => p.fraud_flag && p.status === 'pending').length;
 
   const getStatusBadge = (status: string) => {
     const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -155,8 +181,14 @@ const ManualPaymentsPage: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          {pendingCount > 0 && (
+          {highRiskCount > 0 && (
             <Badge variant="destructive" className="text-sm px-3 py-1">
+              <ShieldAlert className="w-3 h-3 mr-1" />
+              {highRiskCount} alto risco
+            </Badge>
+          )}
+          {pendingCount > 0 && (
+            <Badge variant="secondary" className="text-sm px-3 py-1">
               <AlertTriangle className="w-3 h-3 mr-1" />
               {pendingCount} pendente{pendingCount > 1 ? 's' : ''}
             </Badge>
@@ -170,30 +202,16 @@ const ManualPaymentsPage: React.FC = () => {
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
         <div className="flex gap-1">
-          <Button
-            size="sm"
-            variant={filter === 'pending' ? 'default' : 'outline'}
-            onClick={() => setFilter('pending')}
-          >
-            <Clock className="w-3 h-3 mr-1" />
-            Pendentes
+          <Button size="sm" variant={filter === 'pending' ? 'default' : 'outline'} onClick={() => setFilter('pending')}>
+            <Clock className="w-3 h-3 mr-1" />Pendentes
           </Button>
-          <Button
-            size="sm"
-            variant={filter === 'all' ? 'default' : 'outline'}
-            onClick={() => setFilter('all')}
-          >
+          <Button size="sm" variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>
             Todos
           </Button>
         </div>
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por referência ou telefone..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
+          <Input placeholder="Buscar por referência ou telefone..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
         </div>
       </div>
 
@@ -210,19 +228,31 @@ const ManualPaymentsPage: React.FC = () => {
       ) : (
         <div className="space-y-3">
           {filteredPayments.map(payment => (
-            <Card key={payment.id} className="p-4">
+            <Card key={payment.id} className={`p-4 ${payment.fraud_flag ? 'border-destructive/50 bg-destructive/5' : ''}`}>
               <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-lg">{formatCurrency(payment.amount)}</span>
                     {getStatusBadge(payment.status)}
                     <Badge variant="outline">{PROVIDER_LABELS[payment.provider] || payment.provider}</Badge>
+                    {getRiskBadge(payment.risk_score, payment.fraud_flag)}
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                     <span>📱 {payment.phone}</span>
                     <span>🔗 {payment.reference}</span>
                     <span>🕐 {formatDateTime(payment.created_at)}</span>
+                    {payment.proof_image_url && (
+                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setProofDialog({ open: true, url: payment.proof_image_url! })}>
+                        <Eye className="w-3 h-3 mr-1" />Comprovativo
+                      </Button>
+                    )}
                   </div>
+                  {payment.fraud_reason && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <ShieldAlert className="w-3 h-3" />
+                      {payment.fraud_reason}
+                    </p>
+                  )}
                   {payment.rejection_reason && (
                     <p className="text-sm text-destructive">Motivo: {payment.rejection_reason}</p>
                   )}
@@ -230,22 +260,11 @@ const ManualPaymentsPage: React.FC = () => {
 
                 {payment.status === 'pending' && (
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleConfirm(payment.id)}
-                      disabled={processing === payment.id}
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Confirmar
+                    <Button size="sm" onClick={() => openConfirmDialog(payment)} disabled={processing === payment.id}>
+                      <CheckCircle className="w-4 h-4 mr-1" />Confirmar
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => setRejectDialog({ open: true, paymentId: payment.id })}
-                      disabled={processing === payment.id}
-                    >
-                      <XCircle className="w-4 h-4 mr-1" />
-                      Rejeitar
+                    <Button size="sm" variant="destructive" onClick={() => setRejectDialog({ open: true, paymentId: payment.id })} disabled={processing === payment.id}>
+                      <XCircle className="w-4 h-4 mr-1" />Rejeitar
                     </Button>
                   </div>
                 )}
@@ -255,6 +274,72 @@ const ManualPaymentsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Confirm Dialog (Double Check) */}
+      <Dialog open={confirmDialog.open} onOpenChange={open => !open && setConfirmDialog({ open: false, payment: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5" />
+              Confirmar Pagamento
+            </DialogTitle>
+          </DialogHeader>
+          {confirmDialog.payment && (
+            <div className="space-y-4">
+              {confirmDialog.payment.fraud_flag && (
+                <Card className="p-3 border-destructive bg-destructive/10">
+                  <p className="text-sm font-semibold text-destructive flex items-center gap-1">
+                    <ShieldAlert className="w-4 h-4" />
+                    ⚠️ PAGAMENTO DE ALTO RISCO
+                  </p>
+                  <p className="text-xs text-destructive mt-1">{confirmDialog.payment.fraud_reason}</p>
+                </Card>
+              )}
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Valor:</span>
+                  <p className="font-bold text-lg">{formatCurrency(confirmDialog.payment.amount)}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Provedor:</span>
+                  <p className="font-semibold">{PROVIDER_LABELS[confirmDialog.payment.provider] || confirmDialog.payment.provider}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Telefone:</span>
+                  <p className="font-mono">{confirmDialog.payment.phone}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Referência:</span>
+                  <p className="font-mono">{confirmDialog.payment.reference}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Risco:</span>
+                  {getRiskBadge(confirmDialog.payment.risk_score, confirmDialog.payment.fraud_flag)}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Data:</span>
+                  <p className="text-xs">{formatDateTime(confirmDialog.payment.created_at)}</p>
+                </div>
+              </div>
+
+              {confirmDialog.payment.proof_image_url && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Comprovativo:</span>
+                  <img src={confirmDialog.payment.proof_image_url} alt="Comprovativo" className="mt-1 rounded-md border max-h-48 object-contain" />
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDialog({ open: false, payment: null })}>Cancelar</Button>
+            <Button onClick={handleConfirm} disabled={!!processing} className={confirmDialog.payment?.fraud_flag ? 'bg-destructive hover:bg-destructive/90' : ''}>
+              <CheckCircle className="w-4 h-4 mr-1" />
+              {confirmDialog.payment?.fraud_flag ? 'Confirmar mesmo assim' : 'Confirmar pagamento'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Reject Dialog */}
       <Dialog open={rejectDialog.open} onOpenChange={open => !open && setRejectDialog({ open: false, paymentId: '' })}>
         <DialogContent>
@@ -262,25 +347,27 @@ const ManualPaymentsPage: React.FC = () => {
             <DialogTitle>Rejeitar Pagamento</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Informe o motivo da rejeição. A venda associada será cancelada.
-            </p>
-            <Textarea
-              placeholder="Motivo da rejeição (opcional)"
-              value={rejectReason}
-              onChange={e => setRejectReason(e.target.value)}
-              rows={3}
-            />
+            <p className="text-sm text-muted-foreground">Informe o motivo da rejeição. A venda associada será cancelada.</p>
+            <Textarea placeholder="Motivo da rejeição (opcional)" value={rejectReason} onChange={e => setRejectReason(e.target.value)} rows={3} />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectDialog({ open: false, paymentId: '' })}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={() => setRejectDialog({ open: false, paymentId: '' })}>Cancelar</Button>
             <Button variant="destructive" onClick={handleReject} disabled={!!processing}>
-              <XCircle className="w-4 h-4 mr-1" />
-              Confirmar Rejeição
+              <XCircle className="w-4 h-4 mr-1" />Confirmar Rejeição
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Proof Image Dialog */}
+      <Dialog open={proofDialog.open} onOpenChange={open => !open && setProofDialog({ open: false, url: '' })}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Comprovativo de Pagamento</DialogTitle>
+          </DialogHeader>
+          {proofDialog.url && (
+            <img src={proofDialog.url} alt="Comprovativo" className="w-full rounded-md" />
+          )}
         </DialogContent>
       </Dialog>
     </div>

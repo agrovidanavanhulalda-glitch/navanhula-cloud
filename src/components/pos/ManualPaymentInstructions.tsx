@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Smartphone, Copy, CheckCircle, Clock } from 'lucide-react';
+import { Smartphone, Copy, CheckCircle, Clock, Upload, Image } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/SaaSAuthContext';
 import { toast } from 'sonner';
 
 interface ManualPaymentInstructionsProps {
@@ -47,19 +46,16 @@ const PROVIDER_CONFIG: Record<string, { label: string; color: string; instructio
 };
 
 const ManualPaymentInstructions: React.FC<ManualPaymentInstructionsProps> = ({
-  provider,
-  amount,
-  storeId,
-  companyId,
-  saleId,
-  onPaymentCreated,
-  onCancel,
+  provider, amount, storeId, companyId, saleId, onPaymentCreated, onCancel,
 }) => {
-  const { user } = useAuth();
   const [phone, setPhone] = useState('');
   const [reference, setReference] = useState('');
+  const [paymentId, setPaymentId] = useState<string | null>(null);
   const [created, setCreated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const config = PROVIDER_CONFIG[provider];
 
@@ -71,13 +67,11 @@ const ManualPaymentInstructions: React.FC<ManualPaymentInstructionsProps> = ({
 
     setLoading(true);
     try {
-      // Generate reference
       const { data: refData, error: refError } = await supabase.rpc('generate_nava_reference');
       if (refError) throw refError;
       const ref = refData as string;
 
-      // Create manual payment
-      const { error } = await supabase.from('manual_payments').insert({
+      const { data: insertData, error } = await supabase.from('manual_payments').insert({
         company_id: companyId,
         store_id: storeId,
         sale_id: saleId || null,
@@ -86,11 +80,12 @@ const ManualPaymentInstructions: React.FC<ManualPaymentInstructionsProps> = ({
         provider,
         reference: ref,
         status: 'pending',
-      });
+      }).select('id').single();
 
       if (error) throw error;
 
       setReference(ref);
+      setPaymentId(insertData.id);
       setCreated(true);
       onPaymentCreated(ref);
       toast.success('Pagamento registrado! Aguarde confirmação.');
@@ -99,6 +94,50 @@ const ManualPaymentInstructions: React.FC<ManualPaymentInstructionsProps> = ({
       toast.error('Erro ao criar pagamento');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUploadProof = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !paymentId) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Apenas imagens são permitidas');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Imagem muito grande (máx 5MB)');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${paymentId}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('payment-proofs')
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('payment-proofs')
+        .getPublicUrl(path);
+
+      const publicUrl = urlData.publicUrl;
+
+      await supabase.from('manual_payments')
+        .update({ proof_image_url: publicUrl })
+        .eq('id', paymentId);
+
+      setProofUrl(publicUrl);
+      toast.success('Comprovativo enviado!');
+    } catch (err) {
+      console.error('Upload error:', err);
+      toast.error('Erro ao enviar comprovativo');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -157,6 +196,31 @@ const ManualPaymentInstructions: React.FC<ManualPaymentInstructionsProps> = ({
           </ol>
         </Card>
 
+        {/* Proof Upload */}
+        <Card className="p-4 space-y-3">
+          <h4 className="font-semibold flex items-center gap-2 text-sm">
+            <Upload className="w-4 h-4" />
+            Enviar Comprovativo (opcional)
+          </h4>
+          <p className="text-xs text-muted-foreground">
+            Envie um screenshot da confirmação do pagamento para acelerar a validação.
+          </p>
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUploadProof} />
+          {proofUrl ? (
+            <div className="space-y-2">
+              <img src={proofUrl} alt="Comprovativo" className="rounded-md border max-h-40 object-contain" />
+              <p className="text-xs text-green-600 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />Comprovativo enviado
+              </p>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+              <Image className="w-4 h-4 mr-1" />
+              {uploading ? 'Enviando...' : 'Selecionar imagem'}
+            </Button>
+          )}
+        </Card>
+
         <Card className="p-3 bg-muted/50">
           <p className="text-xs text-muted-foreground text-center">
             ⏳ O operador irá confirmar o recebimento do pagamento. Pode demorar alguns minutos.
@@ -175,22 +239,12 @@ const ManualPaymentInstructions: React.FC<ManualPaymentInstructionsProps> = ({
       </Card>
 
       <div>
-        <label className="text-sm font-medium mb-1 block">
-          Número de telefone do cliente
-        </label>
-        <Input
-          placeholder="84XXXXXXX"
-          value={phone}
-          onChange={e => setPhone(e.target.value)}
-          className="text-lg h-12"
-          maxLength={13}
-        />
+        <label className="text-sm font-medium mb-1 block">Número de telefone do cliente</label>
+        <Input placeholder="84XXXXXXX" value={phone} onChange={e => setPhone(e.target.value)} className="text-lg h-12" maxLength={13} />
       </div>
 
       <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={onCancel}>
-          Cancelar
-        </Button>
+        <Button variant="outline" className="flex-1" onClick={onCancel}>Cancelar</Button>
         <Button className="flex-1" onClick={handleCreatePayment} disabled={loading || !phone.trim()}>
           <CheckCircle className="w-4 h-4 mr-2" />
           {loading ? 'Criando...' : 'Gerar Referência'}
