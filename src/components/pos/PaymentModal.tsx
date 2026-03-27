@@ -21,8 +21,10 @@ import {
   QrCode
 } from 'lucide-react';
 import QRCodePayment from './QRCodePayment';
+import ManualPaymentInstructions from './ManualPaymentInstructions';
 import { formatCurrency } from '@/lib/formatters';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/SaaSAuthContext';
 import { toast } from 'sonner';
 
 export interface PaymentDetails {
@@ -350,14 +352,26 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
             )}
 
-            {/* Electronic Payment Info */}
-            {selectedMethod !== 'cash' && (
+            {/* Electronic Payment - Manual Mobile Money Flow */}
+            {(selectedMethod === 'mpesa' || selectedMethod === 'emola') && (
+              <ManualPaymentInstructions
+                provider={selectedMethod}
+                amount={total}
+                storeId={storeId}
+                companyId={companyId}
+                onPaymentCreated={(ref) => {
+                  toast.success(`Referência gerada: ${ref}`);
+                }}
+                onCancel={() => setSelectedMethod('cash')}
+              />
+            )}
+
+            {/* Card Payment Info */}
+            {selectedMethod === 'card' && (
               <Card className="p-4 bg-secondary/50">
                 <div className="text-center space-y-2">
-                  <Smartphone className="w-10 h-10 mx-auto text-primary" />
-                  <p className="font-medium">
-                    Pagamento via {selectedMethod === 'mpesa' ? 'M-Pesa' : selectedMethod === 'emola' ? 'E-Mola' : 'Cartão'}
-                  </p>
+                  <CreditCard className="w-10 h-10 mx-auto text-primary" />
+                  <p className="font-medium">Pagamento via Cartão</p>
                   <p className="text-sm text-muted-foreground">
                     Confirme o recebimento de {formatCurrency(total)}
                   </p>
