@@ -1793,6 +1793,69 @@ export type Database = {
           },
         ]
       }
+      poultry_daily_records: {
+        Row: {
+          avg_weight_kg: number | null
+          batch_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          feed_consumed_kg: number | null
+          humidity_percent: number | null
+          id: string
+          mortality_count: number
+          observations: string | null
+          record_date: string
+          temperature_celsius: number | null
+          water_consumed_liters: number | null
+        }
+        Insert: {
+          avg_weight_kg?: number | null
+          batch_id: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          feed_consumed_kg?: number | null
+          humidity_percent?: number | null
+          id?: string
+          mortality_count?: number
+          observations?: string | null
+          record_date?: string
+          temperature_celsius?: number | null
+          water_consumed_liters?: number | null
+        }
+        Update: {
+          avg_weight_kg?: number | null
+          batch_id?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          feed_consumed_kg?: number | null
+          humidity_percent?: number | null
+          id?: string
+          mortality_count?: number
+          observations?: string | null
+          record_date?: string
+          temperature_celsius?: number | null
+          water_consumed_liters?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poultry_daily_records_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "poultry_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poultry_daily_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       poultry_feed: {
         Row: {
           batch_id: string
@@ -1830,6 +1893,150 @@ export type Database = {
             columns: ["batch_id"]
             isOneToOne: false
             referencedRelation: "poultry_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poultry_inputs: {
+        Row: {
+          balance: number | null
+          batch_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          entry_date: string
+          id: string
+          input_type: string
+          low_stock_threshold: number | null
+          name: string
+          notes: string | null
+          quantity_received: number
+          quantity_used: number
+          supplier: string | null
+          total_cost: number | null
+          unit: string
+          unit_cost: number
+          updated_at: string
+          usage_date: string | null
+        }
+        Insert: {
+          balance?: number | null
+          batch_id: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          input_type?: string
+          low_stock_threshold?: number | null
+          name: string
+          notes?: string | null
+          quantity_received?: number
+          quantity_used?: number
+          supplier?: string | null
+          total_cost?: number | null
+          unit?: string
+          unit_cost?: number
+          updated_at?: string
+          usage_date?: string | null
+        }
+        Update: {
+          balance?: number | null
+          batch_id?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          input_type?: string
+          low_stock_threshold?: number | null
+          name?: string
+          notes?: string | null
+          quantity_received?: number
+          quantity_used?: number
+          supplier?: string | null
+          total_cost?: number | null
+          unit?: string
+          unit_cost?: number
+          updated_at?: string
+          usage_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poultry_inputs_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "poultry_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poultry_inputs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poultry_operational_costs: {
+        Row: {
+          amount: number
+          batch_id: string
+          company_id: string
+          cost_date: string
+          cost_type: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          notes: string | null
+          quantity: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          batch_id: string
+          company_id: string
+          cost_date?: string
+          cost_type?: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          notes?: string | null
+          quantity?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          batch_id?: string
+          company_id?: string
+          cost_date?: string
+          cost_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          notes?: string | null
+          quantity?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poultry_operational_costs_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "poultry_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poultry_operational_costs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
