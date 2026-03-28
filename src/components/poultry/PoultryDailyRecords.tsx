@@ -25,7 +25,7 @@ export interface DailyRecord {
 
 interface Props {
   records: DailyRecord[];
-  batches: { id: string; batch_name: string; status: string; initial_quantity: number; current_quantity: number; mortality: number }[];
+  batches: { id: string; batch_name: string; status: string; initial_quantity: number; current_quantity: number; mortality: number; avg_weight: number | null }[];
   companyId: string;
   onRefresh: () => void;
 }
