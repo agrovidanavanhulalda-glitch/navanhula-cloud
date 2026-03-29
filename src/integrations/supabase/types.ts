@@ -1210,6 +1210,60 @@ export type Database = {
           },
         ]
       }
+      insights_ia: {
+        Row: {
+          batch_id: string | null
+          company_id: string
+          created_at: string | null
+          dados: Json | null
+          id: string
+          is_read: boolean | null
+          mensagem: string
+          nivel: string
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          batch_id?: string | null
+          company_id: string
+          created_at?: string | null
+          dados?: Json | null
+          id?: string
+          is_read?: boolean | null
+          mensagem: string
+          nivel?: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Update: {
+          batch_id?: string | null
+          company_id?: string
+          created_at?: string | null
+          dados?: Json | null
+          id?: string
+          is_read?: boolean | null
+          mensagem?: string
+          nivel?: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insights_ia_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "poultry_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insights_ia_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       manual_payments: {
         Row: {
           amount: number
@@ -1291,6 +1345,69 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ml_features: {
+        Row: {
+          batch_id: string
+          company_id: string
+          consumo_racao: number | null
+          created_at: string | null
+          custo_acumulado: number | null
+          data: string
+          id: string
+          idade_dias: number
+          lucro_final: number | null
+          mortalidade: number | null
+          peso_final: number | null
+          peso_medio: number | null
+          receita_parcial: number | null
+        }
+        Insert: {
+          batch_id: string
+          company_id: string
+          consumo_racao?: number | null
+          created_at?: string | null
+          custo_acumulado?: number | null
+          data?: string
+          id?: string
+          idade_dias?: number
+          lucro_final?: number | null
+          mortalidade?: number | null
+          peso_final?: number | null
+          peso_medio?: number | null
+          receita_parcial?: number | null
+        }
+        Update: {
+          batch_id?: string
+          company_id?: string
+          consumo_racao?: number | null
+          created_at?: string | null
+          custo_acumulado?: number | null
+          data?: string
+          id?: string
+          idade_dias?: number
+          lucro_final?: number | null
+          mortalidade?: number | null
+          peso_final?: number | null
+          peso_medio?: number | null
+          receita_parcial?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ml_features_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "poultry_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ml_features_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -3571,6 +3688,7 @@ export type Database = {
         Args: { p_store_id: string }
         Returns: Database["public"]["Enums"]["subscription_status"]
       }
+      collect_ml_features: { Args: { p_batch_id: string }; Returns: undefined }
       complete_onboarding: {
         Args: {
           p_company_address?: string
@@ -3598,6 +3716,10 @@ export type Database = {
         Returns: undefined
       }
       evaluate_payment_fraud: { Args: { p_payment_id: string }; Returns: Json }
+      evaluate_poultry_insights: {
+        Args: { p_batch_id: string }
+        Returns: number
+      }
       evaluate_stock_alerts: { Args: { p_store_id: string }; Returns: Json }
       generate_nava_reference: { Args: never; Returns: string }
       generate_reseller_code: { Args: never; Returns: string }
