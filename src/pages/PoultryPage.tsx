@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/formatters';
 import {
   Bird, Plus, RefreshCw, DollarSign, Skull, Pencil, Trash2, Egg,
-  Package, ClipboardList, BarChart3, TrendingUp
+  Package, ClipboardList, BarChart3, TrendingUp, Brain
 } from 'lucide-react';
 import PoultryInputsManager, { type PoultryInput } from '@/components/poultry/PoultryInputsManager';
 import PoultryOperationalCosts, { type OperationalCost } from '@/components/poultry/PoultryOperationalCosts';
@@ -57,6 +57,7 @@ const statusColors: Record<string, string> = {
 
 const PoultryPage: React.FC = () => {
   const { company, store } = useAuth();
+  const navigate = useNavigate();
   const [batches, setBatches] = useState<Batch[]>([]);
   const [productions, setProductions] = useState<Production[]>([]);
   const [inputs, setInputs] = useState<PoultryInput[]>([]);
