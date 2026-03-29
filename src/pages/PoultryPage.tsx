@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/SaaSAuthContext';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -250,6 +251,22 @@ const PoultryPage: React.FC = () => {
           </Dialog>
         </div>
       </div>
+
+      {/* AI Intelligence Card */}
+      <Card className="p-4 border-primary/30 bg-gradient-to-r from-primary/5 to-transparent cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/app/avicultura/inteligencia')}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <Brain className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold">🧠 Centro de Inteligência AI</h3>
+              <p className="text-sm text-muted-foreground">Alertas, previsões e recomendações automáticas para seus lotes</p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm">Abrir</Button>
+        </div>
+      </Card>
 
       {/* Alerts */}
       {lowStockInputs.length > 0 && (
