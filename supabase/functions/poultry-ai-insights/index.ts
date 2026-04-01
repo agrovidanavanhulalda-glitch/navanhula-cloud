@@ -84,6 +84,24 @@ serve(async (req) => {
       .eq("company_id", companyId)
       .limit(50);
 
+    // Collect environmental data
+    const { data: climateRecords } = await supabase
+      .from("dados_climaticos")
+      .select("*")
+      .eq("company_id", companyId)
+      .order("data", { ascending: false })
+      .limit(10);
+
+    const { data: satelliteRecords } = await supabase
+      .from("dados_satelite")
+      .select("*")
+      .eq("company_id", companyId)
+      .order("data", { ascending: false })
+      .limit(10);
+
+    // Evaluate environmental alerts
+    await supabase.rpc("evaluate_environmental_alerts", { p_company_id: companyId });
+
     // Call AI for advanced insights
     const systemPrompt = `Você é o NAVANHULA AI, especialista em avicultura e gestão de lotes de frangos em Moçambique.
 Analise os dados fornecidos e gere insights avançados. Retorne EXATAMENTE um JSON com esta estrutura:
