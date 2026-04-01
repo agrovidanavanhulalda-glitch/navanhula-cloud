@@ -84,6 +84,24 @@ serve(async (req) => {
       .eq("company_id", companyId)
       .limit(50);
 
+    // Collect environmental data
+    const { data: climateRecords } = await supabase
+      .from("dados_climaticos")
+      .select("*")
+      .eq("company_id", companyId)
+      .order("data", { ascending: false })
+      .limit(10);
+
+    const { data: satelliteRecords } = await supabase
+      .from("dados_satelite")
+      .select("*")
+      .eq("company_id", companyId)
+      .order("data", { ascending: false })
+      .limit(10);
+
+    // Evaluate environmental alerts
+    await supabase.rpc("evaluate_environmental_alerts", { p_company_id: companyId });
+
     // Call AI for advanced insights
     const systemPrompt = `Você é o NAVANHULA AI, especialista em avicultura e gestão de lotes de frangos em Moçambique.
 Analise os dados fornecidos e gere insights avançados. Retorne EXATAMENTE um JSON com esta estrutura:
@@ -118,8 +136,10 @@ Seja específico com números reais. Moeda: MT.`;
 REGISTOS DIÁRIOS (últimos): ${JSON.stringify(dailyRecords?.slice(0, 20))}
 INSUMOS: ${JSON.stringify(inputs?.slice(0, 20))}
 CUSTOS OPERACIONAIS: ${JSON.stringify(opCosts?.slice(0, 20))}
+CLIMA ATUAL: ${JSON.stringify(climateRecords?.slice(0, 5))}
+DADOS SATÉLITE: ${JSON.stringify(satelliteRecords?.slice(0, 5))}
 
-Gere insights avançados, detecte anomalias e faça previsões baseadas nestes dados reais.`;
+Gere insights avançados, detecte anomalias e faça previsões baseadas nestes dados reais. Considere as condições climáticas e ambientais na análise.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
