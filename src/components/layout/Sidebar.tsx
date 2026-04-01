@@ -83,6 +83,7 @@ const navSections: NavSection[] = [
       { label: 'Agricultura', href: '/app/agricultura', icon: <Sprout className="w-5 h-5" />, roles: ['admin', 'ceo'] },
       { label: 'Avicultura', href: '/app/avicultura', icon: <Egg className="w-5 h-5" />, roles: ['admin', 'ceo'] },
       { label: 'IA Avícola', href: '/app/avicultura/inteligencia', icon: <Brain className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+      { label: 'Ambiente & Clima', href: '/app/ambiente', icon: <Cloud className="w-5 h-5" />, roles: ['admin', 'ceo'] },
     ],
   },
   {
