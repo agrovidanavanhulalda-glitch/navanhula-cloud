@@ -8,6 +8,7 @@ import {
   WalletCards, History, BarChart3, TrendingUp, Boxes, Shield, User,
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
+  Cloud,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NetworkIndicator from './NetworkIndicator';
