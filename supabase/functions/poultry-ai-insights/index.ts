@@ -136,8 +136,10 @@ Seja específico com números reais. Moeda: MT.`;
 REGISTOS DIÁRIOS (últimos): ${JSON.stringify(dailyRecords?.slice(0, 20))}
 INSUMOS: ${JSON.stringify(inputs?.slice(0, 20))}
 CUSTOS OPERACIONAIS: ${JSON.stringify(opCosts?.slice(0, 20))}
+CLIMA ATUAL: ${JSON.stringify(climateRecords?.slice(0, 5))}
+DADOS SATÉLITE: ${JSON.stringify(satelliteRecords?.slice(0, 5))}
 
-Gere insights avançados, detecte anomalias e faça previsões baseadas nestes dados reais.`;
+Gere insights avançados, detecte anomalias e faça previsões baseadas nestes dados reais. Considere as condições climáticas e ambientais na análise.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
