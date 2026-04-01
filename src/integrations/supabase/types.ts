@@ -650,7 +650,9 @@ export type Database = {
           fiscal_regime: string | null
           id: string
           is_active: boolean | null
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           name: string
           nif: string | null
           phone: string | null
@@ -666,7 +668,9 @@ export type Database = {
           fiscal_regime?: string | null
           id?: string
           is_active?: boolean | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           name: string
           nif?: string | null
           phone?: string | null
@@ -682,7 +686,9 @@ export type Database = {
           fiscal_regime?: string | null
           id?: string
           is_active?: boolean | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           name?: string
           nif?: string | null
           phone?: string | null
@@ -860,6 +866,126 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dados_climaticos: {
+        Row: {
+          batch_id: string | null
+          chuva: number | null
+          company_id: string
+          created_at: string
+          data: string
+          descricao: string | null
+          fonte: string | null
+          humidade: number | null
+          icone: string | null
+          id: string
+          pressao: number | null
+          temperatura: number | null
+          vento: number | null
+        }
+        Insert: {
+          batch_id?: string | null
+          chuva?: number | null
+          company_id: string
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          fonte?: string | null
+          humidade?: number | null
+          icone?: string | null
+          id?: string
+          pressao?: number | null
+          temperatura?: number | null
+          vento?: number | null
+        }
+        Update: {
+          batch_id?: string | null
+          chuva?: number | null
+          company_id?: string
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          fonte?: string | null
+          humidade?: number | null
+          icone?: string | null
+          id?: string
+          pressao?: number | null
+          temperatura?: number | null
+          vento?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dados_climaticos_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "poultry_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dados_climaticos_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dados_satelite: {
+        Row: {
+          batch_id: string | null
+          company_id: string
+          created_at: string
+          data: string
+          evapotranspiracao: number | null
+          fonte: string | null
+          id: string
+          indice_stress: number | null
+          ndvi: number | null
+          radiacao_solar: number | null
+          temperatura_solo: number | null
+        }
+        Insert: {
+          batch_id?: string | null
+          company_id: string
+          created_at?: string
+          data?: string
+          evapotranspiracao?: number | null
+          fonte?: string | null
+          id?: string
+          indice_stress?: number | null
+          ndvi?: number | null
+          radiacao_solar?: number | null
+          temperatura_solo?: number | null
+        }
+        Update: {
+          batch_id?: string | null
+          company_id?: string
+          created_at?: string
+          data?: string
+          evapotranspiracao?: number | null
+          fonte?: string | null
+          id?: string
+          indice_stress?: number | null
+          ndvi?: number | null
+          radiacao_solar?: number | null
+          temperatura_solo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dados_satelite_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "poultry_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dados_satelite_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -3714,6 +3840,10 @@ export type Database = {
       decrement_product_stock: {
         Args: { p_product_id: string; p_quantity: number; p_store_id: string }
         Returns: undefined
+      }
+      evaluate_environmental_alerts: {
+        Args: { p_company_id: string }
+        Returns: number
       }
       evaluate_payment_fraud: { Args: { p_payment_id: string }; Returns: Json }
       evaluate_poultry_insights: {
