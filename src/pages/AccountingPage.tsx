@@ -13,6 +13,8 @@ import PayrollProcessing from '@/components/hr/PayrollProcessing';
 import ExpensesManager from '@/components/finance/ExpensesManager';
 import AccountsPayableManager from '@/components/finance/AccountsPayableManager';
 import AccountsReceivableManager from '@/components/finance/AccountsReceivableManager';
+import ChartOfAccounts from '@/components/accounting/ChartOfAccounts';
+import JournalEntries from '@/components/accounting/JournalEntries';
 
 interface AccountingEntry {
   id: string;
