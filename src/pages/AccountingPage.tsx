@@ -304,6 +304,14 @@ const AccountingPage: React.FC = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="chart" className="mt-4">
+          <ChartOfAccounts />
+        </TabsContent>
+
+        <TabsContent value="journal" className="mt-4">
+          <JournalEntries />
+        </TabsContent>
+
         <TabsContent value="employees" className="mt-4">
           <EmployeeManagement />
         </TabsContent>
