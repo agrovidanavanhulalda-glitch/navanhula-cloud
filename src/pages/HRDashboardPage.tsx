@@ -271,6 +271,11 @@ const HRDashboardPage: React.FC = () => {
           </div>
         </TabsContent>
 
+        {/* Attendance Tab */}
+        <TabsContent value="attendance" className="space-y-6">
+          <AttendanceManager />
+        </TabsContent>
+
         {/* Commissions Tab */}
         <TabsContent value="commissions" className="space-y-6">
           <div className="grid sm:grid-cols-3 gap-4">
