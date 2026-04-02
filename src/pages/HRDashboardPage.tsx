@@ -10,6 +10,7 @@ import {
   Users, DollarSign, TrendingUp, Award, Clock, AlertTriangle,
   CheckCircle, UserCheck, BarChart3, Zap,
 } from 'lucide-react';
+import AttendanceManager from '@/components/hr/AttendanceManager';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
