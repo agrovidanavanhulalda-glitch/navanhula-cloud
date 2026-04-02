@@ -170,6 +170,8 @@ const AccountingPage: React.FC = () => {
           <TabsTrigger value="payable"><CreditCard className="w-4 h-4 mr-1" /> Contas a Pagar</TabsTrigger>
           <TabsTrigger value="receivable"><ArrowDownLeft className="w-4 h-4 mr-1" /> Contas a Receber</TabsTrigger>
           <TabsTrigger value="entries">Lançamentos</TabsTrigger>
+          <TabsTrigger value="chart"><BookOpen className="w-4 h-4 mr-1" /> Plano de Contas</TabsTrigger>
+          <TabsTrigger value="journal"><FileText className="w-4 h-4 mr-1" /> Diário</TabsTrigger>
           <TabsTrigger value="employees"><Users className="w-4 h-4 mr-1" /> Funcionários</TabsTrigger>
           <TabsTrigger value="payroll"><Calculator className="w-4 h-4 mr-1" /> Folha Salarial</TabsTrigger>
         </TabsList>
