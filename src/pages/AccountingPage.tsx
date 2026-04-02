@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TrendingUp, TrendingDown, DollarSign, Receipt, RefreshCw, Download, Calculator, Users, BookOpen, CreditCard, ArrowDownLeft } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Receipt, RefreshCw, Download, Calculator, Users, BookOpen, CreditCard, ArrowDownLeft, FileText } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import EmployeeManagement from '@/components/hr/EmployeeManagement';
@@ -13,6 +13,8 @@ import PayrollProcessing from '@/components/hr/PayrollProcessing';
 import ExpensesManager from '@/components/finance/ExpensesManager';
 import AccountsPayableManager from '@/components/finance/AccountsPayableManager';
 import AccountsReceivableManager from '@/components/finance/AccountsReceivableManager';
+import ChartOfAccounts from '@/components/accounting/ChartOfAccounts';
+import JournalEntries from '@/components/accounting/JournalEntries';
 
 interface AccountingEntry {
   id: string;
@@ -168,6 +170,8 @@ const AccountingPage: React.FC = () => {
           <TabsTrigger value="payable"><CreditCard className="w-4 h-4 mr-1" /> Contas a Pagar</TabsTrigger>
           <TabsTrigger value="receivable"><ArrowDownLeft className="w-4 h-4 mr-1" /> Contas a Receber</TabsTrigger>
           <TabsTrigger value="entries">Lançamentos</TabsTrigger>
+          <TabsTrigger value="chart"><BookOpen className="w-4 h-4 mr-1" /> Plano de Contas</TabsTrigger>
+          <TabsTrigger value="journal"><FileText className="w-4 h-4 mr-1" /> Diário</TabsTrigger>
           <TabsTrigger value="employees"><Users className="w-4 h-4 mr-1" /> Funcionários</TabsTrigger>
           <TabsTrigger value="payroll"><Calculator className="w-4 h-4 mr-1" /> Folha Salarial</TabsTrigger>
         </TabsList>
@@ -298,6 +302,14 @@ const AccountingPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="chart" className="mt-4">
+          <ChartOfAccounts />
+        </TabsContent>
+
+        <TabsContent value="journal" className="mt-4">
+          <JournalEntries />
         </TabsContent>
 
         <TabsContent value="employees" className="mt-4">

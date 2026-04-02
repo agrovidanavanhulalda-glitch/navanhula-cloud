@@ -10,6 +10,7 @@ import {
   Users, DollarSign, TrendingUp, Award, Clock, AlertTriangle,
   CheckCircle, UserCheck, BarChart3, Zap,
 } from 'lucide-react';
+import AttendanceManager from '@/components/hr/AttendanceManager';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
@@ -203,6 +204,7 @@ const HRDashboardPage: React.FC = () => {
       <Tabs defaultValue="performance" className="space-y-4">
         <TabsList className="bg-muted/50">
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="attendance">Presenças</TabsTrigger>
           <TabsTrigger value="commissions">Comissões</TabsTrigger>
           <TabsTrigger value="team">Equipa</TabsTrigger>
         </TabsList>
@@ -267,6 +269,11 @@ const HRDashboardPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Attendance Tab */}
+        <TabsContent value="attendance" className="space-y-6">
+          <AttendanceManager />
         </TabsContent>
 
         {/* Commissions Tab */}
