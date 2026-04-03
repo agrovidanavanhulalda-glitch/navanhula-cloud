@@ -141,6 +141,7 @@ const navGroups: NavGroup[] = [
       { label: 'Lojas', href: '/app/lojas', icon: Store },
       { label: 'Agricultura', href: '/app/agricultura', icon: Sprout },
       { label: 'Avicultura', href: '/app/avicultura', icon: Egg },
+      { label: 'Agro Map', href: '/app/agro-map', icon: MapPin },
       { label: 'IA Avícola', href: '/app/avicultura/inteligencia', icon: Brain },
       { label: 'Ambiente & Clima', href: '/app/ambiente', icon: Cloud },
     ],
