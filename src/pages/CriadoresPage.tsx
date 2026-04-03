@@ -46,10 +46,7 @@ const CriadoresPage: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <AppBreadcrumb items={[
-        { label: 'Dashboard', href: '/app/dashboard' },
-        { label: 'Criadores' },
-      ]} />
+      <AppBreadcrumb />
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
