@@ -48,7 +48,7 @@ const AgroMapPageContent: React.FC = () => {
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
+  const [orderSuccess, setOrderSuccess] = useState<{ total: number; remaining: number } | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterSearch, setFilterSearch] = useState('');
   const [filterMaxPrice, setFilterMaxPrice] = useState('');
