@@ -292,8 +292,8 @@ const AgroMapPageContent: React.FC = () => {
                       <Badge variant="secondary" className="mt-1 capitalize text-xs">{p.tipo_produto}</Badge>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-primary text-sm">{p.preco.toFixed(2)} MT</p>
-                      <p className="text-xs text-muted-foreground">{p.quantidade_disponivel} disp.</p>
+                      <p className="font-bold text-primary text-sm">{(p.preco ?? 0).toFixed(2)} MT</p>
+                      <p className="text-xs text-muted-foreground">{p.quantidade_disponivel ?? 0} disp.</p>
                     </div>
                   </div>
                   {p.telefone && (
