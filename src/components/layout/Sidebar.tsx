@@ -149,6 +149,14 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    title: 'Compliance',
+    icon: Shield,
+    roles: ['admin', 'ceo', 'accountant'],
+    items: [
+      { label: 'Compliance Hub', href: '/app/compliance', icon: Shield },
+    ],
+  },
+  {
     title: 'Sistema',
     icon: Settings,
     items: [

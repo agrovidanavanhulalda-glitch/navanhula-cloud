@@ -214,6 +214,7 @@ const AppRoutes = () => {
         <Route path="criadores" element={<SubscriptionGate><CriadoresPage /></SubscriptionGate>} />
         <Route path="marketplace" element={<SubscriptionGate><MarketplacePage /></SubscriptionGate>} />
         <Route path="ecommerce" element={<SubscriptionGate><ECommercePage /></SubscriptionGate>} />
+        <Route path="compliance" element={<SubscriptionGate><CompliancePage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
         <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />
