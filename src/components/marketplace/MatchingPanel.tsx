@@ -11,6 +11,7 @@ import { Check, X, Zap, Star, RefreshCw } from 'lucide-react';
 
 interface Order {
   id: string;
+  comprador_id: string;
   quantidade: number;
   tipo_producao: string;
   peso_desejado: number;

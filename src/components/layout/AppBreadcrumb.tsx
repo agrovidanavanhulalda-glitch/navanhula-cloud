@@ -49,6 +49,7 @@ const routeLabels: Record<string, string> = {
   performance: 'Performance',
   materiais: 'Materiais',
   criadores: 'Criadores',
+  marketplace: 'Marketplace',
 };
 
 const AppBreadcrumb: React.FC = () => {
