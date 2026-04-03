@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Package, CheckCircle, Truck, XCircle, Clock, Warehouse, MessageCircle, TrendingUp } from 'lucide-react';
+import { Loader2, Package, CheckCircle, Truck, XCircle, Clock, Warehouse, MessageCircle, TrendingUp, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ProducerOrder {
   id: string;
+  producer_id: string;
   cliente_nome: string;
   cliente_contacto: string;
   quantidade: number;
@@ -38,11 +39,12 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
 };
 
 const ProducerDashboardPage: React.FC = () => {
-  const { company } = useAuth();
+  const { user, company } = useAuth();
   const companyId = company?.id;
   const [producers, setProducers] = useState<ProducerInfo[]>([]);
   const [orders, setOrders] = useState<ProducerOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -51,23 +53,48 @@ const ProducerDashboardPage: React.FC = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    const [prodRes, ordRes] = await Promise.all([
-      supabase
-        .from('agro_producers')
-        .select('id, nome_granja, tipo_produto, quantidade_disponivel, preco, telefone')
-        .eq('company_id', companyId!)
-        .eq('status', 'ativo'),
-      supabase
-        .from('agro_orders')
-        .select('id, cliente_nome, cliente_contacto, quantidade, preco_unitario, total, status, created_at')
-        .eq('company_id', companyId!)
-        .order('created_at', { ascending: false })
-        .limit(100),
-    ]);
+    setError(null);
+    try {
+      const [prodRes, ordRes] = await Promise.all([
+        supabase
+          .from('agro_producers')
+          .select('id, nome_granja, tipo_produto, quantidade_disponivel, preco, telefone')
+          .eq('company_id', companyId!)
+          .eq('status', 'ativo'),
+        supabase
+          .from('agro_orders')
+          .select('id, producer_id, cliente_nome, cliente_contacto, quantidade, preco_unitario, total, status, created_at')
+          .eq('company_id', companyId!)
+          .order('created_at', { ascending: false })
+          .limit(100),
+      ]);
 
-    if (prodRes.data) setProducers(prodRes.data as ProducerInfo[]);
-    if (ordRes.data) setOrders(ordRes.data as ProducerOrder[]);
-    setLoading(false);
+      if (prodRes.error) {
+        console.error('[ProducerDashboard] Producers error:', prodRes.error);
+        setError('Erro ao carregar produtores');
+        return;
+      }
+      if (ordRes.error) {
+        console.error('[ProducerDashboard] Orders error:', ordRes.error);
+        setError('Erro ao carregar pedidos');
+        return;
+      }
+
+      const prods = (prodRes.data || []) as ProducerInfo[];
+      const ords = (ordRes.data || []) as ProducerOrder[];
+
+      console.log('[ProducerDashboard] Company:', companyId);
+      console.log('[ProducerDashboard] Producers:', prods.length, prods.map(p => ({ id: p.id, nome: p.nome_granja })));
+      console.log('[ProducerDashboard] Orders:', ords.length, ords.map(o => ({ id: o.id, producer_id: o.producer_id, status: o.status })));
+
+      setProducers(prods);
+      setOrders(ords);
+    } catch (err) {
+      console.error('[ProducerDashboard] Unexpected error:', err);
+      setError('Erro inesperado');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAction = async (orderId: string, newStatus: string) => {
@@ -93,6 +120,16 @@ const ProducerDashboardPage: React.FC = () => {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 md:p-6 flex flex-col items-center justify-center min-h-[400px] text-center">
+        <AlertTriangle className="w-12 h-12 text-destructive mb-4" />
+        <h2 className="text-lg font-semibold text-foreground mb-2">{error}</h2>
+        <Button onClick={fetchData}>Tentar novamente</Button>
       </div>
     );
   }
@@ -148,16 +185,24 @@ const ProducerDashboardPage: React.FC = () => {
             <p className="text-sm text-muted-foreground text-center py-4">Nenhum produtor ativo</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {producers.map(p => (
-                <div key={p.id} className="border rounded-lg p-3 space-y-1">
-                  <p className="font-semibold text-sm text-foreground">{p.nome_granja}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{p.tipo_produto}</p>
-                  <div className="flex justify-between text-xs">
-                    <span>Estoque: <strong>{p.quantidade_disponivel}</strong></span>
-                    <span>Preço: <strong>{p.preco.toFixed(2)} MT</strong></span>
+              {producers.map(p => {
+                const producerOrders = orders.filter(o => o.producer_id === p.id);
+                const producerRevenue = producerOrders.filter(o => o.status === 'entregue').reduce((s, o) => s + o.total, 0);
+                return (
+                  <div key={p.id} className="border rounded-lg p-3 space-y-1">
+                    <p className="font-semibold text-sm text-foreground">{p.nome_granja}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{p.tipo_produto}</p>
+                    <div className="flex justify-between text-xs">
+                      <span>Estoque: <strong>{p.quantidade_disponivel}</strong></span>
+                      <span>Preço: <strong>{p.preco.toFixed(2)} MT</strong></span>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground pt-1 border-t">
+                      <span>Pedidos: {producerOrders.length}</span>
+                      <span>Receita: {producerRevenue.toFixed(0)} MT</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -175,7 +220,8 @@ const ProducerDashboardPage: React.FC = () => {
           {orders.length === 0 ? (
             <div className="text-center p-8 text-muted-foreground">
               <Package className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Nenhum pedido recebido ainda</p>
+              <p className="text-sm">Sem pedidos ainda</p>
+              <p className="text-xs mt-1">Os pedidos feitos no AGRO MAP aparecerão aqui</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -193,7 +239,6 @@ const ProducerDashboardPage: React.FC = () => {
                 <TableBody>
                   {orders.map(order => {
                     const sc = statusConfig[order.status] || statusConfig.pendente;
-                    const isTerminal = order.status === 'entregue' || order.status === 'cancelado';
                     return (
                       <TableRow key={order.id}>
                         <TableCell>
