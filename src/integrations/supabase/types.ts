@@ -1009,6 +1009,98 @@ export type Database = {
         }
         Relationships: []
       }
+      compradores: {
+        Row: {
+          capacidade_compra: number | null
+          company_id: string
+          confiabilidade: number | null
+          created_at: string | null
+          created_by: string | null
+          distrito: string | null
+          email: string | null
+          forma_pagamento: string | null
+          frequencia_compra: string | null
+          id: string
+          latitude: number | null
+          localizacao: string | null
+          longitude: number | null
+          nome: string
+          peso_max: number | null
+          peso_min: number | null
+          prazo_pagamento: string | null
+          preco_alvo: number | null
+          preferencia_tipo: string | null
+          provincia: string | null
+          status: string | null
+          telefone: string | null
+          telefone_alt: string | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          capacidade_compra?: number | null
+          company_id: string
+          confiabilidade?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          distrito?: string | null
+          email?: string | null
+          forma_pagamento?: string | null
+          frequencia_compra?: string | null
+          id?: string
+          latitude?: number | null
+          localizacao?: string | null
+          longitude?: number | null
+          nome: string
+          peso_max?: number | null
+          peso_min?: number | null
+          prazo_pagamento?: string | null
+          preco_alvo?: number | null
+          preferencia_tipo?: string | null
+          provincia?: string | null
+          status?: string | null
+          telefone?: string | null
+          telefone_alt?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          capacidade_compra?: number | null
+          company_id?: string
+          confiabilidade?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          distrito?: string | null
+          email?: string | null
+          forma_pagamento?: string | null
+          frequencia_compra?: string | null
+          id?: string
+          latitude?: number | null
+          localizacao?: string | null
+          longitude?: number | null
+          nome?: string
+          peso_max?: number | null
+          peso_min?: number | null
+          prazo_pagamento?: string | null
+          preco_alvo?: number | null
+          preferencia_tipo?: string | null
+          provincia?: string | null
+          status?: string | null
+          telefone?: string | null
+          telefone_alt?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compradores_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       criadores: {
         Row: {
           bi_nuit: string | null
@@ -2076,6 +2168,71 @@ export type Database = {
           },
         ]
       }
+      marketplace_matches: {
+        Row: {
+          company_id: string
+          comprador_id: string
+          created_at: string | null
+          criador_id: string
+          id: string
+          pedido_id: string | null
+          score: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          comprador_id: string
+          created_at?: string | null
+          criador_id: string
+          id?: string
+          pedido_id?: string | null
+          score?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          comprador_id?: string
+          created_at?: string | null
+          criador_id?: string
+          id?: string
+          pedido_id?: string | null
+          score?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_matches_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_matches_comprador_id_fkey"
+            columns: ["comprador_id"]
+            isOneToOne: false
+            referencedRelation: "compradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_matches_criador_id_fkey"
+            columns: ["criador_id"]
+            isOneToOne: false
+            referencedRelation: "criadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_matches_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos_marketplace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ml_features: {
         Row: {
           batch_id: string
@@ -2525,6 +2682,66 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedidos_marketplace: {
+        Row: {
+          company_id: string
+          comprador_id: string
+          created_at: string | null
+          created_by: string | null
+          data_entrega: string | null
+          id: string
+          peso_desejado: number | null
+          preco_oferecido: number | null
+          quantidade: number | null
+          status: string | null
+          tipo_producao: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          comprador_id: string
+          created_at?: string | null
+          created_by?: string | null
+          data_entrega?: string | null
+          id?: string
+          peso_desejado?: number | null
+          preco_oferecido?: number | null
+          quantidade?: number | null
+          status?: string | null
+          tipo_producao?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          comprador_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          data_entrega?: string | null
+          id?: string
+          peso_desejado?: number | null
+          preco_oferecido?: number | null
+          quantidade?: number | null
+          status?: string | null
+          tipo_producao?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_marketplace_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_marketplace_comprador_id_fkey"
+            columns: ["comprador_id"]
+            isOneToOne: false
+            referencedRelation: "compradores"
             referencedColumns: ["id"]
           },
         ]
