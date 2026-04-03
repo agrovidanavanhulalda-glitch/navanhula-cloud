@@ -336,6 +336,8 @@ export type Database = {
           company_id: string
           created_at: string
           created_by: string | null
+          delivery_status: string
+          driver_id: string | null
           id: string
           payment_status: string
           preco_unitario: number
@@ -351,6 +353,8 @@ export type Database = {
           company_id: string
           created_at?: string
           created_by?: string | null
+          delivery_status?: string
+          driver_id?: string | null
           id?: string
           payment_status?: string
           preco_unitario?: number
@@ -366,6 +370,8 @@ export type Database = {
           company_id?: string
           created_at?: string
           created_by?: string | null
+          delivery_status?: string
+          driver_id?: string | null
           id?: string
           payment_status?: string
           preco_unitario?: number
@@ -381,6 +387,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agro_orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_drivers"
             referencedColumns: ["id"]
           },
           {
@@ -1283,6 +1296,44 @@ export type Database = {
           },
           {
             foreignKeyName: "dados_satelite_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_drivers: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          nome: string
+          status: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          nome: string
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_drivers_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"

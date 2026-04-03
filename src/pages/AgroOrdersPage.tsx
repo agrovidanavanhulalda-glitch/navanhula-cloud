@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Package, CheckCircle, Truck, XCircle, Clock, ShoppingCart, MessageCircle, DollarSign, AlertTriangle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, Package, CheckCircle, Truck, XCircle, Clock, ShoppingCart, MessageCircle, DollarSign, AlertTriangle, UserPlus } from 'lucide-react';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 
 interface AgroOrder {
@@ -19,8 +20,18 @@ interface AgroOrder {
   total: number;
   status: string;
   payment_status: string;
+  delivery_status: string;
+  driver_id: string | null;
   created_at: string;
   producer: { nome_granja: string; tipo_produto: string } | null;
+  driver: { id: string; nome: string; telefone: string | null } | null;
+}
+
+interface Driver {
+  id: string;
+  nome: string;
+  telefone: string | null;
+  status: string;
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -37,6 +48,12 @@ const paymentConfig: Record<string, { label: string; color: string; icon: React.
   falhado: { label: 'Falhado', color: 'bg-red-100 text-red-800 border-red-300', icon: <AlertTriangle className="w-3 h-3" /> },
 };
 
+const deliveryConfig: Record<string, { label: string; color: string }> = {
+  aguardando: { label: 'Aguardando', color: 'bg-gray-100 text-gray-700 border-gray-300' },
+  em_rota: { label: 'Em Rota', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+  entregue: { label: 'Entregue', color: 'bg-green-100 text-green-800 border-green-300' },
+};
+
 const nextStatus: Record<string, string> = {
   pendente: 'confirmado',
   confirmado: 'em_transporte',
@@ -47,19 +64,25 @@ const AgroOrdersPage: React.FC = () => {
   const { company } = useAuth();
   const companyId = company?.id;
   const [orders, setOrders] = useState<AgroOrder[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [assignDialogOrder, setAssignDialogOrder] = useState<string | null>(null);
+  const [selectedDriverId, setSelectedDriverId] = useState<string>('');
 
   useEffect(() => {
-    if (companyId) fetchOrders();
+    if (companyId) {
+      fetchOrders();
+      fetchDrivers();
+    }
   }, [companyId]);
 
   const fetchOrders = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('agro_orders')
-      .select('*, producer:agro_producers(nome_granja, tipo_produto)')
+      .select('*, producer:agro_producers(nome_granja, tipo_produto), driver:delivery_drivers(id, nome, telefone)')
       .eq('company_id', companyId!)
       .order('created_at', { ascending: false });
 
@@ -70,6 +93,16 @@ const AgroOrdersPage: React.FC = () => {
       setOrders((data as unknown as AgroOrder[]) || []);
     }
     setLoading(false);
+  };
+
+  const fetchDrivers = async () => {
+    const { data } = await supabase
+      .from('delivery_drivers')
+      .select('id, nome, telefone, status')
+      .eq('company_id', companyId!)
+      .in('status', ['disponivel'])
+      .order('nome');
+    setDrivers((data as any[]) || []);
   };
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
@@ -118,6 +151,81 @@ const AgroOrdersPage: React.FC = () => {
     } else {
       toast.success('Pagamento marcado como falhado');
       fetchOrders();
+    }
+    setUpdatingId(null);
+  };
+
+  const handleAssignDriver = async () => {
+    if (!assignDialogOrder || !selectedDriverId) return;
+    setUpdatingId(assignDialogOrder);
+
+    const { error } = await supabase
+      .from('agro_orders')
+      .update({ driver_id: selectedDriverId, delivery_status: 'aguardando' } as any)
+      .eq('id', assignDialogOrder);
+
+    if (error) {
+      toast.error('Erro ao atribuir entregador');
+    } else {
+      // Mark driver as em_entrega
+      await supabase
+        .from('delivery_drivers')
+        .update({ status: 'em_entrega' } as any)
+        .eq('id', selectedDriverId);
+
+      toast.success('Entregador atribuído!');
+      setAssignDialogOrder(null);
+      setSelectedDriverId('');
+      fetchOrders();
+      fetchDrivers();
+    }
+    setUpdatingId(null);
+  };
+
+  const handleDeliveryStart = async (orderId: string) => {
+    setUpdatingId(orderId);
+    const { error } = await supabase
+      .from('agro_orders')
+      .update({ delivery_status: 'em_rota' } as any)
+      .eq('id', orderId);
+
+    if (error) {
+      toast.error('Erro ao iniciar entrega');
+    } else {
+      toast.success('Entrega iniciada!');
+      fetchOrders();
+    }
+    setUpdatingId(null);
+  };
+
+  const handleDeliveryComplete = async (order: AgroOrder) => {
+    if (order.payment_status !== 'pago') {
+      toast.error('Pagamento deve ser confirmado antes de marcar como entregue');
+      return;
+    }
+    if (order.delivery_status !== 'em_rota') {
+      toast.error('A entrega precisa estar em rota primeiro');
+      return;
+    }
+    setUpdatingId(order.id);
+    const { error } = await supabase
+      .from('agro_orders')
+      .update({ delivery_status: 'entregue' } as any)
+      .eq('id', order.id);
+
+    if (error) {
+      toast.error('Erro ao concluir entrega');
+    } else {
+      // Free up the driver
+      if (order.driver_id) {
+        await supabase
+          .from('delivery_drivers')
+          .update({ status: 'disponivel' } as any)
+          .eq('id', order.driver_id);
+      }
+      toast.success('Entrega concluída!');
+      fetchOrders();
+      fetchDrivers();
     }
     setUpdatingId(null);
   };
@@ -207,6 +315,8 @@ const AgroOrdersPage: React.FC = () => {
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Pagamento</TableHead>
+                    <TableHead>Entregador</TableHead>
+                    <TableHead>Entrega</TableHead>
                     <TableHead>Data</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -215,6 +325,7 @@ const AgroOrdersPage: React.FC = () => {
                   {filtered.map((order) => {
                     const sc = statusConfig[order.status] || statusConfig.pendente;
                     const pc = paymentConfig[order.payment_status] || paymentConfig.pendente;
+                    const dc = deliveryConfig[order.delivery_status] || deliveryConfig.aguardando;
                     const next = nextStatus[order.status];
                     const isTerminal = order.status === 'entregue' || order.status === 'cancelado';
                     return (
@@ -235,6 +346,19 @@ const AgroOrdersPage: React.FC = () => {
                         <TableCell>
                           <Badge variant="outline" className={`gap-1 ${pc.color}`}>{pc.icon} {pc.label}</Badge>
                         </TableCell>
+                        <TableCell>
+                          {order.driver ? (
+                            <div>
+                              <p className="text-sm font-medium">{order.driver.nome}</p>
+                              {order.driver.telefone && <p className="text-xs text-muted-foreground">{order.driver.telefone}</p>}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Não atribuído</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`${dc.color}`}>{dc.label}</Badge>
+                        </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{formatDateTime(order.created_at)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1 flex-wrap">
@@ -251,6 +375,21 @@ const AgroOrdersPage: React.FC = () => {
                             {order.payment_status === 'pendente' && order.status !== 'cancelado' && (
                               <Button size="sm" variant="ghost" className="text-destructive" disabled={updatingId === order.id} onClick={() => handlePaymentFailed(order.id)}>
                                 Falhado
+                              </Button>
+                            )}
+                            {!order.driver_id && !isTerminal && (
+                              <Button size="sm" variant="outline" className="gap-1" onClick={() => { setAssignDialogOrder(order.id); setSelectedDriverId(''); }}>
+                                <UserPlus className="w-3 h-3" /> Entregador
+                              </Button>
+                            )}
+                            {order.driver_id && order.delivery_status === 'aguardando' && order.payment_status === 'pago' && (
+                              <Button size="sm" variant="outline" className="gap-1 text-blue-600" disabled={updatingId === order.id} onClick={() => handleDeliveryStart(order.id)}>
+                                <Truck className="w-3 h-3" /> Iniciar
+                              </Button>
+                            )}
+                            {order.delivery_status === 'em_rota' && (
+                              <Button size="sm" variant="default" className="gap-1 bg-green-600 hover:bg-green-700" disabled={updatingId === order.id} onClick={() => handleDeliveryComplete(order)}>
+                                <CheckCircle className="w-3 h-3" /> Entregue
                               </Button>
                             )}
                             {!isTerminal && (
@@ -279,6 +418,30 @@ const AgroOrdersPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Assign Driver Dialog */}
+      <Dialog open={!!assignDialogOrder} onOpenChange={(open) => { if (!open) setAssignDialogOrder(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Atribuir Entregador</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            {drivers.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum entregador disponível. Cadastre um em /app/drivers.</p>
+            ) : (
+              <Select value={selectedDriverId} onValueChange={setSelectedDriverId}>
+                <SelectTrigger><SelectValue placeholder="Selecionar entregador" /></SelectTrigger>
+                <SelectContent>
+                  {drivers.map(d => (
+                    <SelectItem key={d.id} value={d.id}>{d.nome}{d.telefone ? ` (${d.telefone})` : ''}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Button onClick={handleAssignDriver} disabled={!selectedDriverId || updatingId === assignDialogOrder} className="w-full">
+              {updatingId === assignDialogOrder ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Atribuição'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

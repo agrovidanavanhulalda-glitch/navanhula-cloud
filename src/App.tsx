@@ -42,6 +42,7 @@ import EnvironmentalDashboardPage from "./pages/EnvironmentalDashboardPage";
 import AgroMapPage from "./pages/AgroMapPage";
 import AgroOrdersPage from "./pages/AgroOrdersPage";
 import ProducerDashboardPage from "./pages/ProducerDashboardPage";
+import DriversPage from "./pages/DriversPage";
 import HRDashboardPage from "./pages/HRDashboardPage";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
@@ -206,6 +207,7 @@ const AppRoutes = () => {
         <Route path="agro-map" element={<SubscriptionGate><AgroMapPage /></SubscriptionGate>} />
         <Route path="agro-orders" element={<SubscriptionGate><AgroOrdersPage /></SubscriptionGate>} />
         <Route path="producer-dashboard" element={<SubscriptionGate><ProducerDashboardPage /></SubscriptionGate>} />
+        <Route path="drivers" element={<SubscriptionGate><DriversPage /></SubscriptionGate>} />
         <Route path="ecommerce" element={<SubscriptionGate><ECommercePage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
