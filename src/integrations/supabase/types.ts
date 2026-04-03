@@ -329,6 +329,122 @@ export type Database = {
           },
         ]
       }
+      agro_orders: {
+        Row: {
+          cliente_contacto: string
+          cliente_nome: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          preco_unitario: number
+          producer_id: string
+          quantidade: number
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          cliente_contacto: string
+          cliente_nome: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          preco_unitario?: number
+          producer_id: string
+          quantidade?: number
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          cliente_contacto?: string
+          cliente_nome?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          preco_unitario?: number
+          producer_id?: string
+          quantidade?: number
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agro_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agro_orders_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "agro_producers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agro_producers: {
+        Row: {
+          company_id: string
+          created_at: string
+          foto_url: string | null
+          id: string
+          latitude: number
+          longitude: number
+          nome_granja: string
+          preco: number
+          quantidade_disponivel: number
+          status: string
+          telefone: string | null
+          tipo_produto: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          nome_granja: string
+          preco?: number
+          quantidade_disponivel?: number
+          status?: string
+          telefone?: string | null
+          tipo_produto?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          nome_granja?: string
+          preco?: number
+          quantidade_disponivel?: number
+          status?: string
+          telefone?: string | null
+          tipo_produto?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agro_producers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           absences: number | null
