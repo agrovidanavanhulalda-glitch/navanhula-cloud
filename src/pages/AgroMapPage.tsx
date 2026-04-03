@@ -33,8 +33,7 @@ const orderSchema = z.object({
   quantidade: z.number().int().min(1, 'Quantidade mínima é 1'),
 });
 
-// Lazy-loaded map component
-const AgroMap = React.lazy(() => import('@/components/agro/AgroMapView'));
+// Map temporarily disabled for debugging
 
 const AgroMapPageContent: React.FC = () => {
   const { user, company, loading: authLoading } = useAuth();
