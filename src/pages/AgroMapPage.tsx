@@ -36,11 +36,12 @@ const orderSchema = z.object({
 // Lazy-loaded map component
 const AgroMap = React.lazy(() => import('@/components/agro/AgroMapView'));
 
-const AgroMapPage: React.FC = () => {
-  const { user, company } = useAuth();
+const AgroMapPageContent: React.FC = () => {
+  const { user, company, loading: authLoading } = useAuth();
   const companyId = company?.id;
   const [producers, setProducers] = useState<Producer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
   const [selectedProducer, setSelectedProducer] = useState<Producer | null>(null);
   const [orderModalOpen, setOrderModalOpen] = useState(false);
