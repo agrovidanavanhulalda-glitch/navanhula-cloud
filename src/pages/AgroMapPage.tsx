@@ -246,26 +246,11 @@ const AgroMapPageContent: React.FC = () => {
 
       {/* Map + List */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Map */}
-        <div className="lg:col-span-2 rounded-xl overflow-hidden border border-border relative z-0" style={{ height: '500px' }}>
-          {loading ? (
-            <div className="h-full flex items-center justify-center bg-muted">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <React.Suspense fallback={
-              <div className="h-full flex items-center justify-center bg-muted">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            }>
-              <AgroMap
-                producers={filteredProducers}
-                center={defaultCenter}
-                userPosition={userPosition}
-                onSelectProducer={handleSelectProducer}
-              />
-            </React.Suspense>
-          )}
+        {/* Map temporarily replaced with test */}
+        <div className="lg:col-span-2 rounded-xl overflow-hidden border border-border relative z-0 bg-muted flex flex-col items-center justify-center" style={{ height: '500px' }}>
+          <h1 className="text-2xl font-bold text-foreground">AGRO MAP OK</h1>
+          <p className="text-muted-foreground mt-2">Teste sem mapa — {filteredProducers.length} produtores carregados</p>
+          {loading && <Loader2 className="w-6 h-6 animate-spin text-primary mt-4" />}
         </div>
 
         {/* Producer List */}
