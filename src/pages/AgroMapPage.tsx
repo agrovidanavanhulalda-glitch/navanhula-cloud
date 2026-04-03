@@ -115,28 +115,25 @@ const AgroMapPageContent: React.FC = () => {
       toast.error(parsed.error.errors[0].message);
       return;
     }
-    if (orderForm.quantidade > selectedProducer.quantidade_disponivel) {
-      toast.error('Quantidade indisponível');
-      return;
-    }
     setSubmitting(true);
-    const total = orderForm.quantidade * selectedProducer.preco;
-    const { error } = await supabase.from('agro_orders').insert({
-      company_id: companyId,
-      producer_id: selectedProducer.id,
-      cliente_nome: orderForm.cliente_nome.trim(),
-      cliente_contacto: orderForm.cliente_contacto.trim(),
-      quantidade: orderForm.quantidade,
-      preco_unitario: selectedProducer.preco,
-      total,
-      created_by: user?.id,
+    const { data, error } = await supabase.rpc('place_agro_order', {
+      p_company_id: companyId,
+      p_producer_id: selectedProducer.id,
+      p_cliente_nome: orderForm.cliente_nome.trim(),
+      p_cliente_contacto: orderForm.cliente_contacto.trim(),
+      p_quantidade: orderForm.quantidade,
+      p_created_by: user?.id || null,
     });
-    if (error) {
-      toast.error('Erro ao enviar pedido');
+
+    const result = data as unknown as { success: boolean; message?: string; total?: number; remaining_stock?: number } | null;
+
+    if (error || !result?.success) {
+      toast.error(result?.message || 'Erro ao enviar pedido');
     } else {
+      setOrderSuccess({ total: result.total!, remaining: result.remaining_stock! });
       toast.success('Pedido enviado com sucesso!');
-      setOrderModalOpen(false);
       setOrderForm({ cliente_nome: '', cliente_contacto: '', quantidade: 1 });
+      fetchProducers();
     }
     setSubmitting(false);
   };
