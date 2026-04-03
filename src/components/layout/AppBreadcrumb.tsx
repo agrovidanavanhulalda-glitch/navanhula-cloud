@@ -48,6 +48,7 @@ const routeLabels: Record<string, string> = {
   links: 'Links',
   performance: 'Performance',
   materiais: 'Materiais',
+  criadores: 'Criadores',
 };
 
 const AppBreadcrumb: React.FC = () => {

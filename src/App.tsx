@@ -209,6 +209,7 @@ const AppRoutes = () => {
         <Route path="agro-orders" element={<SubscriptionGate><AgroOrdersPage /></SubscriptionGate>} />
         <Route path="producer-dashboard" element={<SubscriptionGate><ProducerDashboardPage /></SubscriptionGate>} />
         <Route path="drivers" element={<SubscriptionGate><DriversPage /></SubscriptionGate>} />
+        <Route path="criadores" element={<SubscriptionGate><CriadoresPage /></SubscriptionGate>} />
         <Route path="ecommerce" element={<SubscriptionGate><ECommercePage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
