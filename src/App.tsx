@@ -39,6 +39,7 @@ import ECommercePage from "./pages/ECommercePage";
 import PoultryPage from "./pages/PoultryPage";
 import PoultryIntelligencePage from "./pages/PoultryIntelligencePage";
 import EnvironmentalDashboardPage from "./pages/EnvironmentalDashboardPage";
+import AgroMapPage from "./pages/AgroMapPage";
 import HRDashboardPage from "./pages/HRDashboardPage";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
