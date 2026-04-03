@@ -19,9 +19,11 @@ const MainLayout: React.FC = () => {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Mobile header */}
-        <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-card border-b border-border safe-top"
-          style={{ boxShadow: 'var(--shadow-sm)' }}>
+        {/* Mobile header — sticky so content scrolls beneath */}
+        <header
+          className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-card border-b border-border safe-top"
+          style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+        >
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -40,7 +42,7 @@ const MainLayout: React.FC = () => {
               style={{ background: 'var(--gradient-primary)' }}>
               <ShoppingCart className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-sm tracking-tight">NAVANHULA CLOUD</span>
+            <span className="font-bold text-sm tracking-tight text-foreground">NAVANHULA CLOUD</span>
           </div>
           
           <div className="flex items-center gap-1">
@@ -55,8 +57,8 @@ const MainLayout: React.FC = () => {
           <AppBreadcrumb />
         </div>
 
-        {/* Mobile content */}
-        <main className="flex-1 p-4 safe-bottom overflow-auto">
+        {/* Mobile content — proper padding, no overlap */}
+        <main className="flex-1 p-4 pb-6 safe-bottom overflow-auto">
           <Outlet />
         </main>
 
@@ -71,8 +73,10 @@ const MainLayout: React.FC = () => {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Desktop top bar */}
-          <header className="flex items-center gap-4 px-6 py-2.5 border-b border-border bg-card"
-            style={{ boxShadow: 'var(--shadow-sm)' }}>
+          <header
+            className="sticky top-0 z-50 flex items-center gap-4 px-6 py-2.5 border-b border-border bg-card"
+            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+          >
             <SidebarTrigger className="-ml-2" />
             <div className="flex-1">
               <AppBreadcrumb />
