@@ -9,6 +9,8 @@ import { Menu, ShoppingCart } from 'lucide-react';
 import NetworkIndicator from './NetworkIndicator';
 import NotificationBell from './NotificationBell';
 import LanguageSelector from './LanguageSelector';
+import AppBreadcrumb from './AppBreadcrumb';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
@@ -26,8 +28,10 @@ const MainLayout: React.FC = () => {
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-64">
-              <Sidebar />
+            <SheetContent side="left" className="p-0 w-72">
+              <SidebarProvider>
+                <Sidebar />
+              </SidebarProvider>
             </SheetContent>
           </Sheet>
           
@@ -46,6 +50,11 @@ const MainLayout: React.FC = () => {
           </div>
         </header>
 
+        {/* Mobile breadcrumb */}
+        <div className="px-4 py-2 border-b border-border bg-card">
+          <AppBreadcrumb />
+        </div>
+
         {/* Mobile content */}
         <main className="flex-1 p-4 safe-bottom overflow-auto">
           <Outlet />
@@ -57,22 +66,30 @@ const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Desktop top bar */}
-        <header className="flex items-center justify-end gap-2 px-6 py-2.5 border-b border-border bg-card"
-          style={{ boxShadow: 'var(--shadow-sm)' }}>
-          <LanguageSelector />
-          <NotificationBell />
-          <NetworkIndicator />
-        </header>
-        <main className="flex-1 overflow-auto bg-background">
-          <Outlet />
-        </main>
-        <Footer />
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Desktop top bar */}
+          <header className="flex items-center gap-4 px-6 py-2.5 border-b border-border bg-card"
+            style={{ boxShadow: 'var(--shadow-sm)' }}>
+            <SidebarTrigger className="-ml-2" />
+            <div className="flex-1">
+              <AppBreadcrumb />
+            </div>
+            <div className="flex items-center gap-2">
+              <LanguageSelector />
+              <NotificationBell />
+              <NetworkIndicator />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto bg-background">
+            <Outlet />
+          </main>
+          <Footer />
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
