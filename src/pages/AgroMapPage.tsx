@@ -175,6 +175,25 @@ const AgroMapPageContent: React.FC = () => {
 
   const defaultCenter: [number, number] = userPosition || [-15.12, 39.26];
 
+  if (authLoading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (fetchError && producers.length === 0) {
+    return (
+      <div className="p-4 md:p-6 flex flex-col items-center justify-center min-h-[400px] text-center">
+        <AlertTriangle className="w-12 h-12 text-destructive mb-4" />
+        <h2 className="text-lg font-semibold text-foreground mb-2">Erro ao carregar AGRO MAP</h2>
+        <p className="text-sm text-muted-foreground mb-4">{fetchError}</p>
+        <Button onClick={() => { setFetchError(null); fetchProducers(); }}>Tentar novamente</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 md:p-6 space-y-4 relative z-0">
       {/* Header */}
