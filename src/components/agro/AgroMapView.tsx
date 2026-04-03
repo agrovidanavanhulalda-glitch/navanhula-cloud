@@ -3,13 +3,17 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix leaflet default icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
+// Fix leaflet default icons safely
+try {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  });
+} catch (e) {
+  console.warn('[AgroMap] Failed to configure Leaflet icons:', e);
+}
 
 const productIcon = (tipo: string) => {
   const color = tipo === 'frango' ? '#ef4444' : tipo === 'ovos' ? '#f59e0b' : '#22c55e';
@@ -49,14 +53,17 @@ function LocationUpdater({ position }: { position: [number, number] | null }) {
 }
 
 const AgroMapView: React.FC<AgroMapViewProps> = ({ producers, center, userPosition, onSelectProducer }) => {
+  const safeProducers = Array.isArray(producers) ? producers : [];
+  const safeCenter: [number, number] = Array.isArray(center) && center.length === 2 ? center : [-15.12, 39.26];
+
   return (
-    <MapContainer center={center} zoom={12} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
+    <MapContainer center={safeCenter} zoom={12} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <LocationUpdater position={userPosition} />
-      {producers.map((p) => (
+      {safeProducers.map((p) => (
         <Marker key={p.id} position={[p.latitude, p.longitude]} icon={productIcon(p.tipo_produto)}>
           <Popup>
             <div className="min-w-[200px] p-1">
