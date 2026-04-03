@@ -9,7 +9,7 @@ import {
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
   Cloud, Store, ChevronDown, Calculator, CalendarDays, CreditCard, Banknote,
-  Receipt, ClipboardList, Building2,
+  Receipt, ClipboardList, Building2, MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
