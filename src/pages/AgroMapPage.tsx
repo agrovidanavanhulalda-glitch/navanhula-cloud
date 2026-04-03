@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, MapPin, Phone, ShoppingCart, Plus, Egg, Search, AlertTriangle } from 'lucide-react';
+import { Loader2, MapPin, Phone, ShoppingCart, Plus, Egg, Search, AlertTriangle, ClipboardList, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 interface Producer {
@@ -37,6 +38,7 @@ const orderSchema = z.object({
 
 const AgroMapPageContent: React.FC = () => {
   const { user, company, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const companyId = company?.id;
   const [producers, setProducers] = useState<Producer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ const AgroMapPageContent: React.FC = () => {
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
+  const [orderSuccess, setOrderSuccess] = useState<{ total: number; remaining: number } | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterSearch, setFilterSearch] = useState('');
   const [filterMaxPrice, setFilterMaxPrice] = useState('');
@@ -113,28 +115,25 @@ const AgroMapPageContent: React.FC = () => {
       toast.error(parsed.error.errors[0].message);
       return;
     }
-    if (orderForm.quantidade > selectedProducer.quantidade_disponivel) {
-      toast.error('Quantidade indisponível');
-      return;
-    }
     setSubmitting(true);
-    const total = orderForm.quantidade * selectedProducer.preco;
-    const { error } = await supabase.from('agro_orders').insert({
-      company_id: companyId,
-      producer_id: selectedProducer.id,
-      cliente_nome: orderForm.cliente_nome.trim(),
-      cliente_contacto: orderForm.cliente_contacto.trim(),
-      quantidade: orderForm.quantidade,
-      preco_unitario: selectedProducer.preco,
-      total,
-      created_by: user?.id,
+    const { data, error } = await supabase.rpc('place_agro_order', {
+      p_company_id: companyId,
+      p_producer_id: selectedProducer.id,
+      p_cliente_nome: orderForm.cliente_nome.trim(),
+      p_cliente_contacto: orderForm.cliente_contacto.trim(),
+      p_quantidade: orderForm.quantidade,
+      p_created_by: user?.id || null,
     });
-    if (error) {
-      toast.error('Erro ao enviar pedido');
+
+    const result = data as unknown as { success: boolean; message?: string; total?: number; remaining_stock?: number } | null;
+
+    if (error || !result?.success) {
+      toast.error(result?.message || 'Erro ao enviar pedido');
     } else {
+      setOrderSuccess({ total: result.total!, remaining: result.remaining_stock! });
       toast.success('Pedido enviado com sucesso!');
-      setOrderModalOpen(false);
       setOrderForm({ cliente_nome: '', cliente_contacto: '', quantidade: 1 });
+      fetchProducers();
     }
     setSubmitting(false);
   };
@@ -204,9 +203,14 @@ const AgroMapPageContent: React.FC = () => {
           </h1>
           <p className="text-sm text-muted-foreground">Marketplace de produtores avícolas</p>
         </div>
-        <Button onClick={() => setAddModalOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" /> Adicionar Produtor
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/app/agro-orders')} className="gap-2">
+            <ClipboardList className="w-4 h-4" /> Ver Pedidos
+          </Button>
+          <Button onClick={() => setAddModalOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" /> Adicionar Produtor
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -293,15 +297,27 @@ const AgroMapPageContent: React.FC = () => {
       </div>
 
       {/* Order Modal */}
-      <Dialog open={orderModalOpen} onOpenChange={setOrderModalOpen}>
+      <Dialog open={orderModalOpen} onOpenChange={(open) => { setOrderModalOpen(open); if (!open) setOrderSuccess(null); }}>
         <DialogContent className="sm:max-w-md z-[1200]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-primary" />
-              Fazer Pedido
+              {orderSuccess ? <CheckCircle className="w-5 h-5 text-green-600" /> : <ShoppingCart className="w-5 h-5 text-primary" />}
+              {orderSuccess ? 'Pedido Confirmado!' : 'Fazer Pedido'}
             </DialogTitle>
           </DialogHeader>
-          {selectedProducer && (
+          {orderSuccess ? (
+            <div className="space-y-4 text-center py-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-2xl font-bold text-green-700">{orderSuccess.total.toFixed(2)} MT</p>
+                <p className="text-sm text-green-600 mt-1">Pedido registado com sucesso</p>
+              </div>
+              <p className="text-sm text-muted-foreground">Estoque restante do produtor: {orderSuccess.remaining} unidades</p>
+              <div className="flex gap-2 justify-center">
+                <Button variant="outline" onClick={() => { setOrderModalOpen(false); setOrderSuccess(null); }}>Fechar</Button>
+                <Button onClick={() => { setOrderModalOpen(false); setOrderSuccess(null); navigate('/app/agro-orders'); }}>Ver Pedidos</Button>
+              </div>
+            </div>
+          ) : selectedProducer && (
             <div className="space-y-4">
               <div className="bg-muted rounded-lg p-3">
                 <p className="font-semibold text-foreground">{selectedProducer.nome_granja}</p>
@@ -334,12 +350,14 @@ const AgroMapPageContent: React.FC = () => {
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOrderModalOpen(false)}>Cancelar</Button>
-            <Button onClick={handleOrder} disabled={submitting}>
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Pedido'}
-            </Button>
-          </DialogFooter>
+          {!orderSuccess && (
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOrderModalOpen(false)}>Cancelar</Button>
+              <Button onClick={handleOrder} disabled={submitting}>
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Pedido'}
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
 

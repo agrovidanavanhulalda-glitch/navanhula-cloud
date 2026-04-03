@@ -4332,6 +4332,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      place_agro_order: {
+        Args: {
+          p_cliente_contacto: string
+          p_cliente_nome: string
+          p_company_id: string
+          p_created_by?: string
+          p_producer_id: string
+          p_quantidade: number
+        }
+        Returns: Json
+      }
       process_nava_payment: {
         Args: {
           p_amount: number
@@ -4399,6 +4410,10 @@ export type Database = {
           p_payment_method: string
           p_to_store_id: string
         }
+        Returns: Json
+      }
+      update_agro_order_status: {
+        Args: { p_new_status: string; p_order_id: string }
         Returns: Json
       }
       validate_and_redeem_voucher: {

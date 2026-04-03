@@ -40,6 +40,7 @@ import PoultryPage from "./pages/PoultryPage";
 import PoultryIntelligencePage from "./pages/PoultryIntelligencePage";
 import EnvironmentalDashboardPage from "./pages/EnvironmentalDashboardPage";
 import AgroMapPage from "./pages/AgroMapPage";
+import AgroOrdersPage from "./pages/AgroOrdersPage";
 import HRDashboardPage from "./pages/HRDashboardPage";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
@@ -202,6 +203,7 @@ const AppRoutes = () => {
         <Route path="avicultura/inteligencia" element={<SubscriptionGate><PoultryIntelligencePage /></SubscriptionGate>} />
         <Route path="ambiente" element={<SubscriptionGate><EnvironmentalDashboardPage /></SubscriptionGate>} />
         <Route path="agro-map" element={<SubscriptionGate><AgroMapPage /></SubscriptionGate>} />
+        <Route path="agro-orders" element={<SubscriptionGate><AgroOrdersPage /></SubscriptionGate>} />
         <Route path="ecommerce" element={<SubscriptionGate><ECommercePage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
