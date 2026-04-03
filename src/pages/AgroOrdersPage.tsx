@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Package, CheckCircle, Truck, XCircle, Clock, ShoppingCart } from 'lucide-react';
+import { Loader2, Package, CheckCircle, Truck, XCircle, Clock, ShoppingCart, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface AgroOrder {
@@ -229,6 +229,22 @@ const AgroOrdersPage: React.FC = () => {
                                 onClick={() => handleStatusChange(order.id, 'cancelado')}
                               >
                                 Cancelar
+                              </Button>
+                            )}
+                            {order.cliente_contacto && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-green-600 hover:text-green-700"
+                                asChild
+                              >
+                                <a
+                                  href={`https://wa.me/${order.cliente_contacto.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${order.cliente_nome}, o seu pedido de ${order.quantidade} unidades (${order.total.toFixed(2)} MT) está ${statusConfig[order.status]?.label || order.status}. Obrigado!`)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                </a>
                               </Button>
                             )}
                           </div>
