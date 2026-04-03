@@ -297,15 +297,27 @@ const AgroMapPageContent: React.FC = () => {
       </div>
 
       {/* Order Modal */}
-      <Dialog open={orderModalOpen} onOpenChange={setOrderModalOpen}>
+      <Dialog open={orderModalOpen} onOpenChange={(open) => { setOrderModalOpen(open); if (!open) setOrderSuccess(null); }}>
         <DialogContent className="sm:max-w-md z-[1200]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-primary" />
-              Fazer Pedido
+              {orderSuccess ? <CheckCircle className="w-5 h-5 text-green-600" /> : <ShoppingCart className="w-5 h-5 text-primary" />}
+              {orderSuccess ? 'Pedido Confirmado!' : 'Fazer Pedido'}
             </DialogTitle>
           </DialogHeader>
-          {selectedProducer && (
+          {orderSuccess ? (
+            <div className="space-y-4 text-center py-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-2xl font-bold text-green-700">{orderSuccess.total.toFixed(2)} MT</p>
+                <p className="text-sm text-green-600 mt-1">Pedido registado com sucesso</p>
+              </div>
+              <p className="text-sm text-muted-foreground">Estoque restante do produtor: {orderSuccess.remaining} unidades</p>
+              <div className="flex gap-2 justify-center">
+                <Button variant="outline" onClick={() => { setOrderModalOpen(false); setOrderSuccess(null); }}>Fechar</Button>
+                <Button onClick={() => { setOrderModalOpen(false); setOrderSuccess(null); navigate('/app/agro-orders'); }}>Ver Pedidos</Button>
+              </div>
+            </div>
+          ) : selectedProducer && (
             <div className="space-y-4">
               <div className="bg-muted rounded-lg p-3">
                 <p className="font-semibold text-foreground">{selectedProducer.nome_granja}</p>
@@ -338,12 +350,14 @@ const AgroMapPageContent: React.FC = () => {
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOrderModalOpen(false)}>Cancelar</Button>
-            <Button onClick={handleOrder} disabled={submitting}>
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Pedido'}
-            </Button>
-          </DialogFooter>
+          {!orderSuccess && (
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOrderModalOpen(false)}>Cancelar</Button>
+              <Button onClick={handleOrder} disabled={submitting}>
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Pedido'}
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
 
