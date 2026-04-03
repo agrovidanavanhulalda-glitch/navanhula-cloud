@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Package, CheckCircle, Truck, XCircle, Clock, ShoppingCart } from 'lucide-react';
+import { Loader2, Package, CheckCircle, Truck, XCircle, Clock, ShoppingCart, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface AgroOrder {
