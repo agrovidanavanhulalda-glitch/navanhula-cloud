@@ -203,9 +203,14 @@ const AgroMapPageContent: React.FC = () => {
           </h1>
           <p className="text-sm text-muted-foreground">Marketplace de produtores avícolas</p>
         </div>
-        <Button onClick={() => setAddModalOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" /> Adicionar Produtor
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/app/agro-orders')} className="gap-2">
+            <ClipboardList className="w-4 h-4" /> Ver Pedidos
+          </Button>
+          <Button onClick={() => setAddModalOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" /> Adicionar Produtor
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
