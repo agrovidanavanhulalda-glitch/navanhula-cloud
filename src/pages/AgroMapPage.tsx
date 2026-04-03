@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { toast } from 'sonner';
@@ -12,6 +12,8 @@ import { Loader2, MapPin, Phone, ShoppingCart, Plus, Egg, Search, AlertTriangle,
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import ErrorBoundary from '@/components/ErrorBoundary';
+
+const AgroMapView = lazy(() => import('@/components/agro/AgroMapView'));
 
 interface Producer {
   id: string;
@@ -250,11 +252,29 @@ const AgroMapPageContent: React.FC = () => {
 
       {/* Map + List */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Map temporarily replaced with test */}
-        <div className="lg:col-span-2 rounded-xl overflow-hidden border border-border relative z-0 bg-muted flex flex-col items-center justify-center" style={{ height: '500px' }}>
-          <h1 className="text-2xl font-bold text-foreground">AGRO MAP OK</h1>
-          <p className="text-muted-foreground mt-2">Teste sem mapa — {filteredProducers.length} produtores carregados</p>
-          {loading && <Loader2 className="w-6 h-6 animate-spin text-primary mt-4" />}
+        <div className="lg:col-span-2 rounded-xl overflow-hidden border border-border relative z-0" style={{ height: '500px' }}>
+          <ErrorBoundary fallbackTitle="Mapa indisponível">
+            {loading ? (
+              <div className="h-full flex flex-col items-center justify-center bg-muted">
+                <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                <p className="text-sm text-muted-foreground">Carregando mapa...</p>
+              </div>
+            ) : (
+              <Suspense fallback={
+                <div className="h-full flex flex-col items-center justify-center bg-muted">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                  <p className="text-sm text-muted-foreground">Carregando mapa...</p>
+                </div>
+              }>
+                <AgroMapView
+                  producers={filteredProducers}
+                  center={defaultCenter}
+                  userPosition={userPosition}
+                  onSelectProducer={handleSelectProducer}
+                />
+              </Suspense>
+            )}
+          </ErrorBoundary>
         </div>
 
         {/* Producer List */}
