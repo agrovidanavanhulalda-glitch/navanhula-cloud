@@ -45,6 +45,7 @@ import ProducerDashboardPage from "./pages/ProducerDashboardPage";
 import DriversPage from "./pages/DriversPage";
 import HRDashboardPage from "./pages/HRDashboardPage";
 import CriadoresPage from "./pages/CriadoresPage";
+import MarketplacePage from "./pages/MarketplacePage";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
 import Index from "./pages/Index";
@@ -210,6 +211,7 @@ const AppRoutes = () => {
         <Route path="producer-dashboard" element={<SubscriptionGate><ProducerDashboardPage /></SubscriptionGate>} />
         <Route path="drivers" element={<SubscriptionGate><DriversPage /></SubscriptionGate>} />
         <Route path="criadores" element={<SubscriptionGate><CriadoresPage /></SubscriptionGate>} />
+        <Route path="marketplace" element={<SubscriptionGate><MarketplacePage /></SubscriptionGate>} />
         <Route path="ecommerce" element={<SubscriptionGate><ECommercePage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
