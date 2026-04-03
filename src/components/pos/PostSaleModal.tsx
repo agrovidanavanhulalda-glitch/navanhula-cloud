@@ -88,8 +88,7 @@ const PostSaleModal: React.FC<PostSaleModalProps> = ({
   const handlePrintInvoice = () => {
     downloadPdfA4({ sale, storeName, storeAddress, storePhone, storeNuit, fiscalRegime, companyName });
     markAction('invoice');
-    toast.success('Fatura gerada com sucesso');
-    setTimeout(() => window.print(), 500);
+    toast.success('Fatura A4 gerada com sucesso');
   };
 
   const handleSendEmail = async () => {
