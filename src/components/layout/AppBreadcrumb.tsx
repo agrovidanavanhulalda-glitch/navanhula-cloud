@@ -50,6 +50,7 @@ const routeLabels: Record<string, string> = {
   materiais: 'Materiais',
   criadores: 'Criadores',
   marketplace: 'Marketplace',
+  compliance: 'Compliance Hub',
 };
 
 const AppBreadcrumb: React.FC = () => {
