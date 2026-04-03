@@ -53,14 +53,17 @@ function LocationUpdater({ position }: { position: [number, number] | null }) {
 }
 
 const AgroMapView: React.FC<AgroMapViewProps> = ({ producers, center, userPosition, onSelectProducer }) => {
+  const safeProducers = Array.isArray(producers) ? producers : [];
+  const safeCenter: [number, number] = Array.isArray(center) && center.length === 2 ? center : [-15.12, 39.26];
+
   return (
-    <MapContainer center={center} zoom={12} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
+    <MapContainer center={safeCenter} zoom={12} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <LocationUpdater position={userPosition} />
-      {producers.map((p) => (
+      {safeProducers.map((p) => (
         <Marker key={p.id} position={[p.latitude, p.longitude]} icon={productIcon(p.tipo_produto)}>
           <Popup>
             <div className="min-w-[200px] p-1">
