@@ -87,10 +87,12 @@ const AgroOrdersPage: React.FC = () => {
 
   const stats = {
     total: orders.length,
-    pendente: orders.filter(o => o.status === 'pendente').length,
+    pendente: orders.filter(o => ['pendente', 'confirmado', 'em_transporte'].includes(o.status)).length,
     entregue: orders.filter(o => o.status === 'entregue').length,
-    revenue: orders.filter(o => o.status === 'entregue').reduce((s, o) => s + o.total, 0),
+    revenue: orders.filter(o => o.status === 'entregue').reduce((s, o) => s + (o.quantidade * o.preco_unitario), 0),
   };
+
+  console.log('[AgroOrders] Pedidos:', orders);
 
   return (
     <div className="p-4 md:p-6 space-y-4">
