@@ -395,4 +395,10 @@ const AgroMapPageContent: React.FC = () => {
   );
 };
 
+const AgroMapPage: React.FC = () => (
+  <ErrorBoundary fallbackTitle="Erro ao carregar AGRO MAP">
+    <AgroMapPageContent />
+  </ErrorBoundary>
+);
+
 export default AgroMapPage;
