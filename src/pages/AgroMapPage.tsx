@@ -38,6 +38,7 @@ const orderSchema = z.object({
 
 const AgroMapPageContent: React.FC = () => {
   const { user, company, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const companyId = company?.id;
   const [producers, setProducers] = useState<Producer[]>([]);
   const [loading, setLoading] = useState(true);
