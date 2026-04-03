@@ -231,6 +231,22 @@ const AgroOrdersPage: React.FC = () => {
                                 Cancelar
                               </Button>
                             )}
+                            {order.cliente_contacto && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-green-600 hover:text-green-700"
+                                asChild
+                              >
+                                <a
+                                  href={`https://wa.me/${order.cliente_contacto.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${order.cliente_nome}, o seu pedido de ${order.quantidade} unidades (${order.total.toFixed(2)} MT) está ${statusConfig[order.status]?.label || order.status}. Obrigado!`)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                </a>
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
