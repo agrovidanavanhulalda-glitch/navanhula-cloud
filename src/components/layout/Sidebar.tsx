@@ -4,128 +4,187 @@ import { useAuth } from '@/contexts/SaaSAuthContext';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard, ShoppingCart, Package, Settings, Store, LogOut,
+  LayoutDashboard, ShoppingCart, Package, Settings, LogOut,
   WalletCards, History, BarChart3, TrendingUp, Boxes, Shield, User,
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
-  Cloud,
+  Cloud, Store, ChevronDown, Calculator, CalendarDays, CreditCard, Banknote,
+  Receipt, ClipboardList, Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Sidebar as ShadcnSidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarHeader,
+  SidebarFooter,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import NetworkIndicator from './NetworkIndicator';
-import NotificationBell from './NotificationBell';
 
-interface NavItem {
+interface SubItem {
   label: string;
   href: string;
-  icon: React.ReactNode;
-  roles?: string[];
+  icon: React.ElementType;
 }
 
-interface NavSection {
-  title?: string;
-  items: NavItem[];
+interface NavGroup {
+  title: string;
+  icon: React.ElementType;
   roles?: string[];
+  items: SubItem[];
 }
 
-const navSections: NavSection[] = [
+const navGroups: NavGroup[] = [
   {
+    title: 'Dashboard',
+    icon: LayoutDashboard,
     items: [
-      { label: 'Dashboard', href: '/app/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-      { label: 'Painel CEO', href: '/app/ceo', icon: <TrendingUp className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+      { label: 'Visão Geral', href: '/app/dashboard', icon: LayoutDashboard },
+      { label: 'Painel CEO', href: '/app/ceo', icon: TrendingUp },
+      { label: 'BI Analytics', href: '/app/bi', icon: PieChart },
     ],
   },
   {
     title: 'Vendas',
+    icon: ShoppingCart,
     items: [
-      { label: 'PDV', href: '/app/pdv', icon: <ShoppingCart className="w-5 h-5" /> },
-      { label: 'Caixa', href: '/app/caixa', icon: <WalletCards className="w-5 h-5" /> },
-      { label: 'Histórico', href: '/app/vendas', icon: <History className="w-5 h-5" /> },
-      { label: 'Loja Online', href: '/app/ecommerce', icon: <ShoppingBag className="w-5 h-5" /> },
+      { label: 'PDV', href: '/app/pdv', icon: ShoppingCart },
+      { label: 'Caixa', href: '/app/caixa', icon: WalletCards },
+      { label: 'Histórico', href: '/app/vendas', icon: History },
+      { label: 'Loja Online', href: '/app/ecommerce', icon: ShoppingBag },
     ],
   },
   {
     title: 'Catálogo',
+    icon: Package,
     items: [
-      { label: 'Produtos', href: '/app/produtos', icon: <Package className="w-5 h-5" /> },
-      { label: 'Estoque', href: '/app/estoque', icon: <Boxes className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+      { label: 'Produtos', href: '/app/produtos', icon: Package },
+      { label: 'Estoque', href: '/app/estoque', icon: Boxes },
     ],
   },
   {
-    title: 'CRM & Equipa',
-    roles: ['admin', 'manager', 'ceo'],
+    title: 'Recursos Humanos',
+    icon: Users,
+    roles: ['admin', 'ceo', 'hr'],
     items: [
-      { label: 'Clientes', href: '/app/crm', icon: <UserCheck className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-      { label: 'Vendedores', href: '/app/vendedores', icon: <Users className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-      { label: 'Fornecedores', href: '/app/fornecedores', icon: <Truck className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-      { label: 'RH', href: '/app/rh', icon: <User className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+      { label: 'Funcionários', href: '/app/rh', icon: User },
+      { label: 'Presenças', href: '/app/rh', icon: CalendarDays },
+      { label: 'Vendedores', href: '/app/vendedores', icon: UserCheck },
+    ],
+  },
+  {
+    title: 'Salários',
+    icon: Banknote,
+    roles: ['admin', 'ceo', 'hr'],
+    items: [
+      { label: 'Processar Salários', href: '/app/rh', icon: Calculator },
+      { label: 'Recibos', href: '/app/rh', icon: Receipt },
+    ],
+  },
+  {
+    title: 'Contabilidade',
+    icon: BookOpen,
+    roles: ['admin', 'ceo', 'accountant'],
+    items: [
+      { label: 'Plano de Contas', href: '/app/contabilidade', icon: ClipboardList },
+      { label: 'Diário', href: '/app/contabilidade', icon: BookOpen },
     ],
   },
   {
     title: 'Financeiro',
+    icon: TrendingUp,
     roles: ['admin', 'manager', 'ceo'],
     items: [
-      { label: 'Relatórios', href: '/app/relatorios', icon: <BarChart3 className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-      { label: 'Financeiro', href: '/app/financeiro', icon: <TrendingUp className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-      { label: 'Contabilidade', href: '/app/contabilidade', icon: <BookOpen className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-      { label: 'Fiscal', href: '/app/fiscal', icon: <FileText className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-      { label: 'Documentos', href: '/app/documentos', icon: <FileText className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-      { label: 'Carteira', href: '/app/carteira', icon: <WalletCards className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-      { label: 'Pagamentos MM', href: '/app/pagamentos-manuais', icon: <Smartphone className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
-      { label: 'BI Analytics', href: '/app/bi', icon: <PieChart className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-      { label: 'AI Engine', href: '/app/ai', icon: <Brain className="w-5 h-5" />, roles: ['admin', 'manager', 'ceo'] },
+      { label: 'Relatórios', href: '/app/financeiro', icon: BarChart3 },
+      { label: 'Carteira', href: '/app/carteira', icon: WalletCards },
+      { label: 'Pagamentos MM', href: '/app/pagamentos-manuais', icon: Smartphone },
+      { label: 'Documentos', href: '/app/documentos', icon: FileText },
+    ],
+  },
+  {
+    title: 'Fiscal',
+    icon: FileText,
+    roles: ['admin', 'manager', 'ceo', 'accountant'],
+    items: [
+      { label: 'Gestão Fiscal', href: '/app/fiscal', icon: FileText },
+      { label: 'Relatórios', href: '/app/relatorios', icon: BarChart3 },
+    ],
+  },
+  {
+    title: 'CRM',
+    icon: UserCheck,
+    roles: ['admin', 'manager', 'ceo'],
+    items: [
+      { label: 'Clientes', href: '/app/crm', icon: UserCheck },
+      { label: 'Fornecedores', href: '/app/fornecedores', icon: Truck },
     ],
   },
   {
     title: 'Operações',
+    icon: Building2,
     roles: ['admin', 'ceo'],
     items: [
-      { label: 'Lojas', href: '/app/lojas', icon: <Store className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-      { label: 'Agricultura', href: '/app/agricultura', icon: <Sprout className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-      { label: 'Avicultura', href: '/app/avicultura', icon: <Egg className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-      { label: 'IA Avícola', href: '/app/avicultura/inteligencia', icon: <Brain className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-      { label: 'Ambiente & Clima', href: '/app/ambiente', icon: <Cloud className="w-5 h-5" />, roles: ['admin', 'ceo'] },
+      { label: 'Lojas', href: '/app/lojas', icon: Store },
+      { label: 'Agricultura', href: '/app/agricultura', icon: Sprout },
+      { label: 'Avicultura', href: '/app/avicultura', icon: Egg },
+      { label: 'IA Avícola', href: '/app/avicultura/inteligencia', icon: Brain },
+      { label: 'Ambiente & Clima', href: '/app/ambiente', icon: Cloud },
     ],
   },
   {
     title: 'Sistema',
+    icon: Settings,
     items: [
-      { label: 'Assinatura', href: '/app/assinatura', icon: <Shield className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-      { label: 'Configurações', href: '/app/configuracoes', icon: <Settings className="w-5 h-5" />, roles: ['admin', 'ceo'] },
-      { label: 'Comunidade', href: '/app/comunidade', icon: <MessageSquare className="w-5 h-5" /> },
+      { label: 'AI Engine', href: '/app/ai', icon: Brain },
+      { label: 'Assinatura', href: '/app/assinatura', icon: Shield },
+      { label: 'Configurações', href: '/app/configuracoes', icon: Settings },
+      { label: 'Comunidade', href: '/app/comunidade', icon: MessageSquare },
     ],
   },
 ];
 
-const adminResellerNavItems: NavItem[] = [
-  { label: 'Dashboard', href: '/app/revendedores/dashboard', icon: <Users className="w-5 h-5" /> },
-  { label: 'Cadastrar', href: '/app/revendedores/cadastrar', icon: <UserPlus className="w-5 h-5" /> },
-  { label: 'Lista', href: '/app/revendedores/lista', icon: <Users className="w-5 h-5" /> },
-  { label: 'Comissões', href: '/app/revendedores/comissoes', icon: <TrendingUp className="w-5 h-5" /> },
-  { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: <Wallet className="w-5 h-5" /> },
-  { label: 'Links', href: '/app/revendedores/links', icon: <Link2 className="w-5 h-5" /> },
-  { label: 'Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
-  { label: 'Materiais', href: '/app/revendedores/materiais', icon: <FileText className="w-5 h-5" /> },
+const adminResellerItems: SubItem[] = [
+  { label: 'Dashboard', href: '/app/revendedores/dashboard', icon: Users },
+  { label: 'Cadastrar', href: '/app/revendedores/cadastrar', icon: UserPlus },
+  { label: 'Lista', href: '/app/revendedores/lista', icon: Users },
+  { label: 'Comissões', href: '/app/revendedores/comissoes', icon: TrendingUp },
+  { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: Wallet },
+  { label: 'Links', href: '/app/revendedores/links', icon: Link2 },
+  { label: 'Performance', href: '/app/revendedores/performance', icon: BarChart3 },
+  { label: 'Materiais', href: '/app/revendedores/materiais', icon: FileText },
 ];
 
-const resellerPortalNavItems: NavItem[] = [
-  { label: 'Meu Painel', href: '/app/revendedores/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-  { label: 'Clientes Indicados', href: '/app/revendedores/lista', icon: <Users className="w-5 h-5" /> },
-  { label: 'Comissões', href: '/app/revendedores/comissoes', icon: <TrendingUp className="w-5 h-5" /> },
-  { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: <Wallet className="w-5 h-5" /> },
-  { label: 'Links', href: '/app/revendedores/links', icon: <Link2 className="w-5 h-5" /> },
-  { label: 'Materiais', href: '/app/revendedores/materiais', icon: <FileText className="w-5 h-5" /> },
-  { label: 'Performance', href: '/app/revendedores/performance', icon: <BarChart3 className="w-5 h-5" /> },
+const resellerPortalItems: SubItem[] = [
+  { label: 'Meu Painel', href: '/app/revendedores/dashboard', icon: LayoutDashboard },
+  { label: 'Clientes Indicados', href: '/app/revendedores/lista', icon: Users },
+  { label: 'Comissões', href: '/app/revendedores/comissoes', icon: TrendingUp },
+  { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: Wallet },
+  { label: 'Links', href: '/app/revendedores/links', icon: Link2 },
+  { label: 'Materiais', href: '/app/revendedores/materiais', icon: FileText },
+  { label: 'Performance', href: '/app/revendedores/performance', icon: BarChart3 },
 ];
 
-interface SidebarProps {
-  collapsed?: boolean;
-}
-
-const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
+const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, company, store, signOut, role } = useAuth();
   const { currentCashRegister } = useLocalPOS();
+  const { state } = useSidebar();
+  const collapsed = state === 'collapsed';
 
   const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo';
   const isReseller = role === 'reseller';
@@ -142,165 +201,189 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
     navigate('/login');
   };
 
-  const renderNavItem = (item: NavItem) => {
-    const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
+  const isActive = (href: string) =>
+    location.pathname === href || location.pathname.startsWith(`${href}/`);
+
+  const groupHasActive = (items: SubItem[]) =>
+    items.some(item => isActive(item.href));
+
+  const renderSubItem = (item: SubItem) => {
+    const Icon = item.icon;
+    const active = isActive(item.href);
     return (
-      <Link
-        key={item.href}
-        to={item.href}
-        className={cn(
-          'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-          isActive
-            ? 'bg-[hsl(217_91%_53%/0.15)] text-[hsl(0_0%_100%)] font-semibold'
-            : 'text-[hsl(214_32%_80%)] hover:bg-[hsl(217_91%_53%/0.08)] hover:text-[hsl(214_32%_91%)]',
-          collapsed && 'justify-center px-2'
-        )}
-      >
-        <span className={cn('flex-shrink-0 transition-colors duration-200', isActive ? 'text-primary' : '')}>
-          {item.icon}
-        </span>
-        {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
-        {!collapsed && isActive && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
-      </Link>
+      <SidebarMenuSubItem key={item.href + item.label}>
+        <SidebarMenuSubButton asChild isActive={active}>
+          <Link to={item.href} className="flex items-center gap-2">
+            <Icon className="h-4 w-4" />
+            <span>{item.label}</span>
+          </Link>
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
     );
   };
 
-  const renderSections = () => {
-    if (isReseller) {
-      return resellerPortalNavItems.map(renderNavItem);
-    }
+  const renderCollapsibleGroup = (group: NavGroup) => {
+    if (group.roles && !group.roles.includes(role || 'seller')) return null;
+    const Icon = group.icon;
+    const hasActive = groupHasActive(group.items);
 
-    return navSections.map((section, idx) => {
-      // Filter section by role
-      if (section.roles && !section.roles.includes(role || 'seller')) return null;
-      const visibleItems = section.items.filter(item => !item.roles || item.roles.includes(role || 'seller'));
-      if (visibleItems.length === 0) return null;
-
-      return (
-        <div key={idx} className={idx > 0 ? 'pt-3' : ''}>
-          {section.title && !collapsed && (
-            <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
-              style={{ color: 'hsl(215 16% 45%)' }}>
-              {section.title}
-            </p>
-          )}
-          {collapsed && idx > 0 && (
-            <div className="mx-3 mb-2 border-t" style={{ borderColor: 'hsl(217 33% 18%)' }} />
-          )}
-          <div className="space-y-0.5">{visibleItems.map(renderNavItem)}</div>
-        </div>
-      );
-    });
+    return (
+      <Collapsible key={group.title} defaultOpen={hasActive} className="group/collapsible">
+        <SidebarMenuItem>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton
+              tooltip={group.title}
+              className={cn(
+                'font-semibold text-sidebar-foreground/80',
+                hasActive && 'text-sidebar-primary-foreground bg-sidebar-accent'
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{group.title}</span>
+              <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              {group.items.map(renderSubItem)}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </SidebarMenuItem>
+      </Collapsible>
+    );
   };
 
+  const renderFlatItems = (items: SubItem[]) =>
+    items.map(item => {
+      const Icon = item.icon;
+      const active = isActive(item.href);
+      return (
+        <SidebarMenuItem key={item.href + item.label}>
+          <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+            <Link to={item.href} className="flex items-center gap-2">
+              <Icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      );
+    });
+
   return (
-    <aside
-      className={cn(
-        'flex flex-col h-screen border-r transition-all duration-300',
-        collapsed ? 'w-16' : 'w-64'
-      )}
-      style={{ backgroundColor: 'hsl(222 47% 11%)', borderColor: 'hsl(217 33% 18%)' }}
-    >
-      {/* Brand */}
-      <div className={cn('flex items-center gap-3 p-4 border-b', collapsed && 'justify-center')}
-        style={{ borderColor: 'hsl(217 33% 18%)' }}>
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: 'var(--gradient-primary)' }}>
-          <ShoppingCart className="w-4.5 h-4.5 text-white" />
+    <ShadcnSidebar collapsible="icon" className="border-r border-sidebar-border">
+      {/* Brand Header */}
+      <SidebarHeader className="border-b border-sidebar-border p-4">
+        <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--gradient-primary)' }}
+          >
+            <ShoppingCart className="w-4 h-4 text-white" />
+          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <h1 className="font-bold text-sm text-sidebar-primary-foreground tracking-tight leading-none">NAVANHULA</h1>
+              <p className="text-[10px] font-medium tracking-widest text-sidebar-foreground/50 uppercase">CLOUD ERP</p>
+            </div>
+          )}
         </div>
-        {!collapsed && (
-          <div>
-            <h1 className="font-bold text-base text-white tracking-tight">NAVANHULA</h1>
-            <p className="text-[10px] font-medium tracking-widest uppercase" style={{ color: 'hsl(215 16% 55%)' }}>CLOUD</p>
+
+        {/* Company info */}
+        {!collapsed && company && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-sidebar-foreground/60">
+            <Store className="w-3.5 h-3.5 text-sidebar-primary" />
+            <span className="truncate font-medium">{company.name}</span>
           </div>
         )}
-      </div>
-
-      {/* Status bar */}
-      {!collapsed && (
-        <div className="px-4 py-2 border-b flex items-center justify-between"
-          style={{ borderColor: 'hsl(217 33% 18%)' }}>
-          <NetworkIndicator />
-          <NotificationBell />
-        </div>
-      )}
-
-      {/* Company & Store */}
-      {!collapsed && (company || store || isReseller) && (
-        <div className="px-4 py-3 border-b space-y-1.5"
-          style={{ borderColor: 'hsl(217 33% 18%)' }}>
-          {company && (
-            <div className="flex items-center gap-2 text-sm">
-              <Store className="w-4 h-4 text-primary" />
-              <span className="text-white truncate font-medium text-xs">{company.name}</span>
-            </div>
-          )}
-          {store && !isReseller && (
-            <div className="flex items-center gap-2 text-xs" style={{ color: 'hsl(215 16% 55%)' }}>
-              <Store className="w-3 h-3" />
-              <span className="truncate">{store.name}</span>
-            </div>
-          )}
-          {isReseller && !company && (
-            <div className="flex items-center gap-2 text-xs" style={{ color: 'hsl(215 16% 55%)' }}>
-              <Users className="w-3 h-3 text-primary" />
-              <span className="truncate">Rede comercial NAVANHULA CLOUD</span>
-            </div>
-          )}
-        </div>
-      )}
+        {!collapsed && store && !isReseller && (
+          <div className="mt-1 flex items-center gap-2 text-[11px] text-sidebar-foreground/40">
+            <Store className="w-3 h-3" />
+            <span className="truncate">{store.name}</span>
+          </div>
+        )}
+      </SidebarHeader>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2 overflow-y-auto space-y-0.5">
-        {renderSections()}
-
-        {/* Reseller admin section */}
-        {!isReseller && isBackofficeAdmin && adminResellerNavItems.length > 0 && (
-          <div className="pt-3">
-            {!collapsed && (
-              <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
-                style={{ color: 'hsl(215 16% 45%)' }}>
-                Revendedores
-              </p>
-            )}
-            <div className="space-y-0.5">{adminResellerNavItems.map(renderNavItem)}</div>
-          </div>
+      <SidebarContent>
+        {isReseller ? (
+          <SidebarGroup>
+            <SidebarGroupLabel>Portal Revendedor</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {renderFlatItems(resellerPortalItems)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {navGroups.map(renderCollapsibleGroup)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         )}
-      </nav>
 
-      {/* User section */}
-      <div className={cn('p-3 border-t', collapsed && 'p-2')}
-        style={{ borderColor: 'hsl(217 33% 18%)' }}>
+        {/* Reseller Admin */}
+        {!isReseller && isBackofficeAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Revendedores</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <Collapsible defaultOpen={groupHasActive(adminResellerItems)} className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton tooltip="Rede Comercial" className="font-semibold text-sidebar-foreground/80">
+                        <Users className="h-4 w-4" />
+                        <span>Rede Comercial</span>
+                        <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {adminResellerItems.map(renderSubItem)}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+      </SidebarContent>
+
+      {/* Footer — User & Logout */}
+      <SidebarFooter className="border-t border-sidebar-border p-3">
         {!collapsed && (
-          <div className="mb-2 p-3 rounded-lg" style={{ backgroundColor: 'hsl(217 33% 15%)' }}>
-            <div className="flex items-center gap-2 mb-0.5">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: 'hsl(217 91% 53% / 0.15)' }}>
+          <div className="mb-2 p-2.5 rounded-lg bg-sidebar-accent/50">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center bg-sidebar-primary/15">
                 {isBackofficeAdmin
-                  ? <Shield className="w-3.5 h-3.5 text-primary" />
-                  : <User className="w-3.5 h-3.5" style={{ color: 'hsl(215 16% 55%)' }} />}
+                  ? <Shield className="w-3.5 h-3.5 text-sidebar-primary" />
+                  : <User className="w-3.5 h-3.5 text-sidebar-foreground/50" />}
               </div>
-              <div className="min-w-0">
-                <p className="font-medium text-xs text-white truncate">{currentOperator}</p>
-                <p className="text-[10px]" style={{ color: 'hsl(215 16% 55%)' }}>{currentOperatorRole}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-xs text-sidebar-primary-foreground truncate">{currentOperator}</p>
+                <p className="text-[10px] text-sidebar-foreground/50">{currentOperatorRole}</p>
               </div>
+              <NetworkIndicator />
             </div>
           </div>
         )}
         <Button
           variant="ghost"
+          size="sm"
           className={cn(
-            'w-full justify-start gap-3 text-xs hover:text-destructive hover:bg-destructive/10',
+            'w-full justify-start gap-2 text-xs text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10',
             collapsed && 'justify-center px-2'
           )}
-          style={{ color: 'hsl(215 16% 55%)' }}
           onClick={handleLogout}
         >
           <LogOut className="w-4 h-4" />
           {!collapsed && 'Sair'}
         </Button>
-      </div>
-    </aside>
+      </SidebarFooter>
+    </ShadcnSidebar>
   );
 };
 
