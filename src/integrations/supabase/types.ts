@@ -1009,6 +1009,146 @@ export type Database = {
         }
         Relationships: []
       }
+      criadores: {
+        Row: {
+          bi_nuit: string | null
+          capacidade: number | null
+          company_id: string
+          confiabilidade: number | null
+          consumo_racao: string | null
+          created_at: string
+          created_by: string | null
+          cria_sozinho: boolean | null
+          data_prevista_venda: string | null
+          desafios: string | null
+          distrito: string | null
+          email: string | null
+          experiencia_anos: number | null
+          fonte_agua: string | null
+          fonte_energia: string | null
+          forma_pagamento: string | null
+          fornecedor_pintos: string | null
+          fornecedor_racao: string | null
+          id: string
+          latitude: number | null
+          localidade: string | null
+          longitude: number | null
+          mercados_atuais: string | null
+          nome: string
+          num_trabalhadores: number | null
+          peso_medio: number | null
+          plano_mensal: string | null
+          plano_quinzenal: string | null
+          plano_semanal: string | null
+          precisa_tecnico: boolean | null
+          preco_medio: number | null
+          provincia: string | null
+          saldo: number | null
+          status: string | null
+          telefone: string | null
+          telefone_alt: string | null
+          tem_mercado: boolean | null
+          tipo_instalacao: string | null
+          tipo_producao: string | null
+          updated_at: string
+          wallet_id: string | null
+        }
+        Insert: {
+          bi_nuit?: string | null
+          capacidade?: number | null
+          company_id: string
+          confiabilidade?: number | null
+          consumo_racao?: string | null
+          created_at?: string
+          created_by?: string | null
+          cria_sozinho?: boolean | null
+          data_prevista_venda?: string | null
+          desafios?: string | null
+          distrito?: string | null
+          email?: string | null
+          experiencia_anos?: number | null
+          fonte_agua?: string | null
+          fonte_energia?: string | null
+          forma_pagamento?: string | null
+          fornecedor_pintos?: string | null
+          fornecedor_racao?: string | null
+          id?: string
+          latitude?: number | null
+          localidade?: string | null
+          longitude?: number | null
+          mercados_atuais?: string | null
+          nome: string
+          num_trabalhadores?: number | null
+          peso_medio?: number | null
+          plano_mensal?: string | null
+          plano_quinzenal?: string | null
+          plano_semanal?: string | null
+          precisa_tecnico?: boolean | null
+          preco_medio?: number | null
+          provincia?: string | null
+          saldo?: number | null
+          status?: string | null
+          telefone?: string | null
+          telefone_alt?: string | null
+          tem_mercado?: boolean | null
+          tipo_instalacao?: string | null
+          tipo_producao?: string | null
+          updated_at?: string
+          wallet_id?: string | null
+        }
+        Update: {
+          bi_nuit?: string | null
+          capacidade?: number | null
+          company_id?: string
+          confiabilidade?: number | null
+          consumo_racao?: string | null
+          created_at?: string
+          created_by?: string | null
+          cria_sozinho?: boolean | null
+          data_prevista_venda?: string | null
+          desafios?: string | null
+          distrito?: string | null
+          email?: string | null
+          experiencia_anos?: number | null
+          fonte_agua?: string | null
+          fonte_energia?: string | null
+          forma_pagamento?: string | null
+          fornecedor_pintos?: string | null
+          fornecedor_racao?: string | null
+          id?: string
+          latitude?: number | null
+          localidade?: string | null
+          longitude?: number | null
+          mercados_atuais?: string | null
+          nome?: string
+          num_trabalhadores?: number | null
+          peso_medio?: number | null
+          plano_mensal?: string | null
+          plano_quinzenal?: string | null
+          plano_semanal?: string | null
+          precisa_tecnico?: boolean | null
+          preco_medio?: number | null
+          provincia?: string | null
+          saldo?: number | null
+          status?: string | null
+          telefone?: string | null
+          telefone_alt?: string | null
+          tem_mercado?: boolean | null
+          tipo_instalacao?: string | null
+          tipo_producao?: string | null
+          updated_at?: string
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "criadores_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crops: {
         Row: {
           area_planted: number

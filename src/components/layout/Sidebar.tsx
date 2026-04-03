@@ -9,7 +9,7 @@ import {
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
   Cloud, Store, ChevronDown, Calculator, CalendarDays, CreditCard, Banknote,
-  Receipt, ClipboardList, Building2, MapPin,
+  Receipt, ClipboardList, Building2, MapPin, Bird,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -142,6 +142,7 @@ const navGroups: NavGroup[] = [
       { label: 'Agricultura', href: '/app/agricultura', icon: Sprout },
       { label: 'Avicultura', href: '/app/avicultura', icon: Egg },
       { label: 'Agro Map', href: '/app/agro-map', icon: MapPin },
+      { label: 'Criadores', href: '/app/criadores', icon: Bird },
       { label: 'IA Avícola', href: '/app/avicultura/inteligencia', icon: Brain },
       { label: 'Ambiente & Clima', href: '/app/ambiente', icon: Cloud },
     ],
