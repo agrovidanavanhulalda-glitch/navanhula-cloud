@@ -64,7 +64,8 @@ function LocationUpdater({ position }: { position: [number, number] | null }) {
 }
 
 const AgroMapPage: React.FC = () => {
-  const { user, companyId } = useAuth();
+  const { user, company } = useAuth();
+  const companyId = company?.id;
   const [producers, setProducers] = useState<Producer[]>([]);
   const [loading, setLoading] = useState(true);
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
