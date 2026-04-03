@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { toast } from 'sonner';
@@ -8,10 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, MapPin, Phone, ShoppingCart, Plus, Egg, Search, AlertTriangle, ClipboardList, CheckCircle } from 'lucide-react';
+import { Loader2, MapPin, Phone, ShoppingCart, Plus, Egg, Search, AlertTriangle, ClipboardList, CheckCircle, MapOff } from 'lucide-react';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import ErrorBoundary from '@/components/ErrorBoundary';
+
+const AgroMapView = lazy(() => import('@/components/agro/AgroMapView'));
 
 interface Producer {
   id: string;
