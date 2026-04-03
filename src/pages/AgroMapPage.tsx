@@ -1,38 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, MapPin, Phone, ShoppingCart, Plus, Filter, Egg, Search } from 'lucide-react';
+import { Loader2, MapPin, Phone, ShoppingCart, Plus, Egg, Search } from 'lucide-react';
 import { z } from 'zod';
-
-// Fix leaflet default icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-const productIcon = (tipo: string) => {
-  const color = tipo === 'frango' ? '#ef4444' : tipo === 'ovos' ? '#f59e0b' : '#22c55e';
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="background:${color};width:32px;height:32px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-    </div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-  });
-};
 
 interface Producer {
   id: string;
@@ -55,13 +32,8 @@ const orderSchema = z.object({
   quantidade: z.number().int().min(1, 'Quantidade mínima é 1'),
 });
 
-function LocationUpdater({ position }: { position: [number, number] | null }) {
-  const map = useMap();
-  useEffect(() => {
-    if (position) map.setView(position, 13);
-  }, [position, map]);
-  return null;
-}
+// Lazy-loaded map component
+const AgroMap = React.lazy(() => import('@/components/agro/AgroMapView'));
 
 const AgroMapPage: React.FC = () => {
   const { user, company } = useAuth();
@@ -74,15 +46,12 @@ const AgroMapPage: React.FC = () => {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Filters
   const [filterType, setFilterType] = useState<string>('all');
   const [filterSearch, setFilterSearch] = useState('');
   const [filterMaxPrice, setFilterMaxPrice] = useState('');
 
-  // Order form
   const [orderForm, setOrderForm] = useState({ cliente_nome: '', cliente_contacto: '', quantidade: 1 });
 
-  // Add producer form
   const [addForm, setAddForm] = useState({
     nome_granja: '', latitude: '', longitude: '', tipo_produto: 'frango',
     quantidade_disponivel: '', preco: '', telefone: '',
@@ -91,7 +60,7 @@ const AgroMapPage: React.FC = () => {
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
       (pos) => setUserPosition([pos.coords.latitude, pos.coords.longitude]),
-      () => setUserPosition([-15.12, 39.26]) // Nampula default
+      () => setUserPosition([-15.12, 39.26])
     );
     fetchProducers();
 
@@ -184,10 +153,15 @@ const AgroMapPage: React.FC = () => {
     setSubmitting(false);
   };
 
+  const handleSelectProducer = (p: Producer) => {
+    setSelectedProducer(p);
+    setOrderModalOpen(true);
+  };
+
   const defaultCenter: [number, number] = userPosition || [-15.12, 39.26];
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
+    <div className="p-4 md:p-6 space-y-4 relative z-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
@@ -203,7 +177,7 @@ const AgroMapPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="relative z-10">
         <CardContent className="p-3">
           <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
             <div className="relative flex-1">
@@ -240,42 +214,29 @@ const AgroMapPage: React.FC = () => {
       {/* Map + List */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Map */}
-        <div className="lg:col-span-2 rounded-xl overflow-hidden border border-border" style={{ height: '500px' }}>
+        <div className="lg:col-span-2 rounded-xl overflow-hidden border border-border relative z-0" style={{ height: '500px' }}>
           {loading ? (
             <div className="h-full flex items-center justify-center bg-muted">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : (
-            <MapContainer center={defaultCenter} zoom={12} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            <React.Suspense fallback={
+              <div className="h-full flex items-center justify-center bg-muted">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            }>
+              <AgroMap
+                producers={filteredProducers}
+                center={defaultCenter}
+                userPosition={userPosition}
+                onSelectProducer={handleSelectProducer}
               />
-              <LocationUpdater position={userPosition} />
-              {filteredProducers.map((p) => (
-                <Marker key={p.id} position={[p.latitude, p.longitude]} icon={productIcon(p.tipo_produto)}>
-                  <Popup>
-                    <div className="min-w-[200px]">
-                      <h3 className="font-bold text-sm">{p.nome_granja}</h3>
-                      <p className="text-xs text-gray-500 capitalize">{p.tipo_produto}</p>
-                      <p className="text-sm font-semibold mt-1">{p.preco.toFixed(2)} MT</p>
-                      <p className="text-xs">Disponível: {p.quantidade_disponivel}</p>
-                      <button
-                        className="mt-2 w-full bg-primary text-white text-xs py-1.5 rounded-md font-medium"
-                        onClick={() => { setSelectedProducer(p); setOrderModalOpen(true); }}
-                      >
-                        Fazer Pedido
-                      </button>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+            </React.Suspense>
           )}
         </div>
 
         {/* Producer List */}
-        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 relative z-10">
           {filteredProducers.length === 0 && !loading ? (
             <Card>
               <CardContent className="p-8 text-center">
@@ -288,16 +249,16 @@ const AgroMapPage: React.FC = () => {
               <Card
                 key={p.id}
                 className="cursor-pointer hover:border-primary/50 transition-all"
-                onClick={() => { setSelectedProducer(p); setOrderModalOpen(true); }}
+                onClick={() => handleSelectProducer(p)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm truncate">{p.nome_granja}</h3>
+                      <h3 className="font-semibold text-sm truncate text-foreground">{p.nome_granja}</h3>
                       <Badge variant="secondary" className="mt-1 capitalize text-xs">{p.tipo_produto}</Badge>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-primary">{p.preco.toFixed(2)} MT</p>
+                      <p className="font-bold text-primary text-sm">{p.preco.toFixed(2)} MT</p>
                       <p className="text-xs text-muted-foreground">{p.quantidade_disponivel} disp.</p>
                     </div>
                   </div>
@@ -315,7 +276,7 @@ const AgroMapPage: React.FC = () => {
 
       {/* Order Modal */}
       <Dialog open={orderModalOpen} onOpenChange={setOrderModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md z-[1200]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShoppingCart className="w-5 h-5 text-primary" />
@@ -325,7 +286,7 @@ const AgroMapPage: React.FC = () => {
           {selectedProducer && (
             <div className="space-y-4">
               <div className="bg-muted rounded-lg p-3">
-                <p className="font-semibold">{selectedProducer.nome_granja}</p>
+                <p className="font-semibold text-foreground">{selectedProducer.nome_granja}</p>
                 <p className="text-sm text-muted-foreground capitalize">{selectedProducer.tipo_produto} — {selectedProducer.preco.toFixed(2)} MT/un.</p>
                 <p className="text-xs text-muted-foreground">Disponível: {selectedProducer.quantidade_disponivel}</p>
               </div>
@@ -366,7 +327,7 @@ const AgroMapPage: React.FC = () => {
 
       {/* Add Producer Modal */}
       <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md z-[1200]">
           <DialogHeader>
             <DialogTitle>Adicionar Produtor</DialogTitle>
           </DialogHeader>
