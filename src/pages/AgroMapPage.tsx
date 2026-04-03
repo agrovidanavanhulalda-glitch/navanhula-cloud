@@ -60,6 +60,8 @@ const AgroMapPageContent: React.FC = () => {
   });
 
   useEffect(() => {
+    if (authLoading) return;
+    
     navigator.geolocation?.getCurrentPosition(
       (pos) => setUserPosition([pos.coords.latitude, pos.coords.longitude]),
       () => setUserPosition([-15.12, 39.26])
@@ -72,16 +74,27 @@ const AgroMapPageContent: React.FC = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [authLoading]);
 
   const fetchProducers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('agro_producers')
-      .select('*')
-      .eq('status', 'ativo')
-      .order('created_at', { ascending: false });
-    if (!error && data) setProducers(data);
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase
+        .from('agro_producers')
+        .select('*')
+        .eq('status', 'ativo')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('[AgroMap] Fetch error:', error);
+        setFetchError('Erro ao carregar produtores');
+      } else {
+        setProducers(data || []);
+      }
+    } catch (err) {
+      console.error('[AgroMap] Unexpected error:', err);
+      setFetchError('Erro inesperado ao carregar dados');
+    }
     setLoading(false);
   };
 
