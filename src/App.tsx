@@ -44,6 +44,7 @@ import AgroOrdersPage from "./pages/AgroOrdersPage";
 import ProducerDashboardPage from "./pages/ProducerDashboardPage";
 import DriversPage from "./pages/DriversPage";
 import HRDashboardPage from "./pages/HRDashboardPage";
+import CriadoresPage from "./pages/CriadoresPage";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
 import Index from "./pages/Index";
