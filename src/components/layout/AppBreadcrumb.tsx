@@ -51,6 +51,7 @@ const routeLabels: Record<string, string> = {
   criadores: 'Criadores',
   marketplace: 'Marketplace',
   compliance: 'Compliance Hub',
+  'tax-engine': 'Tax Engine',
 };
 
 const AppBreadcrumb: React.FC = () => {
