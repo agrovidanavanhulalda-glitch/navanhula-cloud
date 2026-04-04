@@ -224,6 +224,11 @@ const HRDashboardPage: React.FC = () => {
           <TabsTrigger value="team">Equipa</TabsTrigger>
         </TabsList>
 
+        {/* Ranking Tab */}
+        <TabsContent value="ranking" className="space-y-6">
+          <SellerRanking />
+        </TabsContent>
+
         {/* Performance Tab */}
         <TabsContent value="performance" className="space-y-6">
           <div className="grid lg:grid-cols-5 gap-6">
