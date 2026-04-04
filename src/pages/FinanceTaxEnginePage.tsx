@@ -119,7 +119,7 @@ const FinanceTaxEnginePage: React.FC = () => {
         .lte('expense_date', endDate.slice(0, 10)),
       supabase
         .from('payroll_runs')
-        .select('total_net, total_inss_employee, total_inss_employer')
+        .select('net_salary, inss_employee, inss_employer')
         .eq('company_id', company.id)
         .gte('created_at', startDate)
         .lte('created_at', endDate),
