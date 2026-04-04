@@ -22,6 +22,7 @@ interface Employee {
   hire_date: string;
   termination_date: string | null;
   base_salary: number;
+  commission_rate: number;
   inss_number: string | null;
   nuit: string | null;
   bank_name: string | null;
