@@ -137,6 +137,10 @@ const EmployeeManagement: React.FC = () => {
                 <div><Label>Salário Base (MT) *</Label><Input type="number" value={form.base_salary} onChange={e => setForm(f => ({ ...f, base_salary: e.target.value }))} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
+                <div><Label>Comissão (%)</Label><Input type="number" step="0.5" min="0" max="100" value={form.commission_rate} onChange={e => setForm(f => ({ ...f, commission_rate: e.target.value }))} placeholder="Ex: 5" /></div>
+                <div><Label>Data de Admissão</Label><Input type="date" value={form.hire_date} onChange={e => setForm(f => ({ ...f, hire_date: e.target.value }))} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div><Label>Email</Label><Input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
                 <div><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
               </div>
