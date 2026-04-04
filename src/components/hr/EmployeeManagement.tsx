@@ -161,8 +161,8 @@ const EmployeeManagement: React.FC = () => {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Data de Admissão</Label><Input type="date" value={form.hire_date} onChange={e => setForm(f => ({ ...f, hire_date: e.target.value }))} /></div>
                 <div><Label>Nº INSS</Label><Input value={form.inss_number} onChange={e => setForm(f => ({ ...f, inss_number: e.target.value }))} /></div>
+                <div><Label>NUIT</Label><Input value={form.nuit} onChange={e => setForm(f => ({ ...f, nuit: e.target.value }))} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>NUIT</Label><Input value={form.nuit} onChange={e => setForm(f => ({ ...f, nuit: e.target.value }))} /></div>
