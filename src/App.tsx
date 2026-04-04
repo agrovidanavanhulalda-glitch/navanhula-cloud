@@ -187,6 +187,7 @@ const AppRoutes = () => {
         <Route path="vendas" element={<LocalSalesHistoryPage />} />
         <Route path="relatorios" element={<LocalReportsPage />} />
         <Route path="financeiro" element={<FinancialReportsPage />} />
+        <Route path="financeiro-rh" element={<SubscriptionGate><FinanceHRUnifiedPage /></SubscriptionGate>} />
         <Route path="carteira" element={<SubscriptionGate><WalletPage /></SubscriptionGate>} />
         <Route path="pagamentos-manuais" element={<SubscriptionGate><ManualPaymentsPage /></SubscriptionGate>} />
         <Route path="configuracoes" element={<LocalSettingsPage />} />
@@ -198,10 +199,11 @@ const AppRoutes = () => {
         <Route path="assinatura" element={<SubscriptionPage />} />
         <Route path="ceo" element={<CEODashboardPage />} />
         <Route path="fiscal" element={<FiscalPage />} />
-        <Route path="contabilidade" element={<AccountingPage />} />
+        <Route path="contabilidade" element={<Navigate to="/app/financeiro-rh?tab=chart" replace />} />
         <Route path="crm" element={<SubscriptionGate><CRMPage /></SubscriptionGate>} />
         <Route path="fornecedores" element={<SubscriptionGate><SuppliersPage /></SubscriptionGate>} />
-        <Route path="rh" element={<SubscriptionGate><HRDashboardPage /></SubscriptionGate>} />
+        <Route path="rh" element={<Navigate to="/app/financeiro-rh?tab=employees" replace />} />
+        <Route path="tax-engine" element={<Navigate to="/app/financeiro-rh?tab=taxes" replace />} />
         <Route path="bi" element={<BIDashboardPage />} />
         <Route path="ai" element={<SubscriptionGate><AIBusinessEnginePage /></SubscriptionGate>} />
         <Route path="documentos" element={<SubscriptionGate><DocumentsCenterPage /></SubscriptionGate>} />
