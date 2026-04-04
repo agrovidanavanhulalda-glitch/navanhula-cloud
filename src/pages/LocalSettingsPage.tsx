@@ -411,6 +411,8 @@ const LocalSettingsPage: React.FC = () => {
               </CardContent>
             </Card>
 
+            <TwoFactorSetup />
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Shield className="w-5 h-5" /> Permissões</CardTitle>
