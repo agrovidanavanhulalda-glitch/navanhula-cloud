@@ -266,6 +266,7 @@ const FinanceHRUnifiedPage: React.FC = () => {
           <TabsTrigger value="attendance"><Clock className="w-4 h-4 mr-1" /> Presenças</TabsTrigger>
           <TabsTrigger value="chart"><BookOpen className="w-4 h-4 mr-1" /> Plano de Contas</TabsTrigger>
           <TabsTrigger value="journal"><FileText className="w-4 h-4 mr-1" /> Diário</TabsTrigger>
+          <TabsTrigger value="commissions"><Award className="w-4 h-4 mr-1" /> Comissões</TabsTrigger>
           <TabsTrigger value="score"><Shield className="w-4 h-4 mr-1" /> Score</TabsTrigger>
         </TabsList>
 
