@@ -68,7 +68,8 @@ const EmployeeManagement: React.FC = () => {
     setForm({
       full_name: emp.full_name, email: emp.email || '', phone: emp.phone || '',
       position: emp.position, department: emp.department, hire_date: emp.hire_date,
-      base_salary: String(emp.base_salary), inss_number: emp.inss_number || '',
+      base_salary: String(emp.base_salary), commission_rate: String(emp.commission_rate || 0),
+      inss_number: emp.inss_number || '',
       nuit: emp.nuit || '', bank_name: emp.bank_name || '', bank_account: emp.bank_account || ''
     });
     setDialogOpen(true);
