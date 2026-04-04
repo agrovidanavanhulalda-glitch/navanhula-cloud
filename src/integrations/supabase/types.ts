@@ -1772,6 +1772,59 @@ export type Database = {
           },
         ]
       }
+      financial_scores: {
+        Row: {
+          company_id: string
+          created_at: string
+          details: Json | null
+          expenses: number
+          id: string
+          period_month: number
+          period_year: number
+          profit: number
+          revenue: number
+          score: number
+          taxes_paid_on_time: number
+          taxes_total: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          details?: Json | null
+          expenses?: number
+          id?: string
+          period_month: number
+          period_year: number
+          profit?: number
+          revenue?: number
+          score?: number
+          taxes_paid_on_time?: number
+          taxes_total?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          details?: Json | null
+          expenses?: number
+          id?: string
+          period_month?: number
+          period_year?: number
+          profit?: number
+          revenue?: number
+          score?: number
+          taxes_paid_on_time?: number
+          taxes_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_scores_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fiscal_document_items: {
         Row: {
           created_at: string
@@ -4511,6 +4564,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "suppliers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_calculations: {
+        Row: {
+          base_amount: number
+          company_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          period_end: string
+          period_start: string
+          status: string
+          tax_amount: number
+          tax_rate: number
+          tax_type: string
+          updated_at: string
+        }
+        Insert: {
+          base_amount?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          period_end: string
+          period_start: string
+          status?: string
+          tax_amount?: number
+          tax_rate?: number
+          tax_type: string
+          updated_at?: string
+        }
+        Update: {
+          base_amount?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          period_end?: string
+          period_start?: string
+          status?: string
+          tax_amount?: number
+          tax_rate?: number
+          tax_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_calculations_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"

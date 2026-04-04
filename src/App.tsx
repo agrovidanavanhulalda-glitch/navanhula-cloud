@@ -47,6 +47,7 @@ import HRDashboardPage from "./pages/HRDashboardPage";
 import CriadoresPage from "./pages/CriadoresPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import CompliancePage from "./pages/CompliancePage";
+import FinanceTaxEnginePage from "./pages/FinanceTaxEnginePage";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
 import Index from "./pages/Index";
@@ -215,6 +216,7 @@ const AppRoutes = () => {
         <Route path="marketplace" element={<SubscriptionGate><MarketplacePage /></SubscriptionGate>} />
         <Route path="ecommerce" element={<SubscriptionGate><ECommercePage /></SubscriptionGate>} />
         <Route path="compliance" element={<SubscriptionGate><CompliancePage /></SubscriptionGate>} />
+        <Route path="tax-engine" element={<SubscriptionGate><FinanceTaxEnginePage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
         <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />
