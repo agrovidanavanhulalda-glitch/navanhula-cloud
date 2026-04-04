@@ -6,14 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { SkeletonKPI, SkeletonChart } from '@/components/ui/skeleton-card';
 import {
   BarChart3, Users, Clock, TrendingUp, Award, RefreshCw, Percent,
   Package, Target, ArrowUpRight, ArrowDownRight, ShoppingCart, Zap,
   Brain, Lightbulb, Star, Activity, AlertTriangle, DollarSign,
-  CalendarDays, CreditCard, Banknote, Smartphone, Eye
+  CalendarDays, CreditCard, Banknote, Smartphone, Eye, Info
 } from 'lucide-react';
 import { formatCurrency, getPaymentMethodLabel } from '@/lib/formatters';
+import { useFinancialAggregator } from '@/hooks/useFinancialAggregator';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, Legend,
