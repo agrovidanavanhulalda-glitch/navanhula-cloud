@@ -36,7 +36,7 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
       const { data: stores } = await supabase.from('stores').select('id').eq('company_id', companyId);
       const storeIds = (stores || []).map(s => s.id);
 
-      const [salesRes, expensesRes, payrollRes, financialScoreRes, saleItemsRes] = await Promise.all([
+      const [salesRes, expensesRes, payrollRes, financialScoreRes, saleItemsRes, commissionsRes] = await Promise.all([
         storeIds.length > 0
           ? supabase.from('sales').select('total').eq('status', 'completed').in('store_id', storeIds).gte('created_at', startStr).lte('created_at', endStr)
           : Promise.resolve({ data: [] as { total: number }[] }),
@@ -50,6 +50,10 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
         storeIds.length > 0
           ? supabase.from('sale_items').select('cost_price, quantity, created_at').gte('created_at', startStr).lte('created_at', endStr)
           : Promise.resolve({ data: [] as { cost_price: number; quantity: number; created_at: string }[] }),
+
+        storeIds.length > 0
+          ? supabase.from('commissions').select('amount').in('store_id', storeIds).gte('created_at', startStr).lte('created_at', endStr)
+          : Promise.resolve({ data: [] as { amount: number }[] }),
       ]);
 
       const salesTotal = (salesRes.data || []).reduce((a: number, s: any) => a + Number(s.total || 0), 0);
