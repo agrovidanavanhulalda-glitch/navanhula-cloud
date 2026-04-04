@@ -169,14 +169,14 @@ const FinanceTaxEnginePage: React.FC = () => {
     // INSS from payroll
     const payrolls = await supabase
       .from('payroll_runs')
-      .select('total_inss_employee, total_inss_employer')
+      .select('inss_employee, inss_employer')
       .eq('company_id', company.id)
       .gte('created_at', `${startDate}T00:00:00`)
       .lte('created_at', `${endDate}T23:59:59`);
 
     const pr = payrolls.data || [];
-    const inssEmp = pr.reduce((s, r) => s + Number(r.total_inss_employee || 0), 0);
-    const inssEr = pr.reduce((s, r) => s + Number(r.total_inss_employer || 0), 0);
+    const inssEmp = pr.reduce((s, r) => s + Number(r.inss_employee || 0), 0);
+    const inssEr = pr.reduce((s, r) => s + Number(r.inss_employer || 0), 0);
 
     const taxes = [
       { tax_type: 'iva', base_amount: salesTotal, tax_rate: 16, tax_amount: ivaAmount },
