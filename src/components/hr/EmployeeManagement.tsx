@@ -226,7 +226,7 @@ const EmployeeManagement: React.FC = () => {
                   </tr>
                 ))}
                 {employees.length === 0 && (
-                  <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">Nenhum funcionário cadastrado</td></tr>
+                  <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">Nenhum funcionário cadastrado</td></tr>
                 )}
               </tbody>
             </table>
