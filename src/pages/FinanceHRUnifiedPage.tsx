@@ -27,6 +27,7 @@ import AccountsPayableManager from '@/components/finance/AccountsPayableManager'
 import AccountsReceivableManager from '@/components/finance/AccountsReceivableManager';
 import ChartOfAccounts from '@/components/accounting/ChartOfAccounts';
 import JournalEntries from '@/components/accounting/JournalEntries';
+import CommissionsManager from '@/components/hr/CommissionsManager';
 import { useFinancialAggregator } from '@/hooks/useFinancialAggregator';
 import { downloadFiscalPdfA4 } from '@/lib/generateFiscalPdfA4';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
