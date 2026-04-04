@@ -22,8 +22,10 @@ interface Employee {
   position: string;
   department: string;
   base_salary: number;
+  commission_rate: number;
   status: string;
   hire_date: string;
+  profile_id: string | null;
 }
 
 interface Commission {
