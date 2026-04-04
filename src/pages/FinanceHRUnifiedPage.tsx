@@ -331,9 +331,10 @@ const FinanceHRUnifiedPage: React.FC = () => {
                 <DRELine label="Lucro Bruto" value={summary.receitas - summary.custoMercadorias - summary.despesasOperacionais} bold
                   color={(summary.receitas - summary.custoMercadorias - summary.despesasOperacionais) >= 0 ? 'text-green-600' : 'text-destructive'} />
                 <DRELine label="(-) Salários" value={-summary.salarios} />
+                <DRELine label="(-) Comissões" value={-summary.comissoes} />
                 <DRELine label="(-) Impostos" value={-totalTaxDRE} />
                 <hr className="border-border" />
-                <DRELine label="Resultado Líquido" value={netProfitDRE} bold color={netProfitDRE >= 0 ? 'text-green-600' : 'text-destructive'} />
+                <DRELine label="Resultado Líquido" value={netProfitDRE - summary.comissoes} bold color={(netProfitDRE - summary.comissoes) >= 0 ? 'text-green-600' : 'text-destructive'} />
               </div>
             </CardContent>
           </Card>
