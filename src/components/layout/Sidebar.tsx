@@ -8,8 +8,8 @@ import {
   WalletCards, History, BarChart3, TrendingUp, Boxes, Shield, User,
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
-  Cloud, Store, ChevronDown, Calculator, CalendarDays, CreditCard, Banknote,
-  Receipt, ClipboardList, Building2, MapPin, Bird,
+  Cloud, Store, ChevronDown, Calculator, CreditCard, Banknote,
+  Building2, MapPin, Bird, BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
