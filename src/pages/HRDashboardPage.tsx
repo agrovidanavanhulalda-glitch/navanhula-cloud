@@ -217,6 +217,7 @@ const HRDashboardPage: React.FC = () => {
 
       <Tabs defaultValue="performance" className="space-y-4">
         <TabsList className="bg-muted/50">
+          <TabsTrigger value="ranking">🏆 Ranking</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="attendance">Presenças</TabsTrigger>
           <TabsTrigger value="commissions">Comissões</TabsTrigger>
