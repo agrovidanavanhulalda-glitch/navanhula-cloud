@@ -18,7 +18,7 @@ export interface FinancialSummary {
 
 export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
   const { company } = useAuth();
-  const [raw, setRaw] = useState({ salesTotal: 0, expensesTotal: 0, payrollTotal: 0, taxesTotal: 0, purchaseCost: 0 });
+  const [raw, setRaw] = useState({ salesTotal: 0, expensesTotal: 0, payrollTotal: 0, taxesTotal: 0, purchaseCost: 0, commissionsTotal: 0 });
   const [loading, setLoading] = useState(true);
 
   const companyId = company?.id;
