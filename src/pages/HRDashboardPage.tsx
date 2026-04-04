@@ -11,6 +11,7 @@ import {
   CheckCircle, UserCheck, BarChart3, Zap,
 } from 'lucide-react';
 import AttendanceManager from '@/components/hr/AttendanceManager';
+import SellerRanking from '@/components/hr/SellerRanking';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
@@ -214,13 +215,19 @@ const HRDashboardPage: React.FC = () => {
         </div>
       )}
 
-      <Tabs defaultValue="performance" className="space-y-4">
+      <Tabs defaultValue="ranking" className="space-y-4">
         <TabsList className="bg-muted/50">
+          <TabsTrigger value="ranking">🏆 Ranking</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="attendance">Presenças</TabsTrigger>
           <TabsTrigger value="commissions">Comissões</TabsTrigger>
           <TabsTrigger value="team">Equipa</TabsTrigger>
         </TabsList>
+
+        {/* Ranking Tab */}
+        <TabsContent value="ranking" className="space-y-6">
+          <SellerRanking />
+        </TabsContent>
 
         {/* Performance Tab */}
         <TabsContent value="performance" className="space-y-6">
