@@ -43,7 +43,7 @@ const EmployeeManagement: React.FC = () => {
   const [form, setForm] = useState({
     full_name: '', email: '', phone: '', position: 'Vendedor',
     department: 'Operações', hire_date: new Date().toISOString().split('T')[0],
-    base_salary: '', inss_number: '', nuit: '', bank_name: '', bank_account: ''
+    base_salary: '', commission_rate: '0', inss_number: '', nuit: '', bank_name: '', bank_account: ''
   });
 
   const loadEmployees = async () => {
