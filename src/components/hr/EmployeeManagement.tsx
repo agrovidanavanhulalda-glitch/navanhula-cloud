@@ -194,6 +194,7 @@ const EmployeeManagement: React.FC = () => {
                   <th className="text-left p-3">Cargo</th>
                   <th className="text-left p-3">Departamento</th>
                   <th className="text-right p-3">Salário Base</th>
+                  <th className="text-center p-3">Comissão</th>
                   <th className="text-center p-3">Status</th>
                   <th className="text-center p-3">Acções</th>
                 </tr>
@@ -205,6 +206,13 @@ const EmployeeManagement: React.FC = () => {
                     <td className="p-3">{emp.position}</td>
                     <td className="p-3">{emp.department}</td>
                     <td className="p-3 text-right font-mono">{formatCurrency(emp.base_salary)}</td>
+                    <td className="p-3 text-center">
+                      {emp.commission_rate > 0 ? (
+                        <Badge variant="outline">{emp.commission_rate}%</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
                     <td className="p-3 text-center">
                       <Badge variant={emp.status === 'active' ? 'default' : 'secondary'}>
                         {emp.status === 'active' ? 'Ativo' : 'Inativo'}
