@@ -8,6 +8,7 @@ export interface FinancialSummary {
   despesasOperacionais: number;
   salarios: number;
   impostos: number;
+  comissoes: number;
   custosTotal: number;
   lucroLiquido: number;
   lucroMargin: number;
