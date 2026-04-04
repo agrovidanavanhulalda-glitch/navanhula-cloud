@@ -1632,6 +1632,7 @@ export type Database = {
           bank_account: string | null
           bank_name: string | null
           base_salary: number
+          commission_rate: number
           company_id: string
           created_at: string
           department: string
@@ -1653,6 +1654,7 @@ export type Database = {
           bank_account?: string | null
           bank_name?: string | null
           base_salary?: number
+          commission_rate?: number
           company_id: string
           created_at?: string
           department?: string
@@ -1674,6 +1676,7 @@ export type Database = {
           bank_account?: string | null
           bank_name?: string | null
           base_salary?: number
+          commission_rate?: number
           company_id?: string
           created_at?: string
           department?: string

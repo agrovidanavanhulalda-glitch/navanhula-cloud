@@ -22,8 +22,10 @@ interface Employee {
   position: string;
   department: string;
   base_salary: number;
+  commission_rate: number;
   status: string;
   hire_date: string;
+  profile_id: string | null;
 }
 
 interface Commission {
@@ -72,14 +74,25 @@ const HRDashboardPage: React.FC = () => {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
+    // Get stores for this company first
+    const { data: companyStores } = await supabase
+      .from('stores').select('id').eq('company_id', company!.id);
+    const storeIds = (companyStores || []).map(s => s.id);
+
     const [empRes, commRes, salesRes] = await Promise.all([
-      supabase.from('employees').select('id, full_name, position, department, base_salary, status, hire_date')
+      supabase.from('employees').select('id, full_name, position, department, base_salary, commission_rate, status, hire_date, profile_id')
         .eq('company_id', company!.id),
-      supabase.from('commissions').select('id, user_id, amount, rate, status, created_at')
-        .gte('created_at', startOfMonth),
-      supabase.from('sales').select('id, user_id, total, profit, seller_name, created_at')
-        .eq('store_id', company!.id)
-        .gte('created_at', startOfMonth),
+      storeIds.length > 0
+        ? supabase.from('commissions').select('id, user_id, amount, rate, status, created_at')
+            .in('store_id', storeIds)
+            .gte('created_at', startOfMonth)
+        : Promise.resolve({ data: [] }),
+      storeIds.length > 0
+        ? supabase.from('sales').select('id, user_id, total, profit, seller_name, created_at')
+            .in('store_id', storeIds)
+            .eq('status', 'completed')
+            .gte('created_at', startOfMonth)
+        : Promise.resolve({ data: [] }),
     ]);
 
     setEmployees(empRes.data || []);

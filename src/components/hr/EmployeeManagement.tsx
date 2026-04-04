@@ -22,6 +22,7 @@ interface Employee {
   hire_date: string;
   termination_date: string | null;
   base_salary: number;
+  commission_rate: number;
   inss_number: string | null;
   nuit: string | null;
   bank_name: string | null;
@@ -42,7 +43,7 @@ const EmployeeManagement: React.FC = () => {
   const [form, setForm] = useState({
     full_name: '', email: '', phone: '', position: 'Vendedor',
     department: 'Operações', hire_date: new Date().toISOString().split('T')[0],
-    base_salary: '', inss_number: '', nuit: '', bank_name: '', bank_account: ''
+    base_salary: '', commission_rate: '0', inss_number: '', nuit: '', bank_name: '', bank_account: ''
   });
 
   const loadEmployees = async () => {
@@ -58,7 +59,7 @@ const EmployeeManagement: React.FC = () => {
   useEffect(() => { loadEmployees(); }, []);
 
   const resetForm = () => {
-    setForm({ full_name: '', email: '', phone: '', position: 'Vendedor', department: 'Operações', hire_date: new Date().toISOString().split('T')[0], base_salary: '', inss_number: '', nuit: '', bank_name: '', bank_account: '' });
+    setForm({ full_name: '', email: '', phone: '', position: 'Vendedor', department: 'Operações', hire_date: new Date().toISOString().split('T')[0], base_salary: '', commission_rate: '0', inss_number: '', nuit: '', bank_name: '', bank_account: '' });
     setEditingEmployee(null);
   };
 
@@ -67,7 +68,8 @@ const EmployeeManagement: React.FC = () => {
     setForm({
       full_name: emp.full_name, email: emp.email || '', phone: emp.phone || '',
       position: emp.position, department: emp.department, hire_date: emp.hire_date,
-      base_salary: String(emp.base_salary), inss_number: emp.inss_number || '',
+      base_salary: String(emp.base_salary), commission_rate: String(emp.commission_rate || 0),
+      inss_number: emp.inss_number || '',
       nuit: emp.nuit || '', bank_name: emp.bank_name || '', bank_account: emp.bank_account || ''
     });
     setDialogOpen(true);
@@ -89,6 +91,7 @@ const EmployeeManagement: React.FC = () => {
       department: form.department,
       hire_date: form.hire_date,
       base_salary: parseFloat(form.base_salary),
+      commission_rate: parseFloat(form.commission_rate) || 0,
       inss_number: form.inss_number || null,
       nuit: form.nuit || null,
       bank_name: form.bank_name || null,
@@ -134,6 +137,10 @@ const EmployeeManagement: React.FC = () => {
                 <div><Label>Salário Base (MT) *</Label><Input type="number" value={form.base_salary} onChange={e => setForm(f => ({ ...f, base_salary: e.target.value }))} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
+                <div><Label>Comissão (%)</Label><Input type="number" step="0.5" min="0" max="100" value={form.commission_rate} onChange={e => setForm(f => ({ ...f, commission_rate: e.target.value }))} placeholder="Ex: 5" /></div>
+                <div><Label>Data de Admissão</Label><Input type="date" value={form.hire_date} onChange={e => setForm(f => ({ ...f, hire_date: e.target.value }))} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div><Label>Email</Label><Input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
                 <div><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
               </div>
@@ -154,8 +161,8 @@ const EmployeeManagement: React.FC = () => {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Data de Admissão</Label><Input type="date" value={form.hire_date} onChange={e => setForm(f => ({ ...f, hire_date: e.target.value }))} /></div>
                 <div><Label>Nº INSS</Label><Input value={form.inss_number} onChange={e => setForm(f => ({ ...f, inss_number: e.target.value }))} /></div>
+                <div><Label>NUIT</Label><Input value={form.nuit} onChange={e => setForm(f => ({ ...f, nuit: e.target.value }))} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>NUIT</Label><Input value={form.nuit} onChange={e => setForm(f => ({ ...f, nuit: e.target.value }))} /></div>
@@ -187,6 +194,7 @@ const EmployeeManagement: React.FC = () => {
                   <th className="text-left p-3">Cargo</th>
                   <th className="text-left p-3">Departamento</th>
                   <th className="text-right p-3">Salário Base</th>
+                  <th className="text-center p-3">Comissão</th>
                   <th className="text-center p-3">Status</th>
                   <th className="text-center p-3">Acções</th>
                 </tr>
@@ -198,6 +206,13 @@ const EmployeeManagement: React.FC = () => {
                     <td className="p-3">{emp.position}</td>
                     <td className="p-3">{emp.department}</td>
                     <td className="p-3 text-right font-mono">{formatCurrency(emp.base_salary)}</td>
+                    <td className="p-3 text-center">
+                      {emp.commission_rate > 0 ? (
+                        <Badge variant="outline">{emp.commission_rate}%</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
                     <td className="p-3 text-center">
                       <Badge variant={emp.status === 'active' ? 'default' : 'secondary'}>
                         {emp.status === 'active' ? 'Ativo' : 'Inativo'}
@@ -211,7 +226,7 @@ const EmployeeManagement: React.FC = () => {
                   </tr>
                 ))}
                 {employees.length === 0 && (
-                  <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">Nenhum funcionário cadastrado</td></tr>
+                  <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">Nenhum funcionário cadastrado</td></tr>
                 )}
               </tbody>
             </table>
