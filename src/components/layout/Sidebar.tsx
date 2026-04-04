@@ -110,6 +110,7 @@ const navGroups: NavGroup[] = [
     roles: ['admin', 'manager', 'ceo'],
     items: [
       { label: 'Relatórios', href: '/app/financeiro', icon: BarChart3 },
+      { label: 'Tax Engine', href: '/app/tax-engine', icon: Calculator },
       { label: 'Carteira', href: '/app/carteira', icon: WalletCards },
       { label: 'Pagamentos MM', href: '/app/pagamentos-manuais', icon: Smartphone },
       { label: 'Documentos', href: '/app/documentos', icon: FileText },
