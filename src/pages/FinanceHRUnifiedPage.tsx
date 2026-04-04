@@ -64,6 +64,8 @@ interface FinScore {
 
 const FinanceHRUnifiedPage: React.FC = () => {
   const { company, role } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'dashboard';
   const month = new Date().getMonth() + 1;
   const year = new Date().getFullYear();
 
