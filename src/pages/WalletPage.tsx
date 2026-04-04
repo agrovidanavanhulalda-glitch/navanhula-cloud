@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import WalletBalanceCards, { PAYMENT_LABELS } from '@/components/wallet/WalletBalanceCards';
 import WalletTransactionList from '@/components/wallet/WalletTransactionList';
 import PayoutDialog from '@/components/wallet/PayoutDialog';
+import ScheduledPayments from '@/components/wallet/ScheduledPayments';
 
 interface WalletData {
   id: string;
