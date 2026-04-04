@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import WalletBalanceCards, { PAYMENT_LABELS } from '@/components/wallet/WalletBalanceCards';
 import WalletTransactionList from '@/components/wallet/WalletTransactionList';
 import PayoutDialog from '@/components/wallet/PayoutDialog';
+import ScheduledPayments from '@/components/wallet/ScheduledPayments';
 
 interface WalletData {
   id: string;
@@ -183,6 +184,7 @@ const WalletPage: React.FC = () => {
         <TabsList>
           <TabsTrigger value="history">Transações</TabsTrigger>
           <TabsTrigger value="payouts">Levantamentos</TabsTrigger>
+          <TabsTrigger value="scheduled">Agendados</TabsTrigger>
         </TabsList>
         <TabsContent value="history">
           <WalletTransactionList transactions={transactions} />
@@ -216,6 +218,15 @@ const WalletPage: React.FC = () => {
               </div>
             )}
           </Card>
+        </TabsContent>
+        <TabsContent value="scheduled">
+          {currentStoreId && user?.company_id ? (
+            <ScheduledPayments storeId={currentStoreId} companyId={user.company_id} />
+          ) : (
+            <Card className="p-8 text-center text-muted-foreground">
+              <p>Selecione uma loja para ver agendamentos</p>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 

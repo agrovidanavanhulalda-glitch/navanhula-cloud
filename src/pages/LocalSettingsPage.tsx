@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner';
 import LogoUpload from '@/components/settings/LogoUpload';
 import FiscalDocumentsManager from '@/components/settings/FiscalDocumentsManager';
+import TwoFactorSetup from '@/components/settings/TwoFactorSetup';
 
 const LocalSettingsPage: React.FC = () => {
   const { role, company, user, store, refreshUserData } = useAuth();
@@ -409,6 +410,8 @@ const LocalSettingsPage: React.FC = () => {
                 </Button>
               </CardContent>
             </Card>
+
+            <TwoFactorSetup />
 
             <Card>
               <CardHeader>
