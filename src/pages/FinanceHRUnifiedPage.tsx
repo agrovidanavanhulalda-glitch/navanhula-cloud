@@ -400,6 +400,7 @@ const FinanceHRUnifiedPage: React.FC = () => {
         {/* Accounting */}
         <TabsContent value="chart" className="mt-4"><ChartOfAccounts /></TabsContent>
         <TabsContent value="journal" className="mt-4"><JournalEntries /></TabsContent>
+        <TabsContent value="commissions" className="mt-4"><CommissionsManager /></TabsContent>
 
         {/* Score */}
         <TabsContent value="score" className="space-y-4 mt-4">
