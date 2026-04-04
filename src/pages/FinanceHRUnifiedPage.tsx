@@ -252,7 +252,7 @@ const FinanceHRUnifiedPage: React.FC = () => {
       )}
 
       {/* Tabs */}
-      <Tabs defaultValue="dashboard">
+      <Tabs defaultValue={initialTab}>
         <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="dashboard"><BarChart3 className="w-4 h-4 mr-1" /> Dashboard</TabsTrigger>
           <TabsTrigger value="dre"><Receipt className="w-4 h-4 mr-1" /> DRE</TabsTrigger>
