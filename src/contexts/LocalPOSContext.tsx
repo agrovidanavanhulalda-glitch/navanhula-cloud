@@ -690,6 +690,24 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
 
           console.log('[POS] ✅ Sale synced to backend:', sale.id);
+
+          // Pipeline: PDV → Documento Fiscal → Contabilidade → Impostos
+          // Auto-issue fiscal document (invoice-receipt for completed sales)
+          autoIssueFiscalDocument({
+            sale,
+            storeId,
+            customerName: sale.paymentDetails?.voucherDetails?.customerName || 'Consumidor Final',
+            customerPhone: sale.paymentDetails?.voucherDetails?.phoneNumber,
+            taxRate: 0, // Uses company fiscal_rate from DB
+          }).then(result => {
+            if (result.success) {
+              console.log('[FiscalPipeline] ✅ Auto-document:', result.documentNumber);
+            } else {
+              console.warn('[FiscalPipeline] ⚠ Auto-document failed:', result.error);
+            }
+          }).catch(err => {
+            console.warn('[FiscalPipeline] ⚠ Exception:', err);
+          });
         } catch (error) {
           console.error('[POS] Sync error:', error);
         }
