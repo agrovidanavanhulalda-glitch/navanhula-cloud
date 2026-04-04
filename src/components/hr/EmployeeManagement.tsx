@@ -91,6 +91,7 @@ const EmployeeManagement: React.FC = () => {
       department: form.department,
       hire_date: form.hire_date,
       base_salary: parseFloat(form.base_salary),
+      commission_rate: parseFloat(form.commission_rate) || 0,
       inss_number: form.inss_number || null,
       nuit: form.nuit || null,
       bank_name: form.bank_name || null,
