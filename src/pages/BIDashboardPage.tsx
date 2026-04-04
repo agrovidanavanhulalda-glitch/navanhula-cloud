@@ -6,14 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { SkeletonKPI, SkeletonChart } from '@/components/ui/skeleton-card';
 import {
   BarChart3, Users, Clock, TrendingUp, Award, RefreshCw, Percent,
   Package, Target, ArrowUpRight, ArrowDownRight, ShoppingCart, Zap,
   Brain, Lightbulb, Star, Activity, AlertTriangle, DollarSign,
-  CalendarDays, CreditCard, Banknote, Smartphone, Eye
+  CalendarDays, CreditCard, Banknote, Smartphone, Eye, Info
 } from 'lucide-react';
 import { formatCurrency, getPaymentMethodLabel } from '@/lib/formatters';
+import { useFinancialAggregator } from '@/hooks/useFinancialAggregator';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, Legend,
@@ -102,6 +104,9 @@ const BIDashboardPage: React.FC = () => {
   const [period, setPeriod] = useState<Period>('month');
 
   const isAdmin = role === 'admin' || role === 'ceo' || role === 'manager';
+
+  // Central financial aggregator
+  const { summary: finSummary, loading: finLoading } = useFinancialAggregator();
 
   // ─── data loading ───
   const loadData = async () => {
@@ -537,22 +542,71 @@ const BIDashboardPage: React.FC = () => {
 
       {sales.length === 0 ? <EmptyBI /> : (
         <>
+          {/* Incomplete data alert */}
+          {finSummary.dadosIncompletos && !finLoading && (
+            <Alert variant="default" className="border-warning/40 bg-warning/5">
+              <Info className="h-4 w-4 text-warning" />
+              <AlertTitle className="text-warning font-semibold">Dados incompletos para cálculo de lucro</AlertTitle>
+              <AlertDescription className="text-sm text-muted-foreground">
+                Os seguintes dados estão em falta: <strong>{finSummary.detalhesIncompletos.join(', ')}</strong>.
+                O lucro exibido pode não refletir a realidade. Registe despesas, salários e impostos para maior precisão.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
             <KPICard icon={ShoppingCart} label="Vendas" value={kpis.count}
               trend={kpis.salesGrowth !== 0 ? `${kpis.salesGrowth > 0 ? '+' : ''}${kpis.salesGrowth.toFixed(0)}%` : undefined}
               trendUp={kpis.salesGrowth > 0 ? true : kpis.salesGrowth < 0 ? false : null}
               sub={`Anterior: ${kpis.prevCount}`} />
-            <KPICard icon={DollarSign} label="Receita" value={formatCurrency(kpis.revenue)}
+            <KPICard icon={DollarSign} label="Receita" value={formatCurrency(finSummary.receitas)}
               trend={kpis.revGrowth !== 0 ? `${kpis.revGrowth > 0 ? '+' : ''}${kpis.revGrowth.toFixed(0)}%` : undefined}
               trendUp={kpis.revGrowth > 0 ? true : kpis.revGrowth < 0 ? false : null} />
-            <KPICard icon={TrendingUp} label="Lucro" value={formatCurrency(kpis.profit)} />
+            <KPICard icon={TrendingUp} label="Lucro Líquido" value={formatCurrency(finSummary.lucroLiquido)}
+              trend={`Margem: ${finSummary.lucroMargin.toFixed(1)}%`}
+              trendUp={finSummary.lucroLiquido > 0 ? true : finSummary.lucroLiquido < 0 ? false : null}
+              sub={finSummary.dadosIncompletos ? '⚠ Dados parciais' : undefined} />
             <KPICard icon={Target} label="Ticket Médio" value={formatCurrency(kpis.avgTicket)} />
             <KPICard icon={Clock} label="Hora Pico" value={`${peakHour.hour}:00`} sub={`${peakHour.count} vendas`} />
             <KPICard icon={CalendarDays} label="Dia Forte" value={peakDay.day} sub={formatCurrency(peakDay.revenue)} />
             <KPICard icon={Award} label="Top Seller" value={sellers[0]?.name?.split(' ')[0] || '-'} sub={sellers[0] ? formatCurrency(sellers[0].revenue) : undefined} />
             <KPICard icon={Percent} label="Margem Média" value={`${avgMargin.toFixed(1)}%`} />
           </div>
+
+          {/* Financial breakdown card */}
+          <Card className="p-5">
+            <h3 className="font-bold text-foreground text-sm mb-4 flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-primary" />
+              Decomposição Financeira — Mês Atual
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="p-3 rounded-lg bg-success/5 border border-success/20">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Receitas</p>
+                <p className="text-lg font-bold text-success">{formatCurrency(finSummary.receitas)}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Custo Mercadorias</p>
+                <p className="text-lg font-bold text-destructive">{formatCurrency(finSummary.custoMercadorias)}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Despesas</p>
+                <p className="text-lg font-bold text-destructive">{formatCurrency(finSummary.despesasOperacionais)}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Salários</p>
+                <p className="text-lg font-bold text-destructive">{formatCurrency(finSummary.salarios)}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Impostos</p>
+                <p className="text-lg font-bold text-destructive">{formatCurrency(finSummary.impostos)}</p>
+              </div>
+              <div className={`p-3 rounded-lg border ${finSummary.lucroLiquido >= 0 ? 'bg-success/5 border-success/20' : 'bg-destructive/5 border-destructive/20'}`}>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Lucro Líquido</p>
+                <p className={`text-lg font-bold ${finSummary.lucroLiquido >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(finSummary.lucroLiquido)}</p>
+              </div>
+            </div>
+          </Card>
 
           {/* Auto Insights */}
           {autoInsights.length > 0 && (
