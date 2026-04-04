@@ -61,8 +61,9 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
       const payrollTotal = (payrollRes.data || []).reduce((a: number, p: any) => a + Number(p.total_cost || 0), 0);
       const taxesTotal = Number((financialScoreRes.data || [])[0]?.taxes_total || 0);
       const purchaseCost = (saleItemsRes.data || []).reduce((a: number, i: any) => a + (Number(i.cost_price || 0) * Number(i.quantity || 0)), 0);
+      const commissionsTotal = (commissionsRes.data || []).reduce((a: number, c: any) => a + Number(c.amount || 0), 0);
 
-      setRaw({ salesTotal, expensesTotal, payrollTotal, taxesTotal, purchaseCost });
+      setRaw({ salesTotal, expensesTotal, payrollTotal, taxesTotal, purchaseCost, commissionsTotal });
     } catch (err) {
       console.error('Financial aggregator error:', err);
     } finally {
