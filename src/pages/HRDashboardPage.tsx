@@ -11,6 +11,7 @@ import {
   CheckCircle, UserCheck, BarChart3, Zap,
 } from 'lucide-react';
 import AttendanceManager from '@/components/hr/AttendanceManager';
+import SellerRanking from '@/components/hr/SellerRanking';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
