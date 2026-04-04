@@ -15,17 +15,9 @@ export interface FinancialSummary {
   detalhesIncompletos: string[];
 }
 
-interface RawData {
-  salesTotal: number;
-  expensesTotal: number;
-  payrollTotal: number;
-  taxesTotal: number;
-  purchaseCost: number;
-}
-
 export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
   const { company } = useAuth();
-  const [raw, setRaw] = useState<RawData>({ salesTotal: 0, expensesTotal: 0, payrollTotal: 0, taxesTotal: 0, purchaseCost: 0 });
+  const [raw, setRaw] = useState({ salesTotal: 0, expensesTotal: 0, payrollTotal: 0, taxesTotal: 0, purchaseCost: 0 });
   const [loading, setLoading] = useState(true);
 
   const companyId = company?.id;
@@ -40,36 +32,30 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
     const endStr = end.toISOString();
 
     try {
-      // Fetch stores for this company
       const { data: stores } = await supabase.from('stores').select('id').eq('company_id', companyId);
       const storeIds = (stores || []).map(s => s.id);
 
-      const [salesRes, expensesRes, payrollRes, taxRecordsRes, purchasesRes] = await Promise.all([
-        // Revenue from completed sales
+      const [salesRes, expensesRes, payrollRes, financialScoreRes, saleItemsRes] = await Promise.all([
         storeIds.length > 0
           ? supabase.from('sales').select('total').eq('status', 'completed').in('store_id', storeIds).gte('created_at', startStr).lte('created_at', endStr)
-          : Promise.resolve({ data: [] }),
+          : Promise.resolve({ data: [] as { total: number }[] }),
 
-        // Operational expenses
         supabase.from('expenses').select('amount').eq('company_id', companyId).gte('expense_date', startStr.slice(0, 10)).lte('expense_date', endStr.slice(0, 10)),
 
-        // Payroll (salaries)
-        supabase.from('payroll').select('net_salary').eq('company_id', companyId).gte('created_at', startStr).lte('created_at', endStr),
+        supabase.from('payroll_runs').select('total_cost').eq('company_id', companyId).gte('created_at', startStr).lte('created_at', endStr),
 
-        // Taxes paid
-        supabase.from('tax_records').select('amount').eq('company_id', companyId).eq('status', 'paid').gte('created_at', startStr).lte('created_at', endStr),
+        supabase.from('financial_scores').select('taxes_total').eq('company_id', companyId).order('created_at', { ascending: false }).limit(1),
 
-        // Purchase cost (cost of goods from sale_items)
         storeIds.length > 0
           ? supabase.from('sale_items').select('cost_price, quantity, created_at').gte('created_at', startStr).lte('created_at', endStr)
-          : Promise.resolve({ data: [] }),
+          : Promise.resolve({ data: [] as { cost_price: number; quantity: number; created_at: string }[] }),
       ]);
 
-      const salesTotal = (salesRes.data || []).reduce((a, s) => a + Number(s.total || 0), 0);
-      const expensesTotal = (expensesRes.data || []).reduce((a, e) => a + Number(e.amount || 0), 0);
-      const payrollTotal = (payrollRes.data || []).reduce((a, p) => a + Number(p.net_salary || 0), 0);
-      const taxesTotal = (taxRecordsRes.data || []).reduce((a, t) => a + Number(t.amount || 0), 0);
-      const purchaseCost = (purchasesRes.data || []).reduce((a, i) => a + (Number(i.cost_price || 0) * Number(i.quantity || 0)), 0);
+      const salesTotal = (salesRes.data || []).reduce((a: number, s: any) => a + Number(s.total || 0), 0);
+      const expensesTotal = (expensesRes.data || []).reduce((a: number, e: any) => a + Number(e.amount || 0), 0);
+      const payrollTotal = (payrollRes.data || []).reduce((a: number, p: any) => a + Number(p.total_cost || 0), 0);
+      const taxesTotal = Number((financialScoreRes.data || [])[0]?.taxes_total || 0);
+      const purchaseCost = (saleItemsRes.data || []).reduce((a: number, i: any) => a + (Number(i.cost_price || 0) * Number(i.quantity || 0)), 0);
 
       setRaw({ salesTotal, expensesTotal, payrollTotal, taxesTotal, purchaseCost });
     } catch (err) {
