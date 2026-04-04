@@ -74,7 +74,7 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
   useEffect(() => { load(); }, [load]);
 
   const summary: FinancialSummary = useMemo(() => {
-    const custosTotal = raw.purchaseCost + raw.expensesTotal + raw.payrollTotal + raw.taxesTotal;
+    const custosTotal = raw.purchaseCost + raw.expensesTotal + raw.payrollTotal + raw.taxesTotal + raw.commissionsTotal;
     const lucroLiquido = raw.salesTotal - custosTotal;
     const lucroMargin = raw.salesTotal > 0 ? (lucroLiquido / raw.salesTotal) * 100 : 0;
 
@@ -90,6 +90,7 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
       despesasOperacionais: raw.expensesTotal,
       salarios: raw.payrollTotal,
       impostos: raw.taxesTotal,
+      comissoes: raw.commissionsTotal,
       custosTotal,
       lucroLiquido,
       lucroMargin,
