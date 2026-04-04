@@ -8,8 +8,8 @@ import {
   WalletCards, History, BarChart3, TrendingUp, Boxes, Shield, User,
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
-  Cloud, Store, ChevronDown, Calculator, CalendarDays, CreditCard, Banknote,
-  Receipt, ClipboardList, Building2, MapPin, Bird,
+  Cloud, Store, ChevronDown, Calculator, CreditCard, Banknote,
+  Building2, MapPin, Bird,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -77,40 +77,16 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    title: 'Recursos Humanos',
-    icon: Users,
-    roles: ['admin', 'ceo', 'hr'],
-    items: [
-      { label: 'Funcionários', href: '/app/rh', icon: User },
-      { label: 'Presenças', href: '/app/rh', icon: CalendarDays },
-      { label: 'Vendedores', href: '/app/vendedores', icon: UserCheck },
-    ],
-  },
-  {
-    title: 'Salários',
-    icon: Banknote,
-    roles: ['admin', 'ceo', 'hr'],
-    items: [
-      { label: 'Processar Salários', href: '/app/rh', icon: Calculator },
-      { label: 'Recibos', href: '/app/rh', icon: Receipt },
-    ],
-  },
-  {
-    title: 'Contabilidade',
-    icon: BookOpen,
-    roles: ['admin', 'ceo', 'accountant'],
-    items: [
-      { label: 'Plano de Contas', href: '/app/contabilidade', icon: ClipboardList },
-      { label: 'Diário', href: '/app/contabilidade', icon: BookOpen },
-    ],
-  },
-  {
-    title: 'Financeiro',
+    title: 'Financeiro & RH',
     icon: TrendingUp,
-    roles: ['admin', 'manager', 'ceo'],
+    roles: ['admin', 'manager', 'ceo', 'hr', 'accountant'],
     items: [
-      { label: 'Relatórios', href: '/app/financeiro', icon: BarChart3 },
-      { label: 'Tax Engine', href: '/app/tax-engine', icon: Calculator },
+      { label: 'Painel Financeiro', href: '/app/financeiro-rh', icon: BarChart3 },
+      { label: 'Funcionários', href: '/app/financeiro-rh?tab=employees', icon: User },
+      { label: 'Salários', href: '/app/financeiro-rh?tab=payroll', icon: Banknote },
+      { label: 'Contabilidade', href: '/app/financeiro-rh?tab=chart', icon: BookOpen },
+      { label: 'Tax Engine', href: '/app/financeiro-rh?tab=taxes', icon: Calculator },
+      { label: 'Vendedores', href: '/app/vendedores', icon: UserCheck },
       { label: 'Carteira', href: '/app/carteira', icon: WalletCards },
       { label: 'Pagamentos MM', href: '/app/pagamentos-manuais', icon: Smartphone },
       { label: 'Documentos', href: '/app/documentos', icon: FileText },
