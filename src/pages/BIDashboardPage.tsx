@@ -105,6 +105,9 @@ const BIDashboardPage: React.FC = () => {
 
   const isAdmin = role === 'admin' || role === 'ceo' || role === 'manager';
 
+  // Central financial aggregator
+  const { summary: finSummary, loading: finLoading } = useFinancialAggregator();
+
   // ─── data loading ───
   const loadData = async () => {
     setLoading(true);
