@@ -59,7 +59,7 @@ const EmployeeManagement: React.FC = () => {
   useEffect(() => { loadEmployees(); }, []);
 
   const resetForm = () => {
-    setForm({ full_name: '', email: '', phone: '', position: 'Vendedor', department: 'Operações', hire_date: new Date().toISOString().split('T')[0], base_salary: '', inss_number: '', nuit: '', bank_name: '', bank_account: '' });
+    setForm({ full_name: '', email: '', phone: '', position: 'Vendedor', department: 'Operações', hire_date: new Date().toISOString().split('T')[0], base_salary: '', commission_rate: '0', inss_number: '', nuit: '', bank_name: '', bank_account: '' });
     setEditingEmployee(null);
   };
 
