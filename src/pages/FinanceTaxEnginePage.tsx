@@ -144,7 +144,7 @@ const FinanceTaxEnginePage: React.FC = () => {
     setExpensesTotal((expRes.data || []).reduce((s, r) => s + Number(r.amount || 0), 0));
 
     const payrolls = payRes.data || [];
-    setPayrollTotal(payrolls.reduce((s, r) => s + Number(r.total_net || 0), 0));
+    setPayrollTotal(payrolls.reduce((s, r) => s + Number(r.net_salary || 0), 0));
 
     setTaxCalcs((taxRes.data as TaxCalc[]) || []);
     setScores((scoreRes.data as FinScore[]) || []);
