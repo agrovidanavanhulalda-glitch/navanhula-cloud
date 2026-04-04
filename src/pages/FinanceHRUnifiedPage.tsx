@@ -27,6 +27,7 @@ import AccountsPayableManager from '@/components/finance/AccountsPayableManager'
 import AccountsReceivableManager from '@/components/finance/AccountsReceivableManager';
 import ChartOfAccounts from '@/components/accounting/ChartOfAccounts';
 import JournalEntries from '@/components/accounting/JournalEntries';
+import CommissionsManager from '@/components/hr/CommissionsManager';
 import { useFinancialAggregator } from '@/hooks/useFinancialAggregator';
 import { downloadFiscalPdfA4 } from '@/lib/generateFiscalPdfA4';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -265,6 +266,7 @@ const FinanceHRUnifiedPage: React.FC = () => {
           <TabsTrigger value="attendance"><Clock className="w-4 h-4 mr-1" /> Presenças</TabsTrigger>
           <TabsTrigger value="chart"><BookOpen className="w-4 h-4 mr-1" /> Plano de Contas</TabsTrigger>
           <TabsTrigger value="journal"><FileText className="w-4 h-4 mr-1" /> Diário</TabsTrigger>
+          <TabsTrigger value="commissions"><Award className="w-4 h-4 mr-1" /> Comissões</TabsTrigger>
           <TabsTrigger value="score"><Shield className="w-4 h-4 mr-1" /> Score</TabsTrigger>
         </TabsList>
 
@@ -329,9 +331,10 @@ const FinanceHRUnifiedPage: React.FC = () => {
                 <DRELine label="Lucro Bruto" value={summary.receitas - summary.custoMercadorias - summary.despesasOperacionais} bold
                   color={(summary.receitas - summary.custoMercadorias - summary.despesasOperacionais) >= 0 ? 'text-green-600' : 'text-destructive'} />
                 <DRELine label="(-) Salários" value={-summary.salarios} />
+                <DRELine label="(-) Comissões" value={-summary.comissoes} />
                 <DRELine label="(-) Impostos" value={-totalTaxDRE} />
                 <hr className="border-border" />
-                <DRELine label="Resultado Líquido" value={netProfitDRE} bold color={netProfitDRE >= 0 ? 'text-green-600' : 'text-destructive'} />
+                <DRELine label="Resultado Líquido" value={netProfitDRE - summary.comissoes} bold color={(netProfitDRE - summary.comissoes) >= 0 ? 'text-green-600' : 'text-destructive'} />
               </div>
             </CardContent>
           </Card>
@@ -398,6 +401,7 @@ const FinanceHRUnifiedPage: React.FC = () => {
         {/* Accounting */}
         <TabsContent value="chart" className="mt-4"><ChartOfAccounts /></TabsContent>
         <TabsContent value="journal" className="mt-4"><JournalEntries /></TabsContent>
+        <TabsContent value="commissions" className="mt-4"><CommissionsManager /></TabsContent>
 
         {/* Score */}
         <TabsContent value="score" className="space-y-4 mt-4">

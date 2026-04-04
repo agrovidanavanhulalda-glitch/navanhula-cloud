@@ -8,6 +8,7 @@ export interface FinancialSummary {
   despesasOperacionais: number;
   salarios: number;
   impostos: number;
+  comissoes: number;
   custosTotal: number;
   lucroLiquido: number;
   lucroMargin: number;
@@ -17,7 +18,7 @@ export interface FinancialSummary {
 
 export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
   const { company } = useAuth();
-  const [raw, setRaw] = useState({ salesTotal: 0, expensesTotal: 0, payrollTotal: 0, taxesTotal: 0, purchaseCost: 0 });
+  const [raw, setRaw] = useState({ salesTotal: 0, expensesTotal: 0, payrollTotal: 0, taxesTotal: 0, purchaseCost: 0, commissionsTotal: 0 });
   const [loading, setLoading] = useState(true);
 
   const companyId = company?.id;
@@ -35,7 +36,7 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
       const { data: stores } = await supabase.from('stores').select('id').eq('company_id', companyId);
       const storeIds = (stores || []).map(s => s.id);
 
-      const [salesRes, expensesRes, payrollRes, financialScoreRes, saleItemsRes] = await Promise.all([
+      const [salesRes, expensesRes, payrollRes, financialScoreRes, saleItemsRes, commissionsRes] = await Promise.all([
         storeIds.length > 0
           ? supabase.from('sales').select('total').eq('status', 'completed').in('store_id', storeIds).gte('created_at', startStr).lte('created_at', endStr)
           : Promise.resolve({ data: [] as { total: number }[] }),
@@ -49,6 +50,10 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
         storeIds.length > 0
           ? supabase.from('sale_items').select('cost_price, quantity, created_at').gte('created_at', startStr).lte('created_at', endStr)
           : Promise.resolve({ data: [] as { cost_price: number; quantity: number; created_at: string }[] }),
+
+        storeIds.length > 0
+          ? supabase.from('commissions').select('amount').in('store_id', storeIds).gte('created_at', startStr).lte('created_at', endStr)
+          : Promise.resolve({ data: [] as { amount: number }[] }),
       ]);
 
       const salesTotal = (salesRes.data || []).reduce((a: number, s: any) => a + Number(s.total || 0), 0);
@@ -56,8 +61,9 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
       const payrollTotal = (payrollRes.data || []).reduce((a: number, p: any) => a + Number(p.total_cost || 0), 0);
       const taxesTotal = Number((financialScoreRes.data || [])[0]?.taxes_total || 0);
       const purchaseCost = (saleItemsRes.data || []).reduce((a: number, i: any) => a + (Number(i.cost_price || 0) * Number(i.quantity || 0)), 0);
+      const commissionsTotal = (commissionsRes.data || []).reduce((a: number, c: any) => a + Number(c.amount || 0), 0);
 
-      setRaw({ salesTotal, expensesTotal, payrollTotal, taxesTotal, purchaseCost });
+      setRaw({ salesTotal, expensesTotal, payrollTotal, taxesTotal, purchaseCost, commissionsTotal });
     } catch (err) {
       console.error('Financial aggregator error:', err);
     } finally {
@@ -68,7 +74,7 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
   useEffect(() => { load(); }, [load]);
 
   const summary: FinancialSummary = useMemo(() => {
-    const custosTotal = raw.purchaseCost + raw.expensesTotal + raw.payrollTotal + raw.taxesTotal;
+    const custosTotal = raw.purchaseCost + raw.expensesTotal + raw.payrollTotal + raw.taxesTotal + raw.commissionsTotal;
     const lucroLiquido = raw.salesTotal - custosTotal;
     const lucroMargin = raw.salesTotal > 0 ? (lucroLiquido / raw.salesTotal) * 100 : 0;
 
@@ -84,6 +90,7 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
       despesasOperacionais: raw.expensesTotal,
       salarios: raw.payrollTotal,
       impostos: raw.taxesTotal,
+      comissoes: raw.commissionsTotal,
       custosTotal,
       lucroLiquido,
       lucroMargin,
