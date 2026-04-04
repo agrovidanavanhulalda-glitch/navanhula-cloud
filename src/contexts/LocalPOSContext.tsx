@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SaaSAuthContext';
+import { autoIssueFiscalDocument } from '@/lib/fiscalPipeline';
 
 /**
  * NAVANHULA CLOUD Context - SUPABASE BACKED
