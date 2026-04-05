@@ -76,7 +76,13 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [loading, setLoading] = useState(true);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
 
-  // Refs to prevent race conditions
+  // Sync currency formatter with company country
+  useEffect(() => {
+    const country = (company as any)?.country || 'MZ';
+    setFormatterCountry(country);
+  }, [company]);
+
+
   const initComplete = useRef(false);
   const setupRan = useRef(false);
 
