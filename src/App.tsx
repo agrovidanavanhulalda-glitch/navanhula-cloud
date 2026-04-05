@@ -3,11 +3,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { SaaSAuthProvider, useAuth } from "@/contexts/SaaSAuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
 import { Loader2 } from "lucide-react";
 import SubscriptionGate from "@/components/layout/SubscriptionGate";
+import { getDefaultRouteForRole, canAccessRoute } from "@/lib/roleRoutes";
 
 import AuthLoginPage from "./pages/AuthLoginPage";
 import AuthSignupPage from "./pages/AuthSignupPage";
@@ -51,6 +52,9 @@ import FinanceTaxEnginePage from "./pages/FinanceTaxEnginePage";
 import SystemAuditPage from "./pages/SystemAuditPage";
 import WhatsAppAutomationPage from "./pages/WhatsAppAutomationPage";
 import FinanceHRUnifiedPage from "./pages/FinanceHRUnifiedPage";
+import DirectorDashboardPage from "./pages/DirectorDashboardPage";
+import ManagerDashboardPage from "./pages/ManagerDashboardPage";
+import HRDashboardPage2 from "./pages/HRDashboardPage2";
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
 import Index from "./pages/Index";
@@ -108,7 +112,8 @@ const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
 LoadingScreen.displayName = "LoadingScreen";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, role } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return <LoadingScreen />;
@@ -116,6 +121,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Block access to routes not allowed for this role
+  if (!canAccessRoute(location.pathname, role)) {
+    return <Navigate to={getDefaultRouteForRole(role)} replace />;
   }
 
   return <>{children}</>;
@@ -129,7 +139,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to={role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard'} replace />;
+    return <Navigate to={getDefaultRouteForRole(role)} replace />;
   }
 
   return <>{children}</>;
@@ -137,7 +147,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const AppEntryRoute = () => {
   const { role } = useAuth();
-  return <Navigate to={role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard'} replace />;
+  return <Navigate to={getDefaultRouteForRole(role)} replace />;
 };
 
 const AppRoutes = () => {
@@ -183,6 +193,9 @@ const AppRoutes = () => {
       >
         <Route index element={<AppEntryRoute />} />
         <Route path="dashboard" element={<LocalDashboardPage />} />
+        <Route path="dashboard/diretor" element={<DirectorDashboardPage />} />
+        <Route path="dashboard/gestor" element={<ManagerDashboardPage />} />
+        <Route path="dashboard/rh" element={<HRDashboardPage2 />} />
         <Route path="pdv" element={<SubscriptionGate><LocalPOSPage /></SubscriptionGate>} />
         <Route path="lojas" element={<SubscriptionGate><LocalStoresPage /></SubscriptionGate>} />
         <Route path="produtos" element={<SubscriptionGate><LocalProductsPage /></SubscriptionGate>} />
@@ -225,7 +238,6 @@ const AppRoutes = () => {
         <Route path="compliance" element={<SubscriptionGate><CompliancePage /></SubscriptionGate>} />
         <Route path="auditoria" element={<SystemAuditPage />} />
         <Route path="whatsapp" element={<SubscriptionGate><WhatsAppAutomationPage /></SubscriptionGate>} />
-        {/* tax-engine route already redirected above */}
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
         <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />
