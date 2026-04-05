@@ -9,7 +9,7 @@ import {
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
   Cloud, Store, ChevronDown, Calculator, CreditCard, Banknote,
-  Building2, MapPin, Bird,
+  Building2, MapPin, Bird, MessageCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -66,6 +66,7 @@ const navGroups: NavGroup[] = [
       { label: 'Caixa', href: '/app/caixa', icon: WalletCards },
       { label: 'Histórico', href: '/app/vendas', icon: History },
       { label: 'Loja Online', href: '/app/ecommerce', icon: ShoppingBag },
+      { label: 'WhatsApp', href: '/app/whatsapp', icon: MessageCircle },
     ],
   },
   {
