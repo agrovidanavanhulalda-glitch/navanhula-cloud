@@ -8,12 +8,17 @@ export interface Subscription {
   id: string;
   store_id: string;
   status: SubscriptionStatus;
+  plan_tier: 'starter' | 'pro' | 'enterprise';
   price_monthly: number;
   current_period_start: string;
   current_period_end: string;
   grace_period_days: number;
+  max_products: number;
+  max_sellers: number;
+  max_stores: number;
   blocked_at: string | null;
   notes: string | null;
+  trial_ends_at: string | null;
 }
 
 export interface PaymentTransaction {
