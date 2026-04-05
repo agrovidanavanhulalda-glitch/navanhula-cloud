@@ -4572,7 +4572,11 @@ export type Database = {
           current_period_start: string
           grace_period_days: number
           id: string
+          max_products: number
+          max_sellers: number
+          max_stores: number
           notes: string | null
+          plan_tier: Database["public"]["Enums"]["plan_tier"]
           price_monthly: number
           status: Database["public"]["Enums"]["subscription_status"]
           store_id: string
@@ -4587,7 +4591,11 @@ export type Database = {
           current_period_start?: string
           grace_period_days?: number
           id?: string
+          max_products?: number
+          max_sellers?: number
+          max_stores?: number
           notes?: string | null
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
           price_monthly?: number
           status?: Database["public"]["Enums"]["subscription_status"]
           store_id: string
@@ -4602,7 +4610,11 @@ export type Database = {
           current_period_start?: string
           grace_period_days?: number
           id?: string
+          max_products?: number
+          max_sellers?: number
+          max_stores?: number
           notes?: string | null
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
           price_monthly?: number
           status?: Database["public"]["Enums"]["subscription_status"]
           store_id?: string
@@ -5211,6 +5223,7 @@ export type Database = {
         | "credit_note"
         | "debit_note"
       payment_method: "cash" | "mpesa" | "emola" | "card" | "voucher"
+      plan_tier: "starter" | "pro" | "enterprise"
       purchase_order_status:
         | "draft"
         | "pending"
@@ -5386,6 +5399,7 @@ export const Constants = {
         "debit_note",
       ],
       payment_method: ["cash", "mpesa", "emola", "card", "voucher"],
+      plan_tier: ["starter", "pro", "enterprise"],
       purchase_order_status: [
         "draft",
         "pending",
