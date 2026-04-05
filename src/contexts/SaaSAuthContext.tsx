@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile, Store, Company, AppRole, AuthContextType } from '@/types/pos';
 import { toast } from 'sonner';
+import { setFormatterCountry } from '@/lib/formatters';
 
 /**
  * NAVANHULA CLOUD - Auth Context
