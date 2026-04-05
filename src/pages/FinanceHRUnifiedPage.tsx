@@ -104,7 +104,8 @@ const FinanceHRUnifiedPage: React.FC = () => {
     const endDate = new Date(year, month, 0).toISOString().slice(0, 10);
 
     const ivaAmount = summary.receitas * 0.16;
-    const profit = summary.receitas - summary.despesasOperacionais;
+    const totalCosts = summary.custoMercadorias + summary.despesasOperacionais + summary.salarios + summary.comissoes;
+    const profit = summary.receitas - totalCosts;
     const irpcAmount = Math.max(0, profit * 0.03);
 
     const payrolls = await supabase.from('payroll_runs').select('inss_employee, inss_employer')
@@ -164,7 +165,7 @@ const FinanceHRUnifiedPage: React.FC = () => {
   const ivaCalc = taxCalcs.find(t => t.tax_type === 'iva' && t.period_start >= `${year}-${String(month).padStart(2, '0')}-01`);
   const irpcCalc = taxCalcs.find(t => t.tax_type === 'irpc' && t.period_start >= `${year}-${String(month).padStart(2, '0')}-01`);
   const totalTaxDRE = (ivaCalc?.tax_amount || 0) + (irpcCalc?.tax_amount || 0);
-  const netProfitDRE = summary.receitas - summary.despesasOperacionais - summary.salarios - totalTaxDRE;
+  const netProfitDRE = summary.receitas - summary.custoMercadorias - summary.despesasOperacionais - summary.salarios - summary.comissoes - totalTaxDRE;
 
   /* Alerts */
   const alerts = useMemo(() => {
@@ -334,7 +335,7 @@ const FinanceHRUnifiedPage: React.FC = () => {
                 <DRELine label="(-) Comissões" value={-summary.comissoes} />
                 <DRELine label="(-) Impostos" value={-totalTaxDRE} />
                 <hr className="border-border" />
-                <DRELine label="Resultado Líquido" value={netProfitDRE - summary.comissoes} bold color={(netProfitDRE - summary.comissoes) >= 0 ? 'text-green-600' : 'text-destructive'} />
+                <DRELine label="Resultado Líquido" value={netProfitDRE} bold color={netProfitDRE >= 0 ? 'text-green-600' : 'text-destructive'} />
               </div>
             </CardContent>
           </Card>

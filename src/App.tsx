@@ -59,6 +59,7 @@ import ContactPage from "./pages/ContactPage";
 import ResellersNetworkPage from "./pages/ResellersNetworkPage";
 import SalesMaterialsPage from "./pages/SalesMaterialsPage";
 import NotFound from "./pages/NotFound";
+import { I18nProvider } from "@/contexts/i18n";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -205,6 +206,7 @@ const AppRoutes = () => {
         <Route path="rh" element={<Navigate to="/app/financeiro-rh?tab=employees" replace />} />
         <Route path="tax-engine" element={<Navigate to="/app/financeiro-rh?tab=taxes" replace />} />
         <Route path="bi" element={<BIDashboardPage />} />
+
         <Route path="ai" element={<SubscriptionGate><AIBusinessEnginePage /></SubscriptionGate>} />
         <Route path="documentos" element={<SubscriptionGate><DocumentsCenterPage /></SubscriptionGate>} />
         <Route path="agricultura" element={<SubscriptionGate><AgriculturePage /></SubscriptionGate>} />
@@ -219,7 +221,7 @@ const AppRoutes = () => {
         <Route path="marketplace" element={<SubscriptionGate><MarketplacePage /></SubscriptionGate>} />
         <Route path="ecommerce" element={<SubscriptionGate><ECommercePage /></SubscriptionGate>} />
         <Route path="compliance" element={<SubscriptionGate><CompliancePage /></SubscriptionGate>} />
-        <Route path="tax-engine" element={<SubscriptionGate><FinanceTaxEnginePage /></SubscriptionGate>} />
+        {/* tax-engine route already redirected above */}
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
         <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />
@@ -240,8 +242,6 @@ const AppRoutes = () => {
     </Routes>
   );
 };
-
-import { I18nProvider } from "@/contexts/i18n";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

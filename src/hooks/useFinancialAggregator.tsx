@@ -48,8 +48,8 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
         supabase.from('financial_scores').select('taxes_total').eq('company_id', companyId).order('created_at', { ascending: false }).limit(1),
 
         storeIds.length > 0
-          ? supabase.from('sale_items').select('cost_price, quantity, created_at').gte('created_at', startStr).lte('created_at', endStr)
-          : Promise.resolve({ data: [] as { cost_price: number; quantity: number; created_at: string }[] }),
+          ? supabase.from('sale_items').select('cost_price, quantity, created_at, sale_id').gte('created_at', startStr).lte('created_at', endStr)
+          : Promise.resolve({ data: [] as { cost_price: number; quantity: number; created_at: string; sale_id: string }[] }),
 
         storeIds.length > 0
           ? supabase.from('commissions').select('amount').in('store_id', storeIds).gte('created_at', startStr).lte('created_at', endStr)
