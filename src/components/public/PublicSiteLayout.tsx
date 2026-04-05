@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import UrgencyBanner from '@/components/public/landing/UrgencyBanner';
-import { cn } from '@/lib/utils';
 
 const navItems = [
   { label: 'Home', hash: '#top' },
