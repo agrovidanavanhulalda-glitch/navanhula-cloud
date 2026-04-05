@@ -165,7 +165,7 @@ const FinanceHRUnifiedPage: React.FC = () => {
   const ivaCalc = taxCalcs.find(t => t.tax_type === 'iva' && t.period_start >= `${year}-${String(month).padStart(2, '0')}-01`);
   const irpcCalc = taxCalcs.find(t => t.tax_type === 'irpc' && t.period_start >= `${year}-${String(month).padStart(2, '0')}-01`);
   const totalTaxDRE = (ivaCalc?.tax_amount || 0) + (irpcCalc?.tax_amount || 0);
-  const netProfitDRE = summary.receitas - summary.despesasOperacionais - summary.salarios - totalTaxDRE;
+  const netProfitDRE = summary.receitas - summary.custoMercadorias - summary.despesasOperacionais - summary.salarios - summary.comissoes - totalTaxDRE;
 
   /* Alerts */
   const alerts = useMemo(() => {
