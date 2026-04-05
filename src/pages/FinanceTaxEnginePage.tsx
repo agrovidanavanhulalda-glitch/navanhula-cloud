@@ -323,7 +323,9 @@ const FinanceTaxEnginePage: React.FC = () => {
       totalSales: 0,
       byMethod: {
         'Receita Bruta': dre.revenue,
-        'Despesas': dre.expenses,
+        'CMV (Custo Mercadorias)': dre.cmv,
+        'Lucro Bruto': dre.grossProfit,
+        'Despesas Operacionais': dre.expenses,
         'Salários': dre.payroll,
         'Impostos': dre.taxes,
       },
