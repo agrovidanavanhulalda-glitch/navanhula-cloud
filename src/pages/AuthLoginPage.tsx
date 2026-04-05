@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/SaaSAuthContext';
+import { getDefaultRouteForRole } from '@/lib/roleRoutes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +29,7 @@ const AuthLoginPage: React.FC = () => {
   useEffect(() => {
     if (!loading && isAuthenticated) {
       console.log('[Login] User authenticated, redirecting...');
-      navigate(role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard', { replace: true });
+      navigate(getDefaultRouteForRole(role), { replace: true });
     }
   }, [loading, isAuthenticated, role, navigate]);
 

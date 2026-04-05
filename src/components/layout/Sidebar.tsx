@@ -55,12 +55,16 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Visão Geral', href: '/app/dashboard', icon: LayoutDashboard },
       { label: 'Painel CEO', href: '/app/ceo', icon: TrendingUp },
+      { label: 'Painel Diretor', href: '/app/dashboard/diretor', icon: Building2 },
+      { label: 'Painel Gestor', href: '/app/dashboard/gestor', icon: Users },
+      { label: 'Painel RH', href: '/app/dashboard/rh', icon: User },
       { label: 'BI Analytics', href: '/app/bi', icon: PieChart },
     ],
   },
   {
     title: 'Vendas',
     icon: ShoppingCart,
+    roles: ['admin', 'ceo', 'director', 'manager', 'seller', 'cashier'],
     items: [
       { label: 'PDV', href: '/app/pdv', icon: ShoppingCart },
       { label: 'Caixa', href: '/app/caixa', icon: WalletCards },
@@ -72,6 +76,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Catálogo',
     icon: Package,
+    roles: ['admin', 'ceo', 'director', 'manager', 'seller'],
     items: [
       { label: 'Produtos', href: '/app/produtos', icon: Package },
       { label: 'Estoque', href: '/app/estoque', icon: Boxes },
@@ -80,7 +85,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Financeiro & RH',
     icon: TrendingUp,
-    roles: ['admin', 'manager', 'ceo', 'hr', 'accountant'],
+    roles: ['admin', 'manager', 'ceo', 'hr', 'director'],
     items: [
       { label: 'Painel Financeiro', href: '/app/financeiro-rh', icon: BarChart3 },
       { label: 'Funcionários', href: '/app/financeiro-rh?tab=employees', icon: User },
@@ -96,7 +101,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Fiscal',
     icon: FileText,
-    roles: ['admin', 'manager', 'ceo', 'accountant'],
+    roles: ['admin', 'manager', 'ceo', 'director'],
     items: [
       { label: 'Gestão Fiscal', href: '/app/fiscal', icon: FileText },
       { label: 'Relatórios', href: '/app/relatorios', icon: BarChart3 },
@@ -105,7 +110,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'CRM',
     icon: UserCheck,
-    roles: ['admin', 'manager', 'ceo'],
+    roles: ['admin', 'manager', 'ceo', 'director'],
     items: [
       { label: 'Clientes', href: '/app/crm', icon: UserCheck },
       { label: 'Fornecedores', href: '/app/fornecedores', icon: Truck },
@@ -114,7 +119,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Operações',
     icon: Building2,
-    roles: ['admin', 'ceo'],
+    roles: ['admin', 'ceo', 'director'],
     items: [
       { label: 'Lojas', href: '/app/lojas', icon: Store },
       { label: 'Agricultura', href: '/app/agricultura', icon: Sprout },
@@ -129,7 +134,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Compliance',
     icon: Shield,
-    roles: ['admin', 'ceo', 'accountant'],
+    roles: ['admin', 'ceo'],
     items: [
       { label: 'Compliance Hub', href: '/app/compliance', icon: Shield },
       { label: 'Agente de Auditoria', href: '/app/auditoria', icon: Shield },
@@ -138,6 +143,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Sistema',
     icon: Settings,
+    roles: ['admin', 'ceo', 'manager'],
     items: [
       { label: 'AI Engine', href: '/app/ai', icon: Brain },
       { label: 'Assinatura', href: '/app/assinatura', icon: Shield },
@@ -176,15 +182,34 @@ const Sidebar: React.FC = () => {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
 
-  const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo';
+  const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
   const isReseller = role === 'reseller';
   const rawName = currentCashRegister?.sellerName || user?.full_name || '';
   const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : 'Operador';
   const currentOperatorRole =
     role === 'reseller' ? 'Revendedor' :
     role === 'ceo' ? 'CEO' :
-    role === 'manager' ? 'Gerente' :
+    role === 'director' ? 'Diretor' :
+    role === 'manager' ? 'Gestor' :
+    role === 'hr' ? 'RH' :
+    role === 'cashier' ? 'Caixa' :
     isBackofficeAdmin ? 'Administrador' : 'Vendedor';
+
+  // Filter Dashboard sub-items by role
+  const filterDashboardItems = (items: SubItem[]): SubItem[] => {
+    const dashboardVisibility: Record<string, string[]> = {
+      '/app/ceo': ['ceo', 'admin'],
+      '/app/dashboard/diretor': ['director', 'ceo', 'admin'],
+      '/app/dashboard/gestor': ['manager', 'director', 'ceo', 'admin'],
+      '/app/dashboard/rh': ['hr', 'director', 'ceo', 'admin'],
+      '/app/bi': ['ceo', 'admin', 'director'],
+    };
+    return items.filter(item => {
+      const allowed = dashboardVisibility[item.href];
+      if (!allowed) return true;
+      return allowed.includes(role || '');
+    });
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -215,7 +240,10 @@ const Sidebar: React.FC = () => {
   const renderCollapsibleGroup = (group: NavGroup) => {
     if (group.roles && !group.roles.includes(role || 'seller')) return null;
     const Icon = group.icon;
-    const hasActive = groupHasActive(group.items);
+    // Filter items for Dashboard group based on role
+    const visibleItems = group.title === 'Dashboard' ? filterDashboardItems(group.items) : group.items;
+    if (visibleItems.length === 0) return null;
+    const hasActive = groupHasActive(visibleItems);
 
     return (
       <Collapsible key={group.title} defaultOpen={hasActive} className="group/collapsible">
@@ -235,7 +263,7 @@ const Sidebar: React.FC = () => {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <SidebarMenuSub>
-              {group.items.map(renderSubItem)}
+              {visibleItems.map(renderSubItem)}
             </SidebarMenuSub>
           </CollapsibleContent>
         </SidebarMenuItem>
