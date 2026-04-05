@@ -103,9 +103,23 @@ const SubscriptionPage: React.FC = () => {
 
       {/* Plan Selection */}
       <PlanSelector
-        currentTier="pro"
-        onSelect={(tier: PlanTier, yearly: boolean) => {
-          toast.info(`Plano ${tier} ${yearly ? 'anual' : 'mensal'} selecionado. Em breve será processado.`);
+        currentTier={(subscription as any)?.plan_tier || 'pro'}
+        onSelect={async (tier: PlanTier, yearly: boolean) => {
+          if (!subscription) {
+            toast.error('Nenhuma assinatura encontrada');
+            return;
+          }
+          try {
+            const { error } = await supabase
+              .from('subscriptions')
+              .update({ plan_tier: tier } as any)
+              .eq('id', subscription.id);
+            if (error) throw error;
+            toast.success(`Plano alterado para ${tier === 'starter' ? 'Starter' : tier === 'pro' ? 'Profissional' : 'Enterprise'}!`);
+            refresh();
+          } catch (err: any) {
+            toast.error(err.message || 'Erro ao alterar plano');
+          }
         }}
       />
 
