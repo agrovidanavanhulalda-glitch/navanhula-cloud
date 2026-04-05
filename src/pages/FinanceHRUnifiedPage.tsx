@@ -104,7 +104,8 @@ const FinanceHRUnifiedPage: React.FC = () => {
     const endDate = new Date(year, month, 0).toISOString().slice(0, 10);
 
     const ivaAmount = summary.receitas * 0.16;
-    const profit = summary.receitas - summary.despesasOperacionais;
+    const totalCosts = summary.custoMercadorias + summary.despesasOperacionais + summary.salarios + summary.comissoes;
+    const profit = summary.receitas - totalCosts;
     const irpcAmount = Math.max(0, profit * 0.03);
 
     const payrolls = await supabase.from('payroll_runs').select('inss_employee, inss_employer')
