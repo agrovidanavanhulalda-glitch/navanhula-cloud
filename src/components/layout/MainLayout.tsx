@@ -11,6 +11,7 @@ import NotificationBell from './NotificationBell';
 import LanguageSelector from './LanguageSelector';
 import AppBreadcrumb from './AppBreadcrumb';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import UpsellBanner from '@/components/monetization/UpsellBanner';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
@@ -57,6 +58,8 @@ const MainLayout: React.FC = () => {
           <AppBreadcrumb />
         </div>
 
+        <UpsellBanner />
+
         {/* Mobile content — proper padding, no overlap */}
         <main className="flex-1 p-4 pb-6 safe-bottom overflow-auto">
           <Outlet />
@@ -87,6 +90,7 @@ const MainLayout: React.FC = () => {
               <NetworkIndicator />
             </div>
           </header>
+          <UpsellBanner />
           <main className="flex-1 overflow-auto bg-background">
             <Outlet />
           </main>

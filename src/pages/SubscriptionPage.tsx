@@ -10,6 +10,8 @@ import { formatCurrency } from '@/lib/formatters';
 import { CreditCard, AlertTriangle, CheckCircle2, XCircle, Clock, Phone, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import PlanSelector from '@/components/monetization/PlanSelector';
+import type { PlanTier } from '@/lib/plans';
 
 const SubscriptionPage: React.FC = () => {
   const { company, role } = useAuth();
@@ -98,6 +100,14 @@ const SubscriptionPage: React.FC = () => {
         <h1 className="text-2xl font-bold">Assinatura</h1>
         <p className="text-muted-foreground">{company?.name || 'Empresa'}</p>
       </div>
+
+      {/* Plan Selection */}
+      <PlanSelector
+        currentTier="pro"
+        onSelect={(tier: PlanTier, yearly: boolean) => {
+          toast.info(`Plano ${tier} ${yearly ? 'anual' : 'mensal'} selecionado. Em breve será processado.`);
+        }}
+      />
 
       {/* Status Card */}
       <Card>
