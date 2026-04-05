@@ -241,8 +241,6 @@ const AppRoutes = () => {
   );
 };
 
-import { I18nProvider } from "@/contexts/i18n";
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <I18nProvider>
