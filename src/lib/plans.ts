@@ -26,20 +26,20 @@ export interface PlanDefinition {
 export const PLANS: PlanDefinition[] = [
   {
     tier: 'starter',
-    name: 'Starter',
-    price: 750,
-    yearlyPrice: 7500, // ~17% discount
+    name: 'Basic',
+    price: 1000,
+    yearlyPrice: 10000, // 2 meses grátis
     description: 'Ideal para pequenos negócios que estão a começar',
     maxProducts: 100,
-    maxSellers: 2,
+    maxSellers: 3,
     maxStores: 1,
     features: [
       'PDV completo',
       'Gestão de estoque básica',
       'Até 100 produtos',
-      'Até 2 vendedores',
+      'Até 3 usuários',
       '1 loja',
-      'Relatórios básicos',
+      'Vendas simples',
       'Suporte por email',
     ],
   },
@@ -47,19 +47,20 @@ export const PLANS: PlanDefinition[] = [
     tier: 'pro',
     name: 'Profissional',
     price: 1500,
-    yearlyPrice: 15000, // ~17% discount
+    yearlyPrice: 15000, // 2 meses grátis
     description: 'Para negócios em crescimento que precisam de mais poder',
     badge: 'Mais Popular',
     maxProducts: 1000,
     maxSellers: 10,
     maxStores: 5,
     features: [
-      'Tudo do Starter +',
+      'Tudo do Basic +',
       'Até 1.000 produtos',
-      'Até 10 vendedores',
+      'Até 10 usuários',
       'Até 5 lojas',
-      'Relatórios avançados',
+      'Relatórios completos',
       'CRM e fidelização',
+      'Gestão RH básica',
       'Documentos fiscais',
       'Comissões automáticas',
       'Suporte prioritário',
@@ -68,8 +69,8 @@ export const PLANS: PlanDefinition[] = [
   {
     tier: 'enterprise',
     name: 'Enterprise',
-    price: 3500,
-    yearlyPrice: 35000,
+    price: 2500,
+    yearlyPrice: 25000, // 2 meses grátis
     description: 'Para grandes operações com múltiplas filiais',
     badge: 'Máximo Poder',
     maxProducts: -1, // unlimited
@@ -77,12 +78,13 @@ export const PLANS: PlanDefinition[] = [
     maxStores: -1,
     features: [
       'Tudo do Profissional +',
+      'Usuários ilimitados',
       'Produtos ilimitados',
-      'Vendedores ilimitados',
       'Lojas ilimitadas',
       'IA para Insights de Negócio',
       'Dashboard CEO',
       'Motor de Compliance',
+      'Multi-filial completo',
       'API personalizada',
       'Gerente de conta dedicado',
     ],
