@@ -59,6 +59,7 @@ import ContactPage from "./pages/ContactPage";
 import ResellersNetworkPage from "./pages/ResellersNetworkPage";
 import SalesMaterialsPage from "./pages/SalesMaterialsPage";
 import NotFound from "./pages/NotFound";
+import { I18nProvider } from "@/contexts/i18n";
 
 const queryClient = new QueryClient({
   defaultOptions: {
