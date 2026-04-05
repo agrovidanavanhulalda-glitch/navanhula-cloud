@@ -131,6 +131,7 @@ const navGroups: NavGroup[] = [
     roles: ['admin', 'ceo', 'accountant'],
     items: [
       { label: 'Compliance Hub', href: '/app/compliance', icon: Shield },
+      { label: 'Agente de Auditoria', href: '/app/auditoria', icon: Shield },
     ],
   },
   {

@@ -4646,6 +4646,42 @@ export type Database = {
           },
         ]
       }
+      system_audit_logs: {
+        Row: {
+          action_taken: string | null
+          check_name: string
+          created_at: string
+          details: Json | null
+          id: string
+          message: string
+          module: string
+          severity: string
+          status: string
+        }
+        Insert: {
+          action_taken?: string | null
+          check_name: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          message: string
+          module: string
+          severity?: string
+          status?: string
+        }
+        Update: {
+          action_taken?: string | null
+          check_name?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          message?: string
+          module?: string
+          severity?: string
+          status?: string
+        }
+        Relationships: []
+      }
       tax_calculations: {
         Row: {
           base_amount: number
