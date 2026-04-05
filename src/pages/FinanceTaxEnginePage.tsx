@@ -161,11 +161,25 @@ const FinanceTaxEnginePage: React.FC = () => {
     const startDate = new Date(year, month - 1, 1).toISOString().slice(0, 10);
     const endDate = new Date(year, month, 0).toISOString().slice(0, 10);
 
+    // Fetch CMV (cost of goods sold) for the period
+    const startDateISO = `${startDate}T00:00:00`;
+    const endDateISO = `${endDate}T23:59:59`;
+    const { data: saleItemsData } = await supabase
+      .from('sale_items')
+      .select('cost_price, quantity')
+      .gte('created_at', startDateISO)
+      .lte('created_at', endDateISO);
+    const cmv = (saleItemsData || []).reduce((s, i) => s + (Number(i.cost_price || 0) * Number(i.quantity || 0)), 0);
+
+    // Check for incomplete data
+    const hasIncompleteData = cmv === 0 && salesTotal > 0;
+
     // IVA = 16% of sales
     const ivaAmount = salesTotal * 0.16;
-    // IRPC = 3% of profit
-    const profit = salesTotal - expensesTotal;
-    const irpcAmount = Math.max(0, profit * 0.03);
+    // Lucro = Receita - CMV - Despesas - Salários (fórmula correta)
+    const realProfit = salesTotal - cmv - expensesTotal - payrollTotal;
+    // IRPC = 3% of profit (only if positive)
+    const irpcAmount = realProfit > 0 ? realProfit * 0.03 : 0;
     // INSS from payroll
     const payrolls = await supabase
       .from('payroll_runs')
