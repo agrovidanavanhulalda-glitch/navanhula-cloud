@@ -93,6 +93,7 @@ const FinanceTaxEnginePage: React.FC = () => {
   const [salesProfit, setSalesProfit] = useState(0);
   const [expensesTotal, setExpensesTotal] = useState(0);
   const [payrollTotal, setPayrollTotal] = useState(0);
+  const [cmvTotal, setCmvTotal] = useState(0);
 
   const { month, year } = currentMonth();
 
@@ -104,7 +105,7 @@ const FinanceTaxEnginePage: React.FC = () => {
     const startDate = new Date(year, month - 1, 1).toISOString();
     const endDate = new Date(year, month, 0, 23, 59, 59).toISOString();
 
-    const [salesRes, expRes, payRes, taxRes, scoreRes] = await Promise.all([
+    const [salesRes, expRes, payRes, taxRes, scoreRes, saleItemsRes] = await Promise.all([
       supabase
         .from('sales')
         .select('total, profit')
@@ -119,7 +120,7 @@ const FinanceTaxEnginePage: React.FC = () => {
         .lte('expense_date', endDate.slice(0, 10)),
       supabase
         .from('payroll_runs')
-        .select('net_salary, inss_employee, inss_employer')
+        .select('net_salary, inss_employee, inss_employer, total_cost')
         .eq('company_id', company.id)
         .gte('created_at', startDate)
         .lte('created_at', endDate),
@@ -136,6 +137,11 @@ const FinanceTaxEnginePage: React.FC = () => {
         .order('period_year', { ascending: false })
         .order('period_month', { ascending: false })
         .limit(12),
+      supabase
+        .from('sale_items')
+        .select('cost_price, quantity')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate),
     ]);
 
     const sales = salesRes.data || [];
@@ -144,7 +150,10 @@ const FinanceTaxEnginePage: React.FC = () => {
     setExpensesTotal((expRes.data || []).reduce((s, r) => s + Number(r.amount || 0), 0));
 
     const payrolls = payRes.data || [];
-    setPayrollTotal(payrolls.reduce((s, r) => s + Number(r.net_salary || 0), 0));
+    setPayrollTotal(payrolls.reduce((s, r) => s + Number(r.total_cost || r.net_salary || 0), 0));
+
+    const cmv = (saleItemsRes.data || []).reduce((s, i) => s + (Number(i.cost_price || 0) * Number(i.quantity || 0)), 0);
+    setCmvTotal(cmv);
 
     setTaxCalcs((taxRes.data as TaxCalc[]) || []);
     setScores((scoreRes.data as FinScore[]) || []);
@@ -161,11 +170,25 @@ const FinanceTaxEnginePage: React.FC = () => {
     const startDate = new Date(year, month - 1, 1).toISOString().slice(0, 10);
     const endDate = new Date(year, month, 0).toISOString().slice(0, 10);
 
+    // Fetch CMV (cost of goods sold) for the period
+    const startDateISO = `${startDate}T00:00:00`;
+    const endDateISO = `${endDate}T23:59:59`;
+    const { data: saleItemsData } = await supabase
+      .from('sale_items')
+      .select('cost_price, quantity')
+      .gte('created_at', startDateISO)
+      .lte('created_at', endDateISO);
+    const cmv = (saleItemsData || []).reduce((s, i) => s + (Number(i.cost_price || 0) * Number(i.quantity || 0)), 0);
+
+    // Check for incomplete data
+    const hasIncompleteData = cmv === 0 && salesTotal > 0;
+
     // IVA = 16% of sales
     const ivaAmount = salesTotal * 0.16;
-    // IRPC = 3% of profit
-    const profit = salesTotal - expensesTotal;
-    const irpcAmount = Math.max(0, profit * 0.03);
+    // Lucro = Receita - CMV - Despesas - Salários (fórmula correta)
+    const realProfit = salesTotal - cmv - expensesTotal - payrollTotal;
+    // IRPC = 3% of profit (only if positive)
+    const irpcAmount = realProfit > 0 ? realProfit * 0.03 : 0;
     // INSS from payroll
     const payrolls = await supabase
       .from('payroll_runs')
@@ -180,7 +203,7 @@ const FinanceTaxEnginePage: React.FC = () => {
 
     const taxes = [
       { tax_type: 'iva', base_amount: salesTotal, tax_rate: 16, tax_amount: ivaAmount },
-      { tax_type: 'irpc', base_amount: profit, tax_rate: 3, tax_amount: irpcAmount },
+      { tax_type: 'irpc', base_amount: realProfit, tax_rate: 3, tax_amount: irpcAmount },
       { tax_type: 'inss_employee', base_amount: payrollTotal, tax_rate: 3, tax_amount: inssEmp || payrollTotal * 0.03 },
       { tax_type: 'inss_employer', base_amount: payrollTotal, tax_rate: 4, tax_amount: inssEr || payrollTotal * 0.04 },
     ];
@@ -205,11 +228,14 @@ const FinanceTaxEnginePage: React.FC = () => {
     if (error) {
       toast.error('Erro ao calcular impostos');
     } else {
+      if (hasIncompleteData) {
+        toast.warning('⚠️ Dados fiscais incompletos — CMV não registado. Lucro pode estar inflacionado.');
+      }
       // Also upsert financial score
       const totalTaxes = taxCalcs.filter(t => t.period_start >= `${year}-01-01`).length;
       const paidOnTime = taxCalcs.filter(t => t.status === 'paid').length;
 
-      const profitMargin = salesTotal > 0 ? (profit / salesTotal) * 100 : 0;
+      const profitMargin = salesTotal > 0 ? (realProfit / salesTotal) * 100 : 0;
       const paymentScore = totalTaxes > 0 ? (paidOnTime / totalTaxes) * 40 : 20;
       const profitScore = Math.min(30, Math.max(0, profitMargin));
       const consistencyScore = salesTotal > 0 ? 30 : 0;
@@ -221,8 +247,8 @@ const FinanceTaxEnginePage: React.FC = () => {
         period_year: year,
         score: Math.min(100, score),
         revenue: salesTotal,
-        expenses: expensesTotal,
-        profit,
+        expenses: expensesTotal + cmv + payrollTotal,
+        profit: realProfit,
         taxes_paid_on_time: paidOnTime,
         taxes_total: totalTaxes + 4,
       }, { onConflict: 'company_id,period_month,period_year' });
@@ -246,13 +272,16 @@ const FinanceTaxEnginePage: React.FC = () => {
   , [taxCalcs]);
 
   const latestScore = scores[0];
-  const profit = salesTotal - expensesTotal;
+  // Fórmula correta: Lucro = Receita - CMV - Despesas - Salários
+  const profit = salesTotal - cmvTotal - expensesTotal - payrollTotal;
+  const hasIncompleteData = cmvTotal === 0 && salesTotal > 0;
 
   const scoreColor = (s: number) => s >= 70 ? 'text-green-600' : s >= 40 ? 'text-amber-600' : 'text-destructive';
 
   /* ----- Alerts ----- */
   const alerts = useMemo(() => {
     const a: { level: 'warning' | 'critical'; msg: string }[] = [];
+    if (hasIncompleteData) a.push({ level: 'warning', msg: '⚠️ Dados fiscais incompletos — CMV (custo de mercadorias) não registado. Lucro pode estar inflacionado.' });
     if (totalTaxDue > 0) a.push({ level: 'warning', msg: `${formatCurrency(totalTaxDue)} em impostos pendentes este mês` });
     if (profit < 0) a.push({ level: 'critical', msg: `Prejuízo de ${formatCurrency(Math.abs(profit))} no período` });
     taxCalcs.filter(t => t.status === 'overdue').forEach(t =>
@@ -260,7 +289,7 @@ const FinanceTaxEnginePage: React.FC = () => {
     );
     if (latestScore && latestScore.score < 40) a.push({ level: 'critical', msg: 'Score financeiro crítico — atenção imediata necessária' });
     return a;
-  }, [totalTaxDue, profit, taxCalcs, latestScore]);
+  }, [totalTaxDue, profit, taxCalcs, latestScore, hasIncompleteData]);
 
   /* ----- DRE data ----- */
   const dre = useMemo(() => {
@@ -269,13 +298,14 @@ const FinanceTaxEnginePage: React.FC = () => {
     const totalTax = (ivaCalc?.tax_amount || 0) + (irpcCalc?.tax_amount || 0);
     return {
       revenue: salesTotal,
+      cmv: cmvTotal,
       expenses: expensesTotal,
       payroll: payrollTotal,
-      grossProfit: salesTotal - expensesTotal,
+      grossProfit: salesTotal - cmvTotal,
       taxes: totalTax,
-      netProfit: salesTotal - expensesTotal - totalTax - payrollTotal,
+      netProfit: salesTotal - cmvTotal - expensesTotal - totalTax - payrollTotal,
     };
-  }, [salesTotal, expensesTotal, payrollTotal, taxCalcs, month, year]);
+  }, [salesTotal, cmvTotal, expensesTotal, payrollTotal, taxCalcs, month, year]);
 
   /* ----- Export PDF ----- */
   const handleExportDRE = () => {
@@ -293,7 +323,9 @@ const FinanceTaxEnginePage: React.FC = () => {
       totalSales: 0,
       byMethod: {
         'Receita Bruta': dre.revenue,
-        'Despesas': dre.expenses,
+        'CMV (Custo Mercadorias)': dre.cmv,
+        'Lucro Bruto': dre.grossProfit,
+        'Despesas Operacionais': dre.expenses,
         'Salários': dre.payroll,
         'Impostos': dre.taxes,
       },
