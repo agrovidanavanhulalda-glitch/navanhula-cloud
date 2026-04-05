@@ -206,6 +206,7 @@ const AppRoutes = () => {
         <Route path="rh" element={<Navigate to="/app/financeiro-rh?tab=employees" replace />} />
         <Route path="tax-engine" element={<Navigate to="/app/financeiro-rh?tab=taxes" replace />} />
         <Route path="bi" element={<BIDashboardPage />} />
+
         <Route path="ai" element={<SubscriptionGate><AIBusinessEnginePage /></SubscriptionGate>} />
         <Route path="documentos" element={<SubscriptionGate><DocumentsCenterPage /></SubscriptionGate>} />
         <Route path="agricultura" element={<SubscriptionGate><AgriculturePage /></SubscriptionGate>} />
