@@ -4067,6 +4067,39 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_view: boolean
+          created_at: string
+          id: string
+          module: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_view?: boolean
+          created_at?: string
+          id?: string
+          module: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_view?: boolean
+          created_at?: string
+          id?: string
+          module?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       sale_items: {
         Row: {
           cost_price: number
@@ -5158,7 +5191,15 @@ export type Database = {
     }
     Enums: {
       accounting_entry_type: "revenue" | "expense" | "tax" | "transfer"
-      app_role: "admin" | "manager" | "seller" | "ceo" | "reseller"
+      app_role:
+        | "admin"
+        | "manager"
+        | "seller"
+        | "ceo"
+        | "reseller"
+        | "director"
+        | "hr"
+        | "cashier"
       billing_payment_method: "mpesa" | "emola" | "manual"
       cash_register_status: "open" | "closed"
       fiscal_document_type:
@@ -5323,7 +5364,16 @@ export const Constants = {
   public: {
     Enums: {
       accounting_entry_type: ["revenue", "expense", "tax", "transfer"],
-      app_role: ["admin", "manager", "seller", "ceo", "reseller"],
+      app_role: [
+        "admin",
+        "manager",
+        "seller",
+        "ceo",
+        "reseller",
+        "director",
+        "hr",
+        "cashier",
+      ],
       billing_payment_method: ["mpesa", "emola", "manual"],
       cash_register_status: ["open", "closed"],
       fiscal_document_type: [
