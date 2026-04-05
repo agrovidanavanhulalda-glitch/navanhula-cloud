@@ -6,9 +6,9 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { label: 'Home', hash: '#top' },
-  { label: 'Sobre', hash: '#sobre' },
+  { label: 'Sobre', hash: '#beneficios' },
+  { label: 'Teste Grátis', hash: '#teste-gratis' },
   { label: 'Preços', hash: '#precos' },
-  { label: 'Recursos', hash: '#recursos' },
   { label: 'Contacto', hash: '#contacto' },
 ];
 
