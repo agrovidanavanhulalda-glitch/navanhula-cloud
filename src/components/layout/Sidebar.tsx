@@ -182,15 +182,34 @@ const Sidebar: React.FC = () => {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
 
-  const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo';
+  const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
   const isReseller = role === 'reseller';
   const rawName = currentCashRegister?.sellerName || user?.full_name || '';
   const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : 'Operador';
   const currentOperatorRole =
     role === 'reseller' ? 'Revendedor' :
     role === 'ceo' ? 'CEO' :
-    role === 'manager' ? 'Gerente' :
+    role === 'director' ? 'Diretor' :
+    role === 'manager' ? 'Gestor' :
+    role === 'hr' ? 'RH' :
+    role === 'cashier' ? 'Caixa' :
     isBackofficeAdmin ? 'Administrador' : 'Vendedor';
+
+  // Filter Dashboard sub-items by role
+  const filterDashboardItems = (items: SubItem[]): SubItem[] => {
+    const dashboardVisibility: Record<string, string[]> = {
+      '/app/ceo': ['ceo', 'admin'],
+      '/app/dashboard/diretor': ['director', 'ceo', 'admin'],
+      '/app/dashboard/gestor': ['manager', 'director', 'ceo', 'admin'],
+      '/app/dashboard/rh': ['hr', 'director', 'ceo', 'admin'],
+      '/app/bi': ['ceo', 'admin', 'director'],
+    };
+    return items.filter(item => {
+      const allowed = dashboardVisibility[item.href];
+      if (!allowed) return true;
+      return allowed.includes(role || '');
+    });
+  };
 
   const handleLogout = async () => {
     await signOut();
