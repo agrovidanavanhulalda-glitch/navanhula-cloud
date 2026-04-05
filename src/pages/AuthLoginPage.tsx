@@ -29,7 +29,7 @@ const AuthLoginPage: React.FC = () => {
   useEffect(() => {
     if (!loading && isAuthenticated) {
       console.log('[Login] User authenticated, redirecting...');
-      navigate(role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard', { replace: true });
+      navigate(getDefaultRouteForRole(role), { replace: true });
     }
   }, [loading, isAuthenticated, role, navigate]);
 
