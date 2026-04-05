@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Menu, X } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import UrgencyBanner from '@/components/public/landing/UrgencyBanner';
 
 const navItems = [
   { label: 'Home', hash: '#top' },
-  { label: 'Sobre', hash: '#sobre' },
+  { label: 'Sobre', hash: '#beneficios' },
+  { label: 'Teste Grátis', hash: '#teste-gratis' },
   { label: 'Preços', hash: '#precos' },
-  { label: 'Recursos', hash: '#recursos' },
   { label: 'Contacto', hash: '#contacto' },
 ];
 
@@ -43,6 +44,7 @@ const PublicSiteLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <UrgencyBanner />
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur">
         <div className="container flex flex-col gap-4 py-4 md:h-20 md:flex-row md:items-center md:justify-between md:py-0">
           <div className="flex items-center justify-between gap-4">
