@@ -194,7 +194,7 @@ const FinanceTaxEnginePage: React.FC = () => {
 
     const taxes = [
       { tax_type: 'iva', base_amount: salesTotal, tax_rate: 16, tax_amount: ivaAmount },
-      { tax_type: 'irpc', base_amount: profit, tax_rate: 3, tax_amount: irpcAmount },
+      { tax_type: 'irpc', base_amount: realProfit, tax_rate: 3, tax_amount: irpcAmount },
       { tax_type: 'inss_employee', base_amount: payrollTotal, tax_rate: 3, tax_amount: inssEmp || payrollTotal * 0.03 },
       { tax_type: 'inss_employer', base_amount: payrollTotal, tax_rate: 4, tax_amount: inssEr || payrollTotal * 0.04 },
     ];
@@ -219,11 +219,14 @@ const FinanceTaxEnginePage: React.FC = () => {
     if (error) {
       toast.error('Erro ao calcular impostos');
     } else {
+      if (hasIncompleteData) {
+        toast.warning('⚠️ Dados fiscais incompletos — CMV não registado. Lucro pode estar inflacionado.');
+      }
       // Also upsert financial score
       const totalTaxes = taxCalcs.filter(t => t.period_start >= `${year}-01-01`).length;
       const paidOnTime = taxCalcs.filter(t => t.status === 'paid').length;
 
-      const profitMargin = salesTotal > 0 ? (profit / salesTotal) * 100 : 0;
+      const profitMargin = salesTotal > 0 ? (realProfit / salesTotal) * 100 : 0;
       const paymentScore = totalTaxes > 0 ? (paidOnTime / totalTaxes) * 40 : 20;
       const profitScore = Math.min(30, Math.max(0, profitMargin));
       const consistencyScore = salesTotal > 0 ? 30 : 0;
@@ -235,8 +238,8 @@ const FinanceTaxEnginePage: React.FC = () => {
         period_year: year,
         score: Math.min(100, score),
         revenue: salesTotal,
-        expenses: expensesTotal,
-        profit,
+        expenses: expensesTotal + cmv + payrollTotal,
+        profit: realProfit,
         taxes_paid_on_time: paidOnTime,
         taxes_total: totalTaxes + 4,
       }, { onConflict: 'company_id,period_month,period_year' });
