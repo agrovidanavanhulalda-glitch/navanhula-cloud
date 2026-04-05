@@ -272,13 +272,16 @@ const FinanceTaxEnginePage: React.FC = () => {
   , [taxCalcs]);
 
   const latestScore = scores[0];
-  const profit = salesTotal - expensesTotal;
+  // Fórmula correta: Lucro = Receita - CMV - Despesas - Salários
+  const profit = salesTotal - cmvTotal - expensesTotal - payrollTotal;
+  const hasIncompleteData = cmvTotal === 0 && salesTotal > 0;
 
   const scoreColor = (s: number) => s >= 70 ? 'text-green-600' : s >= 40 ? 'text-amber-600' : 'text-destructive';
 
   /* ----- Alerts ----- */
   const alerts = useMemo(() => {
     const a: { level: 'warning' | 'critical'; msg: string }[] = [];
+    if (hasIncompleteData) a.push({ level: 'warning', msg: '⚠️ Dados fiscais incompletos — CMV (custo de mercadorias) não registado. Lucro pode estar inflacionado.' });
     if (totalTaxDue > 0) a.push({ level: 'warning', msg: `${formatCurrency(totalTaxDue)} em impostos pendentes este mês` });
     if (profit < 0) a.push({ level: 'critical', msg: `Prejuízo de ${formatCurrency(Math.abs(profit))} no período` });
     taxCalcs.filter(t => t.status === 'overdue').forEach(t =>
@@ -286,7 +289,7 @@ const FinanceTaxEnginePage: React.FC = () => {
     );
     if (latestScore && latestScore.score < 40) a.push({ level: 'critical', msg: 'Score financeiro crítico — atenção imediata necessária' });
     return a;
-  }, [totalTaxDue, profit, taxCalcs, latestScore]);
+  }, [totalTaxDue, profit, taxCalcs, latestScore, hasIncompleteData]);
 
   /* ----- DRE data ----- */
   const dre = useMemo(() => {
@@ -295,13 +298,14 @@ const FinanceTaxEnginePage: React.FC = () => {
     const totalTax = (ivaCalc?.tax_amount || 0) + (irpcCalc?.tax_amount || 0);
     return {
       revenue: salesTotal,
+      cmv: cmvTotal,
       expenses: expensesTotal,
       payroll: payrollTotal,
-      grossProfit: salesTotal - expensesTotal,
+      grossProfit: salesTotal - cmvTotal,
       taxes: totalTax,
-      netProfit: salesTotal - expensesTotal - totalTax - payrollTotal,
+      netProfit: salesTotal - cmvTotal - expensesTotal - totalTax - payrollTotal,
     };
-  }, [salesTotal, expensesTotal, payrollTotal, taxCalcs, month, year]);
+  }, [salesTotal, cmvTotal, expensesTotal, payrollTotal, taxCalcs, month, year]);
 
   /* ----- Export PDF ----- */
   const handleExportDRE = () => {
