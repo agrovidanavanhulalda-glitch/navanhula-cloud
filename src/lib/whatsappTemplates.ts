@@ -181,7 +181,7 @@ export function buildWhatsAppUrl(phone: string, message: string): string {
 export function fillTemplate(template: WhatsAppTemplate, values: Record<string, string>): string {
   let msg = template.message;
   for (const [key, value] of Object.entries(values)) {
-    msg = msg.replaceAll(`{{${key}}}`, value);
+    msg = msg.split(`{{${key}}}`).join(value);
   }
   return msg;
 }
