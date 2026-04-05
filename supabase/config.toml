@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.system-audit]
 verify_jwt = false
+
+[functions.seed-users]
+verify_jwt = false
