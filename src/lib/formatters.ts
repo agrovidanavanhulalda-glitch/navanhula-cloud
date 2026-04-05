@@ -1,19 +1,40 @@
-// Currency and number formatters for Mozambican Metical
+// Currency and number formatters — multi-currency aware
+import { getCountryConfig, type CountryConfig } from './countries';
 
-export const formatCurrency = (value: number): string => {
-  const formatted = new Intl.NumberFormat('pt-MZ', {
+// Current country config — defaults to MZ, can be overridden per-company
+let _currentCountry: CountryConfig = getCountryConfig('MZ');
+
+export function setFormatterCountry(countryCode: string) {
+  _currentCountry = getCountryConfig(countryCode);
+}
+
+export function getFormatterCountry(): CountryConfig {
+  return _currentCountry;
+}
+
+export const formatCurrency = (value: number, countryCode?: string): string => {
+  const cfg = countryCode ? getCountryConfig(countryCode) : _currentCountry;
+  const formatted = new Intl.NumberFormat(cfg.locale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
-  return `${formatted} MT`;
+  return `${formatted} ${cfg.currencySymbol}`;
+};
+
+export const formatCurrencyISO = (value: number, countryCode?: string): string => {
+  const cfg = countryCode ? getCountryConfig(countryCode) : _currentCountry;
+  return new Intl.NumberFormat(cfg.locale, {
+    style: 'currency',
+    currency: cfg.currency,
+  }).format(value);
 };
 
 export const formatNumber = (value: number): string => {
-  return new Intl.NumberFormat('pt-MZ').format(value);
+  return new Intl.NumberFormat(_currentCountry.locale).format(value);
 };
 
 export const formatPercent = (value: number): string => {
-  return new Intl.NumberFormat('pt-MZ', {
+  return new Intl.NumberFormat(_currentCountry.locale, {
     style: 'percent',
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
@@ -21,7 +42,7 @@ export const formatPercent = (value: number): string => {
 };
 
 export const formatDate = (date: string | Date): string => {
-  return new Intl.DateTimeFormat('pt-MZ', {
+  return new Intl.DateTimeFormat(_currentCountry.dateFormat, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -29,7 +50,7 @@ export const formatDate = (date: string | Date): string => {
 };
 
 export const formatDateTime = (date: string | Date): string => {
-  return new Intl.DateTimeFormat('pt-MZ', {
+  return new Intl.DateTimeFormat(_currentCountry.dateFormat, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -39,7 +60,7 @@ export const formatDateTime = (date: string | Date): string => {
 };
 
 export const formatTime = (date: string | Date): string => {
-  return new Intl.DateTimeFormat('pt-MZ', {
+  return new Intl.DateTimeFormat(_currentCountry.dateFormat, {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(date));
