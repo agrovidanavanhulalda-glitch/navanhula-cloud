@@ -240,7 +240,10 @@ const Sidebar: React.FC = () => {
   const renderCollapsibleGroup = (group: NavGroup) => {
     if (group.roles && !group.roles.includes(role || 'seller')) return null;
     const Icon = group.icon;
-    const hasActive = groupHasActive(group.items);
+    // Filter items for Dashboard group based on role
+    const visibleItems = group.title === 'Dashboard' ? filterDashboardItems(group.items) : group.items;
+    if (visibleItems.length === 0) return null;
+    const hasActive = groupHasActive(visibleItems);
 
     return (
       <Collapsible key={group.title} defaultOpen={hasActive} className="group/collapsible">
