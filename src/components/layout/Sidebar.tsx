@@ -263,7 +263,7 @@ const Sidebar: React.FC = () => {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <SidebarMenuSub>
-              {group.items.map(renderSubItem)}
+              {visibleItems.map(renderSubItem)}
             </SidebarMenuSub>
           </CollapsibleContent>
         </SidebarMenuItem>
