@@ -16,6 +16,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, PieChart, Pie, Cell, AreaChart, Area, Line
 } from 'recharts';
+import RevenueWidget from '@/components/monetization/RevenueWidget';
 
 const COLORS = ['hsl(217,91%,53%)', 'hsl(160,84%,39%)', 'hsl(38,92%,50%)', 'hsl(199,89%,48%)', 'hsl(280,67%,55%)', 'hsl(0,84%,60%)'];
 
@@ -201,6 +202,23 @@ const CEODashboardPage: React.FC = () => {
           <p className="text-xl font-bold">{stats?.sales_today ?? 0}</p>
         </Card>
       </div>
+
+      {/* Revenue Analytics Widget */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-primary" /> Métricas de Monetização
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RevenueWidget
+            platformRevenue={stats?.platform_revenue_month ?? 0}
+            activeSubscriptions={stats?.active_subscriptions ?? 0}
+            trialUsers={stats?.trial_subscriptions ?? 0}
+            totalStores={stats?.total_stores ?? 0}
+          />
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="ranking" className="space-y-4">
         <TabsList className="flex-wrap">
