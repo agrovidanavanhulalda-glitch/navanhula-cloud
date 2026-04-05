@@ -15,9 +15,6 @@ import { formatCurrency } from '@/lib/formatters';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, PieChart, Pie, Cell, AreaChart, Area, Line
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, PieChart, Pie, Cell, AreaChart, Area, Line
 } from 'recharts';
 import RevenueWidget from '@/components/monetization/RevenueWidget';
 
