@@ -93,6 +93,7 @@ const FinanceTaxEnginePage: React.FC = () => {
   const [salesProfit, setSalesProfit] = useState(0);
   const [expensesTotal, setExpensesTotal] = useState(0);
   const [payrollTotal, setPayrollTotal] = useState(0);
+  const [cmvTotal, setCmvTotal] = useState(0);
 
   const { month, year } = currentMonth();
 
@@ -104,7 +105,7 @@ const FinanceTaxEnginePage: React.FC = () => {
     const startDate = new Date(year, month - 1, 1).toISOString();
     const endDate = new Date(year, month, 0, 23, 59, 59).toISOString();
 
-    const [salesRes, expRes, payRes, taxRes, scoreRes] = await Promise.all([
+    const [salesRes, expRes, payRes, taxRes, scoreRes, saleItemsRes] = await Promise.all([
       supabase
         .from('sales')
         .select('total, profit')
@@ -119,7 +120,7 @@ const FinanceTaxEnginePage: React.FC = () => {
         .lte('expense_date', endDate.slice(0, 10)),
       supabase
         .from('payroll_runs')
-        .select('net_salary, inss_employee, inss_employer')
+        .select('net_salary, inss_employee, inss_employer, total_cost')
         .eq('company_id', company.id)
         .gte('created_at', startDate)
         .lte('created_at', endDate),
@@ -136,6 +137,11 @@ const FinanceTaxEnginePage: React.FC = () => {
         .order('period_year', { ascending: false })
         .order('period_month', { ascending: false })
         .limit(12),
+      supabase
+        .from('sale_items')
+        .select('cost_price, quantity')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate),
     ]);
 
     const sales = salesRes.data || [];
@@ -144,7 +150,10 @@ const FinanceTaxEnginePage: React.FC = () => {
     setExpensesTotal((expRes.data || []).reduce((s, r) => s + Number(r.amount || 0), 0));
 
     const payrolls = payRes.data || [];
-    setPayrollTotal(payrolls.reduce((s, r) => s + Number(r.net_salary || 0), 0));
+    setPayrollTotal(payrolls.reduce((s, r) => s + Number(r.total_cost || r.net_salary || 0), 0));
+
+    const cmv = (saleItemsRes.data || []).reduce((s, i) => s + (Number(i.cost_price || 0) * Number(i.quantity || 0)), 0);
+    setCmvTotal(cmv);
 
     setTaxCalcs((taxRes.data as TaxCalc[]) || []);
     setScores((scoreRes.data as FinScore[]) || []);
