@@ -95,15 +95,49 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Prevent horizontal overflow globally */
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  /* Responsive images & media */
+  img, video, svg, canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Responsive tables */
+  table {
+    max-width: 100%;
+  }
+
+  /* Word break for long text */
+  p, span, h1, h2, h3, h4, h5, h6, li, td, th, label {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Inputs must respect container width */
+  input, textarea, select {
+    max-width: 100%;
+    min-width: 0;
   }
 
   /* Refined scrollbar */
