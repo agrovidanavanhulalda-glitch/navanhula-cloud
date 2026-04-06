@@ -132,13 +132,13 @@ const LocalPOSPage: React.FC = () => {
   const lastSale = getLastSale();
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row">
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col md:flex-row w-full max-w-full overflow-x-hidden">
       {/* Products Grid - Left Side */}
-      <div className="flex-1 p-4 overflow-auto">
+      <div className="flex-1 p-3 md:p-4 overflow-y-auto overflow-x-hidden min-w-0">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold">PDV - {store.name}</h1>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
+          <div className="min-w-0">
+            <h1 className="text-lg md:text-2xl font-bold truncate">PDV - {store.name}</h1>
             <p className="text-sm text-muted-foreground">Operador: {user?.full_name || 'N/A'}</p>
           </div>
           <Badge variant={cashRegisterOpen ? 'default' : 'destructive'}>
@@ -261,7 +261,7 @@ const LocalPOSPage: React.FC = () => {
       </div>
 
       {/* Cart - Right Side */}
-      <div className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-card flex flex-col max-h-[50vh] md:max-h-none">
+      <div className="w-full md:w-80 lg:w-96 border-t md:border-t-0 md:border-l bg-card flex flex-col md:max-h-[calc(100vh-4rem)] min-w-0">
         {/* Cart Header */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">

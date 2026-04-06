@@ -19,34 +19,34 @@ const MainLayout: React.FC = () => {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col w-full max-w-full overflow-x-hidden">
         {/* Mobile header — sticky so content scrolls beneath */}
         <header
-          className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-card border-b border-border safe-top"
+          className="sticky top-0 z-50 flex items-center justify-between px-3 py-2.5 bg-card border-b border-border safe-top"
           style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
         >
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Button variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0">
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-72">
+            <SheetContent side="left" className="p-0 w-72 overflow-y-auto">
               <SidebarProvider>
                 <Sidebar />
               </SidebarProvider>
             </SheetContent>
           </Sheet>
           
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
               style={{ background: 'var(--gradient-primary)' }}>
-              <ShoppingCart className="w-4 h-4 text-white" />
+              <ShoppingCart className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="font-bold text-sm tracking-tight text-foreground">NAVANHULA CLOUD</span>
+            <span className="font-bold text-xs tracking-tight text-foreground truncate">NAVANHULA</span>
           </div>
           
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 flex-shrink-0">
             <LanguageSelector />
             <NotificationBell />
             <NetworkIndicator />
@@ -54,14 +54,14 @@ const MainLayout: React.FC = () => {
         </header>
 
         {/* Mobile breadcrumb */}
-        <div className="px-4 py-2 border-b border-border bg-card">
+        <div className="px-3 py-1.5 border-b border-border bg-card overflow-x-auto">
           <AppBreadcrumb />
         </div>
 
         <UpsellBanner />
 
-        {/* Mobile content — proper padding, no overlap */}
-        <main className="flex-1 p-4 pb-6 safe-bottom overflow-auto">
+        {/* Mobile content — proper padding, no overlap, vertical scroll only */}
+        <main className="flex-1 p-3 pb-6 safe-bottom overflow-y-auto overflow-x-hidden w-full max-w-full">
           <Outlet />
         </main>
 
@@ -72,26 +72,26 @@ const MainLayout: React.FC = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full bg-background overflow-x-hidden">
         <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {/* Desktop top bar */}
           <header
             className="sticky top-0 z-50 flex items-center gap-4 px-6 py-2.5 border-b border-border bg-card"
             style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
           >
             <SidebarTrigger className="-ml-2" />
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <AppBreadcrumb />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <LanguageSelector />
               <NotificationBell />
               <NetworkIndicator />
             </div>
           </header>
           <UpsellBanner />
-          <main className="flex-1 overflow-auto bg-background">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden bg-background">
             <Outlet />
           </main>
           <Footer />
