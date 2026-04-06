@@ -47,26 +47,26 @@ const PublicSiteLayout: React.FC = () => {
       <UrgencyBanner />
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur">
         <div className="container flex flex-col gap-4 py-4 md:h-20 md:flex-row md:items-center md:justify-between md:py-0">
-          <div className="flex items-center justify-between gap-4">
-            <button type="button" onClick={() => handleSectionNavigation('#top')} className="flex items-center gap-3 text-left">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <button type="button" onClick={() => handleSectionNavigation('#top')} className="flex items-center gap-2 text-left min-w-0 shrink">
               <div
-                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground md:h-11 md:w-11 md:rounded-2xl"
                 style={{ boxShadow: 'var(--shadow-glow)' }}
               >
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
               </div>
-              <div>
-                <p className="text-lg font-bold tracking-tight">NAVANHULA CLOUD</p>
-                <p className="text-xs text-muted-foreground">Plataforma de gestão empresarial.</p>
+              <div className="min-w-0">
+                <p className="text-sm font-bold tracking-tight truncate md:text-lg">NAVANHULA CLOUD</p>
+                <p className="text-[10px] text-muted-foreground truncate md:text-xs">Plataforma de gestão empresarial.</p>
               </div>
             </button>
 
-            <div className="flex items-center gap-2 md:hidden">
-              <Button variant="ghost" asChild>
+            <div className="flex items-center gap-1 shrink-0 md:hidden">
+              <Button variant="ghost" size="sm" asChild>
                 <Link to="/login">Entrar</Link>
               </Button>
-              <Button asChild>
-                <Link to="/registrar">CRIAR CONTA</Link>
+              <Button size="sm" asChild>
+                <Link to="/registrar" className="text-xs">CRIAR CONTA</Link>
               </Button>
             </div>
           </div>
