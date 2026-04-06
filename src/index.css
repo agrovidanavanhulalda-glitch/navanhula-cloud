@@ -101,6 +101,7 @@
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
+    min-height: 100%;
   }
 
   body {
@@ -108,6 +109,10 @@
     font-family: 'Inter', system-ui, sans-serif;
     overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    visibility: visible;
+    opacity: 1;
   }
 
   /* Prevent horizontal overflow globally */
@@ -115,6 +120,12 @@
     overflow-x: hidden;
     width: 100%;
     min-height: 100vh;
+    min-height: 100dvh;
+    display: block;
+    position: relative;
+    isolation: isolate;
+    visibility: visible;
+    opacity: 1;
   }
 
   /* Responsive images & media */
