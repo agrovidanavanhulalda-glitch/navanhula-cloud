@@ -19,16 +19,17 @@ const miniFeatures = [
 ];
 
 const HeroSection: React.FC = () => (
-  <section className="relative overflow-hidden border-b border-border/60">
+  <section className="relative isolate overflow-hidden border-b border-border/60">
     <div
-      className="pointer-events-none absolute inset-0"
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 -z-10"
       style={{
         background:
           'radial-gradient(ellipse 80% 60% at 20% 0%, hsl(var(--primary) / 0.18), transparent 50%), radial-gradient(ellipse 60% 50% at 80% 10%, hsl(var(--accent) / 0.14), transparent 50%)',
       }}
     />
 
-    <div className="container relative grid gap-12 py-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-28">
+    <div className="container relative z-10 grid gap-12 py-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-28">
       {/* Copy */}
       <div className="space-y-8">
         <Badge variant="secondary" className="rounded-full px-4 py-1.5 text-sm font-semibold">
@@ -72,7 +73,7 @@ const HeroSection: React.FC = () => (
           className="absolute -inset-4 rounded-[2.5rem] blur-3xl"
           style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.2), transparent 70%)' }}
         />
-        <Card className="relative overflow-hidden rounded-[2rem] border-border/80 p-4 shadow-2xl" style={{ backgroundImage: 'var(--gradient-dark)' }}>
+        <Card className="relative overflow-hidden rounded-[2rem] border-border/80 bg-card p-4 shadow-2xl" style={{ backgroundImage: 'var(--gradient-card)' }}>
           <div className="space-y-4 rounded-[1.5rem] border border-border/60 bg-background/90 p-5">
             <div className="flex items-center justify-between">
               <div>

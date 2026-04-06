@@ -43,9 +43,9 @@ const PublicSiteLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-clip bg-background text-foreground">
       <UrgencyBanner />
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/90 backdrop-blur">
         <div className="container flex flex-col gap-4 py-4 md:h-20 md:flex-row md:items-center md:justify-between md:py-0">
           <div className="flex items-center justify-between gap-2 min-w-0">
             <button type="button" onClick={() => handleSectionNavigation('#top')} className="flex items-center gap-2 text-left min-w-0 shrink">
@@ -106,11 +106,11 @@ const PublicSiteLayout: React.FC = () => {
         </div>
       </header>
 
-      <main>
+      <main className="relative z-0 flex-1">
         <Outlet />
       </main>
 
-      <footer className="border-t border-border bg-card/40">
+      <footer className="relative z-0 border-t border-border bg-card/40">
         <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-end md:justify-between">
           <div className="max-w-xl space-y-3">
             <p className="text-lg font-black tracking-tight">NAVANHULA CLOUD</p>

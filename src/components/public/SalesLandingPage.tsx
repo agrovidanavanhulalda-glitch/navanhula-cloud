@@ -13,7 +13,7 @@ import FinalCTASection from '@/components/public/landing/FinalCTASection';
 import WhatsAppFloat from '@/components/public/landing/WhatsAppFloat';
 
 const SalesLandingPage: React.FC = () => (
-  <div id="top" className="relative overflow-hidden">
+  <div id="top" className="relative z-0 min-h-screen overflow-hidden">
     <HeroSection />
     <SocialProofBar />
     <BenefitsSection />
