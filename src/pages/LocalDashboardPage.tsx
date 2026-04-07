@@ -510,7 +510,7 @@ const LocalDashboardPage: React.FC = () => {
               <AlertTriangle className="w-4 h-4" />
               Estoque Baixo ({lowStockProducts.length})
             </h2>
-            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => navigate('/app/estoque')}>
+            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => navigate('/app/estoque')}>
               <RefreshCw className="w-3 h-3" /> Repor Tudo
             </Button>
           </div>
