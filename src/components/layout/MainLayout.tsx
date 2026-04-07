@@ -22,8 +22,13 @@ const MainLayout: React.FC = () => {
       <div className="min-h-screen bg-background flex flex-col w-full max-w-full overflow-x-hidden">
         {/* Mobile header — compact, premium */}
         <header
-          className="sticky top-0 z-50 flex items-center justify-between px-4 py-2.5 bg-card border-b border-border safe-top"
-          style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+          className="sticky top-0 z-50 flex items-center justify-between px-4 py-2.5 border-b border-border safe-top"
+          style={{
+            background: 'hsla(0, 0%, 100%, 0.8)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          }}
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"

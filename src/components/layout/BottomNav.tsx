@@ -53,9 +53,14 @@ const BottomNav: React.FC = () => {
         "fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-bottom transition-transform duration-300",
         !visible && "translate-y-full"
       )}
-      style={{ boxShadow: '0 -2px 12px rgba(0,0,0,0.06)' }}
+      style={{
+        background: 'hsla(0, 0%, 100%, 0.9)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        boxShadow: '0 -1px 3px rgba(0,0,0,0.04)',
+      }}
     >
-      <div className="flex justify-around items-center h-[70px] max-w-lg mx-auto px-1">
+      <div className="flex justify-around items-center h-[72px] max-w-lg mx-auto px-1">
         {navItems.map((item) => {
           if (item.isMenu) {
             return (
