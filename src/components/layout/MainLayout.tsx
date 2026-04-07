@@ -43,7 +43,7 @@ const MainLayout: React.FC = () => {
         <UpsellBanner />
 
         {/* Mobile content — padding bottom for bottom nav */}
-        <main className="flex-1 p-3 pb-24 safe-bottom overflow-y-auto overflow-x-hidden w-full max-w-full">
+        <main className="flex-1 p-4 pb-[100px] safe-bottom overflow-y-auto overflow-x-hidden w-full max-w-full">
           <Outlet />
         </main>
 
