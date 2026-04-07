@@ -5,13 +5,15 @@ import { useAuth } from '@/contexts/SaaSAuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonKPI, SkeletonChart, SkeletonList } from '@/components/ui/skeleton-card';
 import {
   ShoppingCart, Package, DollarSign, TrendingUp,
   Plus, AlertTriangle, BarChart3,
   ArrowUpRight, ArrowDownRight, Brain,
-  Target, Lightbulb, Zap, Clock, Star, Activity, Users
+  Target, Lightbulb, Zap, Clock, Star, Activity, Users,
+  ChevronRight, RefreshCw, Megaphone
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import {
@@ -58,13 +60,15 @@ const KPICard: React.FC<{
   </motion.div>
 );
 
-/* ─── Insight Item ─── */
+/* ─── Actionable Insight Item ─── */
 const InsightItem: React.FC<{
   icon: React.ElementType;
   type: 'success' | 'warning' | 'info' | 'danger';
   title: string;
   description: string;
-}> = ({ icon: Icon, type, title, description }) => {
+  actionLabel?: string;
+  onAction?: () => void;
+}> = ({ icon: Icon, type, title, description, actionLabel, onAction }) => {
   const colors = {
     success: 'text-success bg-success/8',
     warning: 'text-warning bg-warning/8',
@@ -76,13 +80,51 @@ const InsightItem: React.FC<{
       <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${colors[type]}`}>
         <Icon className="w-3.5 h-3.5" />
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="font-semibold text-sm text-foreground leading-snug">{title}</p>
         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
+        {actionLabel && onAction && (
+          <Button variant="link" size="sm" className="h-auto p-0 mt-1 text-xs gap-1" onClick={onAction}>
+            {actionLabel}
+            <ChevronRight className="w-3 h-3" />
+          </Button>
+        )}
       </div>
     </div>
   );
 };
+
+/* ─── Smart Alert Banner ─── */
+const SmartAlertBanner: React.FC<{
+  alerts: { icon: React.ElementType; message: string; type: 'warning' | 'danger'; actionLabel: string; onAction: () => void }[];
+}> = ({ alerts }) => {
+  if (alerts.length === 0) return null;
+  const alert = alerts[0]; // Show most critical
+  const bgClass = alert.type === 'danger' ? 'bg-destructive/8 border-destructive/20' : 'bg-warning/8 border-warning/20';
+  const textClass = alert.type === 'danger' ? 'text-destructive' : 'text-warning';
+  return (
+    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${bgClass}`}>
+        <alert.icon className={`w-4 h-4 flex-shrink-0 ${textClass}`} />
+        <p className={`text-sm font-medium flex-1 ${textClass}`}>{alert.message}</p>
+        <Button size="sm" variant="outline" className="text-xs h-7 flex-shrink-0" onClick={alert.onAction}>
+          {alert.actionLabel}
+        </Button>
+      </div>
+    </motion.div>
+  );
+};
+
+/* ─── Quick Action Chip ─── */
+const QuickAction: React.FC<{ icon: React.ElementType; label: string; onClick: () => void }> = ({ icon: Icon, label, onClick }) => (
+  <button
+    onClick={onClick}
+    className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary/8 text-primary text-xs font-medium whitespace-nowrap transition-all duration-200 active:scale-95 hover:bg-primary/15"
+  >
+    <Icon className="w-3.5 h-3.5" />
+    {label}
+  </button>
+);
 
 /* ─── Main Dashboard ─── */
 const LocalDashboardPage: React.FC = () => {
@@ -114,6 +156,14 @@ const LocalDashboardPage: React.FC = () => {
   const lowStockProducts = products.filter(p => p.stock <= 10 && p.isActive);
   const revenueGrowth = lastMonthRevenue > 0 ? ((monthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
 
+  /* ── Daily goal ── */
+  const dailyGoal = useMemo(() => {
+    if (lastMonthSales.length === 0) return 0;
+    const lastMonthDays = new Date(new Date().getFullYear(), new Date().getMonth(), 0).getDate();
+    return lastMonthRevenue / lastMonthDays * 1.1; // 10% above last month avg
+  }, [lastMonthRevenue, lastMonthSales]);
+  const dailyProgress = dailyGoal > 0 ? Math.min((totalRevenue / dailyGoal) * 100, 100) : 0;
+
   /* ── Chart data ── */
   const chartData = useMemo(() => {
     const now = new Date();
@@ -138,7 +188,6 @@ const LocalDashboardPage: React.FC = () => {
       }
       return days;
     }
-    // month
     const days: { name: string; receita: number }[] = [];
     const daysInMonth = now.getDate();
     for (let i = 0; i < daysInMonth; i++) {
@@ -163,23 +212,36 @@ const LocalDashboardPage: React.FC = () => {
     return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
   }, [monthSales]);
 
-  /* ── AI Insights ── */
-  const aiInsights = useMemo(() => {
-    const insights: { icon: React.ElementType; type: 'success' | 'warning' | 'info' | 'danger'; title: string; description: string }[] = [];
+  /* ── Smart Alerts (top banner) ── */
+  const smartAlerts = useMemo(() => {
+    const alerts: { icon: React.ElementType; message: string; type: 'warning' | 'danger'; actionLabel: string; onAction: () => void }[] = [];
+    if (!cashRegisterOpen) {
+      alerts.push({ icon: Clock, type: 'warning', message: 'O caixa ainda está fechado. Abra para começar a vender.', actionLabel: 'Abrir Caixa', onAction: () => navigate('/app/caixa') });
+    }
+    if (lowStockProducts.length >= 5) {
+      alerts.push({ icon: AlertTriangle, type: 'danger', message: `${lowStockProducts.length} produtos com estoque crítico precisam de reposição.`, actionLabel: 'Ver Estoque', onAction: () => navigate('/app/inventario') });
+    }
+    if (todaySales.length === 0 && new Date().getHours() >= 10 && cashRegisterOpen) {
+      alerts.push({ icon: ShoppingCart, type: 'warning', message: 'Ainda sem vendas hoje. Que tal iniciar uma promoção?', actionLabel: 'Nova Venda', onAction: () => { startNewSale(); navigate('/app/pdv'); } });
+    }
+    return alerts;
+  }, [cashRegisterOpen, lowStockProducts, todaySales, navigate, startNewSale]);
 
-    // Revenue growth
+  /* ── AI Insights (action-driven) ── */
+  const aiInsights = useMemo(() => {
+    const insights: { icon: React.ElementType; type: 'success' | 'warning' | 'info' | 'danger'; title: string; description: string; actionLabel?: string; onAction?: () => void }[] = [];
+
     if (revenueGrowth > 10) {
       insights.push({ icon: TrendingUp, type: 'success', title: `Vendas cresceram ${revenueGrowth.toFixed(0)}%`, description: 'Comparado ao mês anterior. Continue o bom trabalho!' });
     } else if (revenueGrowth < -10) {
-      insights.push({ icon: ArrowDownRight, type: 'danger', title: `Vendas caíram ${Math.abs(revenueGrowth).toFixed(0)}%`, description: 'Comparado ao mês anterior. Considere promoções para recuperar.' });
+      insights.push({ icon: ArrowDownRight, type: 'danger', title: `Vendas caíram ${Math.abs(revenueGrowth).toFixed(0)}%`, description: 'Considere criar promoções para recuperar o volume.', actionLabel: 'Ver Relatórios', onAction: () => navigate('/app/relatorios') });
     }
 
-    // Trending product
     if (topProducts.length > 0) {
-      insights.push({ icon: Zap, type: 'info', title: `"${topProducts[0].name}" é o mais vendido`, description: `${topProducts[0].qty} unidades vendidas gerando ${formatCurrency(topProducts[0].revenue)} este mês.` });
+      insights.push({ icon: Zap, type: 'info', title: `"${topProducts[0].name}" é o mais vendido`, description: `${topProducts[0].qty} unidades — ${formatCurrency(topProducts[0].revenue)} este mês.` });
     }
 
-    // Stock depletion
+    // Stock depletion prediction
     const criticalStock = products.filter(p => p.isActive && p.stock > 0).map(p => {
       const sold = monthSales.reduce((a, s) => a + s.items.filter(i => i.product.id === p.id).reduce((a2, i) => a2 + i.quantity, 0), 0);
       const rate = new Date().getDate() > 0 ? sold / new Date().getDate() : 0;
@@ -188,28 +250,22 @@ const LocalDashboardPage: React.FC = () => {
     }).filter(p => p.daysLeft <= 5).sort((a, b) => a.daysLeft - b.daysLeft);
 
     criticalStock.slice(0, 2).forEach(p => {
-      insights.push({ icon: AlertTriangle, type: p.daysLeft <= 2 ? 'danger' : 'warning', title: `"${p.name}" esgota em ~${p.daysLeft} dias`, description: `Restam ${p.stock} unidades. Reponha o estoque agora.` });
+      insights.push({ icon: AlertTriangle, type: p.daysLeft <= 2 ? 'danger' : 'warning', title: `"${p.name}" esgota em ~${p.daysLeft} dias`, description: `Restam ${p.stock} unidades.`, actionLabel: 'Repor Estoque', onAction: () => navigate('/app/inventario') });
     });
 
-    // Sales velocity
     if (todaySales.length > 0) {
       const hour = new Date().getHours() || 1;
       const rate = todaySales.length / hour;
       insights.push({ icon: Activity, type: rate > 2 ? 'success' : 'info', title: `${rate.toFixed(1)} vendas/hora hoje`, description: `Projeção: ~${Math.round(rate * 12)} vendas e ${formatCurrency(Math.round(avgTicket * rate * 12))} até ao fim do dia.` });
     }
 
-    // Promo suggestion
     const highStock = products.filter(p => p.isActive && p.stock > 50).sort((a, b) => b.stock - a.stock);
     if (highStock.length > 0) {
-      insights.push({ icon: Lightbulb, type: 'info', title: `Promoção sugerida: "${highStock[0].name}"`, description: `Estoque alto (${highStock[0].stock} un.). Uma promoção aceleraria a rotação.` });
-    }
-
-    if (!cashRegisterOpen) {
-      insights.push({ icon: Clock, type: 'warning', title: 'Caixa ainda fechado', description: 'Abra o caixa para iniciar as vendas do dia.' });
+      insights.push({ icon: Lightbulb, type: 'info', title: `Promoção sugerida: "${highStock[0].name}"`, description: `Estoque alto (${highStock[0].stock} un.). Uma promoção aceleraria a rotação.`, actionLabel: 'Criar Promoção', onAction: () => navigate('/app/produtos') });
     }
 
     return insights.slice(0, 5);
-  }, [revenueGrowth, topProducts, products, monthSales, todaySales, avgTicket, cashRegisterOpen]);
+  }, [revenueGrowth, topProducts, products, monthSales, todaySales, avgTicket, navigate]);
 
   const handleNewSale = () => { startNewSale(); navigate('/app/pdv'); };
 
@@ -232,13 +288,16 @@ const LocalDashboardPage: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 animate-fade-in">
+      {/* Smart Alert Banner */}
+      <SmartAlertBanner alerts={smartAlerts} />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold tracking-tight text-foreground">
-            {store.name}
-            <span className="text-muted-foreground font-normal text-base ml-2 hidden sm:inline">— Inteligência Empresarial</span>
+            Resumo de Hoje
           </h1>
+          <p className="text-sm text-muted-foreground">{store.name} — {new Date().toLocaleDateString('pt-MZ', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge
@@ -253,6 +312,37 @@ const LocalDashboardPage: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Quick Actions (contextual shortcuts) */}
+      <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+        <QuickAction icon={Plus} label="Nova Venda" onClick={handleNewSale} />
+        <QuickAction icon={Users} label="Novo Cliente" onClick={() => navigate('/app/crm')} />
+        <QuickAction icon={DollarSign} label="Registrar Despesa" onClick={() => navigate('/app/financeiro')} />
+        <QuickAction icon={BarChart3} label="Análise de Desempenho" onClick={() => navigate('/app/relatorios')} />
+        <QuickAction icon={Package} label="Ver Estoque" onClick={() => navigate('/app/inventario')} />
+      </div>
+
+      {/* Daily Goal Progress */}
+      {dailyGoal > 0 && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">Meta Diária</span>
+              </div>
+              <span className="text-sm font-bold tabular-nums text-foreground">
+                {dailyProgress.toFixed(0)}%
+              </span>
+            </div>
+            <Progress value={dailyProgress} className="h-2.5" />
+            <div className="flex justify-between mt-2">
+              <span className="text-xs text-muted-foreground">{formatCurrency(totalRevenue)} alcançado</span>
+              <span className="text-xs text-muted-foreground">Meta: {formatCurrency(dailyGoal)}</span>
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       {/* 4 Core KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -285,7 +375,7 @@ const LocalDashboardPage: React.FC = () => {
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-primary" />
-              Vendas ao longo do tempo
+              Evolução de Receita
             </h2>
             <div className="flex bg-muted rounded-lg p-0.5">
               {(['today', 'week', 'month'] as const).map(p => (
@@ -300,8 +390,13 @@ const LocalDashboardPage: React.FC = () => {
             </div>
           </div>
           {chartData.every(d => d.receita === 0) ? (
-            <div className="h-56 flex items-center justify-center text-muted-foreground text-sm">
-              Sem dados para este período
+            <div className="h-56 flex flex-col items-center justify-center text-center px-4">
+              <BarChart3 className="w-10 h-10 text-muted-foreground/30 mb-3" />
+              <p className="text-sm font-medium text-foreground">Sem vendas neste período</p>
+              <p className="text-xs text-muted-foreground mt-1">Registe a primeira venda para ver a evolução aqui.</p>
+              <Button size="sm" variant="outline" className="mt-3 gap-1.5 text-xs" onClick={handleNewSale}>
+                <Plus className="w-3.5 h-3.5" /> Criar Venda
+              </Button>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
@@ -325,17 +420,18 @@ const LocalDashboardPage: React.FC = () => {
           )}
         </Card>
 
-        {/* Insights Panel */}
+        {/* Insights Panel — action-driven */}
         <Card className="p-5">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2 mb-4">
             <Brain className="w-4 h-4 text-primary" />
-            Insights Inteligentes
+            Insights & Ações
             <Badge variant="secondary" className="text-[10px] ml-auto">AI</Badge>
           </h2>
           {aiInsights.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground text-sm">
-              <Brain className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              Sem insights no momento
+            <div className="py-8 text-center">
+              <Brain className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+              <p className="text-sm font-medium text-foreground">Tudo sob controlo</p>
+              <p className="text-xs text-muted-foreground mt-1">Os insights aparecerão à medida que as vendas forem registadas.</p>
             </div>
           ) : (
             <div>
@@ -356,7 +452,8 @@ const LocalDashboardPage: React.FC = () => {
             Top Produtos — Mês
           </h2>
           {topProducts.length === 0 ? (
-            <EmptyState icon={Package} title="Sem dados" description="Vendas deste mês aparecerão aqui." />
+            <EmptyState icon={Package} title="Sem vendas este mês" description="Os produtos mais vendidos aparecerão aqui assim que registar vendas."
+              action={{ label: 'Iniciar Venda', onClick: handleNewSale }} />
           ) : (
             <div className="space-y-1">
               {topProducts.map((product, i) => (
@@ -379,10 +476,10 @@ const LocalDashboardPage: React.FC = () => {
         <Card className="p-5">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2 mb-4">
             <ShoppingCart className="w-4 h-4 text-primary" />
-            Vendas Recentes
+            Últimas Vendas
           </h2>
           {sales.length === 0 ? (
-            <EmptyState icon={ShoppingCart} title="Nenhuma venda" description="Registre sua primeira venda."
+            <EmptyState icon={ShoppingCart} title="Ainda sem vendas hoje" description="Comece registando a primeira venda do dia — leva menos de 30 segundos."
               action={{ label: 'Nova Venda', onClick: handleNewSale }} />
           ) : (
             <div className="space-y-1">
@@ -405,13 +502,18 @@ const LocalDashboardPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Low Stock Alert */}
+      {/* Low Stock Alert — actionable */}
       {lowStockProducts.length > 0 && (
         <Card className="p-5 border-warning/30">
-          <h2 className="text-sm font-semibold text-warning uppercase tracking-wider flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-4 h-4" />
-            Estoque Baixo ({lowStockProducts.length})
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-warning uppercase tracking-wider flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Estoque Baixo ({lowStockProducts.length})
+            </h2>
+            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => navigate('/app/inventario')}>
+              <RefreshCw className="w-3 h-3" /> Repor Tudo
+            </Button>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {lowStockProducts.slice(0, 8).map(p => (
               <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 text-sm">
