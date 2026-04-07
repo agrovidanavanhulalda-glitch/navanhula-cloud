@@ -219,7 +219,7 @@ const LocalDashboardPage: React.FC = () => {
       alerts.push({ icon: Clock, type: 'warning', message: 'O caixa ainda está fechado. Abra para começar a vender.', actionLabel: 'Abrir Caixa', onAction: () => navigate('/app/caixa') });
     }
     if (lowStockProducts.length >= 5) {
-      alerts.push({ icon: AlertTriangle, type: 'danger', message: `${lowStockProducts.length} produtos com estoque crítico precisam de reposição.`, actionLabel: 'Ver Estoque', onAction: () => navigate('/app/inventario') });
+      alerts.push({ icon: AlertTriangle, type: 'danger', message: `${lowStockProducts.length} produtos com estoque crítico precisam de reposição.`, actionLabel: 'Ver Estoque', onAction: () => navigate('/app/estoque') });
     }
     if (todaySales.length === 0 && new Date().getHours() >= 10 && cashRegisterOpen) {
       alerts.push({ icon: ShoppingCart, type: 'warning', message: 'Ainda sem vendas hoje. Que tal iniciar uma promoção?', actionLabel: 'Nova Venda', onAction: () => { startNewSale(); navigate('/app/pdv'); } });
@@ -250,7 +250,7 @@ const LocalDashboardPage: React.FC = () => {
     }).filter(p => p.daysLeft <= 5).sort((a, b) => a.daysLeft - b.daysLeft);
 
     criticalStock.slice(0, 2).forEach(p => {
-      insights.push({ icon: AlertTriangle, type: p.daysLeft <= 2 ? 'danger' : 'warning', title: `"${p.name}" esgota em ~${p.daysLeft} dias`, description: `Restam ${p.stock} unidades.`, actionLabel: 'Repor Estoque', onAction: () => navigate('/app/inventario') });
+      insights.push({ icon: AlertTriangle, type: p.daysLeft <= 2 ? 'danger' : 'warning', title: `"${p.name}" esgota em ~${p.daysLeft} dias`, description: `Restam ${p.stock} unidades.`, actionLabel: 'Repor Estoque', onAction: () => navigate('/app/estoque') });
     });
 
     if (todaySales.length > 0) {
