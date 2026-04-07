@@ -8,14 +8,14 @@ const FloatingActionButton: React.FC = () => {
   return (
     <button
       onClick={() => navigate('/app/pdv')}
-      className="fixed bottom-[88px] left-4 z-50 w-14 h-14 rounded-full flex items-center justify-center text-primary-foreground transition-all duration-200 active:scale-90 hover:brightness-110"
+      className="fixed bottom-[92px] left-4 z-50 w-[60px] h-[60px] rounded-full flex items-center justify-center text-primary-foreground transition-transform duration-200 active:scale-[0.92]"
       style={{
         background: 'var(--gradient-primary)',
-        boxShadow: 'var(--shadow-glow), 0 4px 16px rgba(0,0,0,0.15)',
+        boxShadow: '0 8px 24px -4px hsl(217 91% 53% / 0.4), 0 4px 12px rgba(0,0,0,0.1)',
       }}
       aria-label="Nova Venda"
     >
-      <Plus className="w-6 h-6" strokeWidth={2.5} />
+      <Plus className="w-7 h-7" strokeWidth={2.5} />
     </button>
   );
 };
