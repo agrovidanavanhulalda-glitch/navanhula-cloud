@@ -319,7 +319,7 @@ const LocalDashboardPage: React.FC = () => {
         <QuickAction icon={Users} label="Novo Cliente" onClick={() => navigate('/app/crm')} />
         <QuickAction icon={DollarSign} label="Registrar Despesa" onClick={() => navigate('/app/financeiro')} />
         <QuickAction icon={BarChart3} label="Análise de Desempenho" onClick={() => navigate('/app/relatorios')} />
-        <QuickAction icon={Package} label="Ver Estoque" onClick={() => navigate('/app/inventario')} />
+        <QuickAction icon={Package} label="Ver Estoque" onClick={() => navigate('/app/estoque')} />
       </div>
 
       {/* Daily Goal Progress */}
@@ -510,7 +510,7 @@ const LocalDashboardPage: React.FC = () => {
               <AlertTriangle className="w-4 h-4" />
               Estoque Baixo ({lowStockProducts.length})
             </h2>
-            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => navigate('/app/inventario')}>
+            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => navigate('/app/estoque')}>
               <RefreshCw className="w-3 h-3" /> Repor Tudo
             </Button>
           </div>
