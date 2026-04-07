@@ -200,15 +200,20 @@
 
   /* Card styles */
   .pos-card {
-    @apply rounded-xl border border-border bg-card p-4;
+    @apply rounded-2xl border border-border bg-card p-5;
     box-shadow: var(--shadow-card);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
 
   .pos-card-interactive {
-    @apply pos-card cursor-pointer transition-all duration-200;
-    @apply hover:border-primary/30;
+    @apply pos-card cursor-pointer;
     &:hover {
       box-shadow: var(--shadow-card-hover);
+      transform: translateY(-2px);
+    }
+    &:active {
+      transform: scale(0.97);
+      box-shadow: var(--shadow-sm);
     }
   }
 

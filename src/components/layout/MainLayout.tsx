@@ -66,8 +66,13 @@ const MainLayout: React.FC = () => {
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {/* Desktop top bar */}
           <header
-            className="sticky top-0 z-50 flex items-center gap-4 px-6 py-2.5 border-b border-border bg-card"
-            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+            className="sticky top-0 z-50 flex items-center gap-4 px-6 py-2.5 border-b border-border"
+            style={{
+              background: 'hsla(0, 0%, 100%, 0.8)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            }}
           >
             <SidebarTrigger className="-ml-2" />
             <div className="flex-1 min-w-0">
