@@ -31,9 +31,11 @@ const MainLayout: React.FC = () => {
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-72 overflow-y-auto">
-              <SidebarProvider>
-                <Sidebar />
+            <SheetContent side="left" className="p-0 w-72 overflow-y-auto bg-sidebar text-sidebar-foreground">
+              <SidebarProvider defaultOpen={true} open={true}>
+                <div className="flex flex-col h-full w-full" style={{ '--sidebar-width': '18rem', '--sidebar-width-icon': '3rem' } as React.CSSProperties}>
+                  <Sidebar collapsible="none" />
+                </div>
               </SidebarProvider>
             </SheetContent>
           </Sheet>
