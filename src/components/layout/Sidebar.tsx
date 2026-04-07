@@ -174,13 +174,13 @@ const resellerPortalItems: SubItem[] = [
   { label: 'Performance', href: '/app/revendedores/performance', icon: BarChart3 },
 ];
 
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, company, store, signOut, role } = useAuth();
   const { currentCashRegister } = useLocalPOS();
   const { state } = useSidebar();
-  const collapsed = state === 'collapsed';
+  const collapsed = forceExpanded ? false : state === 'collapsed';
 
   const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
   const isReseller = role === 'reseller';
@@ -288,7 +288,7 @@ const Sidebar: React.FC = () => {
     });
 
   return (
-    <ShadcnSidebar collapsible="icon" className="border-r border-sidebar-border">
+    <ShadcnSidebar collapsible={forceExpanded ? "none" : "icon"} className="border-r border-sidebar-border">
       {/* Brand Header */}
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
