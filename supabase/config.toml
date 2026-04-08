@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.seed-users]
 verify_jwt = false
+
+[functions.check-document-alerts]
+verify_jwt = false
