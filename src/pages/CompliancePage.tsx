@@ -462,7 +462,7 @@ const CompliancePage: React.FC = () => {
                   <div className="space-y-2">
                     {docs.map(doc => (
                       <div key={doc.id} className="flex items-center justify-between p-2 rounded-md border text-sm">
-                        <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[200px]">{doc.file_name}</a>
+                        <button onClick={() => handleViewDoc(doc.file_url)} className="text-primary hover:underline truncate max-w-[200px] text-left">{doc.file_name}</button>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">{format(parseISO(doc.created_at), 'dd/MM/yy')}</span>
                           <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDeleteDoc(doc.id, detailObligation.id)}>
