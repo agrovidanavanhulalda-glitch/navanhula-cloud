@@ -37,7 +37,6 @@ interface ObligationDoc {
   file_name: string;
   file_type: string | null;
   notes: string | null;
-  notes: string | null;
   created_at: string;
 }
 
@@ -85,7 +84,7 @@ const getAlertInfo = (dueDate: string, status: string) => {
 };
 
 const CompliancePage: React.FC = () => {
-  const { company, user } = useAuth();
+  const { company } = useAuth();
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
