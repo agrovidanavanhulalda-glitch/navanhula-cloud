@@ -162,19 +162,54 @@ const CompliancePage: React.FC = () => {
 
   const handleUpload = async (file: File, obligationId: string) => {
     if (!company?.id) return;
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({ title: 'Tipo inválido', description: 'Apenas PDF, PNG e JPEG são permitidos.', variant: 'destructive' });
+      return;
+    }
+    // Validate file size (50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: 'Arquivo muito grande', description: 'Tamanho máximo: 50MB.', variant: 'destructive' });
+      return;
+    }
+
     setUploading(true);
-    const path = `${company.id}/${obligationId}/${Date.now()}_${file.name}`;
-    const { error: uploadError } = await supabase.storage.from('compliance_docs').upload(path, file);
-    if (uploadError) { toast({ title: 'Erro upload', description: uploadError.message, variant: 'destructive' }); setUploading(false); return; }
-    const { data: urlData } = supabase.storage.from('compliance_docs').getPublicUrl(path);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${company.id}/${year}/${month}/${Date.now()}_${safeName}`;
+
+    const { error: uploadError } = await supabase.storage.from('compliance_documents').upload(path, file);
+    if (uploadError) {
+      console.error('STORAGE ERROR:', uploadError.message);
+      toast({ title: 'Erro ao enviar documento', description: uploadError.message, variant: 'destructive' });
+      setUploading(false);
+      return;
+    }
+
     const { error } = await supabase.from('obligation_documents').insert({
       obligation_id: obligationId, company_id: company.id,
-      file_url: urlData.publicUrl, file_name: file.name,
+      file_url: path, file_name: file.name,
       file_type: file.type, uploaded_by: user?.id,
     });
     if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' });
-    else { toast({ title: 'Documento anexado' }); fetchDocs(obligationId); }
+    else { toast({ title: 'Documento anexado com sucesso' }); fetchDocs(obligationId); }
     setUploading(false);
+  };
+
+  const handleViewDoc = async (filePath: string) => {
+    const { data, error } = await supabase.storage
+      .from('compliance_documents')
+      .createSignedUrl(filePath, 60);
+    if (error || !data?.signedUrl) {
+      console.error('STORAGE ERROR:', error?.message);
+      toast({ title: 'Documento indisponível', description: 'Verifique permissões ou existência do arquivo.', variant: 'destructive' });
+      return;
+    }
+    window.open(data.signedUrl, '_blank');
   };
 
   const handleDeleteDoc = async (docId: string, obligationId: string) => {
@@ -427,7 +462,7 @@ const CompliancePage: React.FC = () => {
                   <div className="space-y-2">
                     {docs.map(doc => (
                       <div key={doc.id} className="flex items-center justify-between p-2 rounded-md border text-sm">
-                        <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[200px]">{doc.file_name}</a>
+                        <button onClick={() => handleViewDoc(doc.file_url)} className="text-primary hover:underline truncate max-w-[200px] text-left">{doc.file_name}</button>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">{format(parseISO(doc.created_at), 'dd/MM/yy')}</span>
                           <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDeleteDoc(doc.id, detailObligation.id)}>
