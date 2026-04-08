@@ -2390,34 +2390,43 @@ export type Database = {
       }
       obligation_documents: {
         Row: {
+          alert_level: string | null
           company_id: string
           created_at: string
+          expiration_date: string | null
           file_name: string
           file_type: string | null
           file_url: string
           id: string
+          last_alert_sent_at: string | null
           notes: string | null
           obligation_id: string
           uploaded_by: string | null
         }
         Insert: {
+          alert_level?: string | null
           company_id: string
           created_at?: string
+          expiration_date?: string | null
           file_name: string
           file_type?: string | null
           file_url: string
           id?: string
+          last_alert_sent_at?: string | null
           notes?: string | null
           obligation_id: string
           uploaded_by?: string | null
         }
         Update: {
+          alert_level?: string | null
           company_id?: string
           created_at?: string
+          expiration_date?: string | null
           file_name?: string
           file_type?: string | null
           file_url?: string
           id?: string
+          last_alert_sent_at?: string | null
           notes?: string | null
           obligation_id?: string
           uploaded_by?: string | null
