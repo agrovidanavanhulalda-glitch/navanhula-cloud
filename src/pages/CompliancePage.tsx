@@ -84,7 +84,7 @@ const getAlertInfo = (dueDate: string, status: string) => {
 };
 
 const CompliancePage: React.FC = () => {
-  const { company } = useAuth();
+  const { company, user } = useAuth();
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -473,7 +473,7 @@ const CompliancePage: React.FC = () => {
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-sm">Documentos Anexos</h4>
                   <label className="cursor-pointer">
-                    <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png"
                       onChange={e => { if (e.target.files?.[0]) handleUpload(e.target.files[0], detailObligation.id); e.target.value = ''; }}
                     />
                     <Button size="sm" variant="outline" asChild disabled={uploading}>
