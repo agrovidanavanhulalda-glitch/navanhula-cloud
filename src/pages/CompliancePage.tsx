@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,9 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
-import { Shield, Plus, FileUp, Trash2, Eye, AlertTriangle, CheckCircle2, Clock, Filter } from 'lucide-react';
+import { Shield, Plus, FileUp, Trash2, Eye, AlertTriangle, Filter, MessageCircle, Bell } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
-import { pt } from 'date-fns/locale';
+import { buildWhatsAppUrl } from '@/lib/whatsappTemplates';
 
 interface Obligation {
   id: string;
@@ -38,6 +37,8 @@ interface ObligationDoc {
   file_type: string | null;
   notes: string | null;
   created_at: string;
+  expiration_date: string | null;
+  alert_level: string | null;
 }
 
 const typeOptions = [
@@ -73,6 +74,15 @@ const getStatusBadge = (status: string, dueDate: string) => {
   }
 };
 
+const getDocExpirationBadge = (doc: ObligationDoc) => {
+  if (!doc.expiration_date) return null;
+  const days = differenceInDays(parseISO(doc.expiration_date), new Date());
+  if (days <= 0) return <Badge variant="destructive" className="text-[10px] px-1.5">🔴 Expirado</Badge>;
+  if (days <= 7) return <Badge className="bg-amber-500/15 text-amber-700 border-amber-200 text-[10px] px-1.5">🟡 {days}d</Badge>;
+  if (days <= 30) return <Badge className="bg-blue-500/15 text-blue-700 border-blue-200 text-[10px] px-1.5">⚠️ {days}d</Badge>;
+  return <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200 text-[10px] px-1.5">🟢 Válido</Badge>;
+};
+
 const getAlertInfo = (dueDate: string, status: string) => {
   if (status === 'pago') return null;
   const days = differenceInDays(parseISO(dueDate), new Date());
@@ -92,10 +102,12 @@ const CompliancePage: React.FC = () => {
   const [detailObligation, setDetailObligation] = useState<Obligation | null>(null);
   const [docs, setDocs] = useState<ObligationDoc[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [docExpirationDate, setDocExpirationDate] = useState('');
 
   // Filters
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterExpiration, setFilterExpiration] = useState('all');
 
   // Form state
   const [form, setForm] = useState({
@@ -167,19 +179,15 @@ const CompliancePage: React.FC = () => {
     const authUser = authData.user;
 
     if (authError || !authUser) {
-      console.log('USER:', authData);
-      console.log('UPLOAD ERROR:', authError);
       toast({ title: 'Sessão expirada', description: 'Faça login para enviar documentos.', variant: 'destructive' });
       return;
     }
 
-    // Validate file type
     const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
     if (!allowedTypes.includes(file.type)) {
       toast({ title: 'Tipo inválido', description: 'Apenas PDF, PNG e JPEG são permitidos.', variant: 'destructive' });
       return;
     }
-    // Validate file size (50MB)
     if (file.size > 50 * 1024 * 1024) {
       toast({ title: 'Arquivo muito grande', description: 'Tamanho máximo: 50MB.', variant: 'destructive' });
       return;
@@ -197,28 +205,28 @@ const CompliancePage: React.FC = () => {
       contentType: file.type,
     });
     if (uploadError) {
-      console.log('USER:', authUser);
-      console.log('UPLOAD ERROR:', uploadError);
       console.error('STORAGE ERROR:', uploadError.message);
       toast({ title: 'Erro ao acessar documento', description: 'Não foi possível enviar o documento.', variant: 'destructive' });
       setUploading(false);
       return;
     }
 
-    const { error } = await supabase.from('obligation_documents').insert({
+    const insertData = {
       obligation_id: obligationId, company_id: company.id,
       file_url: path, file_name: file.name,
       file_type: file.type, uploaded_by: authUser.id,
-    });
+      ...(docExpirationDate ? { expiration_date: docExpirationDate, alert_level: 'none' } : {}),
+    };
+
+    const { error } = await supabase.from('obligation_documents').insert(insertData as any);
 
     if (error) {
-      console.log('USER:', authUser);
-      console.log('UPLOAD ERROR:', error);
-      console.error('STORAGE ERROR:', error.message);
+      console.error('DB ERROR:', error.message);
       await supabase.storage.from('compliance_documents').remove([path]);
-      toast({ title: 'Erro ao acessar documento', description: 'Não foi possível registrar o documento.', variant: 'destructive' });
+      toast({ title: 'Erro ao registrar documento', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Documento anexado com sucesso' });
+      setDocExpirationDate('');
       fetchDocs(obligationId);
     }
     setUploading(false);
@@ -229,9 +237,7 @@ const CompliancePage: React.FC = () => {
       .from('compliance_documents')
       .createSignedUrl(filePath, 60);
     if (error || !data?.signedUrl) {
-      console.log('UPLOAD ERROR:', error);
-      console.error('STORAGE ERROR:', error?.message);
-      toast({ title: 'Erro ao acessar documento', description: 'Documento indisponível. Verifique permissões ou existência do arquivo.', variant: 'destructive' });
+      toast({ title: 'Erro ao acessar documento', description: 'Documento indisponível.', variant: 'destructive' });
       return;
     }
     window.open(data.signedUrl, '_blank');
@@ -241,6 +247,43 @@ const CompliancePage: React.FC = () => {
     const { error } = await supabase.from('obligation_documents').delete().eq('id', docId);
     if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     else { toast({ title: 'Documento removido' }); fetchDocs(obligationId); }
+  };
+
+  const handleSendWhatsAppAlert = (doc: ObligationDoc) => {
+    if (!doc.expiration_date) return;
+    const days = differenceInDays(parseISO(doc.expiration_date), new Date());
+    const statusText = days <= 0 ? 'EXPIRADO' : `expira em ${days} dias`;
+    const message = `⚠️ Atenção: O documento "${doc.file_name}" da empresa ${company?.name || ''} está ${statusText}.\n\nData de expiração: ${format(parseISO(doc.expiration_date), 'dd/MM/yyyy')}\n\nAcesse o sistema para atualizar.`;
+    
+    // Open WhatsApp with prefilled message (user picks the contact)
+    const url = buildWhatsAppUrl('', message);
+    // wa.me without phone opens WhatsApp to pick contact
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const handleRunAlertCheck = async () => {
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/check-document-alerts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${anonKey}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: 'Verificação concluída', description: `${data.alerts_created} alertas gerados.` });
+      } else {
+        toast({ title: 'Erro', description: data.error || 'Falha na verificação', variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Erro', description: 'Não foi possível executar verificação.', variant: 'destructive' });
+    }
   };
 
   const resetForm = () => setForm({ name: '', type: 'imposto', frequency: 'mensal', due_date: '', status: 'pendente', amount: 0, notes: '' });
@@ -275,7 +318,7 @@ const CompliancePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <Shield className="h-7 w-7 text-primary" />
           <div>
@@ -283,63 +326,69 @@ const CompliancePage: React.FC = () => {
             <p className="text-sm text-muted-foreground">Gestão de obrigações legais e documentos</p>
           </div>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setEditingObligation(null); resetForm(); } }}>
-          <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" /> Nova Obrigação</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>{editingObligation ? 'Editar Obrigação' : 'Nova Obrigação'}</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-2">
-              <div className="grid gap-2">
-                <Label>Nome *</Label>
-                <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Ex: INSS Abril" maxLength={100} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleRunAlertCheck}>
+            <Bell className="h-4 w-4 mr-2" />
+            Verificar Alertas
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setEditingObligation(null); resetForm(); } }}>
+            <DialogTrigger asChild>
+              <Button><Plus className="h-4 w-4 mr-2" /> Nova Obrigação</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{editingObligation ? 'Editar Obrigação' : 'Nova Obrigação'}</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-2">
                 <div className="grid gap-2">
-                  <Label>Tipo</Label>
-                  <Select value={form.type} onValueChange={v => setForm({ ...form, type: v })}>
+                  <Label>Nome *</Label>
+                  <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Ex: INSS Abril" maxLength={100} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Tipo</Label>
+                    <Select value={form.type} onValueChange={v => setForm({ ...form, type: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{typeOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Frequência</Label>
+                    <Select value={form.frequency} onValueChange={v => setForm({ ...form, frequency: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{frequencyOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Data de Vencimento *</Label>
+                    <Input type="date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Valor (MT)</Label>
+                    <Input type="number" min={0} value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })} />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Status</Label>
+                  <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{typeOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                    <SelectContent>{statusOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Frequência</Label>
-                  <Select value={form.frequency} onValueChange={v => setForm({ ...form, frequency: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{frequencyOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                  </Select>
+                  <Label>Observações</Label>
+                  <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} maxLength={500} rows={3} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Data de Vencimento *</Label>
-                  <Input type="date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })} />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Valor (MT)</Label>
-                  <Input type="number" min={0} value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })} />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label>Status</Label>
-                <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{statusOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label>Observações</Label>
-                <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} maxLength={500} rows={3} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => { setDialogOpen(false); setEditingObligation(null); resetForm(); }}>Cancelar</Button>
-              <Button onClick={handleSave}>{editingObligation ? 'Atualizar' : 'Criar'}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setDialogOpen(false); setEditingObligation(null); resetForm(); }}>Cancelar</Button>
+                <Button onClick={handleSave}>{editingObligation ? 'Atualizar' : 'Criar'}</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -472,6 +521,14 @@ const CompliancePage: React.FC = () => {
               <div className="border-t pt-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-sm">Documentos Anexos</h4>
+                </div>
+
+                {/* Upload area with expiration date */}
+                <div className="flex flex-wrap gap-2 items-end mb-3 p-3 rounded-md border border-dashed">
+                  <div className="grid gap-1">
+                    <Label className="text-xs text-muted-foreground">Data de expiração</Label>
+                    <Input type="date" className="h-8 text-xs w-[150px]" value={docExpirationDate} onChange={e => setDocExpirationDate(e.target.value)} />
+                  </div>
                   <label className="cursor-pointer">
                     <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png"
                       onChange={e => { if (e.target.files?.[0]) handleUpload(e.target.files[0], detailObligation.id); e.target.value = ''; }}
@@ -481,14 +538,23 @@ const CompliancePage: React.FC = () => {
                     </Button>
                   </label>
                 </div>
+
                 {docs.length === 0 ? (
                   <p className="text-xs text-muted-foreground">Nenhum documento anexado.</p>
                 ) : (
                   <div className="space-y-2">
                     {docs.map(doc => (
                       <div key={doc.id} className="flex items-center justify-between p-2 rounded-md border text-sm">
-                        <button onClick={() => handleViewDoc(doc.file_url)} className="text-primary hover:underline truncate max-w-[200px] text-left">{doc.file_name}</button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <button onClick={() => handleViewDoc(doc.file_url)} className="text-primary hover:underline truncate max-w-[160px] text-left">{doc.file_name}</button>
+                          {getDocExpirationBadge(doc)}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {doc.expiration_date && (
+                            <Button size="icon" variant="ghost" className="h-6 w-6 text-emerald-600" title="Enviar alerta via WhatsApp" onClick={() => handleSendWhatsAppAlert(doc)}>
+                              <MessageCircle className="h-3 w-3" />
+                            </Button>
+                          )}
                           <span className="text-xs text-muted-foreground">{format(parseISO(doc.created_at), 'dd/MM/yy')}</span>
                           <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDeleteDoc(doc.id, detailObligation.id)}>
                             <Trash2 className="h-3 w-3" />
