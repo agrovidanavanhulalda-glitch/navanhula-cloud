@@ -163,6 +163,16 @@ const CompliancePage: React.FC = () => {
   const handleUpload = async (file: File, obligationId: string) => {
     if (!company?.id) return;
 
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const authUser = authData.user;
+
+    if (authError || !authUser) {
+      console.log('USER:', authData);
+      console.log('UPLOAD ERROR:', authError);
+      toast({ title: 'Sessão expirada', description: 'Faça login para enviar documentos.', variant: 'destructive' });
+      return;
+    }
+
     // Validate file type
     const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
     if (!allowedTypes.includes(file.type)) {
@@ -182,10 +192,15 @@ const CompliancePage: React.FC = () => {
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `${company.id}/${year}/${month}/${Date.now()}_${safeName}`;
 
-    const { error: uploadError } = await supabase.storage.from('compliance_documents').upload(path, file);
+    const { error: uploadError } = await supabase.storage.from('compliance_documents').upload(path, file, {
+      upsert: false,
+      contentType: file.type,
+    });
     if (uploadError) {
+      console.log('USER:', authUser);
+      console.log('UPLOAD ERROR:', uploadError);
       console.error('STORAGE ERROR:', uploadError.message);
-      toast({ title: 'Erro ao enviar documento', description: uploadError.message, variant: 'destructive' });
+      toast({ title: 'Erro ao acessar documento', description: 'Não foi possível enviar o documento.', variant: 'destructive' });
       setUploading(false);
       return;
     }
@@ -193,10 +208,19 @@ const CompliancePage: React.FC = () => {
     const { error } = await supabase.from('obligation_documents').insert({
       obligation_id: obligationId, company_id: company.id,
       file_url: path, file_name: file.name,
-      file_type: file.type, uploaded_by: user?.id,
+      file_type: file.type, uploaded_by: authUser.id,
     });
-    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' });
-    else { toast({ title: 'Documento anexado com sucesso' }); fetchDocs(obligationId); }
+
+    if (error) {
+      console.log('USER:', authUser);
+      console.log('UPLOAD ERROR:', error);
+      console.error('STORAGE ERROR:', error.message);
+      await supabase.storage.from('compliance_documents').remove([path]);
+      toast({ title: 'Erro ao acessar documento', description: 'Não foi possível registrar o documento.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Documento anexado com sucesso' });
+      fetchDocs(obligationId);
+    }
     setUploading(false);
   };
 
@@ -205,8 +229,9 @@ const CompliancePage: React.FC = () => {
       .from('compliance_documents')
       .createSignedUrl(filePath, 60);
     if (error || !data?.signedUrl) {
+      console.log('UPLOAD ERROR:', error);
       console.error('STORAGE ERROR:', error?.message);
-      toast({ title: 'Documento indisponível', description: 'Verifique permissões ou existência do arquivo.', variant: 'destructive' });
+      toast({ title: 'Erro ao acessar documento', description: 'Documento indisponível. Verifique permissões ou existência do arquivo.', variant: 'destructive' });
       return;
     }
     window.open(data.signedUrl, '_blank');
@@ -448,7 +473,7 @@ const CompliancePage: React.FC = () => {
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-sm">Documentos Anexos</h4>
                   <label className="cursor-pointer">
-                    <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png"
                       onChange={e => { if (e.target.files?.[0]) handleUpload(e.target.files[0], detailObligation.id); e.target.value = ''; }}
                     />
                     <Button size="sm" variant="outline" asChild disabled={uploading}>
