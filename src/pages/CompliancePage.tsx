@@ -211,17 +211,14 @@ const CompliancePage: React.FC = () => {
       return;
     }
 
-    const insertData: Record<string, unknown> = {
+    const insertData = {
       obligation_id: obligationId, company_id: company.id,
       file_url: path, file_name: file.name,
       file_type: file.type, uploaded_by: authUser.id,
+      ...(docExpirationDate ? { expiration_date: docExpirationDate, alert_level: 'none' } : {}),
     };
-    if (docExpirationDate) {
-      insertData.expiration_date = docExpirationDate;
-      insertData.alert_level = 'none';
-    }
 
-    const { error } = await supabase.from('obligation_documents').insert(insertData);
+    const { error } = await supabase.from('obligation_documents').insert(insertData as any);
 
     if (error) {
       console.error('DB ERROR:', error.message);
