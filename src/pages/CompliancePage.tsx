@@ -13,6 +13,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
 import { Shield, Plus, FileUp, Trash2, Eye, AlertTriangle, Filter, MessageCircle, Bell } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ComplianceDashboard from '@/components/compliance/ComplianceDashboard';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { buildWhatsAppUrl } from '@/lib/whatsappTemplates';
 
@@ -318,13 +320,27 @@ const CompliancePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <Shield className="h-7 w-7 text-primary" />
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Compliance Hub</h1>
+          <p className="text-sm text-muted-foreground">Gestão de obrigações legais e documentos</p>
+        </div>
+      </div>
+
+      <Tabs defaultValue="dashboard" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="dashboard">📊 Dashboard</TabsTrigger>
+          <TabsTrigger value="obrigacoes">📋 Obrigações</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dashboard">
+          <ComplianceDashboard />
+        </TabsContent>
+
+        <TabsContent value="obrigacoes" className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <Shield className="h-7 w-7 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Compliance Hub</h1>
-            <p className="text-sm text-muted-foreground">Gestão de obrigações legais e documentos</p>
-          </div>
+        <div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleRunAlertCheck}>
@@ -569,6 +585,8 @@ const CompliancePage: React.FC = () => {
           </DialogContent>
         </Dialog>
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
