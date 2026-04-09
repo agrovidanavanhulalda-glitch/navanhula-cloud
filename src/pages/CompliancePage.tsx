@@ -13,6 +13,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
 import { Shield, Plus, FileUp, Trash2, Eye, AlertTriangle, Filter, MessageCircle, Bell } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ComplianceDashboard from '@/components/compliance/ComplianceDashboard';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { buildWhatsAppUrl } from '@/lib/whatsappTemplates';
 
