@@ -585,6 +585,8 @@ const CompliancePage: React.FC = () => {
           </DialogContent>
         </Dialog>
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
