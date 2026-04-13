@@ -69,6 +69,7 @@ import BankAccountsPage from "./pages/BankAccountsPage";
 import TaxReportsPage from "./pages/TaxReportsPage";
 import CompanyUsersPage from "./pages/CompanyUsersPage";
 import ApiKeysPage from "./pages/ApiKeysPage";
+import IAMPage from "./pages/IAMPage";
 import InviteAcceptPage from "./pages/InviteAcceptPage";
 import NotFound from "./pages/NotFound";
 import { I18nProvider } from "@/contexts/i18n";
@@ -249,6 +250,7 @@ const AppRoutes = () => {
         <Route path="banco" element={<SubscriptionGate><BankAccountsPage /></SubscriptionGate>} />
         <Route path="relatorios-fiscais" element={<SubscriptionGate><TaxReportsPage /></SubscriptionGate>} />
         <Route path="equipa" element={<SubscriptionGate><CompanyUsersPage /></SubscriptionGate>} />
+        <Route path="iam" element={<SubscriptionGate><IAMPage /></SubscriptionGate>} />
         <Route path="api-keys" element={<SubscriptionGate><ApiKeysPage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />

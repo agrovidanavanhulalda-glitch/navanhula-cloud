@@ -4,7 +4,7 @@ import { ShieldAlert } from 'lucide-react';
 
 interface PermissionGateProps {
   module: string;
-  action?: 'view' | 'create' | 'edit' | 'delete';
+  action?: 'view' | 'create' | 'edit' | 'delete' | 'approve';
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
