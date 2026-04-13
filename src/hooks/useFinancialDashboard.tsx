@@ -92,7 +92,7 @@ export function useFinancialDashboard(startDate: Date, endDate: Date) {
       ]);
 
       setTransactions((txRes.data || []) as any[]);
-      setSalesCogs(typeof cogsRes.data === 'number' ? cogsRes.data : 0);
+      setSalesCogs((cogsRes.data || []).reduce((s: number, r: any) => s + (Number(r.cost_price || 0) * Number(r.quantity || 0)), 0));
       setPendingAP((apRes.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0));
       setPendingAR((arRes.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0));
       setPayrollTotal((payrollRes.data || []).reduce((s: number, r: any) => s + Number(r.total_cost || 0), 0));
