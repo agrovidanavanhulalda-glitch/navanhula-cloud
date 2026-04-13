@@ -80,6 +80,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Produtos', href: '/app/produtos', icon: Package },
       { label: 'Estoque', href: '/app/estoque', icon: Boxes },
+      { label: 'Transferências', href: '/app/transferencias-stock', icon: ArrowRightLeft },
     ],
   },
   {

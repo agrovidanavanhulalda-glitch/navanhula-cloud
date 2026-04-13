@@ -239,6 +239,7 @@ const AppRoutes = () => {
         <Route path="compliance" element={<SubscriptionGate><CompliancePage /></SubscriptionGate>} />
         <Route path="auditoria" element={<SystemAuditPage />} />
         <Route path="whatsapp" element={<SubscriptionGate><WhatsAppAutomationPage /></SubscriptionGate>} />
+        <Route path="transferencias-stock" element={<SubscriptionGate><StockTransferPage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
         <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />
