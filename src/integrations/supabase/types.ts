@@ -1181,6 +1181,56 @@ export type Database = {
         }
         Relationships: []
       }
+      company_invitations: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          max_uses: number
+          role: string
+          status: string
+          token: string
+          updated_at: string
+          used_count: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          id?: string
+          max_uses?: number
+          role?: string
+          status?: string
+          token?: string
+          updated_at?: string
+          used_count?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          max_uses?: number
+          role?: string
+          status?: string
+          token?: string
+          updated_at?: string
+          used_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_users: {
         Row: {
           company_id: string
@@ -5694,6 +5744,7 @@ export type Database = {
       }
     }
     Functions: {
+      accept_company_invitation: { Args: { p_token: string }; Returns: Json }
       add_community_comment: {
         Args: { p_content: string; p_post_id: string }
         Returns: Json
@@ -5920,6 +5971,10 @@ export type Database = {
         Args: { p_company_id: string }
         Returns: undefined
       }
+      toggle_company_user_status: {
+        Args: { p_company_id: string; p_status: string; p_user_id: string }
+        Returns: Json
+      }
       toggle_post_like: { Args: { p_post_id: string }; Returns: Json }
       transfer_between_stores: {
         Args: {
@@ -5932,6 +5987,10 @@ export type Database = {
       }
       update_agro_order_status: {
         Args: { p_new_status: string; p_order_id: string }
+        Returns: Json
+      }
+      update_company_user_role: {
+        Args: { p_company_id: string; p_new_role: string; p_user_id: string }
         Returns: Json
       }
       validate_and_redeem_voucher: {
