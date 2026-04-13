@@ -65,6 +65,10 @@ import ContactPage from "./pages/ContactPage";
 import ResellersNetworkPage from "./pages/ResellersNetworkPage";
 import StockTransferPage from "./pages/StockTransferPage";
 import SalesMaterialsPage from "./pages/SalesMaterialsPage";
+import BankAccountsPage from "./pages/BankAccountsPage";
+import TaxReportsPage from "./pages/TaxReportsPage";
+import CompanyUsersPage from "./pages/CompanyUsersPage";
+import ApiKeysPage from "./pages/ApiKeysPage";
 import NotFound from "./pages/NotFound";
 import { I18nProvider } from "@/contexts/i18n";
 
