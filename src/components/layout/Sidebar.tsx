@@ -89,6 +89,7 @@ const navGroups: NavGroup[] = [
     roles: ['admin', 'manager', 'ceo', 'hr', 'director'],
     items: [
       { label: 'Painel Financeiro', href: '/app/financeiro-rh', icon: BarChart3 },
+      { label: 'Lucro & Cashflow', href: '/app/financeiro-dashboard', icon: TrendingUp },
       { label: 'Funcionários', href: '/app/financeiro-rh?tab=employees', icon: User },
       { label: 'Salários', href: '/app/financeiro-rh?tab=payroll', icon: Banknote },
       { label: 'Contabilidade', href: '/app/financeiro-rh?tab=chart', icon: BookOpen },
