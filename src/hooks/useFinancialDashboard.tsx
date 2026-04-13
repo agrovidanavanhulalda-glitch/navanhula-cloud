@@ -62,7 +62,11 @@ export function useFinancialDashboard(startDate: Date, endDate: Date) {
           .neq('status', 'cancelled')
           .order('transaction_date', { ascending: true }),
         // COGS from sale_items
-        supabase.rpc('get_cogs_for_period' as any, { p_company_id: companyId, p_start: startStr, p_end: endStr }).then(r => r).catch(() => ({ data: null })),
+        // COGS: fallback to useFinancialAggregator-style calculation from sale_items
+        supabase.from('sale_items')
+          .select('cost_price, quantity')
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString()),
         // Accounts payable pending
         supabase.from('accounts_payable')
           .select('amount')
