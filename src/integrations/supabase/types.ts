@@ -4247,6 +4247,48 @@ export type Database = {
           },
         ]
       }
+      salesman_stock: {
+        Row: {
+          company_id: string
+          id: string
+          product_id: string
+          quantity: number
+          salesman_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          id?: string
+          product_id: string
+          quantity?: number
+          salesman_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          salesman_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salesman_stock_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salesman_stock_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_payments: {
         Row: {
           amount: number
@@ -4425,6 +4467,54 @@ export type Database = {
           },
         ]
       }
+      stock_logs: {
+        Row: {
+          action: string
+          company_id: string
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          reference_id: string | null
+          salesman_id: string
+        }
+        Insert: {
+          action: string
+          company_id: string
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity: number
+          reference_id?: string | null
+          salesman_id: string
+        }
+        Update: {
+          action?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          reference_id?: string | null
+          salesman_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_logs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           company_id: string
@@ -4497,6 +4587,86 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_transfer_items: {
+        Row: {
+          id: string
+          product_id: string
+          quantity: number
+          transfer_id: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          quantity: number
+          transfer_id: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          quantity?: number
+          transfer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfer_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfer_items_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "stock_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_transfers: {
+        Row: {
+          company_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          from_admin_id: string
+          id: string
+          notes: string | null
+          status: string
+          to_salesman_id: string
+        }
+        Insert: {
+          company_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          from_admin_id: string
+          id?: string
+          notes?: string | null
+          status?: string
+          to_salesman_id: string
+        }
+        Update: {
+          company_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          from_admin_id?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          to_salesman_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -5024,6 +5194,7 @@ export type Database = {
         Args: { p_confirmed_by: string; p_payment_id: string }
         Returns: Json
       }
+      confirm_stock_transfer: { Args: { p_transfer_id: string }; Returns: Json }
       create_journal_entry: {
         Args: {
           p_description: string
@@ -5058,6 +5229,10 @@ export type Database = {
         Returns: number
       }
       evaluate_stock_alerts: { Args: { p_store_id: string }; Returns: Json }
+      force_confirm_stock_transfer: {
+        Args: { p_transfer_id: string }
+        Returns: Json
+      }
       generate_nava_reference: { Args: never; Returns: string }
       generate_reseller_code: { Args: never; Returns: string }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
