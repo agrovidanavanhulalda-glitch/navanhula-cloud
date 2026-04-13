@@ -52,7 +52,6 @@ import FinanceTaxEnginePage from "./pages/FinanceTaxEnginePage";
 import SystemAuditPage from "./pages/SystemAuditPage";
 import WhatsAppAutomationPage from "./pages/WhatsAppAutomationPage";
 import FinanceHRUnifiedPage from "./pages/FinanceHRUnifiedPage";
-import FinancialDashboardPage from "./pages/FinancialDashboardPage";
 import DirectorDashboardPage from "./pages/DirectorDashboardPage";
 import ManagerDashboardPage from "./pages/ManagerDashboardPage";
 import HRDashboardPage2 from "./pages/HRDashboardPage2";
@@ -206,7 +205,6 @@ const AppRoutes = () => {
         <Route path="relatorios" element={<LocalReportsPage />} />
         <Route path="financeiro" element={<FinancialReportsPage />} />
         <Route path="financeiro-rh" element={<SubscriptionGate><FinanceHRUnifiedPage /></SubscriptionGate>} />
-        <Route path="financeiro-dashboard" element={<SubscriptionGate><FinancialDashboardPage /></SubscriptionGate>} />
         <Route path="carteira" element={<SubscriptionGate><WalletPage /></SubscriptionGate>} />
         <Route path="pagamentos-manuais" element={<SubscriptionGate><ManualPaymentsPage /></SubscriptionGate>} />
         <Route path="configuracoes" element={<LocalSettingsPage />} />
