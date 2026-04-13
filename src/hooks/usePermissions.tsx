@@ -20,7 +20,7 @@ export function usePermissions() {
       if (!role) return [];
       const { data, error } = await supabase
         .from('role_permissions')
-        .select('module, can_view, can_create, can_edit, can_delete')
+        .select('module, can_view, can_create, can_edit, can_delete, can_approve')
         .eq('role', role);
       if (error) throw error;
       return (data ?? []) as ModulePermission[];
@@ -29,7 +29,7 @@ export function usePermissions() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const can = (module: string, action: 'view' | 'create' | 'edit' | 'delete'): boolean => {
+  const can = (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'approve'): boolean => {
     if (!role) return false;
     if (role === 'ceo' || role === 'admin') return true;
     const perm = permissions.find(p => p.module === module);
@@ -41,6 +41,7 @@ export function usePermissions() {
   const canCreateIn = (module: string) => can(module, 'create');
   const canEditIn = (module: string) => can(module, 'edit');
   const canDeleteIn = (module: string) => can(module, 'delete');
+  const canApproveIn = (module: string) => can(module, 'approve');
 
-  return { permissions, can, canViewModule, canCreateIn, canEditIn, canDeleteIn, role };
+  return { permissions, can, canViewModule, canCreateIn, canEditIn, canDeleteIn, canApproveIn, role };
 }
