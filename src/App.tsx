@@ -63,6 +63,7 @@ import PricingPage from "./pages/PricingPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import ContactPage from "./pages/ContactPage";
 import ResellersNetworkPage from "./pages/ResellersNetworkPage";
+import StockTransferPage from "./pages/StockTransferPage";
 import SalesMaterialsPage from "./pages/SalesMaterialsPage";
 import NotFound from "./pages/NotFound";
 import { I18nProvider } from "@/contexts/i18n";
