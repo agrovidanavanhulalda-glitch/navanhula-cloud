@@ -461,6 +461,59 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          permissions: Json
+          rate_limit: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name?: string
+          permissions?: Json
+          rate_limit?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          permissions?: Json
+          rate_limit?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           absences: number | null
@@ -565,6 +618,113 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      bank_accounts: {
+        Row: {
+          account_holder: string | null
+          account_number: string | null
+          balance: number
+          bank_name: string
+          company_id: string
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          account_holder?: string | null
+          account_number?: string | null
+          balance?: number
+          bank_name: string
+          company_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          account_holder?: string | null
+          account_number?: string | null
+          balance?: number
+          bank_name?: string
+          company_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_transactions: {
+        Row: {
+          amount: number
+          bank_account_id: string
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          imported_from: string | null
+          reconciled: boolean
+          reconciled_with: string | null
+          reference: string | null
+          transaction_date: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          bank_account_id: string
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          imported_from?: string | null
+          reconciled?: boolean
+          reconciled_with?: string | null
+          reference?: string | null
+          transaction_date?: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          imported_from?: string | null
+          reconciled?: boolean
+          reconciled_with?: string | null
+          reference?: string | null
+          transaction_date?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       business_modules: {
         Row: {
@@ -958,6 +1118,7 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string | null
+          currency: string | null
           email: string | null
           fiscal_rate: number | null
           fiscal_regime: string | null
@@ -969,6 +1130,9 @@ export type Database = {
           name: string
           nif: string | null
           phone: string | null
+          plan: string | null
+          subscription_status: string | null
+          trial_end_date: string | null
           updated_at: string | null
         }
         Insert: {
@@ -976,6 +1140,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string | null
+          currency?: string | null
           email?: string | null
           fiscal_rate?: number | null
           fiscal_regime?: string | null
@@ -987,6 +1152,9 @@ export type Database = {
           name: string
           nif?: string | null
           phone?: string | null
+          plan?: string | null
+          subscription_status?: string | null
+          trial_end_date?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -994,6 +1162,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string | null
+          currency?: string | null
           email?: string | null
           fiscal_rate?: number | null
           fiscal_regime?: string | null
@@ -1005,9 +1174,50 @@ export type Database = {
           name?: string
           nif?: string | null
           phone?: string | null
+          plan?: string | null
+          subscription_status?: string | null
+          trial_end_date?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      company_users: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_users_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       compradores: {
         Row: {
@@ -1824,6 +2034,75 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_transactions: {
+        Row: {
+          amount: number
+          category: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          payment_method: string | null
+          reference_id: string | null
+          reference_type: string | null
+          status: string
+          store_id: string | null
+          transaction_date: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          payment_method?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          status?: string
+          store_id?: string | null
+          transaction_date?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          payment_method?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          status?: string
+          store_id?: string | null
+          transaction_date?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -3411,6 +3690,8 @@ export type Database = {
           name: string
           reorder_point: number | null
           sale_price: number
+          tax_rate: number | null
+          tax_type: string | null
           updated_at: string | null
         }
         Insert: {
@@ -3431,6 +3712,8 @@ export type Database = {
           name: string
           reorder_point?: number | null
           sale_price?: number
+          tax_rate?: number | null
+          tax_type?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -3451,6 +3734,8 @@ export type Database = {
           name?: string
           reorder_point?: number | null
           sale_price?: number
+          tax_rate?: number | null
+          tax_type?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -5147,6 +5432,68 @@ export type Database = {
           },
         ]
       }
+      tax_reports: {
+        Row: {
+          company_id: string
+          created_at: string
+          generated_by: string | null
+          id: string
+          net_result: number
+          notes: string | null
+          period_end: string
+          period_start: string
+          report_type: string
+          status: string
+          tax_rate: number
+          total_expenses: number
+          total_sales: number
+          total_tax: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          net_result?: number
+          notes?: string | null
+          period_end: string
+          period_start: string
+          report_type?: string
+          status?: string
+          tax_rate?: number
+          total_expenses?: number
+          total_sales?: number
+          total_tax?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          net_result?: number
+          notes?: string | null
+          period_end?: string
+          period_start?: string
+          report_type?: string
+          status?: string
+          tax_rate?: number
+          total_expenses?: number
+          total_sales?: number
+          total_tax?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -5420,13 +5767,27 @@ export type Database = {
       }
       generate_nava_reference: { Args: never; Returns: string }
       generate_reseller_code: { Args: never; Returns: string }
+      generate_tax_report: {
+        Args: {
+          p_company_id: string
+          p_end: string
+          p_start: string
+          p_type?: string
+        }
+        Returns: Json
+      }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
       get_platform_stats: { Args: never; Returns: Json }
       get_reseller_id: { Args: { _user_id: string }; Returns: string }
       get_sales_by_store: { Args: { p_period?: string }; Returns: Json }
       get_top_products_national: { Args: { p_limit?: number }; Returns: Json }
       get_user_company: { Args: { _user_id: string }; Returns: string }
+      get_user_company_ids: { Args: never; Returns: string[] }
       get_user_store: { Args: { _user_id: string }; Returns: string }
+      has_company_role: {
+        Args: { _company_id: string; _role: string }
+        Returns: boolean
+      }
       has_completed_onboarding: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -5514,6 +5875,10 @@ export type Database = {
           p_reference_id: string
           p_subscription_id: string
         }
+        Returns: Json
+      }
+      reconcile_bank_transactions: {
+        Args: { p_bank_account_id: string }
         Returns: Json
       }
       record_stock_movement: {
