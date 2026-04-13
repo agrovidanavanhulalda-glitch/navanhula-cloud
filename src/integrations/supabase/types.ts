@@ -726,6 +726,53 @@ export type Database = {
           },
         ]
       }
+      branches: {
+        Row: {
+          address: string | null
+          company_id: string
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          manager_id: string | null
+          name: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          company_id: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          manager_id?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          company_id?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          manager_id?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branches_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_modules: {
         Row: {
           agricultura: boolean
@@ -1183,6 +1230,7 @@ export type Database = {
       }
       company_invitations: {
         Row: {
+          branch_id: string | null
           company_id: string
           created_at: string
           created_by: string
@@ -1196,6 +1244,7 @@ export type Database = {
           used_count: number
         }
         Insert: {
+          branch_id?: string | null
           company_id: string
           created_at?: string
           created_by: string
@@ -1209,6 +1258,7 @@ export type Database = {
           used_count?: number
         }
         Update: {
+          branch_id?: string | null
           company_id?: string
           created_at?: string
           created_by?: string
@@ -1223,6 +1273,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "company_invitations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "company_invitations_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
@@ -1233,6 +1290,7 @@ export type Database = {
       }
       company_users: {
         Row: {
+          branch_id: string | null
           company_id: string
           created_at: string
           id: string
@@ -1242,6 +1300,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          branch_id?: string | null
           company_id: string
           created_at?: string
           id?: string
@@ -1251,6 +1310,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          branch_id?: string | null
           company_id?: string
           created_at?: string
           id?: string
@@ -1260,6 +1320,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "company_users_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "company_users_company_id_fkey"
             columns: ["company_id"]
@@ -3808,6 +3875,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          branch_id: string | null
           commission_rate: number | null
           company_id: string | null
           created_at: string | null
@@ -3824,6 +3892,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          branch_id?: string | null
           commission_rate?: number | null
           company_id?: string | null
           created_at?: string | null
@@ -3840,6 +3909,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          branch_id?: string | null
           commission_rate?: number | null
           company_id?: string | null
           created_at?: string | null
@@ -3855,6 +3925,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_company_id_fkey"
             columns: ["company_id"]
@@ -4413,6 +4490,7 @@ export type Database = {
       }
       role_permissions: {
         Row: {
+          can_approve: boolean | null
           can_create: boolean
           can_delete: boolean
           can_edit: boolean
@@ -4423,6 +4501,7 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }
         Insert: {
+          can_approve?: boolean | null
           can_create?: boolean
           can_delete?: boolean
           can_edit?: boolean
@@ -4433,6 +4512,7 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }
         Update: {
+          can_approve?: boolean | null
           can_create?: boolean
           can_delete?: boolean
           can_edit?: boolean
@@ -5565,6 +5645,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          device_type: string | null
+          ended_at: string | null
+          id: string
+          ip_address: string | null
+          is_active: boolean | null
+          last_seen_at: string | null
+          location: string | null
+          started_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          device_type?: string | null
+          ended_at?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_seen_at?: string | null
+          location?: string | null
+          started_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          device_type?: string | null
+          ended_at?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_seen_at?: string | null
+          location?: string | null
+          started_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallet_transactions: {
         Row: {
           amount: number
@@ -5832,6 +5951,7 @@ export type Database = {
       get_reseller_id: { Args: { _user_id: string }; Returns: string }
       get_sales_by_store: { Args: { p_period?: string }; Returns: Json }
       get_top_products_national: { Args: { p_limit?: number }; Returns: Json }
+      get_user_branch_ids: { Args: never; Returns: string[] }
       get_user_company: { Args: { _user_id: string }; Returns: string }
       get_user_company_ids: { Args: never; Returns: string[] }
       get_user_store: { Args: { _user_id: string }; Returns: string }
@@ -5945,6 +6065,10 @@ export type Database = {
         }
         Returns: Json
       }
+      record_user_session: {
+        Args: { p_device?: string; p_ip?: string; p_user_agent?: string }
+        Returns: string
+      }
       reject_manual_payment: {
         Args: { p_payment_id: string; p_reason?: string; p_rejected_by: string }
         Returns: Json
@@ -5971,6 +6095,7 @@ export type Database = {
         Args: { p_company_id: string }
         Returns: undefined
       }
+      terminate_user_session: { Args: { p_session_id: string }; Returns: Json }
       toggle_company_user_status: {
         Args: { p_company_id: string; p_status: string; p_user_id: string }
         Returns: Json
