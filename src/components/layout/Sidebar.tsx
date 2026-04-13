@@ -9,7 +9,7 @@ import {
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
   Cloud, Store, ChevronDown, Calculator, CreditCard, Banknote,
-  Building2, MapPin, Bird, MessageCircle,
+  Building2, MapPin, Bird, MessageCircle, ArrowRightLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -80,6 +80,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Produtos', href: '/app/produtos', icon: Package },
       { label: 'Estoque', href: '/app/estoque', icon: Boxes },
+      { label: 'Transferências', href: '/app/transferencias-stock', icon: ArrowRightLeft },
     ],
   },
   {

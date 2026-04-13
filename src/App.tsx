@@ -63,6 +63,7 @@ import PricingPage from "./pages/PricingPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import ContactPage from "./pages/ContactPage";
 import ResellersNetworkPage from "./pages/ResellersNetworkPage";
+import StockTransferPage from "./pages/StockTransferPage";
 import SalesMaterialsPage from "./pages/SalesMaterialsPage";
 import NotFound from "./pages/NotFound";
 import { I18nProvider } from "@/contexts/i18n";
@@ -238,6 +239,7 @@ const AppRoutes = () => {
         <Route path="compliance" element={<SubscriptionGate><CompliancePage /></SubscriptionGate>} />
         <Route path="auditoria" element={<SystemAuditPage />} />
         <Route path="whatsapp" element={<SubscriptionGate><WhatsAppAutomationPage /></SubscriptionGate>} />
+        <Route path="transferencias-stock" element={<SubscriptionGate><StockTransferPage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
         <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />
