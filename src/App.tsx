@@ -69,6 +69,7 @@ import BankAccountsPage from "./pages/BankAccountsPage";
 import TaxReportsPage from "./pages/TaxReportsPage";
 import CompanyUsersPage from "./pages/CompanyUsersPage";
 import ApiKeysPage from "./pages/ApiKeysPage";
+import InviteAcceptPage from "./pages/InviteAcceptPage";
 import NotFound from "./pages/NotFound";
 import { I18nProvider } from "@/contexts/i18n";
 
@@ -184,6 +185,7 @@ const AppRoutes = () => {
         }
       />
       <Route path="/signup" element={<Navigate to="/registrar" replace />} />
+      <Route path="/convite/:token" element={<InviteAcceptPage />} />
       <Route path="/onboarding" element={<Navigate to="/app/dashboard" replace />} />
 
       <Route
