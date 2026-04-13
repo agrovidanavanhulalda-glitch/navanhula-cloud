@@ -4247,6 +4247,94 @@ export type Database = {
           },
         ]
       }
+      sales_targets: {
+        Row: {
+          company_id: string
+          created_at: string
+          current_amount: number
+          id: string
+          period_end: string
+          period_start: string
+          salesman_id: string
+          status: string
+          target_amount: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          current_amount?: number
+          id?: string
+          period_end: string
+          period_start: string
+          salesman_id: string
+          status?: string
+          target_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          current_amount?: number
+          id?: string
+          period_end?: string
+          period_start?: string
+          salesman_id?: string
+          status?: string
+          target_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_targets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salesman_commissions: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          id: string
+          percentage: number
+          sale_id: string | null
+          salesman_id: string
+          status: string
+        }
+        Insert: {
+          amount?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          percentage?: number
+          sale_id?: string | null
+          salesman_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          percentage?: number
+          sale_id?: string | null
+          salesman_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salesman_commissions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       salesman_stock: {
         Row: {
           company_id: string
@@ -4472,7 +4560,9 @@ export type Database = {
           action: string
           company_id: string
           created_at: string
+          device: string | null
           id: string
+          ip_address: string | null
           product_id: string
           quantity: number
           reference_id: string | null
@@ -4482,7 +4572,9 @@ export type Database = {
           action: string
           company_id: string
           created_at?: string
+          device?: string | null
           id?: string
+          ip_address?: string | null
           product_id: string
           quantity: number
           reference_id?: string | null
@@ -4492,7 +4584,9 @@ export type Database = {
           action?: string
           company_id?: string
           created_at?: string
+          device?: string | null
           id?: string
+          ip_address?: string | null
           product_id?: string
           quantity?: number
           reference_id?: string | null
@@ -4587,6 +4681,56 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_reconciliation: {
+        Row: {
+          actual_stock: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          difference: number
+          expected_stock: number
+          id: string
+          notes: string | null
+          product_id: string
+          salesman_id: string
+          status: string
+        }
+        Insert: {
+          actual_stock?: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          difference?: number
+          expected_stock?: number
+          id?: string
+          notes?: string | null
+          product_id: string
+          salesman_id: string
+          status?: string
+        }
+        Update: {
+          actual_stock?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          difference?: number
+          expected_stock?: number
+          id?: string
+          notes?: string | null
+          product_id?: string
+          salesman_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_reconciliation_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -4863,6 +5007,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "suppliers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_alerts: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          message: string
+          product_id: string | null
+          salesman_id: string | null
+          status: string
+          type: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          message: string
+          product_id?: string | null
+          salesman_id?: string | null
+          status?: string
+          type?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          product_id?: string | null
+          salesman_id?: string | null
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_alerts_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -5355,6 +5540,10 @@ export type Database = {
           p_phone_number?: string
           p_store_id: string
         }
+        Returns: Json
+      }
+      run_stock_reconciliation: {
+        Args: { p_salesman_id: string }
         Returns: Json
       }
       seed_chart_of_accounts: {
