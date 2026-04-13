@@ -9,7 +9,7 @@ import {
   MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
   Cloud, Store, ChevronDown, Calculator, CreditCard, Banknote,
-  Building2, MapPin, Bird, MessageCircle, ArrowRightLeft,
+  Building2, MapPin, Bird, MessageCircle, ArrowRightLeft, Landmark, Key,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -100,11 +100,13 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    title: 'Fiscal',
+    title: 'Fiscal & Banco',
     icon: FileText,
     roles: ['admin', 'manager', 'ceo', 'director'],
     items: [
       { label: 'Gestão Fiscal', href: '/app/fiscal', icon: FileText },
+      { label: 'Relatórios Fiscais', href: '/app/relatorios-fiscais', icon: BarChart3 },
+      { label: 'Contas Bancárias', href: '/app/banco', icon: Landmark },
       { label: 'Relatórios', href: '/app/relatorios', icon: BarChart3 },
     ],
   },
@@ -147,6 +149,8 @@ const navGroups: NavGroup[] = [
     roles: ['admin', 'ceo', 'manager'],
     items: [
       { label: 'AI Engine', href: '/app/ai', icon: Brain },
+      { label: 'Equipa', href: '/app/equipa', icon: Users },
+      { label: 'API Keys', href: '/app/api-keys', icon: Key },
       { label: 'Assinatura', href: '/app/assinatura', icon: Shield },
       { label: 'Configurações', href: '/app/configuracoes', icon: Settings },
       { label: 'Comunidade', href: '/app/comunidade', icon: MessageSquare },
