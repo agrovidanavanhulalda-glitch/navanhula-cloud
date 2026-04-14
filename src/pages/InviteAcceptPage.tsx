@@ -38,29 +38,24 @@ const InviteAcceptPage: React.FC = () => {
   useEffect(() => {
     if (!token) return;
     (async () => {
-      const { data, error } = await supabase
-        .from('company_invitations')
-        .select('*, companies:company_id(name)')
-        .eq('token', token)
-        .eq('status', 'active')
-        .maybeSingle();
-      if (error || !data) {
+      // Use secure RPC to look up invitation by exact token (no enumeration possible)
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_invitation_by_token', { p_token: token });
+      const invitation = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+      if (rpcError || !invitation) {
         setError('Convite inválido ou expirado.');
         setLoadingInvite(false);
         return;
       }
-      if (new Date(data.expires_at) < new Date()) {
-        setError('Este convite expirou.');
-        setLoadingInvite(false);
-        return;
+      setInvite(invitation);
+      // Fetch company name separately
+      if (invitation.company_id) {
+        const { data: companyData } = await supabase
+          .from('companies')
+          .select('name')
+          .eq('id', invitation.company_id)
+          .maybeSingle();
+        setCompany(companyData);
       }
-      if (data.used_count >= data.max_uses) {
-        setError('Este convite já foi utilizado o máximo de vezes.');
-        setLoadingInvite(false);
-        return;
-      }
-      setInvite(data);
-      setCompany((data as any).companies);
       setLoadingInvite(false);
     })();
   }, [token]);
