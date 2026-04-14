@@ -5947,6 +5947,29 @@ export type Database = {
         Returns: Json
       }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
+      get_invitation_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          branch_id: string | null
+          company_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          max_uses: number
+          role: string
+          status: string
+          token: string
+          updated_at: string
+          used_count: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "company_invitations"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_platform_stats: { Args: never; Returns: Json }
       get_reseller_id: { Args: { _user_id: string }; Returns: string }
       get_sales_by_store: { Args: { p_period?: string }; Returns: Json }
