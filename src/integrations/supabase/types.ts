@@ -5474,6 +5474,7 @@ export type Database = {
         Row: {
           action_taken: string | null
           check_name: string
+          company_id: string | null
           created_at: string
           details: Json | null
           id: string
@@ -5485,6 +5486,7 @@ export type Database = {
         Insert: {
           action_taken?: string | null
           check_name: string
+          company_id?: string | null
           created_at?: string
           details?: Json | null
           id?: string
@@ -5496,6 +5498,7 @@ export type Database = {
         Update: {
           action_taken?: string | null
           check_name?: string
+          company_id?: string | null
           created_at?: string
           details?: Json | null
           id?: string
@@ -5504,7 +5507,15 @@ export type Database = {
           severity?: string
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "system_audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tax_calculations: {
         Row: {
