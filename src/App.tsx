@@ -70,6 +70,7 @@ import TaxReportsPage from "./pages/TaxReportsPage";
 import CompanyUsersPage from "./pages/CompanyUsersPage";
 import ApiKeysPage from "./pages/ApiKeysPage";
 import IAMPage from "./pages/IAMPage";
+import AutomationRulesPage from "./pages/AutomationRulesPage";
 import InviteAcceptPage from "./pages/InviteAcceptPage";
 import NotFound from "./pages/NotFound";
 import { I18nProvider } from "@/contexts/i18n";
@@ -251,6 +252,7 @@ const AppRoutes = () => {
         <Route path="relatorios-fiscais" element={<SubscriptionGate><TaxReportsPage /></SubscriptionGate>} />
         <Route path="equipa" element={<SubscriptionGate><CompanyUsersPage /></SubscriptionGate>} />
         <Route path="iam" element={<SubscriptionGate><IAMPage /></SubscriptionGate>} />
+        <Route path="automacao" element={<SubscriptionGate><AutomationRulesPage /></SubscriptionGate>} />
         <Route path="api-keys" element={<SubscriptionGate><ApiKeysPage /></SubscriptionGate>} />
         <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
         <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />

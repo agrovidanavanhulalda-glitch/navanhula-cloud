@@ -151,6 +151,7 @@ const navGroups: NavGroup[] = [
       { label: 'AI Engine', href: '/app/ai', icon: Brain },
       { label: 'Equipa', href: '/app/equipa', icon: Users },
       { label: 'IAM', href: '/app/iam', icon: Shield },
+      { label: 'Automação', href: '/app/automacao', icon: Settings },
       { label: 'API Keys', href: '/app/api-keys', icon: Key },
       { label: 'Assinatura', href: '/app/assinatura', icon: Shield },
       { label: 'Configurações', href: '/app/configuracoes', icon: Settings },
