@@ -37,21 +37,14 @@ const MainLayout: React.FC = () => {
       <div className="flex min-h-screen w-full bg-background overflow-x-hidden">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          {/* Desktop top bar */}
-          <header
-            className="sticky top-0 z-50 flex items-center gap-4 px-6 py-2.5 border-b border-border"
-            style={{
-              background: 'hsla(0, 0%, 100%, 0.8)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            }}
-          >
-            <SidebarTrigger className="-ml-2" />
+          {/* Premium top bar — Stripe-style */}
+          <header className="sticky top-0 z-50 flex items-center gap-4 px-6 h-14 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+            <SidebarTrigger className="-ml-2 text-muted-foreground hover:text-foreground transition-colors" />
+            <div className="h-5 w-px bg-border/60" />
             <div className="flex-1 min-w-0">
               <AppBreadcrumb />
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <LanguageSelector />
               <NotificationBell />
               <NetworkIndicator />
