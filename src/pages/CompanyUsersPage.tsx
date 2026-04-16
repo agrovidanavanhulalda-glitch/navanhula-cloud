@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck, Trash2, Settings2 } from 'lucide-react';
+import { Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck, Trash2, Settings2, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 
 const ROLES = [
@@ -34,9 +34,13 @@ const CompanyUsersPage = () => {
   const queryClient = useQueryClient();
   const companyId = company?.id;
   const [showInvite, setShowInvite] = useState(false);
+  const [showCreateUser, setShowCreateUser] = useState(false);
   const [showPermissions, setShowPermissions] = useState<string | null>(null);
   const [inviteForm, setInviteForm] = useState({ role: 'seller', max_uses: '1', expires_days: '7' });
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [createUserForm, setCreateUserForm] = useState({ full_name: '', email: '', role: 'seller' });
+  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string; role: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Fetch members
   const { data: members = [], isLoading } = useQuery({
