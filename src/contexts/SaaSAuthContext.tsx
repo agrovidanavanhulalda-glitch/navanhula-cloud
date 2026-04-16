@@ -123,7 +123,7 @@ export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (currentRole !== 'reseller' && needsCompany) {
         const { error: onboardError } = await supabase.rpc('complete_onboarding', {
-          p_company_name: 'NAVANHULA EMPRESA PRINCIPAL',
+          p_company_name: 'NAVANHULA GROUP SA',
           p_company_nif: null,
           p_company_phone: null,
           p_company_address: null,
