@@ -1366,6 +1366,7 @@ export type Database = {
           plan: string | null
           subscription_status: string | null
           trial_end_date: string | null
+          trial_expires_at: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1388,6 +1389,7 @@ export type Database = {
           plan?: string | null
           subscription_status?: string | null
           trial_end_date?: string | null
+          trial_expires_at?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1410,6 +1412,7 @@ export type Database = {
           plan?: string | null
           subscription_status?: string | null
           trial_end_date?: string | null
+          trial_expires_at?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -2814,6 +2817,65 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          business_name: string | null
+          company_id: string
+          converted_at: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          source: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          business_name?: string | null
+          company_id: string
+          converted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          business_name?: string | null
+          company_id?: string
+          converted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       manual_payments: {
         Row: {
           amount: number
@@ -3175,6 +3237,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      onboarding_progress: {
+        Row: {
+          company_created: boolean | null
+          completion_pct: number | null
+          created_at: string
+          first_customer_added: boolean | null
+          first_product_added: boolean | null
+          first_sale_completed: boolean | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_created?: boolean | null
+          completion_pct?: number | null
+          created_at?: string
+          first_customer_added?: boolean | null
+          first_product_added?: boolean | null
+          first_sale_completed?: boolean | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_created?: boolean | null
+          completion_pct?: number | null
+          created_at?: string
+          first_customer_added?: boolean | null
+          first_product_added?: boolean | null
+          first_sale_completed?: boolean | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       payment_logs: {
         Row: {
@@ -4468,6 +4566,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referrals: {
+        Row: {
+          converted_at: string | null
+          created_at: string
+          id: string
+          invited_email: string
+          reward_applied: boolean | null
+          reward_days: number | null
+          reward_type: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          invited_email: string
+          reward_applied?: boolean | null
+          reward_days?: number | null
+          reward_type?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          invited_email?: string
+          reward_applied?: boolean | null
+          reward_days?: number | null
+          reward_type?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       reseller_clients: {
         Row: {
