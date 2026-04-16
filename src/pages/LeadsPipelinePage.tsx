@@ -46,13 +46,14 @@ const LeadsPipelinePage: React.FC = () => {
 
   const fetchLeads = useCallback(async () => {
     if (!company?.id) return;
-    const { data } = await supabase
+    const sb = supabase as any;
+    const { data } = await sb
       .from('leads')
       .select('*')
       .eq('company_id', company.id)
       .order('created_at', { ascending: false })
       .limit(200);
-    if (data) setLeads(data as unknown as Lead[]);
+    if (data) setLeads(data as Lead[]);
     setLoading(false);
   }, [company?.id]);
 
@@ -60,7 +61,7 @@ const LeadsPipelinePage: React.FC = () => {
 
   const handleCreate = async () => {
     if (!form.name.trim() || !company?.id) return;
-    const { error } = await supabase.from('leads').insert({
+    const { error } = await (supabase as any).from('leads').insert({
       company_id: company.id,
       name: form.name.trim(),
       business_name: form.business_name.trim() || null,
@@ -78,7 +79,7 @@ const LeadsPipelinePage: React.FC = () => {
   const updateStatus = async (id: string, status: string) => {
     const updates: Record<string, any> = { status };
     if (status === 'converted') updates.converted_at = new Date().toISOString();
-    await supabase.from('leads').update(updates).eq('id', id);
+    await (supabase as any).from('leads').update(updates).eq('id', id);
     fetchLeads();
     toast.success(`Status atualizado para ${STATUS_CONFIG[status]?.label}`);
   };
