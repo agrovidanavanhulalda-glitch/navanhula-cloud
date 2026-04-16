@@ -25,7 +25,8 @@ const OnboardingChecklist: React.FC = () => {
   useEffect(() => {
     if (!user?.id) return;
     const load = async () => {
-      const { data } = await supabase
+      const sb = supabase as any;
+      const { data } = await sb
         .from('onboarding_progress')
         .select('*')
         .eq('user_id', user.id)
@@ -44,7 +45,7 @@ const OnboardingChecklist: React.FC = () => {
 
       // Auto-create progress row if missing
       if (!p && user.id) {
-        await supabase.from('onboarding_progress').insert({
+        await (supabase as any).from('onboarding_progress').insert({
           user_id: user.id,
           company_created: !!company?.id,
         });
