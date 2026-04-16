@@ -159,6 +159,31 @@ const CompanyUsersPage = () => {
     },
   });
 
+  // Create user via edge function
+  const createUser = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('seed-users', {
+        body: {
+          users: [{
+            email: createUserForm.email,
+            full_name: createUserForm.full_name,
+            role: createUserForm.role,
+          }],
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Erro ao criar utilizador');
+      return data.users[0];
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['company-users'] });
+      setCreatedCredentials({ email: result.email, password: result.password, role: result.role });
+      setCreateUserForm({ full_name: '', email: '', role: 'seller' });
+      toast.success('Utilizador criado com sucesso!');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao criar utilizador'),
+  });
+
   const copyInviteLink = (token: string) => {
     const url = `${window.location.origin}/convite/${token}`;
     navigator.clipboard.writeText(url);
