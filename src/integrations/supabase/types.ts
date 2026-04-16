@@ -1428,6 +1428,56 @@ export type Database = {
           },
         ]
       }
+      cost_centers: {
+        Row: {
+          budget: number | null
+          code: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          spent: number | null
+          updated_at: string
+        }
+        Insert: {
+          budget?: number | null
+          code?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          spent?: number | null
+          updated_at?: string
+        }
+        Update: {
+          budget?: number | null
+          code?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          spent?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cost_centers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       criadores: {
         Row: {
           bi_nuit: string | null
@@ -2160,6 +2210,7 @@ export type Database = {
           amount: number
           category: string
           company_id: string
+          cost_center_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -2177,6 +2228,7 @@ export type Database = {
           amount?: number
           category?: string
           company_id: string
+          cost_center_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -2194,6 +2246,7 @@ export type Database = {
           amount?: number
           category?: string
           company_id?: string
+          cost_center_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -2213,6 +2266,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
             referencedColumns: ["id"]
           },
           {
@@ -3756,6 +3816,7 @@ export type Database = {
           quantity: number | null
           store_id: string
           updated_at: string | null
+          warehouse_id: string | null
         }
         Insert: {
           id?: string
@@ -3763,6 +3824,7 @@ export type Database = {
           quantity?: number | null
           store_id: string
           updated_at?: string | null
+          warehouse_id?: string | null
         }
         Update: {
           id?: string
@@ -3770,6 +3832,7 @@ export type Database = {
           quantity?: number | null
           store_id?: string
           updated_at?: string | null
+          warehouse_id?: string | null
         }
         Relationships: [
           {
@@ -3784,6 +3847,13 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_stock_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
@@ -5041,6 +5111,7 @@ export type Database = {
           total_cost: number
           type: string
           unit_cost: number
+          warehouse_id: string | null
         }
         Insert: {
           company_id: string
@@ -5058,6 +5129,7 @@ export type Database = {
           total_cost?: number
           type: string
           unit_cost?: number
+          warehouse_id?: string | null
         }
         Update: {
           company_id?: string
@@ -5075,6 +5147,7 @@ export type Database = {
           total_cost?: number
           type?: string
           unit_cost?: number
+          warehouse_id?: string | null
         }
         Relationships: [
           {
@@ -5096,6 +5169,13 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
@@ -5816,6 +5896,63 @@ export type Database = {
           },
           {
             foreignKeyName: "wallets_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warehouses: {
+        Row: {
+          address: string | null
+          capacity: number | null
+          code: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          capacity?: number | null
+          code?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          capacity?: number | null
+          code?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warehouses_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
