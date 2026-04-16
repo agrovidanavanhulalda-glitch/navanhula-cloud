@@ -461,6 +461,82 @@ export type Database = {
           },
         ]
       }
+      alerts: {
+        Row: {
+          alert_type: string
+          company_id: string
+          created_at: string
+          id: string
+          message: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          rule_id: string | null
+          severity: string
+          status: string
+          store_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          alert_type: string
+          company_id: string
+          created_at?: string
+          id?: string
+          message: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          rule_id?: string | null
+          severity?: string
+          status?: string
+          store_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          alert_type?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          rule_id?: string | null
+          severity?: string
+          status?: string
+          store_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_keys: {
         Row: {
           company_id: string
@@ -618,6 +694,65 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      automation_rules: {
+        Row: {
+          action_type: string
+          actions: Json
+          company_id: string
+          conditions: Json
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          last_triggered_at: string | null
+          name: string
+          priority: number
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          actions?: Json
+          company_id: string
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_triggered_at?: string | null
+          name: string
+          priority?: number
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          actions?: Json
+          company_id?: string
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_triggered_at?: string | null
+          name?: string
+          priority?: number
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_rules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bank_accounts: {
         Row: {
@@ -5597,6 +5732,63 @@ export type Database = {
           },
         ]
       }
+      system_insights: {
+        Row: {
+          company_id: string
+          created_at: string
+          data: Json
+          id: string
+          insight_type: string
+          message: string
+          priority: string
+          status: string
+          store_id: string | null
+          title: string
+          valid_until: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          data?: Json
+          id?: string
+          insight_type: string
+          message: string
+          priority?: string
+          status?: string
+          store_id?: string | null
+          title: string
+          valid_until?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          insight_type?: string
+          message?: string
+          priority?: string
+          status?: string
+          store_id?: string | null
+          title?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_insights_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_insights_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tax_calculations: {
         Row: {
           base_amount: number
@@ -5960,6 +6152,84 @@ export type Database = {
           },
         ]
       }
+      workflows: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          data: Json
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          requested_by: string
+          status: string
+          store_id: string | null
+          title: string
+          updated_at: string
+          workflow_type: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          data?: Json
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          requested_by: string
+          status?: string
+          store_id?: string | null
+          title: string
+          updated_at?: string
+          workflow_type: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          data?: Json
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          requested_by?: string
+          status?: string
+          store_id?: string | null
+          title?: string
+          updated_at?: string
+          workflow_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflows_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflows_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       customers_safe: {
@@ -6069,6 +6339,10 @@ export type Database = {
         Args: { p_product_id: string; p_quantity: number; p_store_id: string }
         Returns: undefined
       }
+      evaluate_automation_rules: {
+        Args: { p_company_id: string }
+        Returns: Json
+      }
       evaluate_environmental_alerts: {
         Args: { p_company_id: string }
         Returns: number
@@ -6081,6 +6355,10 @@ export type Database = {
       evaluate_stock_alerts: { Args: { p_store_id: string }; Returns: Json }
       force_confirm_stock_transfer: {
         Args: { p_transfer_id: string }
+        Returns: Json
+      }
+      generate_demand_forecast: {
+        Args: { p_company_id: string }
         Returns: Json
       }
       generate_nava_reference: { Args: never; Returns: string }
