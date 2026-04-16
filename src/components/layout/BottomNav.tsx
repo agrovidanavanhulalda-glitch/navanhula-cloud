@@ -6,13 +6,20 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from './Sidebar';
 
-const navItems = [
+interface NavItem {
+  label: string;
+  icon: React.ElementType;
+  path: string;
+  isMenu?: boolean;
+}
+
+const navItems: NavItem[] = [
   { label: 'Início', icon: LayoutDashboard, path: '/app/dashboard' },
   { label: 'Vendas', icon: ShoppingCart, path: '/app/pdv' },
   { label: 'Clientes', icon: Users, path: '/app/crm' },
   { label: 'Relatórios', icon: BarChart3, path: '/app/relatorios' },
   { label: 'Menu', icon: Menu, path: '', isMenu: true },
-] as const;
+];
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
