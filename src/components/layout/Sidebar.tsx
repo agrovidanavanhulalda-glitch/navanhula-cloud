@@ -10,6 +10,7 @@ import {
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
   Cloud, Store, ChevronDown, Calculator, CreditCard, Banknote,
   Building2, MapPin, Bird, MessageCircle, ArrowRightLeft, Landmark, Key,
+  Target, Gift, Rocket,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -153,6 +154,9 @@ const navGroups: NavGroup[] = [
       { label: 'IAM', href: '/app/iam', icon: Shield },
       { label: 'Automação', href: '/app/automacao', icon: Settings },
       { label: 'API Keys', href: '/app/api-keys', icon: Key },
+      { label: 'Leads & Pipeline', href: '/app/leads', icon: Target },
+      { label: 'Crescimento', href: '/app/crescimento', icon: Rocket },
+      { label: 'Indicações', href: '/app/indicacoes', icon: Gift },
       { label: 'Assinatura', href: '/app/assinatura', icon: Shield },
       { label: 'Configurações', href: '/app/configuracoes', icon: Settings },
       { label: 'Comunidade', href: '/app/comunidade', icon: MessageSquare },
