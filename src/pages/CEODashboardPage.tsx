@@ -7,18 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SkeletonKPI } from '@/components/ui/skeleton-card';
 import {
-  Store, TrendingUp, DollarSign, AlertTriangle, Brain,
-  BarChart3, Package, RefreshCw, Users, Building2, ShieldAlert, CreditCard,
-  ArrowUpRight, ArrowDownRight, Crown, Zap, Star, Lock, Unlock, Activity
+  Store, TrendingUp, DollarSign, Building2, ShieldAlert, CreditCard,
+  Crown, Zap, Star, Activity, RefreshCw, Users, Package
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, PieChart, Pie, Cell, AreaChart, Area, Line
+  ResponsiveContainer, AreaChart, Area, Line, Legend
 } from 'recharts';
-import RevenueWidget from '@/components/monetization/RevenueWidget';
-
-const COLORS = ['hsl(217,91%,53%)', 'hsl(160,84%,39%)', 'hsl(38,92%,50%)', 'hsl(199,89%,48%)', 'hsl(280,67%,55%)', 'hsl(0,84%,60%)'];
+import CreateBranchDialog from '@/components/ceo/CreateBranchDialog';
+import BranchListTable from '@/components/ceo/BranchListTable';
 
 interface PlatformStats {
   total_companies: number;
@@ -33,85 +31,73 @@ interface PlatformStats {
   sales_today: number;
 }
 
-interface StoreRanking {
+interface BranchRow {
   id: string;
   name: string;
+  company_type: string;
   city: string | null;
   is_active: boolean;
-  revenue: number;
-  sales_count: number;
-  profit: number;
+  total_users: number;
+  total_stores: number;
+  total_revenue: number;
+  total_stock: number;
+  created_at: string;
 }
 
-const ExecutiveKPI: React.FC<{
+const KPI: React.FC<{
   icon: React.ElementType;
   label: string;
   value: string | number;
   sub?: React.ReactNode;
-  accent?: 'blue' | 'green' | 'amber' | 'emerald' | 'red';
-}> = ({ icon: Icon, label, value, sub, accent = 'blue' }) => {
-  const accentMap = {
-    blue: { bg: 'bg-primary/10', text: 'text-primary', valueClass: '' },
-    green: { bg: 'bg-success/10', text: 'text-success', valueClass: 'text-success' },
-    amber: { bg: 'bg-warning/10', text: 'text-warning', valueClass: 'text-warning' },
-    emerald: { bg: 'bg-profit/10', text: 'text-profit', valueClass: 'text-profit' },
-    red: { bg: 'bg-destructive/10', text: 'text-destructive', valueClass: 'text-destructive' },
-  };
-  const a = accentMap[accent];
-  return (
-    <Card className="p-5 transition-all duration-150 hover:shadow-lg hover:border-primary/20">
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${a.bg}`}>
-          <Icon className={`w-4.5 h-4.5 ${a.text}`} />
-        </div>
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
+  accent?: string;
+}> = ({ icon: Icon, label, value, sub, accent = 'primary' }) => (
+  <Card className="p-5 hover:shadow-lg hover:border-primary/20 transition-all">
+    <div className="flex items-center gap-3 mb-3">
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center bg-${accent}/10`}>
+        <Icon className={`w-4.5 h-4.5 text-${accent}`} />
       </div>
-      <p className={`text-2xl lg:text-3xl font-bold tracking-tight ${a.valueClass}`}>{value}</p>
-      {sub && <p className="mt-1.5 text-xs text-muted-foreground">{sub}</p>}
-    </Card>
-  );
-};
+      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
+    </div>
+    <p className="text-2xl lg:text-3xl font-bold tracking-tight">{value}</p>
+    {sub && <p className="mt-1.5 text-xs text-muted-foreground">{sub}</p>}
+  </Card>
+);
 
 const CEODashboardPage: React.FC = () => {
   const { company } = useAuth();
   const [stats, setStats] = useState<PlatformStats | null>(null);
-  const [storeRankings, setStoreRankings] = useState<StoreRanking[]>([]);
-  const [monthlyGrowth, setMonthlyGrowth] = useState<{ name: string; receita: number; lojas: number }[]>([]);
+  const [branches, setBranches] = useState<BranchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
+
+  const isMaster = company?.is_system_owner === true || company?.company_type === 'master';
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any).rpc('get_platform_stats');
-      if (error) throw error;
-      if (data?.error === 'unauthorized') {
-        setUnauthorized(true);
-        return;
-      }
-      setStats(data as PlatformStats);
+      const [statsRes, branchRes] = await Promise.all([
+        (supabase as any).rpc('get_platform_stats'),
+        (supabase as any).rpc('get_branch_companies'),
+      ]);
 
-      // Fetch store rankings
-      const salesByStoreRes = await (supabase as any).rpc('get_sales_by_store', { p_period: 'month' });
-      if (salesByStoreRes.data && Array.isArray(salesByStoreRes.data)) {
-        setStoreRankings(salesByStoreRes.data.map((s: any) => ({
-          id: s.store_id, name: s.store_name, city: s.city, is_active: s.is_active,
-          revenue: Number(s.total_revenue || 0), sales_count: Number(s.total_sales || 0), profit: Number(s.total_profit || 0),
-        })).sort((a: StoreRanking, b: StoreRanking) => b.revenue - a.revenue));
-      }
+      if (statsRes.error) throw statsRes.error;
+      if (statsRes.data?.error === 'unauthorized') { setUnauthorized(true); return; }
+      setStats(statsRes.data as PlatformStats);
 
-      // Monthly platform growth simulation based on stats
-      const growth: typeof monthlyGrowth = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(); d.setMonth(d.getMonth() - i);
-        const factor = 1 - (i * 0.12);
-        growth.push({
-          name: d.toLocaleDateString('pt-MZ', { month: 'short', year: '2-digit' }),
-          receita: Math.round((data?.revenue_all_month || 0) * Math.max(factor, 0.3)),
-          lojas: Math.round((data?.total_stores || 0) * Math.max(factor, 0.5)),
-        });
+      if (branchRes.data && Array.isArray(branchRes.data)) {
+        setBranches(branchRes.data.map((b: any) => ({
+          id: b.id,
+          name: b.name,
+          company_type: b.company_type,
+          city: b.city,
+          is_active: b.is_active,
+          total_users: Number(b.total_users || 0),
+          total_stores: Number(b.total_stores || 0),
+          total_revenue: Number(b.total_revenue || 0),
+          total_stock: Number(b.total_stock || 0),
+          created_at: b.created_at,
+        })));
       }
-      setMonthlyGrowth(growth);
     } catch {
       setUnauthorized(true);
     } finally {
@@ -121,18 +107,31 @@ const CEODashboardPage: React.FC = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  if (unauthorized) {
+  // Access guard
+  if (!isMaster && !loading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-[60vh]">
         <Card className="max-w-md w-full text-center p-8">
           <ShieldAlert className="w-12 h-12 text-warning mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Acesso Restrito</h2>
           <p className="text-muted-foreground">
-            Este painel é exclusivo para a administração da plataforma NAVANHULA GROUP LDA.
+            Este painel é exclusivo para a administração da plataforma NAVANHULA GROUP SA.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Empresas clientes devem utilizar o Dashboard principal para visualizar os seus dados.
+            Empresas clientes devem utilizar o Dashboard principal.
           </p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (unauthorized) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md w-full text-center p-8">
+          <ShieldAlert className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Não Autorizado</h2>
+          <p className="text-muted-foreground">Erro ao carregar dados da plataforma.</p>
         </Card>
       </div>
     );
@@ -142,49 +141,59 @@ const CEODashboardPage: React.FC = () => {
     return (
       <div className="p-4 md:p-6 space-y-6 animate-fade-in">
         <div className="h-8 w-64 rounded bg-muted/50 animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {[1,2,3,4,5,6].map(i => <SkeletonKPI key={i} />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <SkeletonKPI key={i} />)}
         </div>
       </div>
     );
   }
 
-  const totalStoreRevenue = storeRankings.reduce((a, s) => a + s.revenue, 0);
-  const activeStores = storeRankings.filter(s => s.is_active).length;
-  const avgRevenuePerStore = activeStores > 0 ? totalStoreRevenue / activeStores : 0;
+  const totalBranches = branches.filter(b => b.company_type === 'branch').length;
+  const totalClients = branches.filter(b => b.company_type === 'client').length;
+  const globalRevenue = branches.reduce((a, b) => a + b.total_revenue, 0);
+  const globalStock = branches.reduce((a, b) => a + b.total_stock, 0);
+  const top5 = [...branches].sort((a, b) => b.total_revenue - a.total_revenue).slice(0, 5);
 
   return (
     <div className="p-4 md:p-6 space-y-8 animate-fade-in">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight flex items-center gap-2">
             <Crown className="w-7 h-7 text-warning" />
-            Painel CEO Supremo
+            Painel CEO — Controle Master
           </h1>
-           <p className="text-sm text-muted-foreground mt-1">
-             NAVANHULA GROUP LDA — Comando Global da Plataforma
-           </p>
+          <p className="text-sm text-muted-foreground mt-1">
+            NAVANHULA GROUP SA — Visão Global de Todas Empresas
+          </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-2">
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <CreateBranchDialog onCreated={fetchData} />
+          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="gap-2">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
-      {/* KPI Grid */}
+      {/* Global KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <ExecutiveKPI icon={Building2} label="Empresas" value={stats?.total_companies ?? 0}
-          sub={`${stats?.total_users ?? 0} utilizadores registrados`} accent="blue" />
-        <ExecutiveKPI icon={Store} label="Lojas Ativas" value={stats?.total_stores ?? 0}
-          sub={`${stats?.total_products ?? 0} produtos no catálogo`} accent="green" />
-        <ExecutiveKPI icon={DollarSign} label="Receita Mensal Total" value={formatCurrency(stats?.revenue_all_month ?? 0)}
-          sub={`${stats?.sales_today ?? 0} vendas registradas hoje`} accent="emerald" />
-        <ExecutiveKPI icon={CreditCard} label="Assinaturas" value={stats?.active_subscriptions ?? 0}
-          sub={`${stats?.trial_subscriptions ?? 0} em teste · ${formatCurrency(stats?.platform_revenue_month ?? 0)}/mês`} accent="blue" />
+        <KPI icon={Building2} label="Filiais" value={totalBranches}
+          sub={`${totalClients} clientes externos`} accent="primary" />
+        <KPI icon={Store} label="Lojas Totais" value={stats?.total_stores ?? 0}
+          sub={`${stats?.total_products ?? 0} produtos no catálogo`} accent="success" />
+        <KPI icon={DollarSign} label="Receita Consolidada" value={formatCurrency(globalRevenue + (stats?.revenue_all_month ?? 0))}
+          sub={`${stats?.sales_today ?? 0} vendas hoje`} accent="profit" />
+        <KPI icon={Users} label="Utilizadores" value={stats?.total_users ?? 0}
+          sub={`${stats?.active_subscriptions ?? 0} assinaturas ativas`} accent="primary" />
       </div>
 
       {/* Secondary KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card className="p-4">
+          <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] mb-1"><Package className="w-3 h-3" /> Stock Global</div>
+          <p className="text-xl font-bold">{globalStock.toLocaleString('pt-MZ')}</p>
+        </Card>
         <Card className="p-4">
           <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] mb-1"><Activity className="w-3 h-3" /> Vendas Total</div>
           <p className="text-xl font-bold">{stats?.total_sales_all ?? 0}</p>
@@ -194,84 +203,68 @@ const CEODashboardPage: React.FC = () => {
           <p className="text-lg font-bold text-success">{formatCurrency(stats?.platform_revenue_month ?? 0)}</p>
         </Card>
         <Card className="p-4">
-          <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] mb-1"><Star className="w-3 h-3" /> Média/Loja</div>
-          <p className="text-lg font-bold">{formatCurrency(avgRevenuePerStore)}</p>
-        </Card>
-        <Card className="p-4">
           <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] mb-1"><Zap className="w-3 h-3" /> Vendas Hoje</div>
           <p className="text-xl font-bold">{stats?.sales_today ?? 0}</p>
         </Card>
       </div>
 
-      {/* Revenue Analytics Widget */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-primary" /> Métricas de Monetização
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RevenueWidget
-            platformRevenue={stats?.platform_revenue_month ?? 0}
-            activeSubscriptions={stats?.active_subscriptions ?? 0}
-            trialUsers={stats?.trial_subscriptions ?? 0}
-            totalStores={stats?.total_stores ?? 0}
-          />
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="ranking" className="space-y-4">
+      {/* Tabs */}
+      <Tabs defaultValue="branches" className="space-y-4">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="ranking">Ranking Lojas</TabsTrigger>
-          <TabsTrigger value="growth">Crescimento</TabsTrigger>
+          <TabsTrigger value="branches">Filiais & Clientes</TabsTrigger>
+          <TabsTrigger value="top5">Top 5 Vendas</TabsTrigger>
           <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="ranking">
+        {/* Branch Listing */}
+        <TabsContent value="branches">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-primary" /> Ranking de Lojas — Receita Mensal
+                <Building2 className="w-5 h-5 text-primary" /> Empresas Vinculadas
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {storeRankings.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground">
-                  <Store className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                  <p>Sem dados de lojas</p>
-                </div>
+              <BranchListTable branches={branches} onRefresh={fetchData} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Top 5 */}
+        <TabsContent value="top5">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Star className="w-5 h-5 text-warning" /> Top 5 — Receita Mensal
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {top5.length === 0 ? (
+                <p className="py-12 text-center text-muted-foreground">Sem dados</p>
               ) : (
                 <>
-                  <ResponsiveContainer width="100%" height={Math.min(storeRankings.length * 45 + 40, 400)}>
-                    <BarChart data={storeRankings.slice(0, 10)} layout="vertical" barSize={20}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(214 32% 91%)" />
-                      <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
-                      <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
+                  <ResponsiveContainer width="100%" height={Math.min(top5.length * 50 + 40, 320)}>
+                    <BarChart data={top5} layout="vertical" barSize={22}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" tick={{ fontSize: 11 }} />
+                      <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 11 }} />
                       <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
-                      <Bar dataKey="revenue" fill="hsl(217, 91%, 53%)" radius={[0, 4, 4, 0]} name="Receita" />
-                      <Bar dataKey="profit" fill="hsl(160, 84%, 39%)" radius={[0, 4, 4, 0]} name="Lucro" />
+                      <Bar dataKey="total_revenue" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Receita" />
                     </BarChart>
                   </ResponsiveContainer>
-
-                  <div className="mt-6 space-y-2">
-                    {storeRankings.map((store, i) => (
-                      <div key={store.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <div className="mt-4 space-y-2">
+                    {top5.map((b, i) => (
+                      <div key={b.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                         <div className="flex items-center gap-3">
                           <Badge variant={i === 0 ? 'default' : 'secondary'} className="w-7 h-7 rounded-full flex items-center justify-center p-0 text-xs">
                             {i + 1}
                           </Badge>
                           <div>
-                            <p className="font-medium text-sm flex items-center gap-2">
-                              {store.name}
-                              {!store.is_active && <Lock className="w-3 h-3 text-destructive" />}
-                            </p>
-                            <p className="text-xs text-muted-foreground">{store.city || 'N/A'} · {store.sales_count} vendas</p>
+                            <p className="font-medium text-sm">{b.name}</p>
+                            <p className="text-xs text-muted-foreground">{b.city || '—'} · {b.total_stores} lojas</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-sm">{formatCurrency(store.revenue)}</p>
-                          <p className="text-xs text-success">{formatCurrency(store.profit)} lucro</p>
-                        </div>
+                        <p className="font-bold text-sm">{formatCurrency(b.total_revenue)}</p>
                       </div>
                     ))}
                   </div>
@@ -281,36 +274,7 @@ const CEODashboardPage: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="growth">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" /> Crescimento da Plataforma
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={320}>
-                <AreaChart data={monthlyGrowth}>
-                  <defs>
-                    <linearGradient id="ceoGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(217, 91%, 53%)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(217, 91%, 53%)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(214 32% 91%)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
-                  <YAxis tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} />
-                  <Tooltip formatter={(v: number, name: string) => [name === 'lojas' ? v : formatCurrency(v), name === 'lojas' ? 'Lojas' : 'Receita']}
-                    contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
-                  <Legend formatter={(v) => v === 'lojas' ? 'Lojas' : 'Receita'} />
-                  <Area type="monotone" dataKey="receita" stroke="hsl(217, 91%, 53%)" fill="url(#ceoGrad)" name="Receita" />
-                  <Line type="monotone" dataKey="lojas" stroke="hsl(160, 84%, 39%)" strokeWidth={2} name="Lojas" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
+        {/* Subscriptions */}
         <TabsContent value="subscriptions">
           <Card>
             <CardHeader>
@@ -333,10 +297,9 @@ const CEODashboardPage: React.FC = () => {
                   <p className="text-2xl font-bold text-primary">{formatCurrency(stats?.platform_revenue_month ?? 0)}</p>
                 </Card>
               </div>
-
-              <div className="text-center text-muted-foreground py-6">
+              <div className="text-center text-muted-foreground py-4">
                 <p className="text-sm">Plano padrão: <strong>1.500 MT</strong> por loja ativa/mês</p>
-                <p className="text-xs mt-1">O sistema monitora pagamentos e suspende lojas em atraso automaticamente.</p>
+                <p className="text-xs mt-1">Filiais (billing_exempt) não pagam assinatura.</p>
               </div>
             </CardContent>
           </Card>

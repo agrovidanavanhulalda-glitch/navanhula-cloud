@@ -6678,6 +6678,17 @@ export type Database = {
         Returns: Json
       }
       confirm_stock_transfer: { Args: { p_transfer_id: string }; Returns: Json }
+      create_branch_company: {
+        Args: {
+          p_address?: string
+          p_city?: string
+          p_country?: string
+          p_name: string
+          p_nif?: string
+          p_phone?: string
+        }
+        Returns: string
+      }
       create_journal_entry: {
         Args: {
           p_description: string
@@ -6734,6 +6745,23 @@ export type Database = {
           p_type?: string
         }
         Returns: Json
+      }
+      get_branch_companies: {
+        Args: never
+        Returns: {
+          billing_exempt: boolean
+          city: string
+          company_type: string
+          country: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          total_revenue: number
+          total_stock: number
+          total_stores: number
+          total_users: number
+        }[]
       }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
       get_invitation_by_token: {
@@ -6913,6 +6941,10 @@ export type Database = {
         Returns: undefined
       }
       terminate_user_session: { Args: { p_session_id: string }; Returns: Json }
+      toggle_company_status: {
+        Args: { p_active: boolean; p_company_id: string }
+        Returns: undefined
+      }
       toggle_company_user_status: {
         Args: { p_company_id: string; p_status: string; p_user_id: string }
         Returns: Json
