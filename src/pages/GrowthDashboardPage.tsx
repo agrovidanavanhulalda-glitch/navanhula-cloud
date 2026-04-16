@@ -15,9 +15,9 @@ const GrowthDashboardPage: React.FC = () => {
   useEffect(() => {
     if (!company?.id) return;
     const load = async () => {
-      const leadsRes = await supabase.from('leads').select('status').eq('company_id', company.id);
-      const referralsRes = await supabase.from('referrals').select('status');
-      const customersRes = await supabase.from('customers').select('id', { count: 'exact' }).eq('company_id', company.id);
+      const leadsRes = await (supabase.from('leads').select('status').eq('company_id', company.id) as any);
+      const referralsRes = await (supabase.from('referrals').select('status') as any);
+      const customersRes = await (supabase.from('customers').select('id', { count: 'exact' }).eq('company_id', company.id) as any);
 
       const leads = (leadsRes.data || []) as { status: string }[];
       const referrals = (referralsRes.data || []) as { status: string }[];
