@@ -7,6 +7,8 @@ export type CashRegisterStatus = 'open' | 'closed';
 export type StockAdjustmentReason = 'loss' | 'theft' | 'breakage' | 'admin_adjustment' | 'inventory_correction';
 
 // Company (multi-tenant root entity)
+export type CompanyType = 'master' | 'branch' | 'client';
+
 export interface Company {
   id: string;
   name: string;
@@ -14,6 +16,10 @@ export interface Company {
   phone?: string;
   address?: string;
   is_active: boolean;
+  company_type: CompanyType;
+  is_system_owner: boolean;
+  billing_exempt: boolean;
+  parent_company_id?: string;
   created_at: string;
   updated_at: string;
 }

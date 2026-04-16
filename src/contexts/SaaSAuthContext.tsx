@@ -47,11 +47,14 @@ const MAX_LOADING_TIME = 2000;
 // Default company for fallback
 const DEFAULT_COMPANY: Company = {
   id: 'local-default',
-  name: 'NAVANHULA EMPRESA',
+  name: 'NAVANHULA GROUP SA',
   nif: null,
   phone: null,
   address: null,
   is_active: true,
+  company_type: 'master',
+  is_system_owner: true,
+  billing_exempt: true,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
