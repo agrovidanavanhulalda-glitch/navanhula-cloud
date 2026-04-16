@@ -5,6 +5,8 @@ export function getDefaultRouteForRole(role: AppRole | null): string {
   switch (role) {
     case 'ceo':
       return '/app/ceo';
+    case 'admin':
+      return '/app/dashboard';
     case 'director':
       return '/app/dashboard/diretor';
     case 'manager':
@@ -12,11 +14,10 @@ export function getDefaultRouteForRole(role: AppRole | null): string {
     case 'hr':
       return '/app/dashboard/rh';
     case 'cashier':
+    case 'seller':
       return '/app/pdv';
     case 'reseller':
       return '/app/revendedores/dashboard';
-    case 'admin':
-    case 'seller':
     default:
       return '/app/dashboard';
   }

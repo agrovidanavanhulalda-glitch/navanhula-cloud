@@ -5,14 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface UserSeed {
-  username: string;
-  email: string;
-  password: string;
-  role: string;
-  full_name: string;
-}
-
 function generatePassword(): string {
   const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const lower = "abcdefghijklmnopqrstuvwxyz";
@@ -33,25 +25,6 @@ function generatePassword(): string {
   return pwd.split("").sort(() => Math.random() - 0.5).join("");
 }
 
-const USERS_TO_CREATE: Omit<UserSeed, "password">[] = [
-  { username: "ceo_01", email: "ceo@navanhula.co.mz", role: "ceo", full_name: "CEO Principal" },
-  { username: "diretor_01", email: "diretor1@navanhula.co.mz", role: "director", full_name: "Diretor Financeiro" },
-  { username: "diretor_02", email: "diretor2@navanhula.co.mz", role: "director", full_name: "Diretor Operacional" },
-  { username: "gestor_01", email: "gestor1@navanhula.co.mz", role: "manager", full_name: "Gestor Vendas" },
-  { username: "gestor_02", email: "gestor2@navanhula.co.mz", role: "manager", full_name: "Gestor Logística" },
-  { username: "gestor_03", email: "gestor3@navanhula.co.mz", role: "manager", full_name: "Gestor Produção" },
-  { username: "rh_01", email: "rh1@navanhula.co.mz", role: "hr", full_name: "Técnico RH 1" },
-  { username: "rh_02", email: "rh2@navanhula.co.mz", role: "hr", full_name: "Técnico RH 2" },
-  { username: "caixa_01", email: "caixa1@navanhula.co.mz", role: "cashier", full_name: "Caixa 1" },
-  { username: "caixa_02", email: "caixa2@navanhula.co.mz", role: "cashier", full_name: "Caixa 2" },
-  { username: "caixa_03", email: "caixa3@navanhula.co.mz", role: "cashier", full_name: "Caixa 3" },
-  { username: "revendedor_01", email: "revendedor1@navanhula.co.mz", role: "reseller", full_name: "Revendedor 1" },
-  { username: "revendedor_02", email: "revendedor2@navanhula.co.mz", role: "reseller", full_name: "Revendedor 2" },
-  { username: "revendedor_03", email: "revendedor3@navanhula.co.mz", role: "reseller", full_name: "Revendedor 3" },
-  { username: "revendedor_04", email: "revendedor4@navanhula.co.mz", role: "reseller", full_name: "Revendedor 4" },
-  { username: "revendedor_05", email: "revendedor5@navanhula.co.mz", role: "reseller", full_name: "Revendedor 5" },
-];
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -63,45 +36,87 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const results: { username: string; email: string; password: string; role: string; status: string }[] = [];
+    // Verify caller is CEO
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
+      if (caller) {
+        const { data: callerRole } = await supabaseAdmin
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", caller.id)
+          .single();
+        if (callerRole?.role !== "ceo" && callerRole?.role !== "admin") {
+          return new Response(JSON.stringify({ error: "Apenas CEO ou Admin podem criar usuários" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+    }
 
-    for (const userDef of USERS_TO_CREATE) {
-      const password = generatePassword();
+    const body = await req.json();
+    const users: { email: string; full_name: string; role: string; password?: string }[] = body.users || [];
 
-      // Create auth user with auto-confirm
+    if (!users.length) {
+      return new Response(JSON.stringify({ error: "Nenhum usuário fornecido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Get master company and store
+    const { data: masterCompany } = await supabaseAdmin
+      .from("companies")
+      .select("id")
+      .eq("is_system_owner", true)
+      .single();
+
+    const { data: mainStore } = await supabaseAdmin
+      .from("stores")
+      .select("id")
+      .eq("company_id", masterCompany?.id)
+      .limit(1)
+      .single();
+
+    const results: { email: string; password: string; role: string; full_name: string; status: string }[] = [];
+
+    for (const u of users) {
+      const password = u.password || generatePassword();
+
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: userDef.email,
+        email: u.email,
         password,
         email_confirm: true,
-        user_metadata: { full_name: userDef.full_name },
+        user_metadata: { full_name: u.full_name },
       });
 
       if (authError) {
-        results.push({
-          username: userDef.username,
-          email: userDef.email,
-          password: "",
-          role: userDef.role,
-          status: `error: ${authError.message}`,
-        });
+        results.push({ email: u.email, password: "", role: u.role, full_name: u.full_name, status: `error: ${authError.message}` });
         continue;
       }
 
       const userId = authData.user.id;
 
+      // Create profile
+      await supabaseAdmin.from("profiles").upsert({
+        id: userId,
+        email: u.email,
+        full_name: u.full_name,
+        company_id: masterCompany?.id,
+        store_id: mainStore?.id,
+        is_active: true,
+        onboarding_completed: true,
+      }, { onConflict: "id" });
+
       // Assign role
       await supabaseAdmin.from("user_roles").upsert({
         user_id: userId,
-        role: userDef.role,
+        role: u.role,
       }, { onConflict: "user_id,role" });
 
-      results.push({
-        username: userDef.username,
-        email: userDef.email,
-        password,
-        role: userDef.role,
-        status: "created",
-      });
+      results.push({ email: u.email, password, role: u.role, full_name: u.full_name, status: "created" });
     }
 
     return new Response(JSON.stringify({ success: true, users: results }), {
