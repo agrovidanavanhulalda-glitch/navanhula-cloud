@@ -1,0 +1,104 @@
+# Project Memory
+
+## Core
+- **Terminology**: Prohibited to use the term "SaaS". Always use "Sistema Empresarial" or "Plataforma de Gestão".
+- **Formatting**: Strictly format currency/numbers (e.g., "1.250,00 MT"). Never write numbers in words.
+- **Identity**: Always use `getProfile()` for user data. Never use Supabase Auth metadata directly.
+- **Tenancy/RLS**: Isolate all data by `company_id`. Use `get_user_company_ids()` and `get_user_branch_ids()` for RLS.
+- **Routing**: Strictly use React Router's `<Link>` for internal navigation. Top-level `I18nProvider` in `App.tsx`.
+- **UI Strings**: Never display DB UUIDs. Use `uiLabels.ts` mappings or fallbacks like "Operador".
+- **Styling**: Inter (desktop), SF Pro Display (mobile). Dark theme, Blue/Navy palette. Floating cards, `.press-scale`.
+- **Z-Index Hierarchy**: Header 30/50, Overlay 40, Sidebar 50, Dropdown 1100, Modal 1200.
+- **Mobile Layout**: Zero horizontal scroll (`overflow-x: hidden`). `min-w-0` on flex items. Sidebar becomes a drawer.
+- **Resilience**: Hooks must return neutral states on error, no throwing. Require `ErrorBoundary` in `main.tsx`.
+- **Integrity**: Never drop existing tables or break consolidated features. Manual POS items persist with `product_id = NULL`.
+- **Build Constraints**: Vite requires `@import` first in `index.css` and `resolve.dedupe` for React packages.
+- **Master Company**: NAVANHULA GROUP SA is the system owner (is_system_owner=true). Branches inherit permissions. Clients are isolated.
+
+## Memories
+- [Master Control System](mem://features/master-control-system) — Master/Branch/Client hierarchy, is_system_owner, get_master_visible_company_ids
+- [Access Control (RBAC)](mem://features/access-control) — Granular permissions restricted by branch/company, segregated via RLS
+- [Cash Register Logic](mem://features/cash-register-logic) — Session required before sales, seller selected, initial balance defined
+- [Seller Management](mem://features/seller-management) — Seller ID/name from profiles bound on session open, hidden UUIDs on receipts
+- [Customer Privacy](mem://security/customer-privacy) — RLS based on roles (Sellers: own, Managers: store, Admins: all), masked contacts
+- [Sale Cancellation](mem://features/sale-cancellation) — Admin only, requires justification, auto-restores stock, 'CANCELADA' status
+- [Customer Data Optionality](mem://constraints/customer-data-optionality) — Customer phone/email optional in POS to speed up checkout
+- [Notification System](mem://features/notification-system) — Supabase Realtime alerts for stock/community/sales on a bell component
+- [Ephemeral Cart](mem://technical/ephemeral-cart) — POS cart kept in memory to avoid DB latency during checkout
+- [Modular Business Logic](mem://technical/modular-business-logic) — business_modules controls conditional UI (Commerce/Agro/Poultry/Mixed)
+- [Storage Privacy Policy](mem://security/storage-privacy-policy) — Private comunidade_media bucket, requires auth and signed URLs
+- [Access Hardening](mem://security/access-hardening) — Restricted CORS, get_invitation_by_token Security Definer to prevent enumeration
+- [Auth Resilience Timeout](mem://technical/auth-resilience-timeout) — CloudAuthContext 5s timeout fallback to local data
+- [Design System](mem://style/design-system) — Inter/SF Pro, Blue/Navy, Glassmorphism, rounded-lg/2xl floating cards
+- [Onboarding Automation](mem://auth/onboarding-automation) — Auto-promotes to Admin, creates company/store/profile, 7-day trial
+- [Product Branding Assets](mem://features/product-branding-assets) — company_assets bucket for product images and logos
+- [Reseller Affiliate Network](mem://features/reseller-affiliate-network) — ?ref= links to /registrar, 30% auto commission
+- [Build Constraints](mem://technical/build-constraints) — @import first in index.css, Workbox cache 5 MiB
+- [User Profile Naming](mem://auth/user-profile-naming) — Fallback to email prefix or 'Operador' if no name, UUIDs banned
+- [Hook Resilience](mem://technical/hook-resilience) — useAuth and useLocalPOS return neutral state on error, no throwing
+- [Bluetooth Printing](mem://features/bluetooth-printing) — ESC/POS, 58mm/80mm, auto drawer kick (ESC p 0 25 250)
+- [Automated Communications](mem://features/automated-communications) — Auto emails for account/sales, alerts for stock
+- [Audit Logging](mem://technical/audit-logging) — audit_logs (data diffs) and access_logs (login/IP)
+- [AI Business Engine](mem://features/ai-business-engine) — Lovable AI Gateway, SmartAlertBanner, InsightItem, local fallback
+- [Subscription Access Control](mem://features/subscription-access-control) — Blocks POS/Products/CRM after 7 days unpaid, Dashboard active
+- [Documents Center](mem://features/documents-center) — Auto FAT-0001/REC-0001 in PDF A4/Thermal, requires NUIT/Payment/Name
+- [E-Commerce Module](mem://features/ecommerce-module) — Online catalog, synced stock, multi-step checkout, M-Pesa/Card
+- [Master Tenant Admin](mem://features/master-tenant-admin) — NAVANHULA GROUP LDA Master store, CEO access via get_platform_stats
+- [Automation Preferences](mem://features/automation-preferences) — Per-store POS automation (receipts, drawer, whatsapp) saved locally
+- [Vite Dependency Deduplication](mem://technical/vite-dependency-deduplication) — resolve.dedupe for react, react-dom, react-router-dom in vite.config.ts
+- [Procurement Lifecycle](mem://features/procurement-lifecycle-automation) — PO states (pending to received), auto increments stock/AP on receipt
+- [Poultry AI Intelligence](mem://features/poultry-ai-intelligence) — Predictive analysis, mortality/FCR, climate integration, risk scores
+- [Climate Satellite Integration](mem://features/climate-satellite-integration) — OpenWeatherMap/NASA POWER, heat stress alerts
+- [Accounting Automation Engine](mem://technical/accounting-automation-engine) — create_journal_entry enforces Debit=Credit, PGC standard
+- [POS Checkout Flow](mem://features/pos-checkout-flow) — Open session, seller ID, manual items (product_id=NULL), thermal/A4 receipt modal
+- [Fiscal Accounting Center](mem://features/fiscal-accounting-center) — POS -> Document -> Accounting -> Taxes. IVA 16%, ISPC 5%, IRPC 3%
+- [Business Intelligence Module](mem://features/business-intelligence-module) — Profit = Revenue - (COGS + Opex + Salaries + Commissions + Taxes)
+- [Supabase Backend Architecture](mem://technical/supabase-backend-architecture) — RLS by company_id, SECURITY DEFINER with search_path set
+- [Layout Spacing Z-Index Standards](mem://style/layout-spacing-zindex-standards) — Header 30/50, Overlay 40, Sidebar 50, Dropdown 1100, Modal 1200
+- [Agro Map Marketplace](mem://features/agro-map-marketplace) — Leaflet/OSM, order states, atomic place_agro_order reservations
+- [Fintech Credentials Privacy](mem://security/fintech-credentials-privacy) — Mobile Money secrets only in Edge Functions
+- [Manual Payment Risk Logic](mem://features/manual-payment-risk-logic) — NAVA-{timestamp}-{random} ref format, risk score, payment-proofs bucket
+- [Payroll Rules Engine Logic](mem://features/payroll-rules-engine-logic) — salary_rules, INSS (3% worker, 4% company), attendance deductions
+- [Agro Map Logistics Drivers](mem://features/agro-map-logistics-drivers) — Soft delete drivers, blocked if active orders
+- [HR Payroll Unified Module](mem://features/hr-payroll-unified-module) — auto_commission_on_sale trigger (5%), tracks profit per employee
+- [Numeric Formatting](mem://constraints/numeric-formatting) — Must use 1.250,00 MT format, no words for numbers
+- [Poultry Breeder Management](mem://features/poultry-breeder-management) — Breeder profiles, GPS, supply chain (chicks/feed), capacity
+- [Marketplace Buyer Demand](mem://features/marketplace-buyer-demand-management) — Compradores table, intelligent supply-demand matching
+- [Compliance Hub](mem://features/compliance-hub) — obligations table, compliance_documents bucket ({empresa}/{ano}/{mes}), 60s signed URLs
+- [Finance Tax Engine](mem://features/finance-tax-engine) — IRPC 3%, extracts COGS, generates Financial Score
+- [HR Attendance Management](mem://features/hr-attendance-management) — attendance table for absences, delays, overtime to feed payroll
+- [Two-Factor Authentication](mem://security/two-factor-authentication) — TOTP via Supabase MFA
+- [Gamification Ranking](mem://features/gamification-ranking) — Score=(sales*0.5)+(qty*0.2)+(target*0.3), badges, live top 3 podium
+- [Manual Item Persistence](mem://technical/manual-item-persistence) — product_id is NULL for manual sale_items to avoid trigger errors
+- [Automated Audit Agent](mem://features/automated-audit-agent) — Audit Agent MAX via pg_cron, auto-corrects negative stock /app/auditoria
+- [Global Localization Framework](mem://features/global-localization-framework) — 10 languages/9 countries, app_lang localStorage, fallback pt
+- [Routing I18n Stability](mem://technical/routing-i18n-stability) — I18nProvider top-level in App.tsx to ensure translation
+- [Customer CRM Logic](mem://features/customer-crm-logic) — total_spent auto-updated after sale, segments customers
+- [Responsive Mobile Standards](mem://style/responsive-mobile-standards) — overflow-x: hidden on root, min-w-0, POS stacks vertically
+- [Subscription Monetization](mem://features/subscription-management-monetization) — Starter 750 MT, Pro 1500, Enterprise 3500, locks access if unpaid
+- [CEO Administration Supreme](mem://features/ceo-administration-supreme-analytics) — CEODashboardPage.tsx, RevenueWidget, master store alerts
+- [Resilient Rendering Pattern](mem://technical/resilient-rendering-pattern-global) — Global ErrorBoundary in main.tsx
+- [Sidebar Component Nesting](mem://technical/sidebar-component-nesting) — collapsible="none" on internal Sidebar for mobile to avoid nested Sheets
+- [App Routing Architecture](mem://technical/app-routing-architecture) — Strictly use <Link> component, no <a> tags, redirect legacy to /app/financeiro-rh
+- [UI Data Labels](mem://technical/ui-data-labels) — uiLabels.ts to map DB enums/UUIDs to friendly names
+- [Poultry PRO ERP](mem://features/poultry-pro-erp) — Flock management, inputs (feed/vaccines), auto FCR, integrates harvest to store stock
+- [Email Confirmation Policy](mem://auth/email-confirmation-policy) — autoConfirmEmails: true in Supabase Auth
+- [Mobile Premium UI Standard](mem://style/mobile-premium-ui-standard) — Banking-app style, BottomNav hides on scroll, FAB 60x60px
+- [Smart Inventory System V2](mem://features/smart-inventory-system-module-v2) — WAC cost_price, stock_movements, /app/estoque/repor direct mass update
+- [Storage DB Integrity Pattern](mem://technical/storage-db-integrity-pattern) — Rollback/delete file from Supabase Storage if DB insert fails
+- [Compliance Dashboard](mem://features/compliance-dashboard) — Risk score: (expired*3 + urgent*2 + warning*1)/total
+- [Enterprise Stock Transfer](mem://features/enterprise-stock-transfer) — salesman_stock, run_stock_reconciliation, tracks target vs actual
+- [Identity Profile Abstraction](mem://technical/identity-profile-abstraction) — Always use getProfile() for identity, never Supabase Auth directly
+- [Automated Financial Ledger](mem://features/automated-financial-ledger) — financial_transactions table auto-populated by trg_financial_tx_* triggers
+- [Nava Pay Ecosystem](mem://features/nava-pay-ecosystem) — Mobile money wallets, 2.5% commission, manual NAVA-REF risk scoring
+- [PWA Offline Resilience](mem://technical/pwa-offline-resilience) — Offline-first 7 days, syncs via timestamps
+- [Integrated Production Provisioning](mem://features/integrated-production-provisioning) — Agro/Poultry harvest auto-updates inventory and COGS
+- [Cross-Company Access Model](mem://technical/cross-company-access-model) — company_users (CEO, Admin, Manager, Seller, Cashier), RLS via get_user_company_ids()
+- [Financial Reliability Score](mem://features/financial-reliability-score) — 0-100 score on payment punctuality and net profit
+- [Compliance Obligations](mem://features/compliance-obligations-automation) — Auto INSS, IRPC, IVA reporting
+- [Public API Integration](mem://features/public-api-integration) — /api/... keys SHA-256 hashed in api_keys table
+- [Banking Reconciliation](mem://features/banking-reconciliation) — bank_accounts, RPC reconcile_bank_transactions
+- [System Integrity Strategy](mem://technical/system-integrity-strategy) — No frontend audit agents, do not drop tables or break existing features
+- [Invitation Onboarding System](mem://features/invitation-onboarding-system) — /convite/:token uses company_invitations with expiry
+- [Organizational Hierarchy Branches](mem://features/organizational-hierarchy-branches) — branch_id logic for isolation, get_user_branch_ids RPC
+- [Session Management](mem://security/session-management) — user_sessions tracks IP/device/timestamp for remote logout
