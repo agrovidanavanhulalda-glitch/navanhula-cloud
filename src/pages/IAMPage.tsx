@@ -579,10 +579,24 @@ const IAMPage = () => {
             </Card>
           </TabsContent>
 
-          {/* ── Audit ── */}
           <TabsContent value="audit">
             <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><ScrollText className="w-5 h-5" /> Logs de Auditoria</CardTitle></CardHeader>
+              <CardHeader>
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <CardTitle className="flex items-center gap-2"><ScrollText className="w-5 h-5" /> Logs de Auditoria</CardTitle>
+                  <Select value={auditFilter} onValueChange={setAuditFilter}>
+                    <SelectTrigger className="w-[160px] h-8">
+                      <SelectValue placeholder="Filtrar ação" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas Ações</SelectItem>
+                      <SelectItem value="INSERT">Criação</SelectItem>
+                      <SelectItem value="UPDATE">Edição</SelectItem>
+                      <SelectItem value="DELETE">Remoção</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
@@ -595,17 +609,20 @@ const IAMPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {auditLogs.length === 0 ? (
-                      <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Sem registos</TableCell></TableRow>
-                    ) : auditLogs.map((log: any) => (
-                      <TableRow key={log.id}>
-                        <TableCell className="text-sm">{new Date(log.created_at).toLocaleString('pt-MZ')}</TableCell>
-                        <TableCell><Badge variant="outline">{log.action}</Badge></TableCell>
-                        <TableCell className="text-sm">{log.table_name || '-'}</TableCell>
-                        <TableCell className="font-mono text-xs">{log.record_id?.slice(0, 8) || '-'}</TableCell>
-                        <TableCell className="text-sm">{log.ip_address || '-'}</TableCell>
-                      </TableRow>
-                    ))}
+                    {(() => {
+                      const filtered = auditFilter === 'all' ? auditLogs : auditLogs.filter((l: any) => l.action === auditFilter);
+                      return filtered.length === 0 ? (
+                        <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Sem registos</TableCell></TableRow>
+                      ) : filtered.map((log: any) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="text-sm">{new Date(log.created_at).toLocaleString('pt-MZ')}</TableCell>
+                          <TableCell><Badge variant="outline">{log.action}</Badge></TableCell>
+                          <TableCell className="text-sm">{log.table_name || '-'}</TableCell>
+                          <TableCell className="font-mono text-xs">{log.record_id?.slice(0, 8) || '-'}</TableCell>
+                          <TableCell className="text-sm">{log.ip_address || '-'}</TableCell>
+                        </TableRow>
+                      ));
+                    })()}
                   </TableBody>
                 </Table>
               </CardContent>
