@@ -57,6 +57,7 @@ const IAMPage = () => {
   const [inviteForm, setInviteForm] = useState({ role: 'seller', max_uses: '1', expires_days: '7', branch_id: '' });
   const [branchForm, setBranchForm] = useState({ name: '', address: '', phone: '', email: '' });
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [auditFilter, setAuditFilter] = useState<string>('all');
 
   // ── Queries ──
   const { data: members = [], isLoading } = useQuery({
