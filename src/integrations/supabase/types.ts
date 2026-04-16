@@ -590,6 +590,57 @@ export type Database = {
           },
         ]
       }
+      api_request_logs: {
+        Row: {
+          api_key_id: string | null
+          company_id: string
+          created_at: string
+          endpoint: string
+          id: string
+          ip_address: string | null
+          method: string
+          response_time_ms: number | null
+          status_code: number | null
+        }
+        Insert: {
+          api_key_id?: string | null
+          company_id: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          ip_address?: string | null
+          method?: string
+          response_time_ms?: number | null
+          status_code?: number | null
+        }
+        Update: {
+          api_key_id?: string | null
+          company_id?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          ip_address?: string | null
+          method?: string
+          response_time_ms?: number | null
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_request_logs_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_request_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           absences: number | null
@@ -1821,6 +1872,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      currencies: {
+        Row: {
+          code: string
+          exchange_rate: number
+          id: string
+          is_active: boolean
+          is_base: boolean
+          name: string
+          symbol: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          exchange_rate?: number
+          id?: string
+          is_active?: boolean
+          is_base?: boolean
+          name: string
+          symbol?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          exchange_rate?: number
+          id?: string
+          is_active?: boolean
+          is_base?: boolean
+          name?: string
+          symbol?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       customer_sellers: {
         Row: {
@@ -6148,6 +6232,104 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_deliveries: {
+        Row: {
+          attempts: number
+          company_id: string
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          response_body: string | null
+          response_status: number | null
+          status: string
+          webhook_id: string
+        }
+        Insert: {
+          attempts?: number
+          company_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          status?: string
+          webhook_id: string
+        }
+        Update: {
+          attempts?: number
+          company_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          status?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          events: string[]
+          id: string
+          is_active: boolean
+          secret: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          events?: string[]
+          id?: string
+          is_active?: boolean
+          secret?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          events?: string[]
+          id?: string
+          is_active?: boolean
+          secret?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
