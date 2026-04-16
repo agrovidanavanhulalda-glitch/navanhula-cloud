@@ -912,6 +912,76 @@ export type Database = {
           },
         ]
       }
+      branch_stock_transfers: {
+        Row: {
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          from_company_id: string
+          id: string
+          notes: string | null
+          product_id: string
+          quantity: number
+          requested_by: string | null
+          status: string
+          to_company_id: string
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          from_company_id: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          quantity: number
+          requested_by?: string | null
+          status?: string
+          to_company_id: string
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          from_company_id?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          quantity?: number
+          requested_by?: string | null
+          status?: string
+          to_company_id?: string
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_stock_transfers_from_company_id_fkey"
+            columns: ["from_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_stock_transfers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_stock_transfers_to_company_id_fkey"
+            columns: ["to_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branches: {
         Row: {
           address: string | null
@@ -6673,6 +6743,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      confirm_branch_transfer: {
+        Args: { p_action: string; p_transfer_id: string; p_user_id: string }
+        Returns: Json
+      }
       confirm_manual_payment: {
         Args: { p_confirmed_by: string; p_payment_id: string }
         Returns: Json
@@ -6764,6 +6838,17 @@ export type Database = {
         }[]
       }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
+      get_global_stock_summary: {
+        Args: { p_user_id: string }
+        Returns: {
+          branch_count: number
+          product_code: string
+          product_id: string
+          product_name: string
+          total_quantity: number
+          total_value: number
+        }[]
+      }
       get_invitation_by_token: {
         Args: { p_token: string }
         Returns: {

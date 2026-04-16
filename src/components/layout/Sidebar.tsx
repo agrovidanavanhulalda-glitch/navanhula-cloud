@@ -82,6 +82,7 @@ const navGroups: NavGroup[] = [
       { label: 'Produtos', href: '/app/produtos', icon: Package },
       { label: 'Estoque', href: '/app/estoque', icon: Boxes },
       { label: 'Transferências', href: '/app/transferencias-stock', icon: ArrowRightLeft },
+      { label: 'Estoque Filiais', href: '/app/estoque-filiais', icon: Building2 },
     ],
   },
   {

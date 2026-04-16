@@ -68,6 +68,7 @@ const FeaturesPage = React.lazy(() => import("./pages/FeaturesPage"));
 const ContactPage = React.lazy(() => import("./pages/ContactPage"));
 const ResellersNetworkPage = React.lazy(() => import("./pages/ResellersNetworkPage"));
 const StockTransferPage = React.lazy(() => import("./pages/StockTransferPage"));
+const BranchInventoryPage = React.lazy(() => import("./pages/BranchInventoryPage"));
 const SalesMaterialsPage = React.lazy(() => import("./pages/SalesMaterialsPage"));
 const BankAccountsPage = React.lazy(() => import("./pages/BankAccountsPage"));
 const TaxReportsPage = React.lazy(() => import("./pages/TaxReportsPage"));
@@ -260,6 +261,7 @@ const AppRoutes = () => {
           <Route path="auditoria" element={<SystemAuditPage />} />
           <Route path="whatsapp" element={<SubscriptionGate><WhatsAppAutomationPage /></SubscriptionGate>} />
           <Route path="transferencias-stock" element={<SubscriptionGate><StockTransferPage /></SubscriptionGate>} />
+          <Route path="estoque-filiais" element={<SubscriptionGate><BranchInventoryPage /></SubscriptionGate>} />
           <Route path="banco" element={<SubscriptionGate><BankAccountsPage /></SubscriptionGate>} />
           <Route path="relatorios-fiscais" element={<SubscriptionGate><TaxReportsPage /></SubscriptionGate>} />
           <Route path="equipa" element={<SubscriptionGate><CompanyUsersPage /></SubscriptionGate>} />
