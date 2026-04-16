@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck, Trash2, Settings2 } from 'lucide-react';
+import { Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck, Trash2, Settings2, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 
 const ROLES = [
@@ -34,9 +34,13 @@ const CompanyUsersPage = () => {
   const queryClient = useQueryClient();
   const companyId = company?.id;
   const [showInvite, setShowInvite] = useState(false);
+  const [showCreateUser, setShowCreateUser] = useState(false);
   const [showPermissions, setShowPermissions] = useState<string | null>(null);
   const [inviteForm, setInviteForm] = useState({ role: 'seller', max_uses: '1', expires_days: '7' });
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [createUserForm, setCreateUserForm] = useState({ full_name: '', email: '', role: 'seller' });
+  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string; role: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Fetch members
   const { data: members = [], isLoading } = useQuery({
@@ -155,6 +159,31 @@ const CompanyUsersPage = () => {
     },
   });
 
+  // Create user via edge function
+  const createUser = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('seed-users', {
+        body: {
+          users: [{
+            email: createUserForm.email,
+            full_name: createUserForm.full_name,
+            role: createUserForm.role,
+          }],
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Erro ao criar utilizador');
+      return data.users[0];
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['company-users'] });
+      setCreatedCredentials({ email: result.email, password: result.password, role: result.role });
+      setCreateUserForm({ full_name: '', email: '', role: 'seller' });
+      toast.success('Utilizador criado com sucesso!');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erro ao criar utilizador'),
+  });
+
   const copyInviteLink = (token: string) => {
     const url = `${window.location.origin}/convite/${token}`;
     navigator.clipboard.writeText(url);
@@ -186,6 +215,75 @@ const CompanyUsersPage = () => {
             <p className="text-sm text-muted-foreground">Utilizadores, permissões e convites</p>
           </div>
           <div className="flex gap-2">
+            {/* Create User Dialog */}
+            <Dialog open={showCreateUser} onOpenChange={(open) => {
+              setShowCreateUser(open);
+              if (!open) { setCreatedCredentials(null); setShowPassword(false); }
+            }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2"><UserPlus className="w-4 h-4" /> Criar Utilizador</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>{createdCredentials ? 'Credenciais Criadas' : 'Criar Novo Utilizador'}</DialogTitle></DialogHeader>
+                {createdCredentials ? (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Email</Label>
+                        <p className="font-mono text-sm">{createdCredentials.email}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Senha</Label>
+                        <div className="flex items-center gap-2">
+                          <p className="font-mono text-sm">{showPassword ? createdCredentials.password : '••••••••••'}</p>
+                          <Button variant="ghost" size="sm" onClick={() => setShowPassword(!showPassword)}>
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Cargo</Label>
+                        <p className="text-sm">{roleLabels[createdCredentials.role] || createdCredentials.role}</p>
+                      </div>
+                    </div>
+                    <Button className="w-full" onClick={() => {
+                      navigator.clipboard.writeText(`Email: ${createdCredentials.email}\nSenha: ${createdCredentials.password}`);
+                      toast.success('Credenciais copiadas!');
+                    }}>
+                      <Copy className="w-4 h-4 mr-2" /> Copiar Credenciais
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Nome Completo</Label>
+                      <Input value={createUserForm.full_name} onChange={e => setCreateUserForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Ex: João Silva" />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input type="email" value={createUserForm.email} onChange={e => setCreateUserForm(f => ({ ...f, email: e.target.value }))} placeholder="joao@empresa.com" />
+                    </div>
+                    <div>
+                      <Label>Cargo</Label>
+                      <Select value={createUserForm.role} onValueChange={v => setCreateUserForm(f => ({ ...f, role: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+                {!createdCredentials && (
+                  <DialogFooter>
+                    <Button onClick={() => createUser.mutate()} disabled={createUser.isPending || !createUserForm.email || !createUserForm.full_name}>
+                      {createUser.isPending ? 'Criando...' : 'Criar Utilizador'}
+                    </Button>
+                  </DialogFooter>
+                )}
+              </DialogContent>
+            </Dialog>
+
             <Dialog open={showInvite} onOpenChange={setShowInvite}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="gap-2"><Link2 className="w-4 h-4" /> Gerar Convite</Button>
@@ -234,11 +332,11 @@ const CompanyUsersPage = () => {
             <div><p className="text-xs text-muted-foreground">Admins</p><p className="text-2xl font-bold">{members.filter((m: any) => ['admin', 'owner', 'ceo'].includes(m.role)).length}</p></div>
           </CardContent></Card>
           <Card><CardContent className="pt-6 flex items-center gap-3">
-            <UserCheck className="w-8 h-8 text-emerald-500" />
+            <UserCheck className="w-8 h-8 text-primary" />
             <div><p className="text-xs text-muted-foreground">Ativos</p><p className="text-2xl font-bold">{members.filter((m: any) => m.status === 'active').length}</p></div>
           </CardContent></Card>
           <Card><CardContent className="pt-6 flex items-center gap-3">
-            <Link2 className="w-8 h-8 text-blue-500" />
+            <Link2 className="w-8 h-8 text-primary" />
             <div><p className="text-xs text-muted-foreground">Convites Ativos</p><p className="text-2xl font-bold">{invitations.filter((i: any) => i.status === 'active').length}</p></div>
           </CardContent></Card>
         </div>
