@@ -3240,9 +3240,14 @@ export type Database = {
         Row: {
           amount: number
           company_id: string
+          converted_amount: number | null
           created_at: string
+          exchange_rate: number | null
           id: string
+          idempotency_key: string | null
           last_checked_at: string | null
+          original_amount: number | null
+          original_currency: string | null
           paid_at: string | null
           payment_method: Database["public"]["Enums"]["billing_payment_method"]
           phone_number: string | null
@@ -3257,9 +3262,14 @@ export type Database = {
         Insert: {
           amount?: number
           company_id: string
+          converted_amount?: number | null
           created_at?: string
+          exchange_rate?: number | null
           id?: string
+          idempotency_key?: string | null
           last_checked_at?: string | null
+          original_amount?: number | null
+          original_currency?: string | null
           paid_at?: string | null
           payment_method: Database["public"]["Enums"]["billing_payment_method"]
           phone_number?: string | null
@@ -3274,9 +3284,14 @@ export type Database = {
         Update: {
           amount?: number
           company_id?: string
+          converted_amount?: number | null
           created_at?: string
+          exchange_rate?: number | null
           id?: string
+          idempotency_key?: string | null
           last_checked_at?: string | null
+          original_amount?: number | null
+          original_currency?: string | null
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["billing_payment_method"]
           phone_number?: string | null
@@ -6238,38 +6253,50 @@ export type Database = {
       }
       webhook_deliveries: {
         Row: {
+          attempt_count: number
           attempts: number
           company_id: string
           created_at: string
           event_type: string
           id: string
+          max_attempts: number
+          next_retry_at: string | null
           payload: Json
           response_body: string | null
           response_status: number | null
+          signature: string | null
           status: string
           webhook_id: string
         }
         Insert: {
+          attempt_count?: number
           attempts?: number
           company_id: string
           created_at?: string
           event_type: string
           id?: string
+          max_attempts?: number
+          next_retry_at?: string | null
           payload?: Json
           response_body?: string | null
           response_status?: number | null
+          signature?: string | null
           status?: string
           webhook_id: string
         }
         Update: {
+          attempt_count?: number
           attempts?: number
           company_id?: string
           created_at?: string
           event_type?: string
           id?: string
+          max_attempts?: number
+          next_retry_at?: string | null
           payload?: Json
           response_body?: string | null
           response_status?: number | null
+          signature?: string | null
           status?: string
           webhook_id?: string
         }
