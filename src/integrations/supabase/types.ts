@@ -1348,7 +1348,9 @@ export type Database = {
       companies: {
         Row: {
           address: string | null
+          billing_exempt: boolean
           city: string | null
+          company_type: string
           country: string | null
           created_at: string | null
           currency: string | null
@@ -1357,11 +1359,13 @@ export type Database = {
           fiscal_regime: string | null
           id: string
           is_active: boolean | null
+          is_system_owner: boolean
           latitude: number | null
           logo_url: string | null
           longitude: number | null
           name: string
           nif: string | null
+          parent_company_id: string | null
           phone: string | null
           plan: string | null
           subscription_status: string | null
@@ -1371,7 +1375,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          billing_exempt?: boolean
           city?: string | null
+          company_type?: string
           country?: string | null
           created_at?: string | null
           currency?: string | null
@@ -1380,11 +1386,13 @@ export type Database = {
           fiscal_regime?: string | null
           id?: string
           is_active?: boolean | null
+          is_system_owner?: boolean
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
           name: string
           nif?: string | null
+          parent_company_id?: string | null
           phone?: string | null
           plan?: string | null
           subscription_status?: string | null
@@ -1394,7 +1402,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          billing_exempt?: boolean
           city?: string | null
+          company_type?: string
           country?: string | null
           created_at?: string | null
           currency?: string | null
@@ -1403,11 +1413,13 @@ export type Database = {
           fiscal_regime?: string | null
           id?: string
           is_active?: boolean | null
+          is_system_owner?: boolean
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
           name?: string
           nif?: string | null
+          parent_company_id?: string | null
           phone?: string | null
           plan?: string | null
           subscription_status?: string | null
@@ -1415,7 +1427,15 @@ export type Database = {
           trial_expires_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_parent_company_id_fkey"
+            columns: ["parent_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_invitations: {
         Row: {
@@ -6739,6 +6759,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_master_visible_company_ids: {
+        Args: { p_user_id: string }
+        Returns: string[]
+      }
       get_platform_stats: { Args: never; Returns: Json }
       get_reseller_id: { Args: { _user_id: string }; Returns: string }
       get_sales_by_store: { Args: { p_period?: string }; Returns: Json }
@@ -6761,6 +6785,7 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_master_company_user: { Args: { p_user_id: string }; Returns: boolean }
       is_reseller: { Args: { _user_id: string }; Returns: boolean }
       issue_fiscal_document: {
         Args: {
