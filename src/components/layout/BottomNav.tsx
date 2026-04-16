@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ShoppingCart, Users, BarChart3, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,33 +14,17 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard' },
+  { label: 'Início', icon: LayoutDashboard, path: '/app/dashboard' },
   { label: 'Vendas', icon: ShoppingCart, path: '/app/pdv' },
   { label: 'Clientes', icon: Users, path: '/app/crm' },
   { label: 'Relatórios', icon: BarChart3, path: '/app/relatorios' },
-  { label: 'Mais', icon: Menu, path: '', isMenu: true },
+  { label: 'Menu', icon: Menu, path: '', isMenu: true },
 ];
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = React.useState(false);
-  const [visible, setVisible] = useState(true);
-  const lastScrollY = useRef(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentY = window.scrollY;
-      if (currentY > lastScrollY.current && currentY > 60) {
-        setVisible(false);
-      } else {
-        setVisible(true);
-      }
-      lastScrollY.current = currentY;
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const isActive = (path: string) => {
     if (!path) return false;
@@ -49,26 +33,22 @@ const BottomNav: React.FC = () => {
 
   return (
     <nav
-      className={cn(
-        "fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-bottom transition-transform duration-300",
-        !visible && "translate-y-full"
-      )}
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 safe-bottom"
       style={{
-        background: 'hsla(0, 0%, 100%, 0.9)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        boxShadow: '0 -1px 3px rgba(0,0,0,0.04)',
+        background: 'hsl(var(--background) / 0.85)',
+        backdropFilter: 'saturate(180%) blur(20px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
       }}
     >
-      <div className="flex justify-around items-center h-[72px] max-w-lg mx-auto px-1">
+      <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
         {navItems.map((item) => {
           if (item.isMenu) {
             return (
               <Sheet key={item.label} open={menuOpen} onOpenChange={setMenuOpen}>
                 <SheetTrigger asChild>
-                  <button className="flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1 transition-colors text-muted-foreground">
-                    <item.icon className="w-5 h-5 flex-shrink-0" />
-                    <span className="text-[10px] font-medium truncate max-w-[56px]">{item.label}</span>
+                  <button className="flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1.5 text-muted-foreground active:scale-95 transition-transform">
+                    <item.icon className="w-[22px] h-[22px]" strokeWidth={1.8} />
+                    <span className="text-[10px] font-medium">{item.label}</span>
                   </button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 w-72 overflow-y-auto bg-sidebar text-sidebar-foreground">
@@ -86,15 +66,12 @@ const BottomNav: React.FC = () => {
               key={item.label}
               onClick={() => navigate(item.path)}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1 transition-all duration-200 relative",
+                "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1.5 transition-colors duration-150 active:scale-95",
                 active ? "text-primary" : "text-muted-foreground"
               )}
             >
-              {active && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
-              )}
-              <item.icon className={cn("w-5 h-5 flex-shrink-0", active && "scale-110")} strokeWidth={active ? 2.5 : 2} />
-              <span className={cn("text-[10px] truncate max-w-[56px]", active ? "font-semibold" : "font-medium")}>{item.label}</span>
+              <item.icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.2 : 1.8} />
+              <span className={cn("text-[10px]", active ? "font-semibold" : "font-medium")}>{item.label}</span>
             </button>
           );
         })}
