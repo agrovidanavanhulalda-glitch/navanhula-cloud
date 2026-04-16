@@ -76,6 +76,9 @@ const ApiKeysPage = React.lazy(() => import("./pages/ApiKeysPage"));
 const IAMPage = React.lazy(() => import("./pages/IAMPage"));
 const AutomationRulesPage = React.lazy(() => import("./pages/AutomationRulesPage"));
 const InviteAcceptPage = React.lazy(() => import("./pages/InviteAcceptPage"));
+const LeadsPipelinePage = React.lazy(() => import("./pages/LeadsPipelinePage"));
+const GrowthDashboardPage = React.lazy(() => import("./pages/GrowthDashboardPage"));
+const ReferralPage = React.lazy(() => import("./pages/ReferralPage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -263,6 +266,9 @@ const AppRoutes = () => {
           <Route path="iam" element={<SubscriptionGate><IAMPage /></SubscriptionGate>} />
           <Route path="automacao" element={<SubscriptionGate><AutomationRulesPage /></SubscriptionGate>} />
           <Route path="api-keys" element={<SubscriptionGate><ApiKeysPage /></SubscriptionGate>} />
+          <Route path="leads" element={<SubscriptionGate><LeadsPipelinePage /></SubscriptionGate>} />
+          <Route path="crescimento" element={<SubscriptionGate><GrowthDashboardPage /></SubscriptionGate>} />
+          <Route path="indicacoes" element={<ReferralPage />} />
           <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
           <Route path="revendedores/dashboard" element={<ResellersNetworkPage />} />
           <Route path="revendedores/cadastrar" element={<ResellersNetworkPage />} />

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import { useNavigate } from 'react-router-dom';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/SaaSAuthContext';
@@ -290,6 +291,9 @@ const LocalDashboardPage: React.FC = () => {
     <div className="p-4 md:p-6 lg:p-8 space-y-6 animate-fade-in">
       {/* Smart Alert Banner */}
       <SmartAlertBanner alerts={smartAlerts} />
+
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
