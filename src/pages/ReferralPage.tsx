@@ -33,8 +33,8 @@ const ReferralPage: React.FC = () => {
 
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from('referrals').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
-      .then(({ data }) => { if (data) setReferrals(data as unknown as Referral[]); });
+    (supabase as any).from('referrals').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+      .then(({ data }: any) => { if (data) setReferrals(data as Referral[]); });
   }, [user?.id]);
 
   const copyLink = () => {
@@ -45,7 +45,7 @@ const ReferralPage: React.FC = () => {
   const sendInvite = async () => {
     if (!email.trim() || !user?.id) return;
     setLoading(true);
-    const { error } = await supabase.from('referrals').insert({
+    const { error } = await (supabase as any).from('referrals').insert({
       user_id: user.id,
       invited_email: email.trim(),
     });
@@ -53,8 +53,8 @@ const ReferralPage: React.FC = () => {
     else {
       toast.success('Convite registado!');
       setEmail('');
-      const { data } = await supabase.from('referrals').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-      if (data) setReferrals(data as unknown as Referral[]);
+      const { data } = await (supabase as any).from('referrals').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+      if (data) setReferrals(data as Referral[]);
     }
     setLoading(false);
   };
