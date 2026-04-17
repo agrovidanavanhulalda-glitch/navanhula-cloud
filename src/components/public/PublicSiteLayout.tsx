@@ -49,19 +49,8 @@ const PublicSiteLayout: React.FC = () => {
         <div className="container flex flex-col gap-4 py-4 md:h-20 md:flex-row md:items-center md:justify-between md:py-0">
           <div className="flex items-center justify-between gap-2 min-w-0">
             <button type="button" onClick={() => handleSectionNavigation('#top')} className="flex items-center gap-3 text-left min-w-0 shrink group">
-              <div className="relative shrink-0">
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 -z-10 rounded-full blur-xl opacity-60 transition-opacity group-hover:opacity-90"
-                  style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.45), transparent 70%)' }}
-                />
-                <img
-                  src={navanhulaLogo}
-                  alt="NAVANHULA CLOUD"
-                  className="h-11 w-11 object-contain md:h-14 md:w-14"
-                  loading="eager"
-                />
-              </div>
+              <BrandLogo size={56} glow priority className="md:!w-[64px] md:!h-[64px]" />
+
               <div className="min-w-0 hidden sm:block">
                 <p className="text-sm font-black tracking-tight truncate md:text-lg">NAVANHULA CLOUD</p>
                 <p className="text-[10px] text-muted-foreground truncate md:text-xs">Enterprise SaaS Platform</p>
