@@ -381,6 +381,13 @@
     background-clip: text;
   }
 
+  .text-gradient-gold {
+    background: var(--gradient-gold-shine);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .text-gradient-success {
     background: var(--gradient-success);
     -webkit-background-clip: text;
@@ -393,8 +400,20 @@
     box-shadow: var(--shadow-glow);
   }
 
+  .glow-gold {
+    box-shadow: var(--shadow-glow-gold);
+  }
+
   .glow-success {
     box-shadow: var(--shadow-glow-success);
+  }
+
+  .bg-gradient-premium {
+    background: var(--gradient-premium);
+  }
+
+  .bg-gradient-gold {
+    background: var(--gradient-gold);
   }
 
   /* Safe area for mobile */

@@ -6,164 +6,196 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { ShoppingCart, Store, LogIn, Loader2, AlertTriangle } from 'lucide-react';
-
-/**
- * AuthLoginPage - Login page with proper error handling
- * 
- * REGRAS:
- * 1. Nunca mostrar loading infinito
- * 2. Erros claros e visíveis
- * 3. Navegação baseada no estado do auth
- */
+import { LogIn, Loader2, AlertTriangle, ShieldCheck, Sparkles } from 'lucide-react';
+import navanhulaLogo from '@/assets/navanhula-cloud-logo.png';
 
 const AuthLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { signIn, isAuthenticated, loading, role } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      console.log('[Login] User authenticated, redirecting...');
       navigate(getDefaultRouteForRole(role), { replace: true });
     }
   }, [loading, isAuthenticated, role, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!email.trim() || !password.trim()) {
       setError('Email e senha são obrigatórios');
       return;
     }
-
     setIsLoading(true);
     setError(null);
-    
-    console.log('[Login] Attempting login for:', email);
-    
     try {
       await signIn(email, password);
-      // Navigation will be handled by useEffect after auth state updates
     } catch (err: any) {
-      const errorMessage = err?.message || 'Erro ao fazer login';
-      console.error('[Login] Error:', errorMessage);
-      setError(errorMessage);
+      setError(err?.message || 'Erro ao fazer login');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Show brief loading while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Verificando sessão...</p>
+      <div className="min-h-screen bg-gradient-premium flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-8 h-8 animate-spin text-gold" />
+        <p className="text-sm text-primary-foreground/70">Verificando sessão...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      {/* Logo and branding */}
-      <div className="mb-8 text-center">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center">
-            <ShoppingCart className="w-8 h-8 text-primary-foreground" />
-          </div>
-        </div>
-        <h1 className="text-3xl font-bold text-primary">NAVANHULA CLOUD</h1>
-        <p className="text-muted-foreground mt-2">Sistema Empresarial</p>
-      </div>
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-gradient-premium">
+      {/* Ambient glows */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 50% at 20% 20%, hsl(var(--primary) / 0.35), transparent 60%), radial-gradient(ellipse 50% 40% at 85% 85%, hsl(var(--gold) / 0.18), transparent 60%)',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage:
+            'linear-gradient(hsl(var(--gold)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--gold)) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+        }}
+      />
 
-      {/* Login card */}
-      <Card className="w-full max-w-md p-8">
-        <div className="flex items-center gap-2 mb-6">
-          <Store className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-semibold">Entrar no Sistema</h2>
-        </div>
-
-        {/* Error message */}
-        {error && (
-          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">
-            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-            <span className="text-sm">{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setError(null);
-              }}
-              required
-              autoComplete="email"
-              disabled={isLoading}
+      <div className="relative z-10 w-full max-w-md">
+        {/* Brand header */}
+        <div className="mb-8 text-center">
+          <div className="relative mx-auto mb-5 inline-flex">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 -z-10 rounded-full blur-2xl"
+              style={{ background: 'radial-gradient(circle, hsl(var(--gold) / 0.6), transparent 70%)' }}
+            />
+            <img
+              src={navanhulaLogo}
+              alt="NAVANHULA CLOUD"
+              className="h-20 w-20 object-contain drop-shadow-[0_8px_24px_rgba(212,169,60,0.35)]"
+              loading="eager"
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError(null);
-              }}
-              required
-              autoComplete="current-password"
-              disabled={isLoading}
-            />
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full h-12 text-lg"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Entrando...
-              </>
-            ) : (
-              <>
-                <LogIn className="w-5 h-5 mr-2" />
-                Entrar
-              </>
-            )}
-          </Button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Ainda não tem conta?{' '}
-            <Link to="/registrar" className="text-primary hover:underline font-medium">
-              Criar conta
-            </Link>
+          <h1 className="text-3xl font-black tracking-tight text-primary-foreground">
+            NAVANHULA <span className="text-gradient-gold">CLOUD</span>
+          </h1>
+          <p className="mt-2 text-sm uppercase tracking-[0.3em] text-primary-foreground/60">
+            Enterprise SaaS Platform
           </p>
         </div>
-      </Card>
 
-      {/* Footer */}
-      <p className="text-sm text-muted-foreground mt-8">
-        © 2026 Navanhula Group Lda. Todos os direitos reservados.
-      </p>
+        {/* Login card — frosted premium */}
+        <Card className="relative overflow-hidden border border-gold/20 bg-card/95 p-8 backdrop-blur-xl shadow-premium">
+          {/* Top gold accent line */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 top-0 h-px"
+            style={{ background: 'linear-gradient(90deg, transparent, hsl(var(--gold) / 0.8), transparent)' }}
+          />
+
+          <div className="mb-6 flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-gold">
+              <ShieldCheck className="h-5 w-5 text-gold-foreground" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold leading-tight">Acesso Seguro</h2>
+              <p className="text-xs text-muted-foreground">Entre com suas credenciais corporativas</p>
+            </div>
+          </div>
+
+          {error && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-destructive">
+              <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@empresa.com"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                required
+                autoComplete="email"
+                disabled={isLoading}
+                className="h-12"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Senha
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                required
+                autoComplete="current-password"
+                disabled={isLoading}
+                className="h-12"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="h-12 w-full text-base font-bold shadow-lg glow-primary"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                <>
+                  <LogIn className="mr-2 h-5 w-5" />
+                  ENTRAR NA PLATAFORMA
+                </>
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Ainda não tem conta?{' '}
+              <Link to="/registrar" className="font-semibold text-primary hover:underline">
+                Criar conta
+              </Link>
+            </p>
+          </div>
+        </Card>
+
+        {/* Trust badges */}
+        <div className="mt-6 flex items-center justify-center gap-4 text-xs text-primary-foreground/60">
+          <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-gold" /> SSL Seguro</span>
+          <span className="h-3 w-px bg-primary-foreground/20" />
+          <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-gold" /> Enterprise Grade</span>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-primary-foreground/50">
+          © 2026 Navanhula Group Lda · Todos os direitos reservados
+        </p>
+      </div>
     </div>
   );
 };
