@@ -110,7 +110,7 @@ const PublicSiteLayout: React.FC = () => {
         <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-end md:justify-between">
           <div className="max-w-xl space-y-3">
             <div className="flex items-center gap-3">
-              <img src={navanhulaLogo} alt="NAVANHULA CLOUD" className="h-12 w-12 object-contain" />
+              <BrandLogo size={48} />
               <p className="text-lg font-black tracking-tight">NAVANHULA CLOUD</p>
             </div>
             <p className="text-sm leading-7 text-muted-foreground">
