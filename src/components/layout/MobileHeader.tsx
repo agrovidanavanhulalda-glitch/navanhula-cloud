@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import NetworkIndicator from './NetworkIndicator';
 import NotificationBell from './NotificationBell';
+import BrandLogo from '@/components/brand/BrandLogo';
 
 const pageTitles: Record<string, string> = {
   '/app/dashboard': 'NAVANHULA',
