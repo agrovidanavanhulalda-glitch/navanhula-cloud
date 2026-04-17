@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import NetworkIndicator from './NetworkIndicator';
 import NotificationBell from './NotificationBell';
+import BrandLogo from '@/components/brand/BrandLogo';
 
 const pageTitles: Record<string, string> = {
   '/app/dashboard': 'NAVANHULA',
@@ -65,6 +66,7 @@ const MobileHeader: React.FC = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
+        <BrandLogo size={28} priority />
         <span className="font-semibold text-[15px] tracking-tight text-foreground truncate">
           {title}
         </span>

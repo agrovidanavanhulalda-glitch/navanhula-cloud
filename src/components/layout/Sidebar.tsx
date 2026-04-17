@@ -35,6 +35,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import NetworkIndicator from './NetworkIndicator';
+import BrandLogo from '@/components/brand/BrandLogo';
 
 interface SubItem {
   label: string;
@@ -304,12 +305,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       {/* Brand Header */}
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
-          <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'var(--gradient-primary)' }}
-          >
-            <ShoppingCart className="w-4 h-4 text-white" />
-          </div>
+          <BrandLogo size={collapsed ? 32 : 40} priority />
           {!collapsed && (
             <div className="min-w-0">
               <h1 className="font-bold text-sm text-sidebar-primary-foreground tracking-tight leading-none">NAVANHULA</h1>
