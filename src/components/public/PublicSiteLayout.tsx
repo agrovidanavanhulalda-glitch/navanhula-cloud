@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import UrgencyBanner from '@/components/public/landing/UrgencyBanner';
+import navanhulaLogo from '@/assets/navanhula-cloud-logo.png';
 
 const navItems = [
   { label: 'Home', hash: '#top' },
@@ -48,16 +48,23 @@ const PublicSiteLayout: React.FC = () => {
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/90 backdrop-blur">
         <div className="container flex flex-col gap-4 py-4 md:h-20 md:flex-row md:items-center md:justify-between md:py-0">
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <button type="button" onClick={() => handleSectionNavigation('#top')} className="flex items-center gap-2 text-left min-w-0 shrink">
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground md:h-11 md:w-11 md:rounded-2xl"
-                style={{ boxShadow: 'var(--shadow-glow)' }}
-              >
-                <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
+            <button type="button" onClick={() => handleSectionNavigation('#top')} className="flex items-center gap-3 text-left min-w-0 shrink group">
+              <div className="relative shrink-0">
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 -z-10 rounded-full blur-xl opacity-60 transition-opacity group-hover:opacity-90"
+                  style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.45), transparent 70%)' }}
+                />
+                <img
+                  src={navanhulaLogo}
+                  alt="NAVANHULA CLOUD"
+                  className="h-11 w-11 object-contain md:h-14 md:w-14"
+                  loading="eager"
+                />
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-bold tracking-tight truncate md:text-lg">NAVANHULA CLOUD</p>
-                <p className="text-[10px] text-muted-foreground truncate md:text-xs">Plataforma de gestão empresarial.</p>
+              <div className="min-w-0 hidden sm:block">
+                <p className="text-sm font-black tracking-tight truncate md:text-lg">NAVANHULA CLOUD</p>
+                <p className="text-[10px] text-muted-foreground truncate md:text-xs">Enterprise SaaS Platform</p>
               </div>
             </button>
 
@@ -113,7 +120,10 @@ const PublicSiteLayout: React.FC = () => {
       <footer className="relative z-0 border-t border-border bg-card/40">
         <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-end md:justify-between">
           <div className="max-w-xl space-y-3">
-            <p className="text-lg font-black tracking-tight">NAVANHULA CLOUD</p>
+            <div className="flex items-center gap-3">
+              <img src={navanhulaLogo} alt="NAVANHULA CLOUD" className="h-12 w-12 object-contain" />
+              <p className="text-lg font-black tracking-tight">NAVANHULA CLOUD</p>
+            </div>
             <p className="text-sm leading-7 text-muted-foreground">
               Plataforma profissional para gestão empresarial completa.
             </p>
