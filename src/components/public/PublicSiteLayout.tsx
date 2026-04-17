@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import UrgencyBanner from '@/components/public/landing/UrgencyBanner';
-import navanhulaLogo from '@/assets/navanhula-cloud-logo.png';
+import BrandLogo from '@/components/brand/BrandLogo';
 
 const navItems = [
   { label: 'Home', hash: '#top' },
