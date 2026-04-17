@@ -35,6 +35,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import NetworkIndicator from './NetworkIndicator';
+import BrandLogo from '@/components/brand/BrandLogo';
 
 interface SubItem {
   label: string;
