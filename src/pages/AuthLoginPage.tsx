@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { LogIn, Loader2, AlertTriangle, ShieldCheck, Sparkles } from 'lucide-react';
-import navanhulaLogo from '@/assets/navanhula-cloud-logo.png';
+import BrandLogo from '@/components/brand/BrandLogo';
 
 const AuthLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
