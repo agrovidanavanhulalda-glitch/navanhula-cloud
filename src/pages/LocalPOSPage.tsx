@@ -469,7 +469,7 @@ const LocalPOSPage: React.FC = () => {
                   }}
                 >
                   <CreditCard className="w-8 h-8" />
-                  PAGAR AGORA
+                  RECEBER PAGAMENTO
                 </Button>
                 
                 {cart.length === 0 && (
