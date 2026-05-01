@@ -192,7 +192,7 @@ const LocalPOSPage: React.FC = () => {
             onClick={() => navigate('/produtos')}
           >
             <Plus className="w-8 h-8" />
-            ADICIONAR PRODUTO
+            CADASTRAR MEU PRIMEIRO PRODUTO
           </Button>
         </div>
       ) : (
