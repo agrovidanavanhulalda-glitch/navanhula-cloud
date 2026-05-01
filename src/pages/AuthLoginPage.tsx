@@ -168,12 +168,12 @@ const AuthLoginPage: React.FC = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Ainda não tem conta?{' '}
-              <Link to="/registrar" className="font-semibold text-primary hover:underline">
-                Criar conta
-              </Link>
-            </p>
+              <p className="text-sm text-muted-foreground">
+                Novo por aqui?{' '}
+                <Link to="/registrar" className="font-semibold text-primary hover:underline">
+                  Criar minha conta
+                </Link>
+              </p>
           </div>
         </Card>
 
