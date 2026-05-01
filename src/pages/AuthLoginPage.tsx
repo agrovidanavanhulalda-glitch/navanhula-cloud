@@ -179,9 +179,9 @@ const AuthLoginPage: React.FC = () => {
 
         {/* Trust badges */}
         <div className="mt-6 flex items-center justify-center gap-4 text-xs text-primary-foreground/60">
-          <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-gold" /> SSL Seguro</span>
+          <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-gold" /> Conexão Protegida</span>
           <span className="h-3 w-px bg-primary-foreground/20" />
-          <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-gold" /> Enterprise Grade</span>
+          <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-gold" /> Segurança Total</span>
         </div>
 
         <p className="mt-6 text-center text-xs text-primary-foreground/50">
