@@ -147,6 +147,8 @@ const LocalPOSPage: React.FC = () => {
   const lastSale = getLastSale();
 
   return (
+    <PageTransition>
+
     <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row w-full bg-background overflow-hidden">
       {/* Three Clear States Logic */}
       {!cashRegisterOpen ? (
