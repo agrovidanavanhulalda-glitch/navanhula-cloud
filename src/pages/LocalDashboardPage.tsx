@@ -290,6 +290,8 @@ const LocalDashboardPage: React.FC = () => {
   }
 
   return (
+    <PageTransition>
+
     <div className="p-4 md:p-6 lg:p-8 space-y-6 animate-fade-in">
       {/* Smart Alert Banner */}
       <SmartAlertBanner alerts={smartAlerts} />
