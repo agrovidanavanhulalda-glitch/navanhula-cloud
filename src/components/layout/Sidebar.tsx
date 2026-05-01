@@ -52,7 +52,7 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    title: 'Dashboard',
+    title: 'Painel',
     icon: LayoutDashboard,
     items: [
       { label: 'Visão Geral', href: '/app/dashboard', icon: LayoutDashboard },
@@ -64,7 +64,7 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    title: 'Vendas',
+    title: 'Vendas (PDV)',
     icon: ShoppingCart,
     roles: ['admin', 'ceo', 'director', 'manager', 'seller', 'cashier'],
     items: [
@@ -76,92 +76,63 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    title: 'Catálogo',
+    title: 'Produtos',
     icon: Package,
     roles: ['admin', 'ceo', 'director', 'manager', 'seller'],
     items: [
-      { label: 'Produtos', href: '/app/produtos', icon: Package },
-      { label: 'Estoque', href: '/app/estoque', icon: Boxes },
+      { label: 'Meus Produtos', href: '/app/produtos', icon: Package },
+    ],
+  },
+  {
+    title: 'Estoque',
+    icon: Boxes,
+    roles: ['admin', 'ceo', 'director', 'manager', 'seller'],
+    items: [
+      { label: 'Inventário', href: '/app/estoque', icon: Boxes },
       { label: 'Transferências', href: '/app/transferencias-stock', icon: ArrowRightLeft },
       { label: 'Estoque Filiais', href: '/app/estoque-filiais', icon: Building2 },
     ],
   },
   {
-    title: 'Financeiro & RH',
-    icon: TrendingUp,
-    roles: ['admin', 'manager', 'ceo', 'hr', 'director'],
-    items: [
-      { label: 'Painel Financeiro', href: '/app/financeiro-rh', icon: BarChart3 },
-      { label: 'Funcionários', href: '/app/financeiro-rh?tab=employees', icon: User },
-      { label: 'Salários', href: '/app/financeiro-rh?tab=payroll', icon: Banknote },
-      { label: 'Contabilidade', href: '/app/financeiro-rh?tab=chart', icon: BookOpen },
-      { label: 'Tax Engine', href: '/app/financeiro-rh?tab=taxes', icon: Calculator },
-      { label: 'Vendedores', href: '/app/vendedores', icon: UserCheck },
-      { label: 'Carteira', href: '/app/carteira', icon: WalletCards },
-      { label: 'Pagamentos MM', href: '/app/pagamentos-manuais', icon: Smartphone },
-      { label: 'Documentos', href: '/app/documentos', icon: FileText },
-    ],
-  },
-  {
-    title: 'Fiscal & Banco',
-    icon: FileText,
-    roles: ['admin', 'manager', 'ceo', 'director'],
-    items: [
-      { label: 'Gestão Fiscal', href: '/app/fiscal', icon: FileText },
-      { label: 'Relatórios Fiscais', href: '/app/relatorios-fiscais', icon: BarChart3 },
-      { label: 'Contas Bancárias', href: '/app/banco', icon: Landmark },
-      { label: 'Relatórios', href: '/app/relatorios', icon: BarChart3 },
-    ],
-  },
-  {
-    title: 'CRM',
+    title: 'Clientes',
     icon: UserCheck,
     roles: ['admin', 'manager', 'ceo', 'director'],
     items: [
-      { label: 'Clientes', href: '/app/crm', icon: UserCheck },
+      { label: 'Gestão CRM', href: '/app/crm', icon: UserCheck },
       { label: 'Fornecedores', href: '/app/fornecedores', icon: Truck },
     ],
   },
   {
-    title: 'Operações',
-    icon: Building2,
-    roles: ['admin', 'ceo', 'director'],
+    title: 'Relatórios',
+    icon: BarChart3,
+    roles: ['admin', 'manager', 'ceo', 'director'],
     items: [
-      { label: 'Lojas', href: '/app/lojas', icon: Store },
-      { label: 'Agricultura', href: '/app/agricultura', icon: Sprout },
-      { label: 'Avicultura', href: '/app/avicultura', icon: Egg },
-      { label: 'Agro Map', href: '/app/agro-map', icon: MapPin },
-      { label: 'Criadores', href: '/app/criadores', icon: Bird },
-      { label: 'Marketplace', href: '/app/marketplace', icon: ShoppingBag },
-      { label: 'IA Avícola', href: '/app/avicultura/inteligencia', icon: Brain },
-      { label: 'Ambiente & Clima', href: '/app/ambiente', icon: Cloud },
+      { label: 'Vendas & Lucro', href: '/app/relatorios', icon: BarChart3 },
+      { label: 'Relatórios Fiscais', href: '/app/relatorios-fiscais', icon: FileText },
+      { label: 'Financeiro', href: '/app/financeiro-rh', icon: TrendingUp },
     ],
   },
   {
-    title: 'Compliance',
-    icon: Shield,
-    roles: ['admin', 'ceo'],
-    items: [
-      { label: 'Compliance Hub', href: '/app/compliance', icon: Shield },
-      { label: 'Agente de Auditoria', href: '/app/auditoria', icon: Shield },
-    ],
-  },
-  {
-    title: 'Sistema',
+    title: 'Configurações',
     icon: Settings,
     roles: ['admin', 'ceo', 'manager'],
     items: [
-      { label: 'AI Engine', href: '/app/ai', icon: Brain },
+      { label: 'Sistema', href: '/app/configuracoes', icon: Settings },
+      { label: 'Gestão Fiscal', href: '/app/fiscal', icon: FileText },
+      { label: 'Contas Bancárias', href: '/app/banco', icon: Landmark },
       { label: 'Equipa', href: '/app/equipa', icon: Users },
-      { label: 'IAM', href: '/app/iam', icon: Shield },
+      { label: 'Lojas', href: '/app/lojas', icon: Store },
+      { label: 'AI Engine', href: '/app/ai', icon: Brain },
+      { label: 'Compliance Hub', href: '/app/compliance', icon: Shield },
+      { label: 'IAM (Acessos)', href: '/app/iam', icon: Shield },
       { label: 'Automação', href: '/app/automacao', icon: Settings },
       { label: 'API Keys', href: '/app/api-keys', icon: Key },
-      { label: 'Leads & Pipeline', href: '/app/leads', icon: Target },
-      { label: 'Crescimento', href: '/app/crescimento', icon: Rocket },
-      { label: 'Indicações', href: '/app/indicacoes', icon: Gift },
-      { label: 'Assinatura', href: '/app/assinatura', icon: Shield },
-      { label: 'Configurações', href: '/app/configuracoes', icon: Settings },
-      { label: 'Comunidade', href: '/app/comunidade', icon: MessageSquare },
+      { label: 'Documentos', href: '/app/documentos', icon: FileText },
+      { label: 'Marketplace', href: '/app/marketplace', icon: ShoppingBag },
+      { label: 'Agricultura', href: '/app/agricultura', icon: Sprout },
+      { label: 'Avicultura', href: '/app/avicultura', icon: Egg },
+      { label: 'Ambiente & Clima', href: '/app/ambiente', icon: Cloud },
+      { label: 'Auditoria', href: '/app/auditoria', icon: Shield },
     ],
   },
 ];
@@ -305,28 +276,16 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       {/* Brand Header */}
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
-          <BrandLogo width={collapsed ? 32 : 120} priority />
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Cloud className="w-5 h-5 text-primary" />
+          </div>
           {!collapsed && (
             <div className="min-w-0">
-              <h1 className="font-bold text-sm text-sidebar-primary-foreground tracking-tight leading-none">NAVANHULA</h1>
-              <p className="text-[10px] font-medium tracking-widest text-sidebar-foreground/50 uppercase">CLOUD ERP</p>
+              <h1 className="font-bold text-sm text-sidebar-primary-foreground tracking-tight leading-none uppercase">Menu Principal</h1>
+              <p className="text-[10px] font-medium tracking-widest text-sidebar-foreground/50 uppercase">Navanhula Cloud</p>
             </div>
           )}
         </div>
-
-        {/* Company info */}
-        {!collapsed && company && (
-          <div className="mt-3 flex items-center gap-2 text-xs text-sidebar-foreground/60">
-            <Store className="w-3.5 h-3.5 text-sidebar-primary" />
-            <span className="truncate font-medium">{company.name}</span>
-          </div>
-        )}
-        {!collapsed && store && !isReseller && (
-          <div className="mt-1 flex items-center gap-2 text-[11px] text-sidebar-foreground/40">
-            <Store className="w-3 h-3" />
-            <span className="truncate">{store.name}</span>
-          </div>
-        )}
       </SidebarHeader>
 
       {/* Navigation */}
@@ -381,33 +340,18 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       {/* Footer — User & Logout */}
       <SidebarFooter className="border-t border-sidebar-border p-3">
         {!collapsed && (
-          <div className="mb-2 p-2.5 rounded-lg bg-sidebar-accent/50">
+          <div className="mb-2 p-2.5 rounded-lg bg-sidebar-accent/10 border border-sidebar-border/50">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center bg-sidebar-primary/15">
-                {isBackofficeAdmin
-                  ? <Shield className="w-3.5 h-3.5 text-sidebar-primary" />
-                  : <User className="w-3.5 h-3.5 text-sidebar-foreground/50" />}
-              </div>
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-xs text-sidebar-primary-foreground truncate">{currentOperator}</p>
-                <p className="text-[10px] text-sidebar-foreground/50">{currentOperatorRole}</p>
+                <p className="text-[10px] text-sidebar-foreground/50 uppercase font-bold tracking-wider">Estado da Rede</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <NetworkIndicator />
+                  <span className="text-[10px] text-sidebar-foreground/70">Sistema Online</span>
+                </div>
               </div>
-              <NetworkIndicator />
             </div>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            'w-full justify-start gap-2 text-xs text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10',
-            collapsed && 'justify-center px-2'
-          )}
-          onClick={handleLogout}
-        >
-          <LogOut className="w-4 h-4" />
-          {!collapsed && 'Sair'}
-        </Button>
       </SidebarFooter>
     </ShadcnSidebar>
   );
