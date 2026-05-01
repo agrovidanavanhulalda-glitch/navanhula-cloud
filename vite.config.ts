@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
     react(), 
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
+      registerType: 'prompt',
+      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png', 'version.json'],
       manifest: {
         name: 'NAVANHULA CLOUD',
         short_name: 'NAVANHULA CLOUD',
