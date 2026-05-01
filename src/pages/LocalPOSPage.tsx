@@ -181,9 +181,9 @@ const LocalPOSPage: React.FC = () => {
             <PackagePlus className="w-12 h-12 text-primary" />
           </motion.div>
           <div className="space-y-2 max-w-md">
-            <h2 className="text-3xl font-bold tracking-tight text-[#0B1F3A]">Sem Produtos</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-[#0B1F3A]">Ainda não tem produtos</h2>
             <p className="text-muted-foreground text-lg">
-              Sua loja ainda não tem produtos cadastrados. Adicione seu primeiro item para começar.
+              Você ainda não cadastrou produtos. Adicione o que você vende para começar a usar o sistema.
             </p>
           </div>
           <Button 
