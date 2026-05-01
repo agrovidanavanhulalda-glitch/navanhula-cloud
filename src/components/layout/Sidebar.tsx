@@ -276,28 +276,16 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       {/* Brand Header */}
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
-          <BrandLogo width={collapsed ? 32 : 120} priority />
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Cloud className="w-5 h-5 text-primary" />
+          </div>
           {!collapsed && (
             <div className="min-w-0">
-              <h1 className="font-bold text-sm text-sidebar-primary-foreground tracking-tight leading-none">NAVANHULA</h1>
-              <p className="text-[10px] font-medium tracking-widest text-sidebar-foreground/50 uppercase">CLOUD ERP</p>
+              <h1 className="font-bold text-sm text-sidebar-primary-foreground tracking-tight leading-none uppercase">Menu Principal</h1>
+              <p className="text-[10px] font-medium tracking-widest text-sidebar-foreground/50 uppercase">Navanhula Cloud</p>
             </div>
           )}
         </div>
-
-        {/* Company info */}
-        {!collapsed && company && (
-          <div className="mt-3 flex items-center gap-2 text-xs text-sidebar-foreground/60">
-            <Store className="w-3.5 h-3.5 text-sidebar-primary" />
-            <span className="truncate font-medium">{company.name}</span>
-          </div>
-        )}
-        {!collapsed && store && !isReseller && (
-          <div className="mt-1 flex items-center gap-2 text-[11px] text-sidebar-foreground/40">
-            <Store className="w-3 h-3" />
-            <span className="truncate">{store.name}</span>
-          </div>
-        )}
       </SidebarHeader>
 
       {/* Navigation */}
