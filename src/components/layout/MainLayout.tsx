@@ -30,7 +30,7 @@ import SmartOnboarding from '@/components/onboarding/SmartOnboarding';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
-  const { user, company, signOut } = useAuth();
+  const { user, company, signOut, role } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
