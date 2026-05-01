@@ -118,7 +118,7 @@ const AuthSignupPage: React.FC = () => {
 
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
-            <Input id="password" type="password" placeholder="Senha forte" value={password} onChange={(e) => { setPassword(e.target.value); setError(null); }} required autoComplete="new-password" disabled={isLoading} className="h-14 text-lg" />
+            <Input id="password" type="password" placeholder="Crie uma senha segura" value={password} onChange={(e) => { setPassword(e.target.value); setError(null); }} required autoComplete="new-password" disabled={isLoading} className="h-14 text-lg" />
             {password.length > 0 && (
               <div className="space-y-1 mt-2">
                 {['Mínimo 8 caracteres', 'Pelo menos 1 letra maiúscula', 'Pelo menos 1 letra minúscula', 'Pelo menos 1 número', 'Pelo menos 1 caractere especial (!@#$%...)'].map((rule) => {
