@@ -186,6 +186,7 @@ const AuthLoginPage: React.FC = () => {
 
         <p className="mt-6 text-center text-xs text-primary-foreground/50">
           © 2026 Navanhula Group Lda · Todos os direitos reservados
+          {currentVersion && <span className="block mt-1 opacity-60 italic">v{currentVersion}</span>}
         </p>
       </div>
     </div>
