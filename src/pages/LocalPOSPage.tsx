@@ -164,11 +164,11 @@ const LocalPOSPage: React.FC = () => {
           </div>
           <Button 
             size="lg"
-            className="h-16 px-10 text-xl font-bold gap-3 shadow-xl hover:scale-105 transition-transform"
+            className="h-20 w-full max-w-sm text-2xl font-black gap-3 shadow-xl hover:scale-105 transition-transform rounded-2xl"
             onClick={() => navigate('/caixa')}
           >
-            <Unlock className="w-6 h-6" />
-            Abrir Caixa Agora
+            <Unlock className="w-8 h-8" />
+            ABRIR CAIXA
           </Button>
         </div>
       ) : products.length === 0 ? (
