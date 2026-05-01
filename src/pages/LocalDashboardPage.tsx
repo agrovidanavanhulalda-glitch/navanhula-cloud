@@ -361,7 +361,7 @@ const LocalDashboardPage: React.FC = () => {
           trend={`${monthSales.length} este mês`}
         />
         <KPICard
-          index={2} icon={Target} label="Ticket Médio"
+          index={2} icon={Target} label="Gasto Médio por Cliente"
           value={formatCurrency(avgTicket)}
         />
         <KPICard
