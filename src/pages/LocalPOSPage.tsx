@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLocalPOS, LocalProduct, PaymentDetails } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,10 @@ import {
   Search,
   X,
   Printer,
-  ScanLine
+  ScanLine,
+  PackagePlus,
+  Unlock,
+  AlertCircle
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
@@ -28,6 +32,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 // HYBRID: Local POS data + Cloud Auth
 
 const LocalPOSPage: React.FC = () => {
+  const navigate = useNavigate();
   const {
     cart,
     products,
@@ -215,49 +220,60 @@ const LocalPOSPage: React.FC = () => {
         )}
 
         {/* Products Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {filteredProducts.map((product, i) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: Math.min(i * 0.02, 0.3), duration: 0.25 }}
-            >
-              <Card
-                className={`p-4 cursor-pointer hover-lift press-scale transition-colors ${
-                  product.stock <= 0 ? 'opacity-50' : ''
-                }`}
-                onClick={() => product.stock > 0 && handleAddToCart(product)}
-              >
-                <div className="text-center">
-                  {product.imageUrl ? (
-                    <div className="w-14 h-14 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
-                      <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+        <div className="flex-1 overflow-y-auto min-h-[400px]">
+          {filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {filteredProducts.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: Math.min(i * 0.02, 0.3), duration: 0.25 }}
+                >
+                  <Card
+                    className={`p-4 cursor-pointer hover-lift press-scale transition-colors h-full flex flex-col justify-between ${
+                      product.stock <= 0 ? 'opacity-50' : ''
+                    }`}
+                    onClick={() => product.stock > 0 && handleAddToCart(product)}
+                  >
+                    <div className="text-center flex-1">
+                      {product.imageUrl ? (
+                        <div className="w-14 h-14 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
+                          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
+                          <ShoppingCart className="w-6 h-6 text-primary" />
+                        </div>
+                      )}
+                      <h3 className="font-medium text-sm truncate">{product.name}</h3>
+                      <p className="text-lg font-bold text-primary mt-1 tabular-nums">
+                        {formatCurrency(product.salePrice)}
+                      </p>
+                      <p className={`text-xs ${product.stock <= 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        Estoque: {product.stock}
+                      </p>
                     </div>
-                  ) : (
-                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
-                      <ShoppingCart className="w-6 h-6 text-primary" />
-                    </div>
-                  )}
-                  <h3 className="font-medium text-sm truncate">{product.name}</h3>
-                  <p className="text-lg font-bold text-primary mt-1 tabular-nums">
-                    {formatCurrency(product.salePrice)}
-                  </p>
-                  <p className={`text-xs ${product.stock <= 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    Estoque: {product.stock}
-                  </p>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full py-20 text-center space-y-4 animate-in fade-in zoom-in duration-300">
+              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-2">
+                <PackagePlus className="w-10 h-10 text-muted-foreground opacity-40" />
+              </div>
+              <div className="space-y-2 max-w-xs mx-auto">
+                <h3 className="text-xl font-semibold">Sem produtos</h3>
+                <p className="text-muted-foreground">Adicione produtos para começar a vender e gerenciar seu estoque.</p>
+              </div>
+              <Button onClick={() => navigate('/produtos')} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Adicionar Produto
+              </Button>
+            </div>
+          )}
         </div>
-
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhum produto encontrado</p>
-          </div>
-        )}
       </div>
 
       {/* Cart - Right Side */}
@@ -380,20 +396,42 @@ const LocalPOSPage: React.FC = () => {
           )}
 
           {/* Payment Button - Opens Modal */}
-          {!cashRegisterOpen && cart.length > 0 && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive text-center">
-              Abra o caixa antes de finalizar a venda
+          {!cashRegisterOpen ? (
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-destructive text-sm">Caixa Fechado</p>
+                  <p className="text-xs text-destructive/80">É necessário abrir o caixa para processar pagamentos.</p>
+                </div>
+              </div>
+              <Button 
+                variant="default" 
+                className="w-full h-12 bg-success hover:bg-success/90 text-success-foreground gap-2 font-bold"
+                onClick={() => navigate('/caixa')}
+              >
+                <Unlock className="w-4 h-4" />
+                Abrir Caixa
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {cart.length === 0 && (
+                <p className="text-xs text-center text-muted-foreground animate-pulse">
+                  Adicione itens para continuar
+                </p>
+              )}
+              <Button 
+                className="w-full h-16 text-xl press-scale font-bold shadow-lg"
+                disabled={cart.length === 0}
+                onClick={() => setShowPaymentModal(true)}
+                style={cart.length > 0 ? { boxShadow: '0 10px 25px -5px rgba(var(--primary), 0.4)' } : undefined}
+              >
+                <CreditCard className="w-6 h-6 mr-2" />
+                Finalizar Venda
+              </Button>
             </div>
           )}
-          <Button 
-            className="w-full h-14 text-lg press-scale font-semibold"
-            disabled={cart.length === 0 || !cashRegisterOpen}
-            onClick={() => setShowPaymentModal(true)}
-            style={cart.length > 0 && cashRegisterOpen ? { boxShadow: 'var(--shadow-glow)' } : undefined}
-          >
-            <CreditCard className="w-5 h-5 mr-2" />
-            Finalizar Venda
-          </Button>
 
           {/* Last sale receipt button */}
           {lastSale && !showReceipt && (
