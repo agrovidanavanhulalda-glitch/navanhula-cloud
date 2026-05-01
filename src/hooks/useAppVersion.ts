@@ -35,6 +35,16 @@ export const useAppVersion = () => {
         console.log(`New version detected: ${data.version} (current: ${localVersion})`);
         setHasUpdate(true);
         
+        // Show notification but also allow forced reload if critical
+        toast.info("Nova atualização disponível", {
+          description: "O sistema será atualizado para garantir a melhor performance.",
+          action: {
+            label: "Atualizar",
+            onClick: () => handleUpdate()
+          },
+          duration: 10000
+        });
+
         if (force) {
           handleUpdate();
         }
