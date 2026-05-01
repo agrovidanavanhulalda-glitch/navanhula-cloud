@@ -426,7 +426,7 @@ const LocalPOSPage: React.FC = () => {
                 </div>
                 {getTotalDiscount() > 0 && (
                   <div className="flex justify-between text-green-600 font-medium">
-                    <span>Descontos</span>
+                    <span>Desconto Aplicado</span>
                     <span className="tabular-nums">-{formatCurrency(getTotalDiscount())}</span>
                   </div>
                 )}
