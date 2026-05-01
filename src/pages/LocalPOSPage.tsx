@@ -168,7 +168,7 @@ const LocalPOSPage: React.FC = () => {
             onClick={() => navigate('/caixa')}
           >
             <Unlock className="w-8 h-8" />
-            ABRIR CAIXA
+            COMEÇAR O DIA (ABRIR CAIXA)
           </Button>
         </div>
       ) : products.length === 0 ? (
