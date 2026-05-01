@@ -474,7 +474,7 @@ const LocalPOSPage: React.FC = () => {
                 
                 {cart.length === 0 && (
                   <p className="text-center text-sm font-medium text-muted-foreground animate-pulse">
-                    Adicione itens para finalizar
+                    Escolha os produtos para finalizar
                   </p>
                 )}
               </div>
