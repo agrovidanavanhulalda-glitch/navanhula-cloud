@@ -10,7 +10,7 @@ import {
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
   Cloud, Store, ChevronDown, Calculator, CreditCard, Banknote,
   Building2, MapPin, Bird, MessageCircle, ArrowRightLeft, Landmark, Key,
-  Target, Gift, Rocket,
+  Target, Gift, Rocket, ShieldCheck, Database
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
