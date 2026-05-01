@@ -27,12 +27,14 @@ import { UI_LABELS } from '@/lib/uiLabels';
 import ThermalReceipt from '@/components/reports/ThermalReceipt';
 import CancelSaleDialog from '@/components/pos/CancelSaleDialog';
 import { toast } from 'sonner';
+import { SkeletonList } from '@/components/ui/skeleton-card';
+import PageTransition from '@/components/layout/PageTransition';
 
 /**
  * Sales History Page with Admin Cancellation
  */
 const LocalSalesHistoryPage: React.FC = () => {
-  const { sales, stores, currentStore, cancelCompletedSale, currentCashRegister } = useLocalPOS();
+  const { sales, stores, currentStore, cancelCompletedSale, currentCashRegister, loading } = useLocalPOS();
   const { role, user, company } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -372,7 +374,9 @@ const LocalSalesHistoryPage: React.FC = () => {
         />
       )}
     </div>
+    </PageTransition>
   );
 };
+
 
 export default LocalSalesHistoryPage;
