@@ -12,22 +12,20 @@ const NetworkIndicator: React.FC = () => {
   return (
     <div 
       className={cn(
-        "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
+        "flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all border shadow-sm",
         isOnline 
-          ? "bg-success/20 text-success" 
-          : "bg-destructive/20 text-destructive animate-pulse"
+          ? "bg-success/10 text-success border-success/20" 
+          : "bg-destructive/10 text-destructive border-destructive/20 animate-pulse"
       )}
     >
+      <div className={cn(
+        "w-2 h-2 rounded-full",
+        isOnline ? "bg-success animate-pulse" : "bg-destructive"
+      )} />
       {isOnline ? (
-        <>
-          <Wifi className="w-3.5 h-3.5" />
-          <span>ONLINE</span>
-        </>
+        <span>SISTEMA ONLINE</span>
       ) : (
-        <>
-          <WifiOff className="w-3.5 h-3.5" />
-          <span>OFFLINE</span>
-        </>
+        <span>SISTEMA OFFLINE</span>
       )}
     </div>
   );
