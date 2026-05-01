@@ -157,9 +157,9 @@ const LocalPOSPage: React.FC = () => {
             <Unlock className="w-12 h-12 text-destructive" />
           </motion.div>
           <div className="space-y-2 max-w-md">
-            <h2 className="text-3xl font-bold tracking-tight text-[#0B1F3A]">Caixa Fechado</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-[#0B1F3A]">O Caixa está fechado</h2>
             <p className="text-muted-foreground text-lg">
-              Para começar a vender, você precisa abrir o caixa do dia e informar o valor inicial.
+              Para começar a vender, você precisa abrir o caixa e informar quanto dinheiro tem para o troco.
             </p>
           </div>
           <Button 
