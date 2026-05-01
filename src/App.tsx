@@ -174,6 +174,8 @@ const AppEntryRoute = () => {
 };
 
 const AppRoutes = () => {
+  const location = useLocation();
+
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
