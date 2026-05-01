@@ -29,6 +29,8 @@ import BluetoothPrintButton from '@/components/pos/BluetoothPrintButton';
 import PostSaleModal from '@/components/pos/PostSaleModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import PageTransition from '@/components/layout/PageTransition';
+
 
 // HYBRID: Local POS data + Cloud Auth
 
