@@ -226,7 +226,7 @@ const LocalPOSPage: React.FC = () => {
                     onClick={() => setShowManualEntry(!showManualEntry)}
                   >
                     <Plus className="w-6 h-6" />
-                    MANUAL
+                    ITEM SEM CÓDIGO
                   </Button>
                 </div>
               </div>
