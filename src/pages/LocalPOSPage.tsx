@@ -249,7 +249,7 @@ const LocalPOSPage: React.FC = () => {
                           className="flex-1 min-w-[200px]"
                         />
                         <Input
-                          placeholder="Preço"
+                          placeholder="Preço (MT)"
                           type="number"
                           value={manualPrice}
                           onChange={(e) => setManualPrice(e.target.value)}
