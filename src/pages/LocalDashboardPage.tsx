@@ -349,7 +349,7 @@ const LocalDashboardPage: React.FC = () => {
       )}
 
       {/* 4 Core KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           index={0} icon={DollarSign} label="Receita Hoje"
           value={formatCurrency(totalRevenue)}
