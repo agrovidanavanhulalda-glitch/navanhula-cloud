@@ -136,7 +136,7 @@ const AuthSignupPage: React.FC = () => {
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-            <Input id="confirmPassword" type="password" placeholder="Digite a senha novamente" value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }} required autoComplete="new-password" disabled={isLoading} className="h-14 text-lg" />
+            <Input id="confirmPassword" type="password" placeholder="Repita a senha para confirmar" value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }} required autoComplete="new-password" disabled={isLoading} className="h-14 text-lg" />
           </div>
 
           <Button type="submit" className="w-full h-14 text-lg font-bold" disabled={isLoading || passwordErrors.length > 0}>
