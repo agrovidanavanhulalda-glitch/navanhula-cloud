@@ -412,6 +412,16 @@
     background: var(--gradient-premium);
   }
 
+  .bg-deep-blue {
+    background-color: hsl(214 68% 10%);
+    color: hsl(0 0% 100%);
+  }
+
+  .bg-deep-blue-soft {
+    background-color: hsl(214 68% 14%);
+    color: hsl(0 0% 100%);
+  }
+
   .bg-gradient-gold {
     background: var(--gradient-gold);
   }
