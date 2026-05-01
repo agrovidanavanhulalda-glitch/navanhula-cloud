@@ -71,7 +71,7 @@ const DEFAULT_STORE: Store = {
   updated_at: new Date().toISOString(),
 };
 
-export const SaaSAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [store, setStore] = useState<Store | null>(null);
