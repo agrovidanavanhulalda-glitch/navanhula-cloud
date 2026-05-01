@@ -365,7 +365,7 @@ const LocalDashboardPage: React.FC = () => {
           value={formatCurrency(avgTicket)}
         />
         <KPICard
-          index={3} icon={AlertTriangle} label="Estoque Baixo"
+          index={3} icon={AlertTriangle} label="Produtos Acabando"
           value={lowStockProducts.length}
           trend={lowStockProducts.length > 0 ? 'Produtos precisam reposição' : 'Tudo em ordem'}
           trendUp={lowStockProducts.length === 0 ? true : false}
