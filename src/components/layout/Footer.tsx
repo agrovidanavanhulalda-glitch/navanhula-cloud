@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ShieldCheck, CloudCheck, Lock } from 'lucide-react';
+import { ShieldCheck, Cloud, Lock, Database } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -21,7 +21,7 @@ const Footer: React.FC = () => {
         {/* Center - Trust Signals */}
         <div className="flex items-center gap-6 px-6 py-2 bg-secondary/30 rounded-2xl border border-border/40">
           <div className="flex items-center gap-2 group">
-            <CloudCheck className="w-4 h-4 text-success group-hover:scale-110 transition-transform" />
+            <Database className="w-4 h-4 text-success group-hover:scale-110 transition-transform" />
             <div className="flex flex-col">
               <span className="font-bold text-foreground leading-none">Backup Ativo</span>
               <span className="text-[10px] leading-tight">Dados protegidos em tempo real</span>
