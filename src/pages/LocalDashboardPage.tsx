@@ -299,7 +299,7 @@ const LocalDashboardPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold tracking-tight text-foreground">
-            Resumo de Hoje
+            O que aconteceu hoje
           </h1>
           <p className="text-sm text-muted-foreground">{store.name} — {new Date().toLocaleDateString('pt-MZ', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
