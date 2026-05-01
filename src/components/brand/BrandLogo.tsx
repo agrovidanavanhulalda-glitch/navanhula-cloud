@@ -32,11 +32,10 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
   // though Vite usually handles this with hashes.
   const logoUrl = `${navanhulaLogo}?v=1.0.1`;
   
-  const actualHeight = height || width;
   const containerStyle = { 
     width: width, 
     height: height || 'auto',
-    minHeight: height ? undefined : width * 0.4 // Minimum height for horizontal layout
+    minHeight: height ? undefined : width * 0.3 // Minimum height for horizontal layout
   };
 
   return (
@@ -68,10 +67,12 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
         <div
           aria-label={alt}
           role="img"
-          className="h-full w-full rounded-xl flex items-center justify-center text-gold font-black"
+          className="rounded-lg flex items-center justify-center text-gold font-black shadow-inner"
           style={{
-            background: 'var(--gradient-premium, linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7)))',
-            fontSize: Math.round(width * 0.4),
+            width: '100%',
+            height: height || (width * 0.5), // Responsive fallback height
+            background: 'var(--gradient-premium, linear-gradient(135deg, #0f172a, #1e293b))',
+            fontSize: Math.round(width * 0.3),
             lineHeight: 1,
           }}
         >
