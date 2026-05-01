@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useLocalPOS, LocalSale } from '@/contexts/LocalPOSContext';
-import { useAuth } from '@/contexts/SaaSAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

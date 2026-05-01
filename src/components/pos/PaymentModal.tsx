@@ -24,7 +24,7 @@ import QRCodePayment from './QRCodePayment';
 import ManualPaymentInstructions from './ManualPaymentInstructions';
 import { formatCurrency } from '@/lib/formatters';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/SaaSAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export interface PaymentDetails {

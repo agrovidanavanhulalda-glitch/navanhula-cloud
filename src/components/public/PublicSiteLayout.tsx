@@ -53,7 +53,7 @@ const PublicSiteLayout: React.FC = () => {
 
               <div className="min-w-0 hidden sm:block">
                 <p className="text-sm font-black tracking-tight truncate md:text-lg">NAVANHULA CLOUD</p>
-                <p className="text-[10px] text-muted-foreground truncate md:text-xs">Enterprise SaaS Platform</p>
+                <p className="text-[10px] text-muted-foreground truncate md:text-xs">Plataforma Enterprise Cloud</p>
               </div>
             </button>
 

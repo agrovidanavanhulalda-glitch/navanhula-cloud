@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '@/contexts/SaaSAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, Users, TrendingUp, FileCheck, Building2, ShoppingCart } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
