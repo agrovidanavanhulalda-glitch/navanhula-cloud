@@ -9,26 +9,26 @@
 @layer base {
   :root {
     /* Core — Light professional palette */
-    --background: 222 47% 97%;
-    --foreground: 222 47% 11%;
+    --background: 0 0% 100%;
+    --foreground: 214 68% 14%; /* #0B1F3A */
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 214 68% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 214 68% 14%;
 
-    /* Primary — NAVANHULA Deep Blue #1E3A8A */
-    --primary: 222 76% 33%;
+    /* Primary — NAVANHULA Deep Blue #0B1F3A */
+    --primary: 214 68% 14%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 217 91% 60%;
+    --primary-glow: 214 68% 30%;
 
     /* Secondary — Light Gray */
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
 
     --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 25% 40%;
 
     /* Accent — Premium Gold #D4A93C */
     --accent: 43 67% 53%;
@@ -66,11 +66,11 @@
     --radius: 0.75rem;
 
     /* Sidebar — Deep navy with gold accent */
-    --sidebar-background: 222 76% 11%;
+    --sidebar-background: 214 68% 10%;
     --sidebar-foreground: 214 32% 91%;
     --sidebar-primary: 43 67% 53%;
-    --sidebar-primary-foreground: 222 76% 15%;
-    --sidebar-accent: 222 76% 33% / 0.18;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 68% 18% / 0.8;
     --sidebar-accent-foreground: 43 67% 65%;
     --sidebar-border: 222 47% 18%;
     --sidebar-ring: 43 67% 53%;
@@ -410,6 +410,16 @@
 
   .bg-gradient-premium {
     background: var(--gradient-premium);
+  }
+
+  .bg-deep-blue {
+    background-color: hsl(214 68% 10%);
+    color: hsl(0 0% 100%);
+  }
+
+  .bg-deep-blue-soft {
+    background-color: hsl(214 68% 14%);
+    color: hsl(0 0% 100%);
   }
 
   .bg-gradient-gold {

@@ -275,7 +275,7 @@ const LocalDashboardPage: React.FC = () => {
     return (
       <div className="p-4 md:p-6 lg:p-8 space-y-6">
         <div className="h-7 w-48 rounded-lg bg-muted animate-pulse" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => <SkeletonKPI key={i} />)}
         </div>
         <SkeletonChart />
@@ -349,7 +349,7 @@ const LocalDashboardPage: React.FC = () => {
       )}
 
       {/* 4 Core KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           index={0} icon={DollarSign} label="Receita Hoje"
           value={formatCurrency(totalRevenue)}
