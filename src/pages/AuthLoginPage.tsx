@@ -101,8 +101,8 @@ const AuthLoginPage: React.FC = () => {
               <ShieldCheck className="h-5 w-5 text-gold-foreground" />
             </div>
             <div>
-              <h2 className="text-lg font-bold leading-tight">Acesso Seguro</h2>
-              <p className="text-xs text-muted-foreground">Entre com suas credenciais corporativas</p>
+              <h2 className="text-lg font-bold leading-tight">Entrar no Sistema</h2>
+              <p className="text-xs text-muted-foreground">Use o seu e-mail e senha para começar</p>
             </div>
           </div>
 
