@@ -108,17 +108,17 @@ const AuthSignupPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName">Nome Completo</Label>
-            <Input id="fullName" type="text" placeholder="Seu nome completo" value={fullName} onChange={(e) => { setFullName(e.target.value); setError(null); }} required autoComplete="name" disabled={isLoading} />
+            <Input id="fullName" type="text" placeholder="Seu nome completo" value={fullName} onChange={(e) => { setFullName(e.target.value); setError(null); }} required autoComplete="name" disabled={isLoading} className="h-14 text-lg" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => { setEmail(e.target.value); setError(null); }} required autoComplete="email" disabled={isLoading} />
+            <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => { setEmail(e.target.value); setError(null); }} required autoComplete="email" disabled={isLoading} className="h-14 text-lg" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
-            <Input id="password" type="password" placeholder="Senha forte" value={password} onChange={(e) => { setPassword(e.target.value); setError(null); }} required autoComplete="new-password" disabled={isLoading} />
+            <Input id="password" type="password" placeholder="Senha forte" value={password} onChange={(e) => { setPassword(e.target.value); setError(null); }} required autoComplete="new-password" disabled={isLoading} className="h-14 text-lg" />
             {password.length > 0 && (
               <div className="space-y-1 mt-2">
                 {['Mínimo 8 caracteres', 'Pelo menos 1 letra maiúscula', 'Pelo menos 1 letra minúscula', 'Pelo menos 1 número', 'Pelo menos 1 caractere especial (!@#$%...)'].map((rule) => {
@@ -136,10 +136,10 @@ const AuthSignupPage: React.FC = () => {
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-            <Input id="confirmPassword" type="password" placeholder="Digite a senha novamente" value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }} required autoComplete="new-password" disabled={isLoading} />
+            <Input id="confirmPassword" type="password" placeholder="Digite a senha novamente" value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }} required autoComplete="new-password" disabled={isLoading} className="h-14 text-lg" />
           </div>
 
-          <Button type="submit" className="w-full h-12 text-lg" disabled={isLoading || passwordErrors.length > 0}>
+          <Button type="submit" className="w-full h-14 text-lg font-bold" disabled={isLoading || passwordErrors.length > 0}>
             {isLoading ? (<><Loader2 className="w-5 h-5 animate-spin mr-2" />Criando conta...</>) : (<><UserPlus className="w-5 h-5 mr-2" />Criar Conta</>)}
           </Button>
         </form>
