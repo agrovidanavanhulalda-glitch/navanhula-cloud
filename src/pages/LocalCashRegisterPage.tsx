@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 // HYBRID: Local POS data + Alto Contraste para uso em loja
 
@@ -47,6 +48,7 @@ const LocalCashRegisterPage: React.FC = () => {
     openCashRegister,
     closeCashRegister,
   } = useLocalPOS();
+  const { updateStep } = useOnboarding();
 
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
@@ -74,6 +76,7 @@ const LocalCashRegisterPage: React.FC = () => {
     }
     
     openCashRegister(seller.id, seller.name, amount);
+    updateStep('first_cash_opened');
     toast.success('Caixa aberto com sucesso!');
     setShowOpenDialog(false);
     setOpeningAmount('');

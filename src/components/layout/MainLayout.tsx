@@ -14,6 +14,7 @@ import NotificationBell from './NotificationBell';
 import LanguageSelector from './LanguageSelector';
 
 import BrandLogo from '@/components/brand/BrandLogo';
+import SmartOnboarding from '@/components/onboarding/SmartOnboarding';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
@@ -25,6 +26,7 @@ const MainLayout: React.FC = () => {
         <UpsellBanner />
 
         <main className="flex-1 p-4 pb-[100px] safe-bottom overflow-y-auto overflow-x-hidden w-full max-w-full animate-fade-in">
+          <SmartOnboarding />
           <Outlet />
         </main>
 
@@ -57,8 +59,11 @@ const MainLayout: React.FC = () => {
             </div>
           </header>
           <UpsellBanner />
-          <main className="flex-1 overflow-y-auto overflow-x-hidden bg-background">
-            <Outlet />
+          <main className="flex-1 overflow-y-auto overflow-x-hidden bg-background p-6">
+            <div className="max-w-7xl mx-auto space-y-6">
+              <SmartOnboarding />
+              <Outlet />
+            </div>
           </main>
           <Footer />
         </div>

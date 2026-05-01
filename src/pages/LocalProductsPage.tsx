@@ -30,11 +30,13 @@ import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import ProductImageUpload from '@/components/products/ProductImageUpload';
 import * as XLSX from 'xlsx';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 // HYBRID: Local POS data + SaaS Auth
 
 const LocalProductsPage: React.FC = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useLocalPOS();
+  const { updateStep } = useOnboarding();
   const { role } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -137,6 +139,7 @@ const LocalProductsPage: React.FC = () => {
       toast.success('Produto atualizado');
     } else {
       addProduct(productData);
+      updateStep('first_product_added');
       toast.success('Produto criado');
     }
 
