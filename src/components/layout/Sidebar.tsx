@@ -340,33 +340,18 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       {/* Footer — User & Logout */}
       <SidebarFooter className="border-t border-sidebar-border p-3">
         {!collapsed && (
-          <div className="mb-2 p-2.5 rounded-lg bg-sidebar-accent/50">
+          <div className="mb-2 p-2.5 rounded-lg bg-sidebar-accent/10 border border-sidebar-border/50">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center bg-sidebar-primary/15">
-                {isBackofficeAdmin
-                  ? <Shield className="w-3.5 h-3.5 text-sidebar-primary" />
-                  : <User className="w-3.5 h-3.5 text-sidebar-foreground/50" />}
-              </div>
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-xs text-sidebar-primary-foreground truncate">{currentOperator}</p>
-                <p className="text-[10px] text-sidebar-foreground/50">{currentOperatorRole}</p>
+                <p className="text-[10px] text-sidebar-foreground/50 uppercase font-bold tracking-wider">Estado da Rede</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <NetworkIndicator />
+                  <span className="text-[10px] text-sidebar-foreground/70">Sistema Online</span>
+                </div>
               </div>
-              <NetworkIndicator />
             </div>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            'w-full justify-start gap-2 text-xs text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10',
-            collapsed && 'justify-center px-2'
-          )}
-          onClick={handleLogout}
-        >
-          <LogOut className="w-4 h-4" />
-          {!collapsed && 'Sair'}
-        </Button>
       </SidebarFooter>
     </ShadcnSidebar>
   );
