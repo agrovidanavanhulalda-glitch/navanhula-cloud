@@ -336,7 +336,7 @@ const LocalPOSPage: React.FC = () => {
             <div className="p-5 md:p-6 border-b flex items-center justify-between bg-[#0B1F3A] text-white">
               <div className="flex items-center gap-3">
                 <ShoppingCart className="w-7 h-7" />
-                <h2 className="text-2xl font-black tracking-tight uppercase">Carrinho</h2>
+                <h2 className="text-2xl font-black tracking-tight uppercase">Itens da Venda</h2>
               </div>
               <Badge variant="outline" className="text-white border-white/30 text-xl py-1.5 px-4 font-black">
                 {cart.length} {cart.length === 1 ? 'ITEM' : 'ITENS'}
