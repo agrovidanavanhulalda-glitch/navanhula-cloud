@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import { useNavigate } from 'react-router-dom';
+import PageTransition from '@/components/layout/PageTransition';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
