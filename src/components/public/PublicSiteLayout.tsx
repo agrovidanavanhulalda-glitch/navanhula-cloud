@@ -49,7 +49,7 @@ const PublicSiteLayout: React.FC = () => {
         <div className="container flex flex-col gap-4 py-4 md:h-20 md:flex-row md:items-center md:justify-between md:py-0">
           <div className="flex items-center justify-between gap-2 min-w-0">
             <button type="button" onClick={() => handleSectionNavigation('#top')} className="flex items-center gap-3 text-left min-w-0 shrink group">
-              <BrandLogo size={56} glow priority className="md:!w-[64px] md:!h-[64px]" />
+              <BrandLogo width={64} glow priority className="md:!w-[140px]" />
 
               <div className="min-w-0 hidden sm:block">
                 <p className="text-sm font-black tracking-tight truncate md:text-lg">NAVANHULA CLOUD</p>
@@ -110,7 +110,7 @@ const PublicSiteLayout: React.FC = () => {
         <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-end md:justify-between">
           <div className="max-w-xl space-y-3">
             <div className="flex items-center gap-3">
-              <BrandLogo size={48} />
+              <BrandLogo width={48} className="md:!w-[120px]" />
               <p className="text-lg font-black tracking-tight">NAVANHULA CLOUD</p>
             </div>
             <p className="text-sm leading-7 text-muted-foreground">

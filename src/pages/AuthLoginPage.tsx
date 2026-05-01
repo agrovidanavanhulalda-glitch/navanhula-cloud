@@ -75,7 +75,7 @@ const AuthLoginPage: React.FC = () => {
         {/* Brand header */}
         <div className="mb-8 text-center">
           <div className="relative mx-auto mb-5 inline-flex">
-            <BrandLogo size={96} glow priority />
+            <BrandLogo width={160} glow priority />
           </div>
           <h1 className="text-3xl font-black tracking-tight text-primary-foreground">
             NAVANHULA <span className="text-gradient-gold">CLOUD</span>
