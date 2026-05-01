@@ -355,8 +355,8 @@ const LocalPOSPage: React.FC = () => {
                     <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center">
                       <ShoppingCart className="w-10 h-10 opacity-20" />
                     </div>
-                    <p className="text-center font-medium">Seu carrinho está vazio</p>
-                    <p className="text-sm text-center px-10">Clique nos produtos à esquerda para adicioná-los à venda.</p>
+                    <p className="text-center font-medium">Nenhum produto selecionado</p>
+                    <p className="text-sm text-center px-10">Toque nos produtos ao lado para começar a vender.</p>
                   </motion.div>
                 ) : (
                   cart.map((item) => (
