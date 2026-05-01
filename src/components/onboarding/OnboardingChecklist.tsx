@@ -50,7 +50,7 @@ const OnboardingChecklist: React.FC = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          <h3 className="font-bold text-foreground">Primeiros Passos</h3>
+          <h3 className="font-bold text-foreground">Vamos configurar sua empresa?</h3>
         </div>
         <span className="text-xs font-bold text-primary">{Math.round(completionPct)}%</span>
       </div>
