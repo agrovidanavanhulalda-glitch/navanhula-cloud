@@ -17,7 +17,7 @@ const navItems: NavItem[] = [
   { label: 'Início', icon: LayoutDashboard, path: '/app/dashboard' },
   { label: 'Vendas', icon: ShoppingCart, path: '/app/pdv' },
   { label: 'Produtos', icon: Package, path: '/app/produtos' },
-  { label: 'Estoque', icon: Boxes, path: '/app/estoque' },
+  { label: 'Stock', icon: Boxes, path: '/app/estoque' },
   { label: 'Menu', icon: Menu, path: '', isMenu: true },
 ];
 
