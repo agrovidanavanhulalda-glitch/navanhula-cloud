@@ -140,7 +140,7 @@ const AuthSignupPage: React.FC = () => {
           </div>
 
           <Button type="submit" className="w-full h-14 text-lg font-bold" disabled={isLoading || passwordErrors.length > 0}>
-            {isLoading ? (<><Loader2 className="w-5 h-5 animate-spin mr-2" />Criando conta...</>) : (<><UserPlus className="w-5 h-5 mr-2" />Criar Conta</>)}
+            {isLoading ? (<><Loader2 className="w-5 h-5 animate-spin mr-2" />Criando conta...</>) : (<><UserPlus className="w-5 h-5 mr-2" />CRIAR MINHA CONTA</>)}
           </Button>
         </form>
 
