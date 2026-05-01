@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
+      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png', 'version.json'],
       manifest: {
         name: 'NAVANHULA CLOUD',
         short_name: 'NAVANHULA CLOUD',
