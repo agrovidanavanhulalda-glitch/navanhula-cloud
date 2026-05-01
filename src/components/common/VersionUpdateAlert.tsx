@@ -5,11 +5,9 @@ import { RefreshCw, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const VersionUpdateAlert = () => {
-  const { hasUpdate, handleUpdate } = useAppVersion();
+  const { hasUpdate, handleUpdate, currentVersion } = useAppVersion();
 
-  return (
-    <AnimatePresence>
-      {hasUpdate && (
+  if (!hasUpdate) return null;
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
