@@ -201,34 +201,34 @@ const LocalPOSPage: React.FC = () => {
           <div className="flex-1 flex flex-col min-w-0 bg-slate-50/30">
             {/* Top Search Bar - Large & Prominent */}
             <div className="p-4 md:p-6 bg-white border-b shadow-sm sticky top-0 z-10">
-              <div className="max-w-4xl mx-auto flex gap-3">
+              <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1 group">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5 group-focus-within:text-primary transition-colors" />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-6 h-6 group-focus-within:text-primary transition-colors" />
                   <Input
-                    placeholder="Busque por nome, código ou use o scanner..."
+                    placeholder="Busque produtos ou use scanner..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-14 text-lg border-2 focus-visible:ring-primary shadow-sm"
+                    className="pl-12 h-16 text-xl border-2 focus-visible:ring-primary shadow-sm rounded-xl"
                     autoFocus
                   />
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-14 w-14 flex-shrink-0 border-2 hover:bg-primary/5 hover:text-primary transition-colors"
-                  onClick={() => setShowBarcodeScanner(true)}
-                  title="Scanner de código de barras"
-                >
-                  <ScanLine className="w-6 h-6" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-14 px-4 hidden sm:flex border-2 gap-2"
-                  onClick={() => setShowManualEntry(!showManualEntry)}
-                >
-                  <Plus className="w-5 h-5" />
-                  Manual
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="h-16 w-16 flex-shrink-0 border-2 hover:bg-primary/5 hover:text-primary transition-colors rounded-xl"
+                    onClick={() => setShowBarcodeScanner(true)}
+                  >
+                    <ScanLine className="w-8 h-8" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-16 px-6 flex-1 sm:flex-none border-2 gap-2 font-bold text-lg rounded-xl"
+                    onClick={() => setShowManualEntry(!showManualEntry)}
+                  >
+                    <Plus className="w-6 h-6" />
+                    MANUAL
+                  </Button>
+                </div>
               </div>
 
               {/* Manual Entry Expansion */}
