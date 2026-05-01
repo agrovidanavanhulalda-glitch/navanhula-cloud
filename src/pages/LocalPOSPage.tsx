@@ -28,6 +28,7 @@ import BarcodeScanner from '@/components/pos/BarcodeScanner';
 import BluetoothPrintButton from '@/components/pos/BluetoothPrintButton';
 import PostSaleModal from '@/components/pos/PostSaleModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 // HYBRID: Local POS data + Cloud Auth
 
@@ -49,6 +50,7 @@ const LocalPOSPage: React.FC = () => {
     getTotalDiscount,
     getLastSale,
   } = useLocalPOS();
+  const { updateStep } = useOnboarding();
 
   const { user, company } = useAuth();
 
@@ -114,6 +116,7 @@ const LocalPOSPage: React.FC = () => {
         ? ` | Troco: ${formatCurrency(paymentDetails.change)}`
         : '';
       toast.success(`Venda concluída!${changeMsg}`);
+      updateStep('first_sale_completed');
       setShowPaymentModal(false);
 
       // Check user preference for skip modal
