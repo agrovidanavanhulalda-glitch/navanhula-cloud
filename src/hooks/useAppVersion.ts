@@ -31,7 +31,7 @@ export const useAppVersion = () => {
         return;
       }
 
-      if (localVersion !== data.version) {
+      if (data.version && localVersion !== data.version) {
         console.log(`New version detected: ${data.version} (current: ${localVersion})`);
         setHasUpdate(true);
         
