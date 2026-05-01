@@ -251,79 +251,84 @@ const LocalProductsPage: React.FC = () => {
       </div>
 
       {/* Products Table */}
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="text-left p-4 font-medium">Produto</th>
-                <th className="text-right p-4 font-medium">Preço Compra</th>
-                <th className="text-right p-4 font-medium">Preço Venda</th>
-                <th className="text-right p-4 font-medium">Margem</th>
-                <th className="text-right p-4 font-medium">Estoque</th>
-                <th className="text-center p-4 font-medium">Status</th>
-                <th className="text-center p-4 font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-muted/30">
-                  <td className="p-4">
-                    <div className="font-medium">{product.name}</div>
-                  </td>
-                  <td className="p-4 text-right text-muted-foreground">
-                    {formatCurrency(product.costPrice)}
-                  </td>
-                  <td className="p-4 text-right font-medium">
-                    {formatCurrency(product.salePrice)}
-                  </td>
-                  <td className="p-4 text-right">
-                    <Badge variant="secondary">
-                      {calculateMargin(product.costPrice, product.salePrice)}%
-                    </Badge>
-                  </td>
-                  <td className="p-4 text-right">
-                    <span className={product.stock <= 10 ? 'text-destructive font-medium' : ''}>
-                      {product.stock}
-                    </span>
-                  </td>
-                  <td className="p-4 text-center">
-                    <Badge variant={product.isActive ? 'default' : 'secondary'}>
-                      {product.isActive ? 'Ativo' : 'Inativo'}
-                    </Badge>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(product)}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() => setDeleteConfirm(product.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
+      {loading ? (
+        <SkeletonTable rows={8} cols={6} />
+      ) : (
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-left p-4 font-medium">Produto</th>
+                  <th className="text-right p-4 font-medium">Preço Compra</th>
+                  <th className="text-right p-4 font-medium">Preço Venda</th>
+                  <th className="text-right p-4 font-medium">Margem</th>
+                  <th className="text-right p-4 font-medium">Estoque</th>
+                  <th className="text-center p-4 font-medium">Status</th>
+                  <th className="text-center p-4 font-medium">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhum produto encontrado</p>
+              </thead>
+              <tbody className="divide-y">
+                {filteredProducts.map((product) => (
+                  <tr key={product.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="p-4">
+                      <div className="font-medium">{product.name}</div>
+                    </td>
+                    <td className="p-4 text-right text-muted-foreground">
+                      {formatCurrency(product.costPrice)}
+                    </td>
+                    <td className="p-4 text-right font-medium">
+                      {formatCurrency(product.salePrice)}
+                    </td>
+                    <td className="p-4 text-right">
+                      <Badge variant="secondary">
+                        {calculateMargin(product.costPrice, product.salePrice)}%
+                      </Badge>
+                    </td>
+                    <td className="p-4 text-right">
+                      <span className={product.stock <= 10 ? 'text-destructive font-medium' : ''}>
+                        {product.stock}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center">
+                      <Badge variant={product.isActive ? 'default' : 'secondary'}>
+                        {product.isActive ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(product)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                          onClick={() => setDeleteConfirm(product.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-      </Card>
+
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum produto encontrado</p>
+            </div>
+          )}
+        </Card>
+      )}
+
 
       {/* Product Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
@@ -451,8 +456,9 @@ const LocalProductsPage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageTransition>
   );
 };
+
 
 export default LocalProductsPage;
