@@ -387,26 +387,26 @@ const LocalPOSPage: React.FC = () => {
                         </div>
                         
                         <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                          <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1.5">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-md hover:bg-white hover:shadow-sm"
+                              className="h-12 w-12 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
                               onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="w-5 h-5" />
                             </Button>
-                            <span className="w-10 text-center font-black tabular-nums">{item.quantity}</span>
+                            <span className="w-12 text-center font-black text-xl tabular-nums">{item.quantity}</span>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-md hover:bg-white hover:shadow-sm"
+                              className="h-12 w-12 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
                               onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-5 h-5" />
                             </Button>
                           </div>
-                          <span className="font-bold text-lg text-[#0B1F3A] tabular-nums">
+                          <span className="font-bold text-xl text-[#0B1F3A] tabular-nums">
                             {formatCurrency(item.total)}
                           </span>
                         </div>
