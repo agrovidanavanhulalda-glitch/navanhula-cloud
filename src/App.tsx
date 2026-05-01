@@ -81,6 +81,7 @@ const LeadsPipelinePage = React.lazy(() => import("./pages/LeadsPipelinePage"));
 const GrowthDashboardPage = React.lazy(() => import("./pages/GrowthDashboardPage"));
 const ReferralPage = React.lazy(() => import("./pages/ReferralPage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
+const VersionUpdateAlert = React.lazy(() => import("@/components/common/VersionUpdateAlert"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
