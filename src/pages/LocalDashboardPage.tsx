@@ -273,17 +273,19 @@ const LocalDashboardPage: React.FC = () => {
   /* ── Loading State ── */
   if (loading) {
     return (
-      <div className="p-4 md:p-6 lg:p-8 space-y-6">
-        <div className="h-7 w-48 rounded-lg bg-muted animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => <SkeletonKPI key={i} />)}
+      <PageTransition>
+        <div className="p-4 md:p-6 lg:p-8 space-y-6">
+          <div className="h-7 w-48 rounded-lg bg-muted animate-pulse" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => <SkeletonKPI key={i} />)}
+          </div>
+          <SkeletonChart />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <SkeletonList rows={5} />
+            <SkeletonList rows={5} />
+          </div>
         </div>
-        <SkeletonChart />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <SkeletonList rows={5} />
-          <SkeletonList rows={5} />
-        </div>
-      </div>
+      </PageTransition>
     );
   }
 
@@ -528,8 +530,10 @@ const LocalDashboardPage: React.FC = () => {
           </div>
         </Card>
       )}
-    </div>
+      </div>
+    </PageTransition>
   );
 };
+
 
 export default LocalDashboardPage;
