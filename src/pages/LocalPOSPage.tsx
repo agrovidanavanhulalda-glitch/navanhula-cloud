@@ -555,8 +555,10 @@ const LocalPOSPage: React.FC = () => {
           onPrintReceipt={handlePostSalePrintReceipt}
         />
       )}
-    </div>
+      </div>
+    </PageTransition>
   );
 };
+
 
 export default LocalPOSPage;
