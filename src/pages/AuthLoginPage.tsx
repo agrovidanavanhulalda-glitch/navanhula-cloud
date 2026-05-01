@@ -15,6 +15,7 @@ const AuthLoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { currentVersion } = useAppVersion();
 
   const { signIn, isAuthenticated, loading, role } = useAuth();
   const navigate = useNavigate();
