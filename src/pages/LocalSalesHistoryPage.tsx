@@ -373,10 +373,11 @@ const LocalSalesHistoryPage: React.FC = () => {
           }}
         />
       )}
-    </div>
+      </div>
     </PageTransition>
   );
 };
+
 
 
 export default LocalSalesHistoryPage;
