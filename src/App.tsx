@@ -10,6 +10,8 @@ import { Loader2 } from "lucide-react";
 import SubscriptionGate from "@/components/layout/SubscriptionGate";
 import { getDefaultRouteForRole, canAccessRoute } from "@/lib/roleRoutes";
 import { I18nProvider } from "@/contexts/i18n";
+import { AnimatePresence } from "framer-motion";
+import PageTransition from "./components/layout/PageTransition";
 
 // Public site — eagerly loaded (landing page)
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
