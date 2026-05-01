@@ -4,7 +4,7 @@ import { ArrowRight, Play, CheckCircle2, BarChart3, ShoppingCart, Users, Store }
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import navanhulaLogo from '@/assets/navanhula-cloud-logo.png';
+import BrandLogo from '@/components/brand/BrandLogo';
 
 const stats = [
   { value: '124.500 MT', label: 'Vendas do dia', tone: 'text-profit' },
@@ -40,11 +40,11 @@ const HeroSection: React.FC = () => (
               className="absolute inset-0 -z-10 rounded-full blur-2xl opacity-70"
               style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.55), hsl(var(--accent) / 0.3) 50%, transparent 75%)' }}
             />
-            <img
-              src={navanhulaLogo}
-              alt="NAVANHULA CLOUD logo"
-              className="h-20 w-20 object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.25)] sm:h-24 sm:w-24"
-              loading="eager"
+            <BrandLogo 
+              width={160} 
+              glow 
+              priority 
+              className="!h-auto"
             />
           </div>
           <div className="leading-tight">
