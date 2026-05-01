@@ -338,18 +338,39 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       </SidebarContent>
 
       {/* Footer — User & Logout */}
-      <SidebarFooter className="border-t border-sidebar-border p-3">
+      <SidebarFooter className="border-t border-sidebar-border p-3 gap-2">
         {!collapsed && (
-          <div className="mb-2 p-2.5 rounded-lg bg-sidebar-accent/10 border border-sidebar-border/50">
-            <div className="flex items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] text-sidebar-foreground/50 uppercase font-bold tracking-wider">Estado da Rede</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <NetworkIndicator />
-                  <span className="text-[10px] text-sidebar-foreground/70">Sistema Online</span>
+          <div className="flex flex-col gap-2">
+            <div className="p-2.5 rounded-lg bg-sidebar-accent/10 border border-sidebar-border/50">
+              <div className="flex flex-col gap-1.5">
+                <p className="text-[10px] text-sidebar-foreground/50 uppercase font-bold tracking-wider">Segurança & Estado</p>
+                <NetworkIndicator />
+                <div className="flex items-center gap-2 px-1 text-[10px] text-sidebar-foreground/70">
+                  <Database className="w-3 h-3 text-success" />
+                  <span className="font-medium">Backup em tempo real</span>
+                </div>
+                <div className="flex items-center gap-2 px-1 text-[10px] text-sidebar-foreground/70">
+                  <ShieldCheck className="w-3 h-3 text-primary" />
+                  <span className="font-medium">Proteção SSL Ativa</span>
                 </div>
               </div>
             </div>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="text-xs font-semibold">Sair do sistema</span>
+            </Button>
+          </div>
+        )}
+        {collapsed && (
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+            <ShieldCheck className="w-4 h-4 text-primary/50" />
           </div>
         )}
       </SidebarFooter>
