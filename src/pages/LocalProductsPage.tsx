@@ -456,7 +456,9 @@ const LocalProductsPage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </PageTransition>
+
   );
 };
 
