@@ -243,7 +243,7 @@ const LocalPOSPage: React.FC = () => {
                     <Card className="mt-4 p-4 border-2 border-dashed bg-secondary/20">
                       <div className="flex flex-wrap items-center gap-3">
                         <Input
-                          placeholder="Nome do item"
+                          placeholder="Nome do produto ou serviço"
                           value={manualName}
                           onChange={(e) => setManualName(e.target.value)}
                           className="flex-1 min-w-[200px]"
