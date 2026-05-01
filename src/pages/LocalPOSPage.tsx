@@ -421,7 +421,7 @@ const LocalPOSPage: React.FC = () => {
             <div className="p-4 md:p-6 bg-slate-50 border-t space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-muted-foreground font-medium">
-                  <span>Subtotal</span>
+                  <span>Soma dos Itens</span>
                   <span className="tabular-nums">{formatCurrency(getSubtotal())}</span>
                 </div>
                 {getTotalDiscount() > 0 && (
