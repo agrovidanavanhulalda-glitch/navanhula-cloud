@@ -66,7 +66,7 @@ const MobileHeader: React.FC = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <BrandLogo size={28} priority />
+        <BrandLogo width={90} priority />
         <span className="font-semibold text-[15px] tracking-tight text-foreground truncate">
           {title}
         </span>

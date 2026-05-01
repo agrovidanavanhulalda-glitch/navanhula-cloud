@@ -305,7 +305,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       {/* Brand Header */}
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
-          <BrandLogo size={collapsed ? 32 : 40} priority />
+          <BrandLogo width={collapsed ? 32 : 120} priority />
           {!collapsed && (
             <div className="min-w-0">
               <h1 className="font-bold text-sm text-sidebar-primary-foreground tracking-tight leading-none">NAVANHULA</h1>
