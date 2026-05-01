@@ -66,11 +66,11 @@
     --radius: 0.75rem;
 
     /* Sidebar — Deep navy with gold accent */
-    --sidebar-background: 222 76% 11%;
+    --sidebar-background: 214 68% 10%;
     --sidebar-foreground: 214 32% 91%;
     --sidebar-primary: 43 67% 53%;
-    --sidebar-primary-foreground: 222 76% 15%;
-    --sidebar-accent: 222 76% 33% / 0.18;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 68% 18% / 0.8;
     --sidebar-accent-foreground: 43 67% 65%;
     --sidebar-border: 222 47% 18%;
     --sidebar-ring: 43 67% 53%;
