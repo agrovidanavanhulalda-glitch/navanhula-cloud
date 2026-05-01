@@ -431,7 +431,7 @@ const LocalPOSPage: React.FC = () => {
                   </div>
                 )}
                 <div className="flex justify-between items-end pt-2 border-t border-slate-200">
-                  <span className="text-lg font-bold text-[#0B1F3A]">TOTAL</span>
+                  <span className="text-lg font-bold text-[#0B1F3A]">VALOR A COBRAR</span>
                   <motion.div
                     key={getTotal()}
                     initial={{ scale: 1.1, color: '#2563eb' }}
