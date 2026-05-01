@@ -292,9 +292,9 @@ const AppRoutes = () => {
 
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </AnimatePresence>
     </Suspense>
-  );
-};
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
