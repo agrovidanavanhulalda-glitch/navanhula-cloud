@@ -333,7 +333,7 @@ const LocalDashboardPage: React.FC = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold text-foreground">Meta Diária</span>
+                <span className="text-sm font-semibold text-foreground">Objetivo do Dia</span>
               </div>
               <span className="text-sm font-bold tabular-nums text-foreground">
                 {dailyProgress.toFixed(0)}%
