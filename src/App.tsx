@@ -300,6 +300,9 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <Suspense fallback={null}>
+          <VersionUpdateAlert />
+        </Suspense>
         <BrowserRouter>
           <SaaSAuthProvider>
             <AppRoutes />
