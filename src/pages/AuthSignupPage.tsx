@@ -89,7 +89,7 @@ const AuthSignupPage: React.FC = () => {
       <Card className="w-full max-w-md p-8">
         <div className="flex items-center gap-2 mb-6">
           <UserPlus className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-semibold">Criar Conta</h2>
+          <h2 className="text-xl font-semibold">Começar Agora</h2>
         </div>
 
         {referralCode ? (
