@@ -205,7 +205,7 @@ const LocalPOSPage: React.FC = () => {
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-6 h-6 group-focus-within:text-primary transition-colors" />
                   <Input
-                    placeholder="Busque produtos ou use scanner..."
+                    placeholder="Procure um produto ou use o leitor de código..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-12 h-16 text-xl border-2 focus-visible:ring-primary shadow-sm rounded-xl"
