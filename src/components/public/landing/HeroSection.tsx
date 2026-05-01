@@ -48,7 +48,7 @@ const HeroSection: React.FC = () => (
             />
           </div>
           <div className="leading-tight">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Enterprise SaaS</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Enterprise Cloud</p>
             <p className="text-2xl font-black tracking-tight sm:text-3xl">NAVANHULA <span className="text-gradient-primary">CLOUD</span></p>
           </div>
         </div>
