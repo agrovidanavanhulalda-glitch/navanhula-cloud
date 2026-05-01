@@ -379,10 +379,10 @@ const LocalPOSPage: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            className="h-12 w-12 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
                             onClick={() => removeFromCart(item.product.id)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-6 h-6" />
                           </Button>
                         </div>
                         
