@@ -164,11 +164,11 @@ const LocalPOSPage: React.FC = () => {
           </div>
           <Button 
             size="lg"
-            className="h-16 px-10 text-xl font-bold gap-3 shadow-xl hover:scale-105 transition-transform"
+            className="h-20 w-full max-w-sm text-2xl font-black gap-3 shadow-xl hover:scale-105 transition-transform rounded-2xl"
             onClick={() => navigate('/caixa')}
           >
-            <Unlock className="w-6 h-6" />
-            Abrir Caixa Agora
+            <Unlock className="w-8 h-8" />
+            ABRIR CAIXA
           </Button>
         </div>
       ) : products.length === 0 ? (
@@ -188,11 +188,11 @@ const LocalPOSPage: React.FC = () => {
           </div>
           <Button 
             size="lg"
-            className="h-16 px-10 text-xl font-bold gap-3 shadow-xl hover:scale-105 transition-transform"
+            className="h-20 w-full max-w-sm text-2xl font-black gap-3 shadow-xl hover:scale-105 transition-transform rounded-2xl"
             onClick={() => navigate('/produtos')}
           >
-            <Plus className="w-6 h-6" />
-            Adicionar Primeiro Produto
+            <Plus className="w-8 h-8" />
+            ADICIONAR PRODUTO
           </Button>
         </div>
       ) : (
@@ -201,34 +201,34 @@ const LocalPOSPage: React.FC = () => {
           <div className="flex-1 flex flex-col min-w-0 bg-slate-50/30">
             {/* Top Search Bar - Large & Prominent */}
             <div className="p-4 md:p-6 bg-white border-b shadow-sm sticky top-0 z-10">
-              <div className="max-w-4xl mx-auto flex gap-3">
+              <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1 group">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5 group-focus-within:text-primary transition-colors" />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-6 h-6 group-focus-within:text-primary transition-colors" />
                   <Input
-                    placeholder="Busque por nome, código ou use o scanner..."
+                    placeholder="Busque produtos ou use scanner..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-14 text-lg border-2 focus-visible:ring-primary shadow-sm"
+                    className="pl-12 h-16 text-xl border-2 focus-visible:ring-primary shadow-sm rounded-xl"
                     autoFocus
                   />
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-14 w-14 flex-shrink-0 border-2 hover:bg-primary/5 hover:text-primary transition-colors"
-                  onClick={() => setShowBarcodeScanner(true)}
-                  title="Scanner de código de barras"
-                >
-                  <ScanLine className="w-6 h-6" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-14 px-4 hidden sm:flex border-2 gap-2"
-                  onClick={() => setShowManualEntry(!showManualEntry)}
-                >
-                  <Plus className="w-5 h-5" />
-                  Manual
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="h-16 w-16 flex-shrink-0 border-2 hover:bg-primary/5 hover:text-primary transition-colors rounded-xl"
+                    onClick={() => setShowBarcodeScanner(true)}
+                  >
+                    <ScanLine className="w-8 h-8" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-16 px-6 flex-1 sm:flex-none border-2 gap-2 font-bold text-lg rounded-xl"
+                    onClick={() => setShowManualEntry(!showManualEntry)}
+                  >
+                    <Plus className="w-6 h-6" />
+                    MANUAL
+                  </Button>
+                </div>
               </div>
 
               {/* Manual Entry Expansion */}
@@ -304,16 +304,16 @@ const LocalPOSPage: React.FC = () => {
                             </Badge>
                           </div>
                         </div>
-                        <div className="p-3 flex-1 flex flex-col justify-between space-y-1">
-                          <h3 className="font-bold text-[#0B1F3A] leading-tight line-clamp-2">
+                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+                          <h3 className="font-bold text-base text-[#0B1F3A] leading-tight line-clamp-2">
                             {product.name}
                           </h3>
                           <div className="flex items-center justify-between mt-auto">
-                            <p className="text-lg font-black text-primary tabular-nums">
+                            <p className="text-xl font-black text-primary tabular-nums">
                               {formatCurrency(product.salePrice)}
                             </p>
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                              <Plus className="w-4 h-4" />
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                              <Plus className="w-5 h-5" />
                             </div>
                           </div>
                         </div>
@@ -333,13 +333,13 @@ const LocalPOSPage: React.FC = () => {
           {/* Cart Section - Right Side */}
           <div className="w-full md:w-[380px] lg:w-[420px] bg-white border-l shadow-2xl flex flex-col z-20">
             {/* Cart Header */}
-            <div className="p-4 md:p-6 border-b flex items-center justify-between bg-[#0B1F3A] text-white">
-              <div className="flex items-center gap-2">
-                <ShoppingCart className="w-6 h-6" />
-                <h2 className="text-xl font-bold tracking-tight">Carrinho</h2>
+            <div className="p-5 md:p-6 border-b flex items-center justify-between bg-[#0B1F3A] text-white">
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="w-7 h-7" />
+                <h2 className="text-2xl font-black tracking-tight uppercase">Carrinho</h2>
               </div>
-              <Badge variant="outline" className="text-white border-white/30 text-lg py-1 px-3">
-                {cart.length} {cart.length === 1 ? 'item' : 'itens'}
+              <Badge variant="outline" className="text-white border-white/30 text-xl py-1.5 px-4 font-black">
+                {cart.length} {cart.length === 1 ? 'ITEM' : 'ITENS'}
               </Badge>
             </div>
 
@@ -379,34 +379,34 @@ const LocalPOSPage: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            className="h-12 w-12 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
                             onClick={() => removeFromCart(item.product.id)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-6 h-6" />
                           </Button>
                         </div>
                         
                         <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                          <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1.5">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-md hover:bg-white hover:shadow-sm"
+                              className="h-12 w-12 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
                               onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="w-5 h-5" />
                             </Button>
-                            <span className="w-10 text-center font-black tabular-nums">{item.quantity}</span>
+                            <span className="w-12 text-center font-black text-xl tabular-nums">{item.quantity}</span>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-md hover:bg-white hover:shadow-sm"
+                              className="h-12 w-12 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
                               onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-5 h-5" />
                             </Button>
                           </div>
-                          <span className="font-bold text-lg text-[#0B1F3A] tabular-nums">
+                          <span className="font-bold text-xl text-[#0B1F3A] tabular-nums">
                             {formatCurrency(item.total)}
                           </span>
                         </div>

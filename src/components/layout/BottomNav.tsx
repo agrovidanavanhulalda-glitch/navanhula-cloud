@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, Users, BarChart3, Menu } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, BarChart3, Menu, Package, Boxes } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -16,8 +16,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Início', icon: LayoutDashboard, path: '/app/dashboard' },
   { label: 'Vendas', icon: ShoppingCart, path: '/app/pdv' },
-  { label: 'Clientes', icon: Users, path: '/app/crm' },
-  { label: 'Relatórios', icon: BarChart3, path: '/app/relatorios' },
+  { label: 'Produtos', icon: Package, path: '/app/produtos' },
+  { label: 'Estoque', icon: Boxes, path: '/app/estoque' },
   { label: 'Menu', icon: Menu, path: '', isMenu: true },
 ];
 
@@ -46,9 +46,9 @@ const BottomNav: React.FC = () => {
             return (
               <Sheet key={item.label} open={menuOpen} onOpenChange={setMenuOpen}>
                 <SheetTrigger asChild>
-                  <button className="flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1.5 text-muted-foreground active:scale-95 transition-transform">
-                    <item.icon className="w-[22px] h-[22px]" strokeWidth={1.8} />
-                    <span className="text-[10px] font-medium">{item.label}</span>
+                  <button className="flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-1.5 text-muted-foreground active:scale-95 transition-transform">
+                    <item.icon className="w-6 h-6" strokeWidth={1.8} />
+                    <span className="text-[11px] font-bold uppercase tracking-tighter">{item.label}</span>
                   </button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 w-72 overflow-y-auto bg-sidebar text-sidebar-foreground">
@@ -66,12 +66,12 @@ const BottomNav: React.FC = () => {
               key={item.label}
               onClick={() => navigate(item.path)}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1.5 transition-colors duration-150 active:scale-95",
+                "flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-1.5 transition-colors duration-150 active:scale-95",
                 active ? "text-primary" : "text-muted-foreground"
               )}
             >
-              <item.icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.2 : 1.8} />
-              <span className={cn("text-[10px]", active ? "font-semibold" : "font-medium")}>{item.label}</span>
+              <item.icon className="w-6 h-6" strokeWidth={active ? 2.5 : 1.8} />
+              <span className={cn("text-[11px] uppercase tracking-tighter", active ? "font-black" : "font-bold")}>{item.label}</span>
             </button>
           );
         })}

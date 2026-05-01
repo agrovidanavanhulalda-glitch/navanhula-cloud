@@ -72,7 +72,6 @@ const navGroups: NavGroup[] = [
       { label: 'Caixa', href: '/app/caixa', icon: WalletCards },
       { label: 'Histórico', href: '/app/vendas', icon: History },
       { label: 'Loja Online', href: '/app/ecommerce', icon: ShoppingBag },
-      { label: 'WhatsApp', href: '/app/whatsapp', icon: MessageCircle },
     ],
   },
   {
@@ -123,6 +122,7 @@ const navGroups: NavGroup[] = [
       { label: 'Equipa', href: '/app/equipa', icon: Users },
       { label: 'Lojas', href: '/app/lojas', icon: Store },
       { label: 'AI Engine', href: '/app/ai', icon: Brain },
+      { label: 'WhatsApp', href: '/app/whatsapp', icon: MessageCircle },
       { label: 'Compliance Hub', href: '/app/compliance', icon: Shield },
       { label: 'IAM (Acessos)', href: '/app/iam', icon: Shield },
       { label: 'Automação', href: '/app/automacao', icon: Settings },
@@ -225,7 +225,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
     if (group.roles && !group.roles.includes(role || 'seller')) return null;
     const Icon = group.icon;
     // Filter items for Dashboard group based on role
-    const visibleItems = group.title === 'Dashboard' ? filterDashboardItems(group.items) : group.items;
+    const visibleItems = group.title === 'Painel' ? filterDashboardItems(group.items) : group.items;
     if (visibleItems.length === 0) return null;
     const hasActive = groupHasActive(visibleItems);
 

@@ -127,7 +127,7 @@ const AuthLoginPage: React.FC = () => {
                 required
                 autoComplete="email"
                 disabled={isLoading}
-                className="h-12"
+                className="h-14 text-lg"
               />
             </div>
 
@@ -144,13 +144,13 @@ const AuthLoginPage: React.FC = () => {
                 required
                 autoComplete="current-password"
                 disabled={isLoading}
-                className="h-12"
+                className="h-14 text-lg"
               />
             </div>
 
             <Button
               type="submit"
-              className="h-12 w-full text-base font-bold shadow-lg glow-primary"
+              className="h-14 w-full text-lg font-bold shadow-lg glow-primary"
               disabled={isLoading}
             >
               {isLoading ? (

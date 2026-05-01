@@ -68,14 +68,14 @@ const MobileHeader: React.FC = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <BrandLogo width={80} priority />
+        <BrandLogo width={100} priority />
       </div>
 
       <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
-        <span className="font-bold text-[13px] tracking-tight text-foreground truncate max-w-[120px]">
+        <span className="font-black text-sm tracking-tight text-foreground truncate max-w-[140px] uppercase">
           {company?.name || 'Navanhula'}
         </span>
-        <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest">
+        <span className="text-[10px] text-primary font-bold uppercase tracking-[0.2em]">
           {title}
         </span>
       </div>
