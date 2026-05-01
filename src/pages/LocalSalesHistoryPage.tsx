@@ -27,12 +27,14 @@ import { UI_LABELS } from '@/lib/uiLabels';
 import ThermalReceipt from '@/components/reports/ThermalReceipt';
 import CancelSaleDialog from '@/components/pos/CancelSaleDialog';
 import { toast } from 'sonner';
+import { SkeletonList } from '@/components/ui/skeleton-card';
+import PageTransition from '@/components/layout/PageTransition';
 
 /**
  * Sales History Page with Admin Cancellation
  */
 const LocalSalesHistoryPage: React.FC = () => {
-  const { sales, stores, currentStore, cancelCompletedSale, currentCashRegister } = useLocalPOS();
+  const { sales, stores, currentStore, cancelCompletedSale, currentCashRegister, loading } = useLocalPOS();
   const { role, user, company } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -178,200 +180,207 @@ const LocalSalesHistoryPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <ShoppingCart className="w-6 h-6" />
-            Histórico de Vendas
-          </h1>
-          <p className="text-muted-foreground">
-            {filteredSales.length} vendas encontradas
-          </p>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <Card className="p-4 mb-6">
-        <div className="flex flex-wrap gap-4 items-end">
-          <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por código, vendedor ou produto..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+    <PageTransition>
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <ShoppingCart className="w-6 h-6" />
+              Histórico de Vendas
+            </h1>
+            <p className="text-muted-foreground">
+              {filteredSales.length} vendas encontradas
+            </p>
           </div>
-
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="completed">Concluídas</SelectItem>
-              <SelectItem value="cancelled">Canceladas</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Hoje</SelectItem>
-              <SelectItem value="week">Última Semana</SelectItem>
-              <SelectItem value="month">Último Mês</SelectItem>
-              <SelectItem value="all">Todo Período</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
-      </Card>
 
-      {/* Sales List */}
-      {filteredSales.length === 0 ? (
-        <Card className="p-12 text-center">
-          <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-          <h3 className="text-lg font-semibold mb-2">Nenhuma venda encontrada</h3>
-          <p className="text-muted-foreground">
-            Ajuste os filtros ou faça uma nova venda
-          </p>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {filteredSales.map((sale) => (
-            <Card 
-              key={sale.id} 
-              className={`p-4 ${sale.status === 'cancelled' ? 'opacity-70 bg-destructive/5' : ''}`}
-            >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                {/* Left: Sale Info */}
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Receipt className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono font-bold">
-                        #{sale.id.slice(-6).toUpperCase()}
-                      </span>
-                      {getStatusBadge(sale.status)}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(sale.createdAt).toLocaleString('pt-MZ')}
-                    </p>
-                    <p className="text-sm">
-                      <span className="text-muted-foreground">Vendedor:</span>{' '}
-                      <span className="font-medium">{sale.sellerName || 'N/A'}</span>
-                    </p>
-                    {sale.status === 'cancelled' && sale.cancellationReason && (
-                      <p className="text-sm text-destructive mt-1">
-                        <AlertTriangle className="w-3 h-3 inline mr-1" />
-                        {sale.cancellationReason}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Center: Items Summary */}
-                <div className="flex-1 px-4">
-                  <p className="text-sm text-muted-foreground mb-1">
-                    {sale.items.length > 0 
-                      ? `${sale.items.reduce((acc, i) => acc + i.quantity, 0)} itens` 
-                      : `${formatCurrency(sale.total)}`}
-                  </p>
-                  <p className="text-sm truncate">
-                    {sale.items.length > 0 
-                      ? sale.items.slice(0, 3).map(i => i.product.name).join(', ') + (sale.items.length > 3 ? '...' : '')
-                      : 'Venda registada'}
-                  </p>
-                </div>
-
-                {/* Right: Total and Actions */}
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className={`text-xl font-bold ${sale.status === 'cancelled' ? 'line-through text-muted-foreground' : 'text-primary'}`}>
-                      {formatCurrency(sale.total)}
-                    </p>
-                    {sale.status === 'completed' && (
-                      <div className="space-y-0.5">
-                        <p className="text-xs text-muted-foreground">
-                          Custo: {formatCurrency(getSaleCost(sale))}
-                        </p>
-                        <p className={`text-xs font-medium ${getSaleProfit(sale) >= 0 ? 'text-profit' : 'text-loss'}`}>
-                          Lucro: {formatCurrency(getSaleProfit(sale))}
-                        </p>
-                        <p className={`text-xs font-medium ${getSaleMargin(sale) >= 0 ? 'text-profit' : 'text-loss'}`}>
-                          Margem: {getSaleMargin(sale).toFixed(1)}%
-                        </p>
-                      </div>
-                    )}
-                    <Badge variant="outline" className="text-xs mt-1">
-                      {getPaymentLabel(sale.paymentMethod)}
-                    </Badge>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewReceipt(sale)}
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      Ver
-                    </Button>
-                    
-                    {isAdmin && sale.status === 'completed' && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleOpenCancelDialog(sale)}
-                      >
-                        <XCircle className="w-4 h-4 mr-1" />
-                        Cancelar
-                      </Button>
-                    )}
-                  </div>
-                </div>
+        {/* Filters */}
+        <Card className="p-4 mb-6">
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por código, vendedor ou produto..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
+            </div>
 
-      {/* Receipt Modal */}
-      {showReceipt && selectedSale && (
-        <ThermalReceipt
-          sale={selectedSale}
-          storeName={currentStore.name}
-          storeAddress={currentStore.address}
-          storePhone={currentStore.phone}
-          storeNuit={company?.nif || ''}
-          fiscalRegime={(company as any)?.fiscal_regime || ''}
-          companyName={company?.name || ''}
-          onClose={() => {
-            setShowReceipt(false);
-            setSelectedSale(null);
-          }}
-        />
-      )}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="completed">Concluídas</SelectItem>
+                <SelectItem value="cancelled">Canceladas</SelectItem>
+              </SelectContent>
+            </Select>
 
-      {/* Cancel Dialog */}
-      {showCancelDialog && selectedSale && (
-        <CancelSaleDialog
-          sale={selectedSale}
-          onConfirm={handleCancelSale}
-          onCancel={() => {
-            setShowCancelDialog(false);
-            setSelectedSale(null);
-          }}
-        />
-      )}
-    </div>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Hoje</SelectItem>
+                <SelectItem value="week">Última Semana</SelectItem>
+                <SelectItem value="month">Último Mês</SelectItem>
+                <SelectItem value="all">Todo Período</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+
+        {/* Sales List */}
+        {loading ? (
+          <div className="space-y-4">
+            <SkeletonList rows={5} />
+            <SkeletonList rows={5} />
+          </div>
+        ) : filteredSales.length === 0 ? (
+          <Card className="p-12 text-center">
+            <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <h3 className="text-lg font-semibold mb-2">Nenhuma venda encontrada</h3>
+            <p className="text-muted-foreground">
+              Ajuste os filtros ou faça uma nova venda
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {filteredSales.map((sale) => (
+              <Card 
+                key={sale.id} 
+                className={`p-4 ${sale.status === 'cancelled' ? 'opacity-70 bg-destructive/5' : ''}`}
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  {/* Left: Sale Info */}
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Receipt className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono font-bold">
+                          #{sale.id.slice(-6).toUpperCase()}
+                        </span>
+                        {getStatusBadge(sale.status)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(sale.createdAt).toLocaleString('pt-MZ')}
+                      </p>
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Vendedor:</span>{' '}
+                        <span className="font-medium">{sale.sellerName || 'N/A'}</span>
+                      </p>
+                      {sale.status === 'cancelled' && sale.cancellationReason && (
+                        <p className="text-sm text-destructive mt-1">
+                          <AlertTriangle className="w-3 h-3 inline mr-1" />
+                          {sale.cancellationReason}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Center: Items Summary */}
+                  <div className="flex-1 px-4">
+                    <p className="text-sm text-muted-foreground mb-1">
+                      {sale.items.length > 0 
+                        ? `${sale.items.reduce((acc, i) => acc + i.quantity, 0)} itens` 
+                        : `${formatCurrency(sale.total)}`}
+                    </p>
+                    <p className="text-sm truncate">
+                      {sale.items.length > 0 
+                        ? sale.items.slice(0, 3).map(i => i.product.name).join(', ') + (sale.items.length > 3 ? '...' : '')
+                        : 'Venda registada'}
+                    </p>
+                  </div>
+
+                  {/* Right: Total and Actions */}
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className={`text-xl font-bold ${sale.status === 'cancelled' ? 'line-through text-muted-foreground' : 'text-primary'}`}>
+                        {formatCurrency(sale.total)}
+                      </p>
+                      {sale.status === 'completed' && (
+                        <div className="space-y-0.5">
+                          <p className="text-xs text-muted-foreground">
+                            Custo: {formatCurrency(getSaleCost(sale))}
+                          </p>
+                          <p className={`text-xs font-medium ${getSaleProfit(sale) >= 0 ? 'text-profit' : 'text-loss'}`}>
+                            Lucro: {formatCurrency(getSaleProfit(sale))}
+                          </p>
+                          <p className={`text-xs font-medium ${getSaleMargin(sale) >= 0 ? 'text-profit' : 'text-loss'}`}>
+                            Margem: {getSaleMargin(sale).toFixed(1)}%
+                          </p>
+                        </div>
+                      )}
+                      <Badge variant="outline" className="text-xs mt-1">
+                        {getPaymentLabel(sale.paymentMethod)}
+                      </Badge>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewReceipt(sale)}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        Ver
+                      </Button>
+                      
+                      {isAdmin && sale.status === 'completed' && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleOpenCancelDialog(sale)}
+                        >
+                          <XCircle className="w-4 h-4 mr-1" />
+                          Cancelar
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Receipt Modal */}
+        {showReceipt && selectedSale && (
+          <ThermalReceipt
+            sale={selectedSale}
+            storeName={currentStore.name}
+            storeAddress={currentStore.address}
+            storePhone={currentStore.phone}
+            storeNuit={company?.nif || ''}
+            fiscalRegime={(company as any)?.fiscal_regime || ''}
+            companyName={company?.name || ''}
+            onClose={() => {
+              setShowReceipt(false);
+              setSelectedSale(null);
+            }}
+          />
+        )}
+
+        {/* Cancel Dialog */}
+        {showCancelDialog && selectedSale && (
+          <CancelSaleDialog
+            sale={selectedSale}
+            onConfirm={handleCancelSale}
+            onCancel={() => {
+              setShowCancelDialog(false);
+              setSelectedSale(null);
+            }}
+          />
+        )}
+      </div>
+    </PageTransition>
   );
 };
 

@@ -10,6 +10,8 @@ import { Loader2 } from "lucide-react";
 import SubscriptionGate from "@/components/layout/SubscriptionGate";
 import { getDefaultRouteForRole, canAccessRoute } from "@/lib/roleRoutes";
 import { I18nProvider } from "@/contexts/i18n";
+import { AnimatePresence } from "framer-motion";
+import PageTransition from "./components/layout/PageTransition";
 
 // Public site — eagerly loaded (landing page)
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
@@ -172,9 +174,13 @@ const AppEntryRoute = () => {
 };
 
 const AppRoutes = () => {
+  const location = useLocation();
+
   return (
     <Suspense fallback={<PageLoader />}>
-      <Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+
         <Route element={<PublicSiteLayout />}>
           <Route path="/" element={<Index />} />
           <Route path="/home" element={<Index />} />
@@ -290,9 +296,11 @@ const AppRoutes = () => {
 
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </AnimatePresence>
     </Suspense>
   );
 };
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
