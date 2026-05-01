@@ -10,18 +10,18 @@
   :root {
     /* Core — Light professional palette */
     --background: 0 0% 100%;
-    --foreground: 214 68% 14%;
+    --foreground: 214 68% 14%; /* #0B1F3A */
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 214 68% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 214 68% 14%;
 
-    /* Primary — NAVANHULA Deep Blue #1E3A8A */
-    --primary: 222 76% 33%;
+    /* Primary — NAVANHULA Deep Blue #0B1F3A */
+    --primary: 214 68% 14%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 217 91% 60%;
+    --primary-glow: 214 68% 30%;
 
     /* Secondary — Light Gray */
     --secondary: 210 40% 96%;
