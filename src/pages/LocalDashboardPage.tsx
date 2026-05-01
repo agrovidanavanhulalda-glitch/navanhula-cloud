@@ -342,7 +342,7 @@ const LocalDashboardPage: React.FC = () => {
             <Progress value={dailyProgress} className="h-2.5" />
             <div className="flex justify-between mt-2">
               <span className="text-xs text-muted-foreground">{formatCurrency(totalRevenue)} alcançado</span>
-              <span className="text-xs text-muted-foreground">Meta: {formatCurrency(dailyGoal)}</span>
+              <span className="text-xs text-muted-foreground">Objetivo: {formatCurrency(dailyGoal)}</span>
             </div>
           </Card>
         </motion.div>
