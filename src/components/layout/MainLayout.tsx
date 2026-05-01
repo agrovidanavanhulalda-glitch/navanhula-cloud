@@ -88,17 +88,17 @@ const MainLayout: React.FC = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 flex items-center gap-2 pl-2 pr-3 hover:bg-secondary/80 rounded-full transition-all">
                     <Avatar className="h-8 w-8 border border-border/50">
-                      <AvatarImage src={user?.user_metadata?.avatar_url} />
+                      <AvatarImage src={user?.avatar_url} />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                         {user?.email?.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start text-left">
                       <span className="text-xs font-bold leading-tight truncate max-w-[100px]">
-                        {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+                        {user?.full_name || user?.email?.split('@')[0]}
                       </span>
                       <span className="text-[10px] text-muted-foreground leading-tight capitalize">
-                        {user?.user_metadata?.role || 'Usuário'}
+                        {role || 'Usuário'}
                       </span>
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -107,7 +107,7 @@ const MainLayout: React.FC = () => {
                 <DropdownMenuContent align="end" className="w-56 mt-1 animate-in fade-in-0 zoom-in-95">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.user_metadata?.full_name}</p>
+                      <p className="text-sm font-medium leading-none">{user?.full_name}</p>
                       <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                     </div>
                   </DropdownMenuLabel>
