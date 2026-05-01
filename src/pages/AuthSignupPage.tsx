@@ -146,8 +146,8 @@ const AuthSignupPage: React.FC = () => {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Já tem conta?{' '}
-            <Link to="/login" className="text-primary hover:underline font-medium">Entrar</Link>
+            Já usa o sistema?{' '}
+            <Link to="/login" className="text-primary hover:underline font-medium">Entrar agora</Link>
           </p>
         </div>
       </Card>
