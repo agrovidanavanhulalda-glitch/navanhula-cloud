@@ -41,7 +41,7 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
 
   return (
     <div
-      className={cn('relative inline-flex items-center justify-center flex-shrink-0', className)}
+      className={cn('relative inline-flex items-center justify-center flex-shrink-0 select-none transition-all duration-300', className)}
       style={containerStyle}
     >
       {glow && (
