@@ -299,7 +299,7 @@ const LocalDashboardPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold tracking-tight text-foreground">
-            Resumo de Hoje
+            O que aconteceu hoje
           </h1>
           <p className="text-sm text-muted-foreground">{store.name} — {new Date().toLocaleDateString('pt-MZ', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
@@ -333,7 +333,7 @@ const LocalDashboardPage: React.FC = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold text-foreground">Meta Diária</span>
+                <span className="text-sm font-semibold text-foreground">Objetivo do Dia</span>
               </div>
               <span className="text-sm font-bold tabular-nums text-foreground">
                 {dailyProgress.toFixed(0)}%
@@ -342,7 +342,7 @@ const LocalDashboardPage: React.FC = () => {
             <Progress value={dailyProgress} className="h-2.5" />
             <div className="flex justify-between mt-2">
               <span className="text-xs text-muted-foreground">{formatCurrency(totalRevenue)} alcançado</span>
-              <span className="text-xs text-muted-foreground">Meta: {formatCurrency(dailyGoal)}</span>
+              <span className="text-xs text-muted-foreground">Objetivo: {formatCurrency(dailyGoal)}</span>
             </div>
           </Card>
         </motion.div>
@@ -351,21 +351,21 @@ const LocalDashboardPage: React.FC = () => {
       {/* 4 Core KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          index={0} icon={DollarSign} label="Receita Hoje"
+          index={0} icon={DollarSign} label="Dinheiro Ganho Hoje"
           value={formatCurrency(totalRevenue)}
           trend={`Mês: ${formatCurrency(monthRevenue)}`}
         />
         <KPICard
-          index={1} icon={ShoppingCart} label="Vendas Hoje"
+          index={1} icon={ShoppingCart} label="Vendas Feitas"
           value={todaySales.length}
           trend={`${monthSales.length} este mês`}
         />
         <KPICard
-          index={2} icon={Target} label="Ticket Médio"
+          index={2} icon={Target} label="Gasto Médio por Cliente"
           value={formatCurrency(avgTicket)}
         />
         <KPICard
-          index={3} icon={AlertTriangle} label="Estoque Baixo"
+          index={3} icon={AlertTriangle} label="Produtos Acabando"
           value={lowStockProducts.length}
           trend={lowStockProducts.length > 0 ? 'Produtos precisam reposição' : 'Tudo em ordem'}
           trendUp={lowStockProducts.length === 0 ? true : false}

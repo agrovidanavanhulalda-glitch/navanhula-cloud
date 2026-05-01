@@ -157,9 +157,9 @@ const LocalPOSPage: React.FC = () => {
             <Unlock className="w-12 h-12 text-destructive" />
           </motion.div>
           <div className="space-y-2 max-w-md">
-            <h2 className="text-3xl font-bold tracking-tight text-[#0B1F3A]">Caixa Fechado</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-[#0B1F3A]">O Caixa está fechado</h2>
             <p className="text-muted-foreground text-lg">
-              Para começar a vender, você precisa abrir o caixa do dia e informar o valor inicial.
+              Para começar a vender, você precisa abrir o caixa e informar quanto dinheiro tem para o troco.
             </p>
           </div>
           <Button 
@@ -168,7 +168,7 @@ const LocalPOSPage: React.FC = () => {
             onClick={() => navigate('/caixa')}
           >
             <Unlock className="w-8 h-8" />
-            ABRIR CAIXA
+            COMEÇAR O DIA (ABRIR CAIXA)
           </Button>
         </div>
       ) : products.length === 0 ? (
@@ -181,9 +181,9 @@ const LocalPOSPage: React.FC = () => {
             <PackagePlus className="w-12 h-12 text-primary" />
           </motion.div>
           <div className="space-y-2 max-w-md">
-            <h2 className="text-3xl font-bold tracking-tight text-[#0B1F3A]">Sem Produtos</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-[#0B1F3A]">Ainda não tem produtos</h2>
             <p className="text-muted-foreground text-lg">
-              Sua loja ainda não tem produtos cadastrados. Adicione seu primeiro item para começar.
+              Você ainda não cadastrou produtos. Adicione o que você vende para começar a usar o sistema.
             </p>
           </div>
           <Button 
@@ -192,7 +192,7 @@ const LocalPOSPage: React.FC = () => {
             onClick={() => navigate('/produtos')}
           >
             <Plus className="w-8 h-8" />
-            ADICIONAR PRODUTO
+            CADASTRAR MEU PRIMEIRO PRODUTO
           </Button>
         </div>
       ) : (
@@ -205,7 +205,7 @@ const LocalPOSPage: React.FC = () => {
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-6 h-6 group-focus-within:text-primary transition-colors" />
                   <Input
-                    placeholder="Busque produtos ou use scanner..."
+                    placeholder="Procure um produto ou use o leitor de código..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-12 h-16 text-xl border-2 focus-visible:ring-primary shadow-sm rounded-xl"
@@ -226,7 +226,7 @@ const LocalPOSPage: React.FC = () => {
                     onClick={() => setShowManualEntry(!showManualEntry)}
                   >
                     <Plus className="w-6 h-6" />
-                    MANUAL
+                    ITEM SEM CÓDIGO
                   </Button>
                 </div>
               </div>
@@ -243,13 +243,13 @@ const LocalPOSPage: React.FC = () => {
                     <Card className="mt-4 p-4 border-2 border-dashed bg-secondary/20">
                       <div className="flex flex-wrap items-center gap-3">
                         <Input
-                          placeholder="Nome do item"
+                          placeholder="Nome do produto ou serviço"
                           value={manualName}
                           onChange={(e) => setManualName(e.target.value)}
                           className="flex-1 min-w-[200px]"
                         />
                         <Input
-                          placeholder="Preço"
+                          placeholder="Preço (MT)"
                           type="number"
                           value={manualPrice}
                           onChange={(e) => setManualPrice(e.target.value)}
@@ -336,7 +336,7 @@ const LocalPOSPage: React.FC = () => {
             <div className="p-5 md:p-6 border-b flex items-center justify-between bg-[#0B1F3A] text-white">
               <div className="flex items-center gap-3">
                 <ShoppingCart className="w-7 h-7" />
-                <h2 className="text-2xl font-black tracking-tight uppercase">Carrinho</h2>
+                <h2 className="text-2xl font-black tracking-tight uppercase">Itens da Venda</h2>
               </div>
               <Badge variant="outline" className="text-white border-white/30 text-xl py-1.5 px-4 font-black">
                 {cart.length} {cart.length === 1 ? 'ITEM' : 'ITENS'}
@@ -355,8 +355,8 @@ const LocalPOSPage: React.FC = () => {
                     <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center">
                       <ShoppingCart className="w-10 h-10 opacity-20" />
                     </div>
-                    <p className="text-center font-medium">Seu carrinho está vazio</p>
-                    <p className="text-sm text-center px-10">Clique nos produtos à esquerda para adicioná-los à venda.</p>
+                    <p className="text-center font-medium">Nenhum produto selecionado</p>
+                    <p className="text-sm text-center px-10">Toque nos produtos ao lado para começar a vender.</p>
                   </motion.div>
                 ) : (
                   cart.map((item) => (
@@ -421,17 +421,17 @@ const LocalPOSPage: React.FC = () => {
             <div className="p-4 md:p-6 bg-slate-50 border-t space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-muted-foreground font-medium">
-                  <span>Subtotal</span>
+                  <span>Soma dos Itens</span>
                   <span className="tabular-nums">{formatCurrency(getSubtotal())}</span>
                 </div>
                 {getTotalDiscount() > 0 && (
                   <div className="flex justify-between text-green-600 font-medium">
-                    <span>Descontos</span>
+                    <span>Desconto Aplicado</span>
                     <span className="tabular-nums">-{formatCurrency(getTotalDiscount())}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-end pt-2 border-t border-slate-200">
-                  <span className="text-lg font-bold text-[#0B1F3A]">TOTAL</span>
+                  <span className="text-lg font-bold text-[#0B1F3A]">VALOR A COBRAR</span>
                   <motion.div
                     key={getTotal()}
                     initial={{ scale: 1.1, color: '#2563eb' }}
@@ -469,12 +469,12 @@ const LocalPOSPage: React.FC = () => {
                   }}
                 >
                   <CreditCard className="w-8 h-8" />
-                  PAGAR AGORA
+                  RECEBER PAGAMENTO
                 </Button>
                 
                 {cart.length === 0 && (
                   <p className="text-center text-sm font-medium text-muted-foreground animate-pulse">
-                    Adicione itens para finalizar
+                    Escolha os produtos para finalizar
                   </p>
                 )}
               </div>

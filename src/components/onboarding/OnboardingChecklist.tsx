@@ -21,24 +21,24 @@ const OnboardingChecklist: React.FC = () => {
   const steps = [
     { 
       key: 'product', 
-      label: 'Criar primeiro produto', 
-      description: 'Cadastre seu primeiro item no estoque', 
+      label: 'Cadastrar primeiro produto', 
+      description: 'Adicione o que você quer vender', 
       route: '/app/produtos', 
       done: first_product_added,
       icon: <ShoppingBag className="w-4 h-4" />
     },
     { 
       key: 'cash', 
-      label: 'Abrir caixa', 
-      description: 'Inicie o turno de trabalho', 
+      label: 'Começar o dia (Abrir Caixa)', 
+      description: 'Informe quanto dinheiro tem no início', 
       route: '/app/caixa', 
       done: first_cash_opened,
       icon: <Wallet className="w-4 h-4" />
     },
     { 
       key: 'sale', 
-      label: 'Fazer primeira venda', 
-      description: 'Realize uma venda no PDV', 
+      label: 'Fazer minha primeira venda', 
+      description: 'Teste o sistema fazendo uma venda rápida', 
       route: '/app/pdv', 
       done: first_sale_completed,
       icon: <Receipt className="w-4 h-4" />
@@ -50,7 +50,7 @@ const OnboardingChecklist: React.FC = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          <h3 className="font-bold text-foreground">Primeiros Passos</h3>
+          <h3 className="font-bold text-foreground">Vamos configurar sua empresa?</h3>
         </div>
         <span className="text-xs font-bold text-primary">{Math.round(completionPct)}%</span>
       </div>

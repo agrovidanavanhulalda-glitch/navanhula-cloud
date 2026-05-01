@@ -83,7 +83,7 @@ const AuthLoginPage: React.FC = () => {
             NAVANHULA <span className="text-gradient-gold">CLOUD</span>
           </h1>
           <p className="mt-2 text-sm uppercase tracking-[0.3em] text-primary-foreground/60">
-            Plataforma Enterprise Cloud
+            Gestão simples para o seu negócio
           </p>
         </div>
 
@@ -101,8 +101,8 @@ const AuthLoginPage: React.FC = () => {
               <ShieldCheck className="h-5 w-5 text-gold-foreground" />
             </div>
             <div>
-              <h2 className="text-lg font-bold leading-tight">Acesso Seguro</h2>
-              <p className="text-xs text-muted-foreground">Entre com suas credenciais corporativas</p>
+              <h2 className="text-lg font-bold leading-tight">Entrar no Sistema</h2>
+              <p className="text-xs text-muted-foreground">Use o seu e-mail e senha para começar</p>
             </div>
           </div>
 
@@ -161,27 +161,27 @@ const AuthLoginPage: React.FC = () => {
               ) : (
                 <>
                   <LogIn className="mr-2 h-5 w-5" />
-                  ENTRAR NA PLATAFORMA
+                  ENTRAR AGORA
                 </>
               )}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Ainda não tem conta?{' '}
-              <Link to="/registrar" className="font-semibold text-primary hover:underline">
-                Criar conta
-              </Link>
-            </p>
+              <p className="text-sm text-muted-foreground">
+                Novo por aqui?{' '}
+                <Link to="/registrar" className="font-semibold text-primary hover:underline">
+                  Criar minha conta
+                </Link>
+              </p>
           </div>
         </Card>
 
         {/* Trust badges */}
         <div className="mt-6 flex items-center justify-center gap-4 text-xs text-primary-foreground/60">
-          <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-gold" /> SSL Seguro</span>
+          <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-gold" /> Conexão Protegida</span>
           <span className="h-3 w-px bg-primary-foreground/20" />
-          <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-gold" /> Enterprise Grade</span>
+          <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-gold" /> Segurança Total</span>
         </div>
 
         <p className="mt-6 text-center text-xs text-primary-foreground/50">
