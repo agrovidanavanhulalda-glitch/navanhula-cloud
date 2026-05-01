@@ -304,16 +304,16 @@ const LocalPOSPage: React.FC = () => {
                             </Badge>
                           </div>
                         </div>
-                        <div className="p-3 flex-1 flex flex-col justify-between space-y-1">
-                          <h3 className="font-bold text-[#0B1F3A] leading-tight line-clamp-2">
+                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+                          <h3 className="font-bold text-base text-[#0B1F3A] leading-tight line-clamp-2">
                             {product.name}
                           </h3>
                           <div className="flex items-center justify-between mt-auto">
-                            <p className="text-lg font-black text-primary tabular-nums">
+                            <p className="text-xl font-black text-primary tabular-nums">
                               {formatCurrency(product.salePrice)}
                             </p>
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                              <Plus className="w-4 h-4" />
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                              <Plus className="w-5 h-5" />
                             </div>
                           </div>
                         </div>
