@@ -3333,6 +3333,7 @@ export type Database = {
           company_created: boolean | null
           completion_pct: number | null
           created_at: string
+          first_cash_opened: boolean | null
           first_customer_added: boolean | null
           first_product_added: boolean | null
           first_sale_completed: boolean | null
@@ -3344,6 +3345,7 @@ export type Database = {
           company_created?: boolean | null
           completion_pct?: number | null
           created_at?: string
+          first_cash_opened?: boolean | null
           first_customer_added?: boolean | null
           first_product_added?: boolean | null
           first_sale_completed?: boolean | null
@@ -3355,6 +3357,7 @@ export type Database = {
           company_created?: boolean | null
           completion_pct?: number | null
           created_at?: string
+          first_cash_opened?: boolean | null
           first_customer_added?: boolean | null
           first_product_added?: boolean | null
           first_sale_completed?: boolean | null
