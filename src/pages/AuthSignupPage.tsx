@@ -83,7 +83,7 @@ const AuthSignupPage: React.FC = () => {
           </div>
         </div>
         <h1 className="text-3xl font-bold text-primary">NAVANHULA CLOUD</h1>
-        <p className="text-muted-foreground mt-2">Sistema Empresarial</p>
+        <p className="text-muted-foreground mt-2">Gestão simples para o seu negócio</p>
       </div>
 
       <Card className="w-full max-w-md p-8">
