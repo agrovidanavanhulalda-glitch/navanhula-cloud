@@ -31,6 +31,8 @@ import { toast } from 'sonner';
 import ProductImageUpload from '@/components/products/ProductImageUpload';
 import * as XLSX from 'xlsx';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { SkeletonTable } from '@/components/ui/skeleton-card';
+import PageTransition from '@/components/layout/PageTransition';
 
 // HYBRID: Local POS data + SaaS Auth
 
