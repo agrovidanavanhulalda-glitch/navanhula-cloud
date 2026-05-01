@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/SaaSAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { autoIssueFiscalDocument } from '@/lib/fiscalPipeline';
 
 /**

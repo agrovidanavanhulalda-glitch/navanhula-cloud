@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
-import { useAuth } from '@/contexts/SaaSAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

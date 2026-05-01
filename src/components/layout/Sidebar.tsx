@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/SaaSAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
 import { cn } from '@/lib/utils';
 import {

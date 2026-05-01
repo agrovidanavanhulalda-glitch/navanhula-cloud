@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { SaaSAuthProvider, useAuth } from "@/contexts/SaaSAuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
 import { Loader2 } from "lucide-react";
 import SubscriptionGate from "@/components/layout/SubscriptionGate";
@@ -304,9 +304,9 @@ const App = () => (
           <VersionUpdateAlert />
         </Suspense>
         <BrowserRouter>
-          <SaaSAuthProvider>
+          <AuthProvider>
             <AppRoutes />
-          </SaaSAuthProvider>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </I18nProvider>

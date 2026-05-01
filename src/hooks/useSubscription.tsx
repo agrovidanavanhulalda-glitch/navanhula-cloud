@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/SaaSAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type SubscriptionStatus = 'active' | 'warning' | 'blocked' | 'cancelled' | 'loading';
 

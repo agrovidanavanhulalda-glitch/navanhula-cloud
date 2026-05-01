@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppVersion } from '@/hooks/useAppVersion';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/SaaSAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { getDefaultRouteForRole } from '@/lib/roleRoutes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
