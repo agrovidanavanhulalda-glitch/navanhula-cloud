@@ -189,7 +189,7 @@ const CEODashboardPage: React.FC = () => {
       </div>
 
       {/* Secondary KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="p-4">
           <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] mb-1"><Package className="w-3 h-3" /> Stock Global</div>
           <p className="text-xl font-bold">{globalStock.toLocaleString('pt-MZ')}</p>
