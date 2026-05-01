@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAppVersion } from '@/hooks/useAppVersion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/SaaSAuthContext';
 import { getDefaultRouteForRole } from '@/lib/roleRoutes';
