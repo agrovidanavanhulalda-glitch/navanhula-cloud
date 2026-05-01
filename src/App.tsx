@@ -178,7 +178,9 @@ const AppRoutes = () => {
 
   return (
     <Suspense fallback={<PageLoader />}>
-      <Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+
         <Route element={<PublicSiteLayout />}>
           <Route path="/" element={<Index />} />
           <Route path="/home" element={<Index />} />
