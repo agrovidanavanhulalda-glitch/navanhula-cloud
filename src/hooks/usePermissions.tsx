@@ -2,46 +2,57 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 
-export type ModulePermission = {
-  module: string;
-  can_view: boolean;
-  can_create: boolean;
-  can_edit: boolean;
-  can_delete: boolean;
-  can_approve: boolean;
-};
-
 export function usePermissions() {
-  const { role, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const { data: permissions = [] } = useQuery({
-    queryKey: ['role-permissions', role],
+    queryKey: ['user-permissions', user?.id],
     queryFn: async () => {
-      if (!role) return [];
+      if (!user?.id) return [];
+      
+      // Get user's role and its permissions
       const { data, error } = await supabase
-        .from('role_permissions')
-        .select('module, can_view, can_create, can_edit, can_delete, can_approve')
-        .eq('role', role);
+        .from('user_company')
+        .select(`
+          roles (
+            role_permissions (
+              permissions (key)
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       if (error) throw error;
-      return (data ?? []) as ModulePermission[];
+      
+      const roleData = data?.roles as any;
+      const permList = roleData?.role_permissions?.map((rp: any) => rp.permissions?.key) || [];
+      return permList as string[];
     },
-    enabled: isAuthenticated && !!role,
+    enabled: isAuthenticated && !!user?.id,
     staleTime: 5 * 60 * 1000,
   });
 
-  const can = (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'approve'): boolean => {
-    if (!role) return false;
-    if (role === 'ceo' || role === 'admin') return true;
-    const perm = permissions.find(p => p.module === module);
-    if (!perm) return false;
-    return perm[`can_${action}`];
+  const hasPermission = (permissionKey: string): boolean => {
+    // Master user/CEO has all permissions
+    if (user?.is_super_admin) return true;
+    return permissions.includes(permissionKey);
   };
 
-  const canViewModule = (module: string) => can(module, 'view');
-  const canCreateIn = (module: string) => can(module, 'create');
-  const canEditIn = (module: string) => can(module, 'edit');
-  const canDeleteIn = (module: string) => can(module, 'delete');
-  const canApproveIn = (module: string) => can(module, 'approve');
+  // Compatibility helpers for existing code
+  const canViewModule = (module: string) => {
+    if (module === 'stock') return hasPermission('manage_stock');
+    if (module === 'sales') return hasPermission('manage_sales');
+    if (module === 'finance') return hasPermission('manage_finance');
+    if (module === 'reports') return hasPermission('view_reports');
+    if (module === 'users') return hasPermission('create_user');
+    return true; // Default to true for unmapped modules during transition
+  };
 
-  return { permissions, can, canViewModule, canCreateIn, canEditIn, canDeleteIn, canApproveIn, role };
+  const canCreateIn = (module: string) => canViewModule(module);
+  const canEditIn = (module: string) => canViewModule(module);
+  const canDeleteIn = (module: string) => hasPermission('delete_user');
+  const canApproveIn = (module: string) => hasPermission('manage_finance');
+
+  return { permissions, hasPermission, canViewModule, canCreateIn, canEditIn, canDeleteIn, canApproveIn };
 }

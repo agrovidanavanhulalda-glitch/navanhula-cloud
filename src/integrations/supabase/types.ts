@@ -713,9 +713,13 @@ export type Database = {
       audit_logs: {
         Row: {
           action: string
+          company_id: string | null
           created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
           id: string
           ip_address: string | null
+          metadata: Json | null
           new_data: Json | null
           old_data: Json | null
           record_id: string | null
@@ -724,9 +728,13 @@ export type Database = {
         }
         Insert: {
           action: string
+          company_id?: string | null
           created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
           id?: string
           ip_address?: string | null
+          metadata?: Json | null
           new_data?: Json | null
           old_data?: Json | null
           record_id?: string | null
@@ -735,16 +743,28 @@ export type Database = {
         }
         Update: {
           action?: string
+          company_id?: string | null
           created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
           id?: string
           ip_address?: string | null
+          metadata?: Json | null
           new_data?: Json | null
           old_data?: Json | null
           record_id?: string | null
           table_name?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       automation_rules: {
         Row: {
@@ -2800,6 +2820,57 @@ export type Database = {
           },
         ]
       }
+      invites: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string
+          expires_at: string
+          id: string
+          role_id: string | null
+          status: string | null
+          token: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          role_id?: string | null
+          status?: string | null
+          token: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          role_id?: string | null
+          status?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           approved_at: string | null
@@ -3798,6 +3869,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      permissions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          key: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+        }
+        Relationships: []
       }
       platform_fees: {
         Row: {
@@ -5036,6 +5128,36 @@ export type Database = {
       }
       role_permissions: {
         Row: {
+          permission_id: string
+          role_id: string
+        }
+        Insert: {
+          permission_id: string
+          role_id: string
+        }
+        Update: {
+          permission_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions_legacy: {
+        Row: {
           can_approve: boolean | null
           can_create: boolean
           can_delete: boolean
@@ -5067,6 +5189,24 @@ export type Database = {
           id?: string
           module?: string
           role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -6248,6 +6388,51 @@ export type Database = {
           },
         ]
       }
+      user_company: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          id: string
+          role_id: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          role_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          role_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_company_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_company_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -6747,6 +6932,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_is_master: { Args: { user_uuid: string }; Returns: boolean }
       check_subscription_status: {
         Args: { p_store_id: string }
         Returns: Database["public"]["Enums"]["subscription_status"]
@@ -6870,25 +7056,13 @@ export type Database = {
       get_invitation_by_token: {
         Args: { p_token: string }
         Returns: {
-          branch_id: string | null
           company_id: string
-          created_at: string
-          created_by: string
+          email: string
           expires_at: string
           id: string
-          max_uses: number
-          role: string
+          role_id: string
           status: string
-          token: string
-          updated_at: string
-          used_count: number
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "company_invitations"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       get_master_visible_company_ids: {
         Args: { p_user_id: string }
@@ -6899,6 +7073,12 @@ export type Database = {
       get_reseller_id: { Args: { _user_id: string }; Returns: string }
       get_sales_by_store: { Args: { p_period?: string }; Returns: Json }
       get_top_products_national: { Args: { p_limit?: number }; Returns: Json }
+      get_user_allowed_companies: {
+        Args: { user_uuid: string }
+        Returns: {
+          company_id: string
+        }[]
+      }
       get_user_branch_ids: { Args: never; Returns: string[] }
       get_user_company: { Args: { _user_id: string }; Returns: string }
       get_user_company_ids: { Args: never; Returns: string[] }

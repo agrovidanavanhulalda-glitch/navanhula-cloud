@@ -45,6 +45,7 @@ export interface Profile {
   store_id?: string;
   avatar_url?: string;
   is_active: boolean;
+  is_super_admin?: boolean;
   onboarding_completed?: boolean;
   created_at: string;
   updated_at: string;

@@ -23,9 +23,20 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   children,
   fallback = <DefaultFallback />,
 }) => {
-  const { can } = usePermissions();
+  const { canViewModule, canCreateIn, canEditIn, canDeleteIn, canApproveIn } = usePermissions();
 
-  if (!can(module, action)) {
+  const hasAccess = () => {
+    switch (action) {
+      case 'view': return canViewModule(module);
+      case 'create': return canCreateIn(module);
+      case 'edit': return canEditIn(module);
+      case 'delete': return canDeleteIn(module);
+      case 'approve': return canApproveIn(module);
+      default: return false;
+    }
+  };
+
+  if (!hasAccess()) {
     return <>{fallback}</>;
   }
 
