@@ -1429,6 +1429,7 @@ export type Database = {
           fiscal_regime: string | null
           id: string
           is_active: boolean | null
+          is_master: boolean | null
           is_system_owner: boolean
           latitude: number | null
           logo_url: string | null
@@ -1456,6 +1457,7 @@ export type Database = {
           fiscal_regime?: string | null
           id?: string
           is_active?: boolean | null
+          is_master?: boolean | null
           is_system_owner?: boolean
           latitude?: number | null
           logo_url?: string | null
@@ -1483,6 +1485,7 @@ export type Database = {
           fiscal_regime?: string | null
           id?: string
           is_active?: boolean | null
+          is_master?: boolean | null
           is_system_owner?: boolean
           latitude?: number | null
           logo_url?: string | null
@@ -4374,14 +4377,18 @@ export type Database = {
           commission_rate: number | null
           company_id: string | null
           created_at: string | null
+          created_by: string | null
           email: string
           full_name: string
           id: string
           is_active: boolean | null
+          is_super_admin: boolean | null
+          last_login: string | null
           onboarding_completed: boolean | null
           phone: string | null
           shift_end: string | null
           shift_start: string | null
+          status: string | null
           store_id: string | null
           updated_at: string | null
         }
@@ -4391,14 +4398,18 @@ export type Database = {
           commission_rate?: number | null
           company_id?: string | null
           created_at?: string | null
+          created_by?: string | null
           email: string
           full_name: string
           id: string
           is_active?: boolean | null
+          is_super_admin?: boolean | null
+          last_login?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
           shift_end?: string | null
           shift_start?: string | null
+          status?: string | null
           store_id?: string | null
           updated_at?: string | null
         }
@@ -4408,14 +4419,18 @@ export type Database = {
           commission_rate?: number | null
           company_id?: string | null
           created_at?: string | null
+          created_by?: string | null
           email?: string
           full_name?: string
           id?: string
           is_active?: boolean | null
+          is_super_admin?: boolean | null
+          last_login?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
           shift_end?: string | null
           shift_start?: string | null
+          status?: string | null
           store_id?: string | null
           updated_at?: string | null
         }
