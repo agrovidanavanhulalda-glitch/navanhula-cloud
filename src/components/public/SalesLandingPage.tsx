@@ -10,7 +10,7 @@ import LandingFooter from '@/components/public/landing/LandingFooter';
 import WhatsAppFloat from '@/components/public/landing/WhatsAppFloat';
 
 const SalesLandingPage: React.FC = () => (
-  <div id="top" className="relative z-0 min-h-screen overflow-hidden bg-[#F5F7FA] font-sans">
+  <div id="top" className="relative z-0 min-h-screen overflow-hidden bg-white font-sans">
     <LandingHeader />
     <main>
       <HeroSection />
