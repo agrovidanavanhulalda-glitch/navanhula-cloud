@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import UrgencyBanner from '@/components/public/landing/UrgencyBanner';
 import BrandLogo from '@/components/brand/BrandLogo';
 
+import WhatsAppFloat from './landing/WhatsAppFloat';
+
 const navItems = [
   { label: 'Início', hash: '#top' },
   { label: 'Funcionalidades', hash: '#recursos' },
@@ -123,6 +125,7 @@ const PublicSiteLayout: React.FC = () => {
           </div>
         </div>
       </footer>
+      <WhatsAppFloat />
     </div>
   );
 };

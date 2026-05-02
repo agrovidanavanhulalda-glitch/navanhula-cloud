@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import BrandLogo from '@/components/brand/BrandLogo';
 import SmartOnboarding from '@/components/onboarding/SmartOnboarding';
+import WhatsAppFloat from '../public/landing/WhatsAppFloat';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
@@ -137,6 +138,7 @@ const MainLayout: React.FC = () => {
           </main>
           <Footer />
         </div>
+        <WhatsAppFloat />
       </div>
     </SidebarProvider>
   );
