@@ -18,6 +18,7 @@ export interface Company {
   is_active: boolean;
   company_type: CompanyType;
   is_system_owner: boolean;
+  is_master?: boolean;
   billing_exempt: boolean;
   parent_company_id?: string;
   created_at: string;
