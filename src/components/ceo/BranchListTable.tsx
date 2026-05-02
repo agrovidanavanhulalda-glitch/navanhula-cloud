@@ -2,10 +2,12 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Lock, Unlock, Building2, Users, Package } from 'lucide-react';
+import { Lock, Unlock, Building2, Users, Package, ExternalLink } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface BranchRow {
   id: string;
@@ -26,6 +28,9 @@ interface Props {
 }
 
 const BranchListTable: React.FC<Props> = ({ branches, onRefresh }) => {
+  const { refreshUserData } = useAuth();
+  const navigate = useNavigate();
+
   const toggleStatus = async (id: string, active: boolean) => {
     try {
       const { error } = await (supabase as any).rpc('toggle_company_status', {
@@ -40,19 +45,29 @@ const BranchListTable: React.FC<Props> = ({ branches, onRefresh }) => {
     }
   };
 
-  if (branches.length === 0) {
-    return (
-      <div className="py-16 text-center text-muted-foreground">
-        <Building2 className="w-10 h-10 mx-auto mb-3 opacity-40" />
-        <p className="font-medium">Nenhuma filial ou cliente registrado</p>
-        <p className="text-sm mt-1">Crie a primeira filial usando o botão acima.</p>
-      </div>
-    );
-  }
+  const impersonate = async (companyId: string) => {
+    try {
+      // Logic for impersonation usually involves updating the profile or a session variable
+      // For now, we'll use a simple approach: Update the profile's company_id temporarily 
+      // OR better, use a local storage flag that the context picks up.
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ company_id: companyId })
+        .eq('id', (await supabase.auth.getUser()).data.user?.id);
 
-  return (
-    <div className="overflow-x-auto">
-      <Table>
+      if (error) throw error;
+      
+      toast.success('A entrar como empresa...');
+      await refreshUserData();
+      navigate('/app/dashboard');
+    } catch (err: any) {
+      toast.error('Erro ao impersonar: ' + err.message);
+    }
+  };
+
+  if (branches.length === 0) {
+...
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
