@@ -10,10 +10,12 @@ import { pt } from "date-fns/locale";
 
 interface AuditLog {
   id: string;
-  user_id: string;
+  user_id: string | null;
   action: string;
   table_name: string;
-  details: any;
+  details?: any;
+  new_data?: any;
+  old_data?: any;
   created_at: string;
   profiles?: {
     full_name: string;
@@ -27,11 +29,11 @@ const SystemAuditPage: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("audit_logs")
-        .select("*, profiles:user_id(full_name, email)")
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      return data as AuditLog[];
+      return data as any[];
     },
   });
 
@@ -114,10 +116,10 @@ const SystemAuditPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {log.details && (
+                    {(log.details || log.new_data || log.old_data) && (
                       <div className="mt-2 p-2 rounded bg-muted/50 text-[11px] font-mono overflow-hidden">
                         <pre className="whitespace-pre-wrap break-all">
-                          {JSON.stringify(log.details, null, 2)}
+                          {JSON.stringify(log.details || log.new_data || log.old_data, null, 2)}
                         </pre>
                       </div>
                     )}
