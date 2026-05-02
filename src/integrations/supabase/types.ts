@@ -1459,6 +1459,7 @@ export type Database = {
           parent_company_id: string | null
           phone: string | null
           plan: string | null
+          status: string | null
           subscription_status: string | null
           trial_end_date: string | null
           trial_expires_at: string | null
@@ -1487,6 +1488,7 @@ export type Database = {
           parent_company_id?: string | null
           phone?: string | null
           plan?: string | null
+          status?: string | null
           subscription_status?: string | null
           trial_end_date?: string | null
           trial_expires_at?: string | null
@@ -1515,6 +1517,7 @@ export type Database = {
           parent_company_id?: string | null
           phone?: string | null
           plan?: string | null
+          status?: string | null
           subscription_status?: string | null
           trial_end_date?: string | null
           trial_expires_at?: string | null
@@ -7042,6 +7045,14 @@ export type Database = {
         }[]
       }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
+      get_companies_no_sales: {
+        Args: { days_count?: number }
+        Returns: {
+          company_id: string
+          company_name: string
+          last_sale_date: string
+        }[]
+      }
       get_global_stock_summary: {
         Args: { p_user_id: string }
         Returns: {
@@ -7097,6 +7108,7 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_ceo: { Args: never; Returns: boolean }
+      is_global_ceo: { Args: never; Returns: boolean }
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_master_company_user: { Args: { p_user_id: string }; Returns: boolean }
       is_reseller: { Args: { _user_id: string }; Returns: boolean }
