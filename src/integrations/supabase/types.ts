@@ -7053,6 +7053,23 @@ export type Database = {
           last_sale_date: string
         }[]
       }
+      get_global_low_stock: {
+        Args: never
+        Returns: {
+          company_name: string
+          current_stock: number
+          min_stock: number
+          product_name: string
+        }[]
+      }
+      get_global_sales_trend: {
+        Args: { days_count?: number }
+        Returns: {
+          sale_count: number
+          sale_date: string
+          total_sales: number
+        }[]
+      }
       get_global_stock_summary: {
         Args: { p_user_id: string }
         Returns: {
@@ -7062,6 +7079,18 @@ export type Database = {
           product_name: string
           total_quantity: number
           total_value: number
+        }[]
+      }
+      get_global_users: {
+        Args: never
+        Returns: {
+          company_name: string
+          created_at: string
+          email: string
+          name: string
+          role: string
+          status: string
+          user_id: string
         }[]
       }
       get_invitation_by_token: {
@@ -7082,6 +7111,13 @@ export type Database = {
       get_my_company_id: { Args: never; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
       get_reseller_id: { Args: { _user_id: string }; Returns: string }
+      get_revenue_by_company: {
+        Args: never
+        Returns: {
+          company_name: string
+          revenue: number
+        }[]
+      }
       get_sales_by_store: { Args: { p_period?: string }; Returns: Json }
       get_top_products_national: { Args: { p_limit?: number }; Returns: Json }
       get_user_allowed_companies: {
