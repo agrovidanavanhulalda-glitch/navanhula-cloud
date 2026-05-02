@@ -7056,25 +7056,13 @@ export type Database = {
       get_invitation_by_token: {
         Args: { p_token: string }
         Returns: {
-          branch_id: string | null
           company_id: string
-          created_at: string
-          created_by: string
+          email: string
           expires_at: string
           id: string
-          max_uses: number
-          role: string
+          role_id: string
           status: string
-          token: string
-          updated_at: string
-          used_count: number
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "company_invitations"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       get_master_visible_company_ids: {
         Args: { p_user_id: string }
