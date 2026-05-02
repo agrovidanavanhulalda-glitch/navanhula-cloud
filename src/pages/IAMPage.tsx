@@ -54,8 +54,10 @@ const IAMPage = () => {
   const companyId = company?.id;
   const [showInvite, setShowInvite] = useState(false);
   const [showBranch, setShowBranch] = useState(false);
+  const [showCreateUser, setShowCreateUser] = useState(false);
   const [inviteForm, setInviteForm] = useState({ role: 'seller', max_uses: '1', expires_days: '7', branch_id: '' });
   const [branchForm, setBranchForm] = useState({ name: '', address: '', phone: '', email: '' });
+  const [userForm, setUserForm] = useState({ name: '', email: '', branch_id: '' });
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [auditFilter, setAuditFilter] = useState<string>('all');
 
@@ -250,6 +252,63 @@ const IAMPage = () => {
     onError: () => toast.error('Erro ao remover filial'),
   });
 
+  const createUserMutation = useMutation({
+    mutationFn: async () => {
+      if (!companyId) throw new Error('Empresa não selecionada');
+      
+      const userId = crypto.randomUUID();
+      
+      // 1. Criar perfil na tabela profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          full_name: userForm.name,
+          email: userForm.email,
+          company_id: companyId,
+          branch_id: userForm.branch_id || null,
+          status: 'active'
+        });
+      
+      if (profileError) throw profileError;
+
+      // 2. Vincular utilizador à empresa
+      const { error: companyUserError } = await supabase
+        .from('company_users')
+        .insert({
+          user_id: userId,
+          company_id: companyId,
+          role: 'seller', // Vendedor por padrão conforme solicitado
+          status: 'active',
+          branch_id: userForm.branch_id || null
+        });
+
+      if (companyUserError) throw companyUserError;
+
+      // 3. Adicionar cargo na tabela user_roles
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: 'seller'
+        });
+
+      if (roleError) {
+        console.error('Erro ao atribuir cargo, mas utilizador foi criado:', roleError);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['iam-members'] });
+      toast.success('Utilizador criado com sucesso!');
+      setShowCreateUser(false);
+      setUserForm({ name: '', email: '', branch_id: '' });
+    },
+    onError: (error: any) => {
+      console.error('Erro ao criar utilizador:', error);
+      toast.error('Falha ao criar utilizador: ' + (error.message || 'Erro desconhecido'));
+    }
+  });
+
   const copyInviteLink = (token: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/convite/${token}`);
     setCopiedToken(token);
@@ -271,6 +330,50 @@ const IAMPage = () => {
             <p className="text-sm text-muted-foreground">Utilizadores, filiais, permissões, sessões e auditoria</p>
           </div>
           <div className="flex gap-2 flex-wrap">
+            <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
+              <DialogTrigger asChild>
+                <Button variant="default" className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+                  <Plus className="w-4 h-4" /> Criar Utilizador
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Criar Novo Utilizador (Vendedor)</DialogTitle></DialogHeader>
+                <div className="space-y-3 pt-4">
+                  <div>
+                    <Label htmlFor="user-name">Nome Completo *</Label>
+                    <Input id="user-name" value={userForm.name} onChange={e => setUserForm(f => ({ ...f, name: e.target.value }))} placeholder="Ex: João Silva" />
+                  </div>
+                  <div>
+                    <Label htmlFor="user-email">Email *</Label>
+                    <Input id="user-email" type="email" value={userForm.email} onChange={e => setUserForm(f => ({ ...f, email: e.target.value }))} placeholder="joao@exemplo.com" />
+                  </div>
+                  {branches.length > 0 && (
+                    <div>
+                      <Label htmlFor="user-branch">Filial (opcional)</Label>
+                      <Select value={userForm.branch_id} onValueChange={v => setUserForm(f => ({ ...f, branch_id: v }))}>
+                        <SelectTrigger id="user-branch"><SelectValue placeholder="Selecione uma filial" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sem filial</SelectItem>
+                          {branches.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Nota: O utilizador será criado com o cargo de <strong>Vendedor</strong>.
+                  </p>
+                </div>
+                <DialogFooter className="mt-6">
+                  <Button variant="outline" onClick={() => setShowCreateUser(false)}>Cancelar</Button>
+                  <Button 
+                    onClick={() => createUserMutation.mutate()} 
+                    disabled={!userForm.name || !userForm.email || createUserMutation.isPending}
+                  >
+                    {createUserMutation.isPending ? 'Criando...' : 'Criar Utilizador'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <Dialog open={showBranch} onOpenChange={setShowBranch}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="gap-2"><Building2 className="w-4 h-4" /> Nova Filial</Button>
