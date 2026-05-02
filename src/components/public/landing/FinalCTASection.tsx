@@ -1,32 +1,39 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { MessageCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+
+const WHATSAPP_LINK = "https://wa.me/258840000000?text=Olá,%20quero%20ver%20como%20o%20NAVANHULA%20pode%20funcionar%20no%20meu%20negócio";
 
 const FinalCTASection: React.FC = () => (
-  <section className="pb-16 pt-16 lg:pb-24">
+  <section className="bg-[#0B3C5D] py-20 lg:py-32">
     <div className="container">
-      <div
-        className="overflow-hidden rounded-[2rem] border border-border px-6 py-12 text-center sm:px-10 lg:px-16 lg:py-16"
-        style={{ backgroundImage: 'var(--gradient-dark)' }}
-      >
-        <div className="mx-auto max-w-3xl space-y-6">
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary">
-            Pronto para começar?
-          </p>
-          <h2 className="text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
-            Comece hoje a profissionalizar sua loja.
+      <div className="mx-auto max-w-4xl text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="space-y-10"
+        >
+          <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+            Pronto para controlar seu negócio como um CEO?
           </h2>
-          <p className="mx-auto max-w-xl text-lg leading-8 text-muted-foreground">
-            Experimente o NAVANHULA CLOUD gratuitamente e descubra como organizar, vender e crescer com mais confiança.
-          </p>
-          <Button asChild size="lg" className="mt-2 gap-2 px-10 text-base font-bold shadow-lg">
-            <Link to="/registrar">
-              CRIAR MINHA LOJA AGORA
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+          
+          <Button 
+            asChild 
+            size="lg" 
+            className="bg-[#F4B400] hover:bg-[#F4B400]/90 text-[#0B3C5D] font-black rounded-full px-12 h-20 text-xl shadow-2xl shadow-yellow-500/20"
+          >
+            <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="mr-3 h-8 w-8 fill-current" />
+              Falar no WhatsApp
+            </a>
           </Button>
-        </div>
+
+          <p className="text-blue-200/60 font-medium">
+            Atendimento imediato por especialistas
+          </p>
+        </motion.div>
       </div>
     </div>
   </section>
