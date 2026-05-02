@@ -149,13 +149,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch user profile and related data
   const fetchUserData = useCallback(async (userId: string): Promise<void> => {
     try {
-      const [profileResult, roleResult] = await Promise.all([
+      const [profileResult, companyUserResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
-        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+        supabase
+          .from('user_company')
+          .select('*, roles(name)')
+          .eq('user_id', userId)
+          .maybeSingle(),
       ]);
 
       const profileData = profileResult.data;
-      const userRole = roleResult.data?.role as AppRole || 'admin';
+      const userRole = (companyUserResult.data?.roles as any)?.name?.toLowerCase() as AppRole || 'admin';
 
       if (profileData) {
         setUser(profileData as Profile);
