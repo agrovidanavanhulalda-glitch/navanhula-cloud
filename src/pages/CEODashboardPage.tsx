@@ -89,12 +89,13 @@ const CEODashboardPage: React.FC = () => {
       ]);
 
       if (statsRes.error) throw statsRes.error;
-      if (statsRes.data?.error === 'unauthorized') { setUnauthorized(true); return; }
-      setStats(statsRes.data as PlatformStats);
+      const statsData = statsRes.data as any;
+      if (statsData?.error === 'unauthorized') { setUnauthorized(true); return; }
+      setStats(statsData as PlatformStats);
 
       if (branchRes.data) setBranches(branchRes.data as BranchRow[]);
-      if (trendRes.data) setSalesTrend(trendRes.data);
-      if (revCompRes.data) setRevenueByCompany(revCompRes.data);
+      if (trendRes.data) setSalesTrend(trendRes.data as any[]);
+      if (revCompRes.data) setRevenueByCompany(revCompRes.data as any[]);
 
     } catch (err) {
       console.error(err);
