@@ -3,7 +3,7 @@ import { CheckCircle2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
-const WHATSAPP_LINK = "https://wa.me/258840000000?text=Olá,%20quero%20ver%20como%20o%20NAVANHULA%20pode%20funcionar%20no%20meu%20negócio";
+const WHATSAPP_LINK = "https://wa.me/258860498852?text=Olá,%20quero%20ver%20como%20o%20NAVANHULA%20pode%20funcionar%20no%20meu%20negócio";
 
 const OfferSection: React.FC = () => (
   <section id="precos" className="bg-white py-20 lg:py-32">

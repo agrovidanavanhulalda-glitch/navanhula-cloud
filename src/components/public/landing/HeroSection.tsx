@@ -4,7 +4,7 @@ import { ArrowRight, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
-const WHATSAPP_LINK = "https://wa.me/258840000000?text=Olá,%20quero%20ver%20como%20o%20NAVANHULA%20pode%20funcionar%20no%20meu%20negócio";
+const WHATSAPP_LINK = "https://wa.me/258860498852?text=Olá,%20quero%20ver%20como%20o%20NAVANHULA%20pode%20funcionar%20no%20meu%20negócio";
 
 const HeroSection: React.FC = () => (
   <section className="relative overflow-hidden bg-white pt-20 pb-16 lg:pt-32 lg:pb-32">
