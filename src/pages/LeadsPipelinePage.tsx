@@ -153,16 +153,33 @@ const LeadsPipelinePage: React.FC = () => {
                   </div>
                   <div className="space-y-2 min-h-[200px] p-2 rounded-lg bg-muted/30 border border-border">
                     {stageLeads.map(lead => (
-                      <Card key={lead.id} className="p-3 space-y-2 cursor-pointer hover:shadow-md transition-shadow">
-                        <p className="font-medium text-sm text-foreground truncate">{lead.name}</p>
+                      <Card key={lead.id} className="p-3 space-y-2 cursor-pointer hover:shadow-md transition-all group">
+                        <div className="flex items-start justify-between">
+                          <p className="font-medium text-sm text-foreground truncate">{lead.name}</p>
+                          <a 
+                            href={`https://wa.me/${lead.phone?.replace(/\D/g, '')}?text=Olá%20${encodeURIComponent(lead.name)},%20falo%20da%20NAVANHULA%20CLOUD...`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-green-100 rounded text-green-600"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
                         {lead.business_name && <p className="text-xs text-muted-foreground flex items-center gap-1"><Building2 className="w-3 h-3" />{lead.business_name}</p>}
                         {lead.phone && <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" />{lead.phone}</p>}
-                        {stage !== 'converted' && (
-                          <Button size="sm" variant="ghost" className="w-full text-xs gap-1 h-7"
-                            onClick={() => updateStatus(lead.id, PIPELINE_STAGES[PIPELINE_STAGES.indexOf(stage) + 1])}>
-                            Avançar <ArrowRight className="w-3 h-3" />
+                        
+                        <div className="flex gap-2 pt-1">
+                          {stage !== 'converted' && (
+                            <Button size="sm" variant="outline" className="flex-1 text-[10px] gap-1 h-6 px-1"
+                              onClick={() => updateStatus(lead.id, PIPELINE_STAGES[PIPELINE_STAGES.indexOf(stage) + 1])}>
+                              Avançar <ArrowRight className="w-3 h-3" />
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" className="text-[10px] h-6 px-1 text-destructive"
+                            onClick={() => updateStatus(lead.id, 'lost')}>
+                            Perder
                           </Button>
-                        )}
+                        </div>
                       </Card>
                     ))}
                   </div>
@@ -189,24 +206,35 @@ const LeadsPipelinePage: React.FC = () => {
           </div>
           <div className="space-y-2">
             {filtered.map(lead => (
-              <Card key={lead.id} className="p-4 flex items-center justify-between">
+              <Card key={lead.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-foreground truncate">{lead.name}</p>
-                    <Badge className={`text-xs ${STATUS_CONFIG[lead.status]?.color}`}>{STATUS_CONFIG[lead.status]?.label}</Badge>
+                    <Badge className={`text-[10px] px-1.5 h-4 ${STATUS_CONFIG[lead.status]?.color}`}>{STATUS_CONFIG[lead.status]?.label}</Badge>
                   </div>
                   <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
                     {lead.business_name && <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{lead.business_name}</span>}
-                    {lead.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{lead.phone}</span>}
+                    {lead.phone && (
+                      <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-green-600 transition-colors">
+                        <Phone className="w-3 h-3" />{lead.phone}
+                      </a>
+                    )}
                     {lead.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{lead.email}</span>}
                   </div>
                 </div>
-                <Select value={lead.status} onValueChange={v => updateStatus(lead.id, v)}>
-                  <SelectTrigger className="w-[140px] h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(STATUS_CONFIG).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" asChild>
+                    <a href={`https://wa.me/${lead.phone?.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                      <Phone className="w-4 h-4" />
+                    </a>
+                  </Button>
+                  <Select value={lead.status} onValueChange={v => updateStatus(lead.id, v)}>
+                    <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(STATUS_CONFIG).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </Card>
             ))}
             {!loading && filtered.length === 0 && (
