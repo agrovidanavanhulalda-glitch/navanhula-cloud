@@ -17,10 +17,10 @@ import { Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck, Trash2, Settin
 import { PermissionGate } from '@/components/auth/PermissionGate';
 
 const ROLES = [
-  { value: 'admin', label: 'Administrador' },
-  { value: 'manager', label: 'Gestor' },
-  { value: 'seller', label: 'Vendedor' },
-  { value: 'cashier', label: 'Caixa' },
+  { value: 'ceo', label: 'CEO (Acesso Total)' },
+  { value: 'admin', label: 'Administrador (Empresa)' },
+  { value: 'manager', label: 'Gestor (Relatórios)' },
+  { value: 'seller', label: 'Vendedor (PDV)' },
 ];
 
 const MODULES = ['stock', 'sales', 'finance', 'users', 'reports', 'settings', 'compliance', 'hr'];
