@@ -108,17 +108,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Bootstrap warning - non-critical
       }
 
-      const [profileResult, roleResult] = await Promise.all([
+      const [profileResult, companyUserResult] = await Promise.all([
         supabase
           .from('profiles')
           .select('id, company_id, store_id, onboarding_completed')
           .eq('id', userId)
           .maybeSingle(),
-        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+        supabase
+          .from('user_company')
+          .select('*, roles(name)')
+          .eq('user_id', userId)
+          .maybeSingle(),
       ]);
 
       const profile = profileResult.data;
-      const currentRole = (roleResult.data?.role as AppRole | undefined) ?? 'admin';
+      const currentRole = (companyUserResult.data?.roles as any)?.name?.toLowerCase() as AppRole || 'admin';
       const needsCompany = !profile?.company_id || !profile?.onboarding_completed;
 
       if (currentRole !== 'reseller' && needsCompany) {
