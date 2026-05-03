@@ -87,17 +87,21 @@ const LocalCashRegisterPage: React.FC = () => {
     }
   };
 
-  // Handle close register
-  const handleCloseRegister = () => {
+  const handleCloseRegister = async () => {
     const amount = parseFloat(closingAmount);
     if (isNaN(amount)) {
       toast.error('Informe o valor de fechamento');
       return;
     }
-    closeCashRegister(amount);
-    toast.success('Caixa fechado com sucesso!');
-    setShowCloseDialog(false);
-    setClosingAmount('');
+    
+    try {
+      await closeCashRegister(amount);
+      setShowCloseDialog(false);
+      setClosingAmount('');
+    } catch (error) {
+      console.error('[CashRegisterPage] Erro ao fechar caixa:', error);
+      toast.error('Falha ao fechar caixa');
+    }
   };
 
   // Format date - human readable
