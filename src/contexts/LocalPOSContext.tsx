@@ -533,197 +533,171 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setState(prev => ({ ...prev, currentSale: newSale, cart: [] }));
   }, [state.currentStore.id]);
 
-  const completeSale = useCallback((paymentDetails: PaymentDetails): LocalSale | null => {
-    let completedSale: LocalSale | null = null;
+  const completeSale = useCallback(async (paymentDetails: PaymentDetails): Promise<LocalSale | null> => {
+    console.log('[POS] Iniciando conclusão de venda');
+    
+    if (state.cart.length === 0) {
+      toast.error('Carrinho vazio');
+      return null;
+    }
 
-    setState(prev => {
-      if (prev.cart.length === 0) return prev;
+    const subtotal = state.cart.reduce((acc, item) => acc + item.quantity * item.product.salePrice, 0);
+    const discount = state.cart.reduce((acc, item) => acc + item.discount, 0);
+    const total = subtotal - discount;
+    const costTotal = state.cart.reduce((acc, item) => acc + item.product.costPrice * item.quantity, 0);
+    const saleProfit = total - costTotal;
 
-      const subtotal = prev.cart.reduce((acc, item) => acc + item.quantity * item.product.salePrice, 0);
-      const discount = prev.cart.reduce((acc, item) => acc + item.discount, 0);
-      const total = subtotal - discount;
+    const saleId = crypto.randomUUID();
+    const storeId = state.currentStore.id;
+    
+    if (storeId === 'fallback' || !storeId) {
+      toast.error('Loja não identificada. Por favor, selecione uma loja.');
+      return null;
+    }
 
-      let paymentMethodLabel = paymentDetails.method;
-      if (paymentDetails.method === 'split' && paymentDetails.splitDetails) {
-        paymentMethodLabel = `split:cash+${paymentDetails.splitDetails.electronicMethod}` as any;
+    const sellerName = state.currentCashRegister?.sellerName || user?.full_name || (user?.email ? user.email.split('@')[0] : 'Vendedor');
+
+    const completedSale: LocalSale = {
+      id: saleId,
+      items: [...state.cart],
+      subtotal,
+      discount,
+      total,
+      costTotal,
+      profit: saleProfit,
+      status: 'completed',
+      paymentMethod: paymentDetails.method,
+      paymentDetails,
+      amountReceived: paymentDetails.amountReceived,
+      changeGiven: paymentDetails.change,
+      createdAt: new Date(),
+      storeId,
+      sellerId: user?.id,
+      sellerName,
+    };
+
+    try {
+      // 1. Inserir venda no Supabase
+      const { error: saleError } = await supabase.from('sales').insert({
+        id: saleId,
+        store_id: storeId,
+        user_id: user?.id,
+        cash_register_id: state.currentCashRegister?.id || null,
+        subtotal,
+        discount_amount: discount,
+        total,
+        cost_total: costTotal,
+        profit: saleProfit,
+        payment_method: paymentDetails.method as any,
+        status: 'completed',
+        seller_name: sellerName,
+        customer_name: paymentDetails.voucherDetails?.customerName || null,
+        customer_phone: paymentDetails.voucherDetails?.phoneNumber || null,
+      } as any);
+
+      if (saleError) {
+        console.error('[POS] Erro ao salvar venda:', saleError);
+        toast.error('Erro ao salvar venda: ' + saleError.message);
+        return null;
       }
 
-      const saleId = crypto.randomUUID();
-
-      // Calculate cost and profit locally
-      const costTotal = prev.cart.reduce((acc, item) => acc + item.product.costPrice * item.quantity, 0);
-      const saleProfit = total - costTotal;
-
-      completedSale = {
-        id: saleId,
-        items: [...prev.cart],
-        subtotal,
-        discount,
-        total,
-        costTotal,
-        profit: saleProfit,
-        status: 'completed',
-        paymentMethod: paymentMethodLabel,
-        paymentDetails,
-        amountReceived: paymentDetails.amountReceived,
-        changeGiven: paymentDetails.change,
-        createdAt: new Date(),
-        storeId: prev.currentStore.id,
-        sellerId: prev.currentCashRegister?.sellerId || user?.id,
-        sellerName: prev.currentCashRegister?.sellerName || user?.full_name || (user?.email ? user.email.split('@')[0] : 'Vendedor'),
-      };
-
-      // Update local stock optimistically
-      const updatedProducts = prev.products.map(product => {
-        const cartItem = prev.cart.find(item => item.product.id === product.id);
-        if (cartItem) {
-          return { ...product, stock: Math.max(0, product.stock - cartItem.quantity) };
-        }
-        return product;
+      // 2. Inserir itens da venda
+      const saleItems = state.cart.map(item => {
+        const isManual = item.product.id.startsWith('manual-');
+        return {
+          sale_id: saleId,
+          product_id: isManual ? null : item.product.id,
+          product_name: item.product.name,
+          quantity: item.quantity,
+          unit_price: item.product.salePrice,
+          cost_price: item.product.costPrice,
+          discount_amount: item.discount,
+          total: item.total,
+          profit: (item.product.salePrice - item.product.costPrice) * item.quantity - item.discount,
+        };
       });
 
-      // Update cash register
-      let updatedCashRegisters = prev.cashRegisters;
-      let updatedCurrentCashRegister = prev.currentCashRegister;
-      if (prev.currentCashRegister) {
-        updatedCurrentCashRegister = {
-          ...prev.currentCashRegister,
-          salesTotal: prev.currentCashRegister.salesTotal + total,
-          salesCount: prev.currentCashRegister.salesCount + 1,
-        };
-        updatedCashRegisters = prev.cashRegisters.map(cr =>
-          cr.id === prev.currentCashRegister!.id ? updatedCurrentCashRegister! : cr
-        );
+      const { error: itemsError } = await supabase.from('sale_items').insert(saleItems as any);
+      if (itemsError) {
+        console.error('[POS] Erro ao salvar itens da venda:', itemsError);
+        // Não interrompemos pois a venda principal foi salva, mas logamos
       }
 
-      return {
-        ...prev,
-        products: updatedProducts,
-        sales: [completedSale!, ...prev.sales],
-        currentSale: null,
-        cart: [],
-        cashRegisters: updatedCashRegisters,
-        currentCashRegister: updatedCurrentCashRegister,
-      };
-    });
-
-    // Write to Supabase in background
-    if (completedSale && user?.id) {
-      const sale = completedSale;
-      const storeId = state.currentStore.id;
-
-      // Determine valid payment method for DB enum
-      const validMethods = ['cash', 'mpesa', 'emola', 'card', 'voucher'];
-      let dbPaymentMethod = sale.paymentMethod || 'cash';
-      if (!validMethods.includes(dbPaymentMethod)) {
-        dbPaymentMethod = 'cash';
+      // 3. Atualizar stock atomicamente
+      for (const item of state.cart.filter(i => !i.product.id.startsWith('manual-'))) {
+        await supabase.rpc('decrement_product_stock', {
+          p_product_id: item.product.id,
+          p_store_id: storeId,
+          p_quantity: item.quantity,
+        });
       }
 
-      (async () => {
-        try {
-          // Calculate cost_total and profit
-          const costTotal = sale.items.reduce((acc, item) => acc + item.product.costPrice * item.quantity, 0);
-          const saleProfit = sale.total - costTotal;
+      // 4. Crédito na carteira se não for dinheiro
+      if (paymentDetails.method !== 'cash') {
+        await supabase.rpc('credit_wallet_from_sale', {
+          p_store_id: storeId,
+          p_payment_method: paymentDetails.method,
+          p_amount: total,
+          p_sale_id: saleId,
+        });
+      }
 
-          // Insert sale (with seller_name persisted)
-          const { error: saleError } = await supabase.from('sales').insert({
-            id: sale.id,
-            store_id: storeId,
-            user_id: user.id,
-            cash_register_id: state.currentCashRegister?.id || null,
-            subtotal: sale.subtotal,
-            discount_amount: sale.discount,
-            total: sale.total,
-            cost_total: costTotal,
-            profit: saleProfit,
-            payment_method: dbPaymentMethod as any,
-            status: 'completed',
-            seller_name: sale.sellerName || user.full_name || (user.email ? user.email.split('@')[0] : 'Vendedor'),
-            customer_name: sale.paymentDetails?.voucherDetails?.customerName || null,
-            customer_phone: sale.paymentDetails?.voucherDetails?.phoneNumber || null,
-          } as any);
+      console.log('[POS] ✅ Venda persistida com sucesso:', saleId);
 
-          if (saleError) {
-            console.error('[POS] Sale insert error:', saleError);
-            return;
+      // 5. Atualizar estado local
+      setState(prev => {
+        // Atualizar stock local
+        const updatedProducts = prev.products.map(product => {
+          const cartItem = prev.cart.find(item => item.product.id === product.id);
+          if (cartItem) {
+            return { ...product, stock: Math.max(0, product.stock - cartItem.quantity) };
           }
+          return product;
+        });
 
-          // Insert ALL sale items (including manual items with null product_id)
-          const saleItems = sale.items.map(item => {
-            const isManual = item.product.id.startsWith('manual-');
-            return {
-              sale_id: sale.id,
-              product_id: isManual ? null : item.product.id,
-              product_name: item.product.name,
-              quantity: item.quantity,
-              unit_price: item.product.salePrice,
-              cost_price: item.product.costPrice,
-              discount_amount: item.discount,
-              total: item.total,
-              profit: (item.product.salePrice - item.product.costPrice) * item.quantity - item.discount,
-            };
-          });
-
-          if (saleItems.length > 0) {
-            const { error: itemsError } = await supabase.from('sale_items').insert(saleItems as any);
-            if (itemsError) {
-              console.error('[POS] Sale items insert error:', itemsError);
-            }
-          }
-
-          // Update stock atomically in Supabase for non-manual items
-          for (const item of sale.items.filter(i => !i.product.id.startsWith('manual-'))) {
-            const { error: stockError } = await supabase.rpc('decrement_product_stock', {
-              p_product_id: item.product.id,
-              p_store_id: storeId,
-              p_quantity: item.quantity,
-            });
-            if (stockError) {
-              console.error('[POS] Stock decrement error for', item.product.name, ':', stockError);
-            }
-          }
-
-          // Credit wallet
-          if (dbPaymentMethod !== 'cash') {
-            await supabase.rpc('credit_wallet_from_sale', {
-              p_store_id: storeId,
-              p_payment_method: dbPaymentMethod,
-              p_amount: sale.total,
-              p_sale_id: sale.id,
-            });
-          }
-
-          console.log('[POS] ✅ Sale synced to backend:', sale.id);
-
-          // Pipeline: PDV → Documento Fiscal → Contabilidade → Impostos
-          // Auto-issue fiscal document (invoice-receipt for completed sales)
-          autoIssueFiscalDocument({
-            sale,
-            storeId,
-            customerName: sale.paymentDetails?.voucherDetails?.customerName || 'Consumidor Final',
-            customerPhone: sale.paymentDetails?.voucherDetails?.phoneNumber,
-            taxRate: 0, // Uses company fiscal_rate from DB
-          }).then(result => {
-            if (result.success) {
-              console.log('[FiscalPipeline] ✅ Auto-document:', result.documentNumber);
-            } else {
-              console.warn('[FiscalPipeline] ⚠ Auto-document failed:', result.error);
-            }
-          }).catch(err => {
-            console.warn('[FiscalPipeline] ⚠ Exception:', err);
-          });
-        } catch (error) {
-          console.error('[POS] Sync error:', error);
+        // Atualizar caixa se aberto
+        let updatedCashRegisters = prev.cashRegisters;
+        let updatedCurrentCashRegister = prev.currentCashRegister;
+        if (prev.currentCashRegister) {
+          updatedCurrentCashRegister = {
+            ...prev.currentCashRegister,
+            salesTotal: prev.currentCashRegister.salesTotal + total,
+            salesCount: prev.currentCashRegister.salesCount + 1,
+          };
+          updatedCashRegisters = prev.cashRegisters.map(cr =>
+            cr.id === prev.currentCashRegister!.id ? updatedCurrentCashRegister! : cr
+          );
         }
-      })();
-    }
 
-    if (completedSale) {
+        return {
+          ...prev,
+          products: updatedProducts,
+          sales: [completedSale, ...prev.sales],
+          currentSale: null,
+          cart: [],
+          cashRegisters: updatedCashRegisters,
+          currentCashRegister: updatedCurrentCashRegister,
+        };
+      });
+
       setLastSale(completedSale);
-    }
+      
+      // Auto-issue fiscal document (não aguardamos aqui para não travar a UI)
+      autoIssueFiscalDocument({
+        sale: completedSale,
+        storeId,
+        customerName: paymentDetails.voucherDetails?.customerName || 'Consumidor Final',
+        customerPhone: paymentDetails.voucherDetails?.phoneNumber,
+        taxRate: 0,
+      }).catch(err => console.warn('[Fiscal] Erro auto-emissão:', err));
 
-    return completedSale;
-  }, [user?.id, state.currentStore.id, state.currentCashRegister?.id]);
+      return completedSale;
+    } catch (error: any) {
+      console.error('[POS] Exceção na conclusão da venda:', error);
+      toast.error('Falha crítica ao finalizar venda');
+      return null;
+    }
+  }, [user?.id, state.currentStore.id, state.currentCashRegister, state.cart]);
 
   const cancelSale = useCallback(() => {
     setState(prev => ({ ...prev, currentSale: null, cart: [] }));
