@@ -703,83 +703,104 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setState(prev => ({ ...prev, currentSale: null, cart: [] }));
   }, []);
 
-  const cancelCompletedSale = useCallback((
+  const cancelCompletedSale = useCallback(async (
     saleId: string,
     reason: string,
     cancelledBy: string,
     cancelledByName: string
-  ): boolean => {
-    let success = false;
-
-    setState(prev => {
-      const saleIndex = prev.sales.findIndex(s => s.id === saleId);
-      if (saleIndex === -1) {
+  ): Promise<boolean> => {
+    console.log('[POS] Cancelando venda:', saleId);
+    
+    try {
+      const sale = state.sales.find(s => s.id === saleId);
+      if (!sale) {
         toast.error('Venda não encontrada');
-        return prev;
+        return false;
       }
 
-      const sale = prev.sales[saleIndex];
       if (sale.status === 'cancelled') {
         toast.error('Venda já foi cancelada');
-        return prev;
+        return false;
       }
 
-      const updatedProducts = prev.products.map(product => {
-        const saleItem = sale.items.find(item => item.product.id === product.id);
-        if (saleItem) {
-          return { ...product, stock: product.stock + saleItem.quantity };
-        }
-        return product;
+      // 1. Atualizar no Supabase
+      const { error } = await supabase.from('sales').update({ 
+        status: 'cancelled', 
+        notes: reason 
+      }).eq('id', saleId);
+
+      if (error) {
+        console.error('[POS] Erro ao cancelar venda no Supabase:', error);
+        toast.error('Erro ao cancelar venda');
+        return false;
+      }
+
+      // 2. Restaurar stock (seria bom ter uma RPC para isso também, mas fazemos aqui)
+      for (const item of sale.items.filter(i => !i.product.id.startsWith('manual-'))) {
+        await supabase.rpc('increment_product_stock', {
+          p_product_id: item.product.id,
+          p_store_id: sale.storeId,
+          p_quantity: item.quantity,
+        });
+      }
+
+      // 3. Atualizar estado local
+      setState(prev => {
+        const updatedProducts = prev.products.map(product => {
+          const saleItem = sale.items.find(item => item.product.id === product.id);
+          if (saleItem) {
+            return { ...product, stock: product.stock + saleItem.quantity };
+          }
+          return product;
+        });
+
+        const cancelledSale: LocalSale = {
+          ...sale,
+          status: 'cancelled',
+          cancelledAt: new Date(),
+          cancelledBy,
+          cancelledByName,
+          cancellationReason: reason,
+        };
+
+        const cancellation: SaleCancellation = {
+          id: crypto.randomUUID(),
+          saleId: sale.id,
+          saleTotal: sale.total,
+          reason,
+          cancelledBy,
+          cancelledByName,
+          cancelledAt: new Date(),
+          itemsRestored: sale.items.reduce((acc, item) => acc + item.quantity, 0),
+        };
+
+        return {
+          ...prev,
+          sales: prev.sales.map(s => s.id === saleId ? cancelledSale : s),
+          products: updatedProducts,
+          cancellations: [...prev.cancellations, cancellation],
+        };
       });
 
-      const cancelledSale: LocalSale = {
-        ...sale,
-        status: 'cancelled',
-        cancelledAt: new Date(),
-        cancelledBy,
-        cancelledByName,
-        cancellationReason: reason,
-      };
-
-      const cancellation: SaleCancellation = {
-        id: generateId(),
-        saleId: sale.id,
-        saleTotal: sale.total,
-        reason,
-        cancelledBy,
-        cancelledByName,
-        cancelledAt: new Date(),
-        itemsRestored: sale.items.reduce((acc, item) => acc + item.quantity, 0),
-      };
-
-      success = true;
-
-      return {
-        ...prev,
-        sales: prev.sales.map(s => s.id === saleId ? cancelledSale : s),
-        products: updatedProducts,
-        cancellations: [...prev.cancellations, cancellation],
-      };
-    });
-
-    // Sync cancellation to Supabase
-    if (success) {
-      (async () => {
-        await supabase.from('sales').update({ status: 'cancelled', notes: reason }).eq('id', saleId);
-      })();
-      toast.success('Venda cancelada com sucesso! Estoque restaurado.');
+      toast.success('Venda cancelada com sucesso!');
+      return true;
+    } catch (error: any) {
+      console.error('[POS] Exceção ao cancelar venda:', error);
+      toast.error('Erro ao processar cancelamento');
+      return false;
     }
-
-    return success;
-  }, []);
+  }, [state.sales]);
 
   // ============ CASH REGISTER ============
 
-  const openCashRegister = useCallback((sellerId: string, sellerName: string, openingAmount: number): LocalCashRegister => {
+  const openCashRegister = useCallback(async (sellerId: string, sellerName: string, openingAmount: number): Promise<LocalCashRegister> => {
+    console.log('[POS] Abrindo caixa para:', sellerName);
     const registerId = crypto.randomUUID();
+    const storeId = state.currentStore.id;
+
     const newRegister: LocalCashRegister = {
       id: registerId,
-      storeId: state.currentStore.id,
+      storeId,
       sellerId,
       sellerName,
       openingAmount,
@@ -789,122 +810,171 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       salesCount: 0,
     };
 
-    setState(prev => ({
-      ...prev,
-      cashRegisters: [newRegister, ...prev.cashRegisters],
-      currentCashRegister: newRegister,
-    }));
+    try {
+      const { error } = await supabase.from('cash_registers').insert({
+        id: registerId,
+        store_id: storeId,
+        user_id: user?.id,
+        opening_amount: openingAmount,
+        status: 'open',
+      });
 
-    // Sync to Supabase
-    if (user?.id) {
-      (async () => {
-        await supabase.from('cash_registers').insert({
-          id: registerId,
-          store_id: state.currentStore.id,
-          user_id: user.id,
-          opening_amount: openingAmount,
-          status: 'open',
-        });
-      })();
+      if (error) {
+        console.error('[POS] Erro ao abrir caixa no Supabase:', error);
+        toast.error('Erro ao abrir caixa');
+        throw error;
+      }
+
+      setState(prev => ({
+        ...prev,
+        cashRegisters: [newRegister, ...prev.cashRegisters],
+        currentCashRegister: newRegister,
+      }));
+
+      toast.success('Caixa aberto com sucesso!');
+      return newRegister;
+    } catch (error) {
+      throw error;
     }
-
-    return newRegister;
   }, [state.currentStore.id, user?.id]);
 
-  const closeCashRegister = useCallback((closingAmount: number) => {
-    setState(prev => {
-      if (!prev.currentCashRegister) return prev;
-      const expectedAmount = prev.currentCashRegister.openingAmount + prev.currentCashRegister.salesTotal;
-      const closedRegister: LocalCashRegister = {
-        ...prev.currentCashRegister,
-        closingAmount,
-        expectedAmount,
+  const closeCashRegister = useCallback(async (closingAmount: number) => {
+    console.log('[POS] Fechando caixa');
+    if (!state.currentCashRegister) return;
+
+    const expectedAmount = state.currentCashRegister.openingAmount + state.currentCashRegister.salesTotal;
+    
+    try {
+      const { error } = await supabase.from('cash_registers').update({
+        closing_amount: closingAmount,
+        expected_amount: expectedAmount,
+        difference: closingAmount - expectedAmount,
         status: 'closed',
-        closedAt: new Date(),
-      };
+        closed_at: new Date().toISOString(),
+      }).eq('id', state.currentCashRegister.id);
 
-      // Sync to Supabase
-      (async () => {
-        await supabase.from('cash_registers').update({
-          closing_amount: closingAmount,
-          expected_amount: expectedAmount,
-          difference: closingAmount - expectedAmount,
+      if (error) {
+        console.error('[POS] Erro ao fechar caixa no Supabase:', error);
+        toast.error('Erro ao fechar caixa');
+        return;
+      }
+
+      setState(prev => {
+        const closedRegister: LocalCashRegister = {
+          ...prev.currentCashRegister!,
+          closingAmount,
+          expectedAmount,
           status: 'closed',
-          closed_at: new Date().toISOString(),
-        }).eq('id', closedRegister.id);
-      })();
+          closedAt: new Date(),
+        };
 
-      return {
-        ...prev,
-        cashRegisters: prev.cashRegisters.map(cr => cr.id === closedRegister.id ? closedRegister : cr),
-        currentCashRegister: null,
-      };
-    });
-  }, []);
+        return {
+          ...prev,
+          cashRegisters: prev.cashRegisters.map(cr => cr.id === closedRegister.id ? closedRegister : cr),
+          currentCashRegister: null,
+        };
+      });
+
+      toast.success('Caixa fechado com sucesso!');
+    } catch (error) {
+      console.error('[POS] Exceção ao fechar caixa:', error);
+    }
+  }, [state.currentCashRegister]);
 
   const getCashRegisterHistory = useCallback(() => state.cashRegisters, [state.cashRegisters]);
 
   // ============ STORE ACTIONS ============
 
-  const addStore = useCallback((store: Omit<LocalStore, 'id'>) => {
+  const addStore = useCallback(async (store: Omit<LocalStore, 'id'>) => {
     const storeId = crypto.randomUUID();
-    setState(prev => ({
-      ...prev,
-      stores: [...prev.stores, { ...store, id: storeId }],
-    }));
+    const targetCompanyId = company?.id;
 
-    if (company?.id) {
-      (async () => {
-        await supabase.from('stores').insert({
-          id: storeId,
-          name: store.name,
-          address: store.address || null,
-          phone: store.phone || null,
-          company_id: company.id,
-          is_active: store.isActive,
-        });
-      })();
+    if (!targetCompanyId) {
+      toast.error('Empresa não identificada');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('stores').insert({
+        id: storeId,
+        name: store.name,
+        address: store.address || null,
+        phone: store.phone || null,
+        company_id: targetCompanyId,
+        is_active: store.isActive,
+      });
+
+      if (error) {
+        console.error('[POS] Erro ao criar loja:', error);
+        toast.error('Erro ao criar loja');
+        return;
+      }
+
+      setState(prev => ({
+        ...prev,
+        stores: [...prev.stores, { ...store, id: storeId }],
+      }));
+      toast.success('Loja criada!');
+    } catch (error) {
+      console.error('[POS] Exceção ao criar loja:', error);
     }
   }, [company?.id]);
 
-  const updateStore = useCallback((id: string, updates: Partial<LocalStore>) => {
-    setState(prev => {
-      const updatedStores = prev.stores.map(s => s.id === id ? { ...s, ...updates } : s);
-      const currentStore = prev.currentStore.id === id ? { ...prev.currentStore, ...updates } : prev.currentStore;
-      return { ...prev, stores: updatedStores, currentStore };
-    });
-
-    (async () => {
+  const updateStore = useCallback(async (id: string, updates: Partial<LocalStore>) => {
+    try {
       const dbUpdates: any = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.address !== undefined) dbUpdates.address = updates.address;
       if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
       if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
-      await supabase.from('stores').update(dbUpdates).eq('id', id);
-    })();
+
+      const { error } = await supabase.from('stores').update(dbUpdates).eq('id', id);
+
+      if (error) {
+        console.error('[POS] Erro ao atualizar loja:', error);
+        toast.error('Erro ao atualizar loja');
+        return;
+      }
+
+      setState(prev => {
+        const updatedStores = prev.stores.map(s => s.id === id ? { ...s, ...updates } : s);
+        const currentStore = prev.currentStore.id === id ? { ...prev.currentStore, ...updates } : prev.currentStore;
+        return { ...prev, stores: updatedStores, currentStore };
+      });
+      toast.success('Loja atualizada!');
+    } catch (error) {
+      console.error('[POS] Exceção ao atualizar loja:', error);
+    }
   }, []);
 
-  const deleteStore = useCallback((id: string) => {
-    setState(prev => ({ ...prev, stores: prev.stores.filter(s => s.id !== id) }));
-    (async () => {
-      await supabase.from('stores').update({ is_active: false }).eq('id', id);
-    })();
+  const deleteStore = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase.from('stores').update({ is_active: false }).eq('id', id);
+      
+      if (error) {
+        console.error('[POS] Erro ao desativar loja:', error);
+        toast.error('Erro ao desativar loja');
+        return;
+      }
+
+      setState(prev => ({ ...prev, stores: prev.stores.filter(s => s.id !== id) }));
+      toast.success('Loja desativada');
+    } catch (error) {
+      console.error('[POS] Exceção ao desativar loja:', error);
+    }
   }, []);
 
   const setCurrentStore = useCallback((storeId: string) => {
+    console.log('[POS] Mudando para loja:', storeId);
     setState(prev => {
       const store = prev.stores.find(s => s.id === storeId);
       if (!store) return prev;
       return { ...prev, currentStore: store };
     });
 
-    // Persist active store in Supabase
-    (async () => {
-      await supabase.rpc('set_active_store', { p_store_id: storeId });
-    })();
-
-    // Reload data for new store
-    dataLoaded.current = false;
+    supabase.rpc('set_active_store', { p_store_id: storeId }).then(() => {
+      dataLoaded.current = false;
+    });
   }, []);
 
   // ============ SELLER ACTIONS ============
