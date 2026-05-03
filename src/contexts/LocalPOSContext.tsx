@@ -1083,65 +1083,135 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // ============ PRODUCT ACTIONS ============
 
-  const addProduct = useCallback((product: Omit<LocalProduct, 'id'>) => {
+  const addProduct = useCallback(async (product: Omit<LocalProduct, 'id'>) => {
+    console.log('[POS] Criando produto:', product.name);
     const productId = crypto.randomUUID();
-    setState(prev => ({
-      ...prev,
-      products: [...prev.products, { ...product, id: productId }],
-    }));
+    
+    // Validar campos obrigatórios
+    if (!product.name.trim()) {
+      toast.error('O nome do produto é obrigatório');
+      return;
+    }
 
-    (async () => {
+    try {
       const code = `P-${Date.now().toString(36).toUpperCase()}`;
-      await supabase.from('products').insert({
+      const targetCompanyId = company?.id;
+
+      if (!targetCompanyId) {
+        console.error('[POS] Erro: ID da empresa não encontrado');
+        toast.error('Erro: ID da empresa não encontrado. Faça login novamente.');
+        return;
+      }
+
+      const { data: insertData, error: insertError } = await supabase.from('products').insert({
         id: productId,
         code,
-        name: product.name,
+        name: product.name.trim(),
         cost_price: product.costPrice,
         sale_price: product.salePrice,
         is_active: product.isActive,
-        company_id: company?.id || null,
-      } as any);
+        company_id: targetCompanyId,
+      } as any).select();
+
+      if (insertError) {
+        console.error('[POS] Erro ao inserir produto no Supabase:', insertError);
+        toast.error('Erro ao salvar produto: ' + insertError.message);
+        return;
+      }
+
+      console.log('[POS] Produto inserido com sucesso:', insertData);
+
       // Create stock entry
       if (state.currentStore.id) {
-        await supabase.from('product_stock').insert({
+        const { error: stockError } = await supabase.from('product_stock').insert({
           product_id: productId,
           store_id: state.currentStore.id,
           quantity: product.stock,
         });
+
+        if (stockError) {
+          console.warn('[POS] Erro ao criar stock inicial:', stockError);
+        }
       }
-    })();
+
+      // Atualizar estado local após sucesso no backend
+      setState(prev => ({
+        ...prev,
+        products: [...prev.products, { ...product, id: productId }],
+      }));
+
+      toast.success('Produto criado com sucesso');
+    } catch (error: any) {
+      console.error('[POS] Exceção ao criar produto:', error);
+      toast.error('Falha crítica ao criar produto');
+    }
   }, [state.currentStore.id, company?.id]);
 
-  const updateProduct = useCallback((id: string, updates: Partial<LocalProduct>) => {
-    setState(prev => ({
-      ...prev,
-      products: prev.products.map(p => p.id === id ? { ...p, ...updates } : p),
-    }));
-
-    (async () => {
+  const updateProduct = useCallback(async (id: string, updates: Partial<LocalProduct>) => {
+    console.log('[POS] Atualizando produto:', id, updates);
+    
+    try {
       const dbUpdates: any = {};
-      if (updates.name !== undefined) dbUpdates.name = updates.name;
+      if (updates.name !== undefined) dbUpdates.name = updates.name.trim();
       if (updates.costPrice !== undefined) dbUpdates.cost_price = updates.costPrice;
       if (updates.salePrice !== undefined) dbUpdates.sale_price = updates.salePrice;
       if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
+      if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
+
       if (Object.keys(dbUpdates).length > 0) {
-        await supabase.from('products').update(dbUpdates).eq('id', id);
+        const { error: updateError } = await supabase.from('products').update(dbUpdates).eq('id', id);
+        
+        if (updateError) {
+          console.error('[POS] Erro ao atualizar produto no Supabase:', updateError);
+          toast.error('Erro ao atualizar produto: ' + updateError.message);
+          return;
+        }
       }
+
       if (updates.stock !== undefined && state.currentStore.id) {
-        await supabase.from('product_stock').upsert({
+        const { error: stockError } = await supabase.from('product_stock').upsert({
           product_id: id,
           store_id: state.currentStore.id,
           quantity: updates.stock,
         }, { onConflict: 'product_id,store_id' });
+
+        if (stockError) {
+          console.error('[POS] Erro ao atualizar stock no Supabase:', stockError);
+          toast.error('Erro ao atualizar estoque');
+          return;
+        }
       }
-    })();
+
+      // Atualizar estado local após sucesso no backend
+      setState(prev => ({
+        ...prev,
+        products: prev.products.map(p => p.id === id ? { ...p, ...updates } : p),
+      }));
+
+      console.log('[POS] Produto atualizado com sucesso');
+    } catch (error: any) {
+      console.error('[POS] Exceção ao atualizar produto:', error);
+      toast.error('Falha crítica ao atualizar produto');
+    }
   }, [state.currentStore.id]);
 
-  const deleteProduct = useCallback((id: string) => {
-    setState(prev => ({ ...prev, products: prev.products.filter(p => p.id !== id) }));
-    (async () => {
-      await supabase.from('products').update({ is_active: false }).eq('id', id);
-    })();
+  const deleteProduct = useCallback(async (id: string) => {
+    console.log('[POS] Removendo produto (desativando):', id);
+    try {
+      const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id);
+      
+      if (error) {
+        console.error('[POS] Erro ao remover produto no Supabase:', error);
+        toast.error('Erro ao remover produto');
+        return;
+      }
+
+      setState(prev => ({ ...prev, products: prev.products.filter(p => p.id !== id) }));
+      toast.success('Produto removido com sucesso');
+    } catch (error: any) {
+      console.error('[POS] Exceção ao remover produto:', error);
+      toast.error('Falha crítica ao remover produto');
+    }
   }, []);
 
   // ============ GETTERS ============
