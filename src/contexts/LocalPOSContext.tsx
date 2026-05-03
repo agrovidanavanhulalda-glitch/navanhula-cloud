@@ -323,46 +323,57 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // ============ LOAD DATA FROM SUPABASE ============
   useEffect(() => {
-    if (!user?.id || dataLoaded.current) return;
+    if (!user?.id || !company?.id) {
+      if (!user?.id) console.log('[POS] Aguardando autenticação...');
+      if (user?.id && !company?.id) console.log('[POS] Aguardando identificação da empresa...');
+      return;
+    }
 
     const loadData = async () => {
+      console.log('[POS] Carregando dados para empresa:', company.name);
+      setState(prev => ({ ...prev, loading: true }));
+      
       try {
         const storeId = authStore?.id || user.store_id;
-        if (!storeId) {
-          setState(prev => ({ ...prev, loading: false }));
-          return;
-        }
+        const targetCompanyId = company.id;
 
-        // Fetch all data in parallel
+        // Fetch all data in parallel, filtering by company_id where applicable
         const [
           productsRes,
-          stockRes,
           storesRes,
           cashRegistersRes,
           salesRes,
         ] = await Promise.all([
-          supabase.from('products').select('*').eq('is_active', true),
-          supabase.from('product_stock').select('*').eq('store_id', storeId),
-          supabase.from('stores').select('*'),
-          supabase.from('cash_registers').select('*').eq('store_id', storeId).order('opened_at', { ascending: false }).limit(50),
-          supabase.from('sales').select('*, sale_items(*)').eq('store_id', storeId).order('created_at', { ascending: false }).limit(200),
+          supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true),
+          supabase.from('stores').select('*').eq('company_id', targetCompanyId),
+          supabase.from('cash_registers').select('*').order('opened_at', { ascending: false }).limit(50),
+          supabase.from('sales').select('*, sale_items(*)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100),
         ]);
 
-        // Map products with stock
-        const stockMap = new Map<string, number>();
-        (stockRes.data || []).forEach((s: any) => {
-          stockMap.set(s.product_id, s.quantity || 0);
-        });
+        if (productsRes.error) throw productsRes.error;
+        if (storesRes.error) throw storesRes.error;
+
+        // Fetch stock for these products in the current store
+        let stockMap = new Map<string, number>();
+        if (storeId) {
+          const { data: stockData } = await supabase
+            .from('product_stock')
+            .select('*')
+            .eq('store_id', storeId);
+          
+          (stockData || []).forEach((s: any) => {
+            stockMap.set(s.product_id, s.quantity || 0);
+          });
+        }
 
         const products: LocalProduct[] = (productsRes.data || []).map((p: any) =>
           mapDbProductToLocal(p, stockMap.get(p.id) || 0)
         );
 
-        // Map stores
         const stores: LocalStore[] = (storesRes.data || []).map(mapDbStoreToLocal);
         const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : FALLBACK_STORE);
 
-        // Map cash registers - fetch profile names for seller display
+        // Map cash registers
         const crUserIds = [...new Set((cashRegistersRes.data || []).map((cr: any) => cr.user_id))];
         let profileMap = new Map<string, string>();
         if (crUserIds.length > 0) {
@@ -372,27 +383,17 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .in('id', crUserIds);
           (profilesData || []).forEach((p: any) => profileMap.set(p.id, p.full_name));
         }
+        
         const cashRegisters = (cashRegistersRes.data || []).map((cr: any) =>
           mapDbCashRegisterToLocal(cr, profileMap.get(cr.user_id))
         );
-        const openRegister = cashRegisters.find(cr => cr.status === 'open') || null;
-
-        // Map sales - also fetch seller names from profiles
-        const saleUserIds = [...new Set((salesRes.data || []).map((s: any) => s.user_id).filter(Boolean))];
-        const newSellerIds = saleUserIds.filter(id => !profileMap.has(id));
-        if (newSellerIds.length > 0) {
-          const { data: sellerProfiles } = await supabase
-            .from('profiles')
-            .select('id, full_name')
-            .in('id', newSellerIds);
-          (sellerProfiles || []).forEach((p: any) => profileMap.set(p.id, p.full_name));
-        }
+        const openRegister = cashRegisters.find(cr => cr.status === 'open' && cr.sellerId === user.id) || null;
 
         const sales: LocalSale[] = (salesRes.data || []).map((s: any) =>
           mapDbSaleToLocal(s, s.sale_items || [], profileMap.get(s.user_id))
         );
 
-        dataLoaded.current = true;
+        console.log(`[POS] ✅ ${products.length} produtos e ${sales.length} vendas carregados.`);
 
         setState(prev => ({
           ...prev,
@@ -404,14 +405,17 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           sales,
           loading: false,
         }));
+        
+        dataLoaded.current = true;
       } catch (error) {
-        console.error('[POS] Load error:', error);
+        console.error('[POS] Erro ao carregar dados:', error);
+        toast.error('Erro ao carregar dados do sistema');
         setState(prev => ({ ...prev, loading: false }));
       }
     };
 
     loadData();
-  }, [user?.id, authStore?.id]);
+  }, [user?.id, company?.id, authStore?.id]);
 
   // Reload when store changes in auth
   useEffect(() => {
