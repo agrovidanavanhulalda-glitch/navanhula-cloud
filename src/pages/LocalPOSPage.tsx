@@ -111,29 +111,39 @@ const LocalPOSPage: React.FC = () => {
     setShowManualEntry(false);
   };
 
-  // Handle payment confirmation with full details
-  const handlePaymentConfirm = (paymentDetails: PaymentDetails) => {
+  const handlePaymentConfirm = async (paymentDetails: PaymentDetails) => {
     if (cart.length === 0) {
       toast.error('Carrinho vazio');
       return;
     }
-    const sale = completeSale(paymentDetails);
-    if (sale) {
-      const changeMsg = paymentDetails.change > 0 
-        ? ` | Troco: ${formatCurrency(paymentDetails.change)}`
-        : '';
-      toast.success(`Venda concluída!${changeMsg}`);
-      updateStep('first_sale_completed');
-      setShowPaymentModal(false);
+    
+    console.log('[POSPage] Confirmando pagamento:', paymentDetails.method);
+    
+    try {
+      const sale = await completeSale(paymentDetails);
+      if (sale) {
+        console.log('[POSPage] Venda concluída com sucesso');
+        const changeMsg = paymentDetails.change > 0 
+          ? ` | Troco: ${formatCurrency(paymentDetails.change)}`
+          : '';
+        toast.success(`Venda concluída!${changeMsg}`);
+        updateStep('first_sale_completed');
+        setShowPaymentModal(false);
 
-      // Check user preference for skip modal
-      const skipModal = localStorage.getItem('navanhula_skip_post_sale_modal') === 'true';
-      if (skipModal) {
-        setShowReceipt(true);
-        setTimeout(() => window.print(), 500);
+        // Check user preference for skip modal
+        const skipModal = localStorage.getItem('navanhula_skip_post_sale_modal') === 'true';
+        if (skipModal) {
+          setShowReceipt(true);
+          setTimeout(() => window.print(), 500);
+        } else {
+          setShowPostSaleModal(true);
+        }
       } else {
-        setShowPostSaleModal(true);
+        console.warn('[POSPage] Venda não retornada pelo contexto');
       }
+    } catch (error) {
+      console.error('[POSPage] Erro ao concluir venda:', error);
+      toast.error('Erro ao processar venda');
     }
   };
 

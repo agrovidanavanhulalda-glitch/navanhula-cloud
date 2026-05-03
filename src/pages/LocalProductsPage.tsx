@@ -98,8 +98,9 @@ const LocalProductsPage: React.FC = () => {
     setShowForm(true);
   };
 
-  // Save product
-  const handleSave = () => {
+  const handleSave = async () => {
+    console.log('[ProductsPage] Iniciando salvamento do produto');
+    
     if (!formData.name.trim()) {
       toast.error('Nome é obrigatório');
       return;
@@ -130,23 +131,24 @@ const LocalProductsPage: React.FC = () => {
       salePrice,
       stock,
       isActive: formData.isActive,
+      imageUrl: formData.imageUrl
     };
 
-    if (editingProduct) {
-      updateProduct(editingProduct.id, productData);
-      // Update image_url in Supabase
-      if (formData.imageUrl) {
-        supabase.from('products').update({ image_url: formData.imageUrl }).eq('id', editingProduct.id);
+    try {
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, productData);
+        // Note: updateProduct context handles the toast and state update
+      } else {
+        await addProduct(productData);
+        updateStep('first_product_added');
       }
-      toast.success('Produto atualizado');
-    } else {
-      addProduct(productData);
-      updateStep('first_product_added');
-      toast.success('Produto criado');
-    }
 
-    setShowForm(false);
-    resetForm();
+      setShowForm(false);
+      resetForm();
+    } catch (error) {
+      console.error('[ProductsPage] Erro ao salvar:', error);
+      toast.error('Erro ao salvar produto');
+    }
   };
 
   // Delete product

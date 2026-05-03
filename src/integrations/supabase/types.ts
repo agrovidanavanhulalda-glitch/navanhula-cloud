@@ -7178,6 +7178,7 @@ export type Database = {
       is_ceo: { Args: never; Returns: boolean }
       is_global_ceo: { Args: never; Returns: boolean }
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_master_ceo: { Args: never; Returns: boolean }
       is_master_company_user: { Args: { p_user_id: string }; Returns: boolean }
       is_reseller: { Args: { _user_id: string }; Returns: boolean }
       issue_fiscal_document: {

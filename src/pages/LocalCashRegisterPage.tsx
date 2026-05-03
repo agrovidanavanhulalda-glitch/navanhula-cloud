@@ -65,8 +65,7 @@ const LocalCashRegisterPage: React.FC = () => {
     .sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime())
     .slice(0, 10); // Últimos 10 registros
 
-  // Handle open register
-  const handleOpenRegister = () => {
+  const handleOpenRegister = async () => {
     const amount = parseFloat(openingAmount) || 0;
     const seller = sellers.find(s => s.id === selectedSellerId);
     
@@ -75,26 +74,34 @@ const LocalCashRegisterPage: React.FC = () => {
       return;
     }
     
-    openCashRegister(seller.id, seller.name, amount);
-    updateStep('first_cash_opened');
-    toast.success('Caixa aberto com sucesso!');
-    setShowOpenDialog(false);
-    setOpeningAmount('');
-    setSelectedSellerId('');
-    navigate('/pdv');
+    try {
+      await openCashRegister(seller.id, seller.name, amount);
+      updateStep('first_cash_opened');
+      setShowOpenDialog(false);
+      setOpeningAmount('');
+      setSelectedSellerId('');
+      navigate('/pdv');
+    } catch (error) {
+      console.error('[CashRegisterPage] Erro ao abrir caixa:', error);
+      toast.error('Falha ao abrir caixa');
+    }
   };
 
-  // Handle close register
-  const handleCloseRegister = () => {
+  const handleCloseRegister = async () => {
     const amount = parseFloat(closingAmount);
     if (isNaN(amount)) {
       toast.error('Informe o valor de fechamento');
       return;
     }
-    closeCashRegister(amount);
-    toast.success('Caixa fechado com sucesso!');
-    setShowCloseDialog(false);
-    setClosingAmount('');
+    
+    try {
+      await closeCashRegister(amount);
+      setShowCloseDialog(false);
+      setClosingAmount('');
+    } catch (error) {
+      console.error('[CashRegisterPage] Erro ao fechar caixa:', error);
+      toast.error('Falha ao fechar caixa');
+    }
   };
 
   // Format date - human readable
