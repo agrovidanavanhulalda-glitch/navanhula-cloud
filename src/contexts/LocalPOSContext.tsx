@@ -729,12 +729,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return false;
       }
 
-      // 2. Restaurar stock (seria bom ter uma RPC para isso também, mas fazemos aqui)
+      // 2. Restaurar stock usando decrement com valor negativo
       for (const item of sale.items.filter(i => !i.product.id.startsWith('manual-'))) {
-        await supabase.rpc('increment_product_stock', {
+        await supabase.rpc('decrement_product_stock', {
           p_product_id: item.product.id,
           p_store_id: sale.storeId,
-          p_quantity: item.quantity,
+          p_quantity: -item.quantity,
         });
       }
 
