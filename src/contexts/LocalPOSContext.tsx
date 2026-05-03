@@ -623,14 +623,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Não interrompemos pois a venda principal foi salva, mas logamos
       }
 
-      // 3. Atualizar stock atomicamente
-      for (const item of state.cart.filter(i => !i.product.id.startsWith('manual-'))) {
-        await supabase.rpc('decrement_product_stock', {
-          p_product_id: item.product.id,
-          p_store_id: storeId,
-          p_quantity: item.quantity,
-        });
-      }
+      // 3. Stock é atualizado automaticamente via Trigger no Supabase (update_stock_on_sale)
+      // Não removemos manualmente aqui para evitar dupla dedução.
 
       // 4. Crédito na carteira se não for dinheiro
       if (paymentDetails.method !== 'cash') {
