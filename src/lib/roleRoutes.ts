@@ -42,6 +42,7 @@ export function canAccessRoute(path: string, role: AppRole | null): boolean {
   if (!role) return false;
   
   // CEO and admin can access everything (Super Admin Bypass)
+  // Check for 'ceo', 'admin', 'super_admin' roles, or is_super_admin flag
   if (role === 'ceo' || role === 'admin' || role === 'super_admin' || role === 'director') return true;
 
   for (const [prefix, allowedRoles] of Object.entries(routeRoleMap)) {
