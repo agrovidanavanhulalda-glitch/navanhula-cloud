@@ -7,13 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { LogIn, Loader2, AlertTriangle, ShieldCheck, Sparkles } from 'lucide-react';
+import { LogIn, Loader2, AlertTriangle, ShieldCheck, Sparkles, Eye, EyeOff } from 'lucide-react';
 import BrandLogo from '@/components/brand/BrandLogo';
 
 const AuthLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { currentVersion } = useAppVersion();
 
@@ -135,17 +136,28 @@ const AuthLoginPage: React.FC = () => {
               <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Senha
               </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                required
-                autoComplete="current-password"
-                disabled={isLoading}
-                className="h-14 text-lg"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                  required
+                  autoComplete="current-password"
+                  disabled={isLoading}
+                  className="h-14 text-lg pr-12"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                </Button>
+              </div>
             </div>
 
             <Button
