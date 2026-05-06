@@ -144,24 +144,39 @@ const IAMPage = () => {
   // ── Mutations ──
   const createInvite = useMutation({
     mutationFn: async () => {
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + parseInt(inviteForm.expires_days));
-      const { error } = await supabase.from('company_invitations').insert({
-        company_id: companyId!,
-        role: inviteForm.role,
-        max_uses: parseInt(inviteForm.max_uses),
-        expires_at: expiresAt.toISOString(),
-        created_by: user?.id!,
-        branch_id: inviteForm.branch_id || null,
+      if (!companyId) throw new Error('Empresa não selecionada');
+      
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: {
+          action: 'invite_user',
+          payload: {
+            company_id: companyId,
+            role: inviteForm.role,
+            max_uses: inviteForm.max_uses,
+            expires_days: inviteForm.expires_days,
+            branch_id: inviteForm.branch_id || null,
+          }
+        }
       });
+
       if (error) throw error;
+      if (!data.success) throw new Error(data.message || 'Erro ao criar convite');
+      
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
-      toast.success('Convite criado!');
+      toast.success('Convite criado com sucesso!');
+      if (data.inviteLink) {
+        navigator.clipboard.writeText(data.inviteLink);
+        toast.info('Link do convite copiado para a área de transferência');
+      }
       setShowInvite(false);
     },
-    onError: () => toast.error('Erro ao criar convite'),
+    onError: (error: any) => {
+      console.error('[IAM] Erro convite:', error);
+      toast.error(error.message || 'Erro ao criar convite');
+    },
   });
 
   const createBranch = useMutation({
