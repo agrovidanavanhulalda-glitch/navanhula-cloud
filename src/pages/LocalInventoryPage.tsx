@@ -66,7 +66,7 @@ const LocalInventoryPage: React.FC = () => {
     setLoading(true);
     const { data } = await supabase
       .from('products')
-      .select('id, name, code, cost_price, sale_price, low_stock_threshold, is_active, product_stock!inner(quantity)')
+      .select('id, name, code, cost_price, sale_price, low_stock_threshold, is_active, product_stock(quantity)')
       .eq('product_stock.store_id', store.id)
       .eq('is_active', true)
       .order('name');

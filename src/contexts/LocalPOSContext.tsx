@@ -168,6 +168,7 @@ interface LocalPOSContextType extends LocalPOSState {
   getCancellationHistory: () => SaleCancellation[];
   store: LocalStore;
   cashRegisterOpen: boolean;
+  refreshData: () => Promise<void>;
 }
 
 const LocalPOSContext = createContext<LocalPOSContextType | undefined>(undefined);
@@ -321,101 +322,101 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [lastSale, setLastSale] = useState<LocalSale | null>(null);
   const dataLoaded = useRef(false);
 
-  // ============ LOAD DATA FROM SUPABASE ============
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!user?.id || !company?.id) {
       if (!user?.id) console.log('[POS] Aguardando autenticação...');
       if (user?.id && !company?.id) console.log('[POS] Aguardando identificação da empresa...');
       return;
     }
 
-    const loadData = async () => {
-      console.log('[POS] Carregando dados para empresa:', company.name);
-      setState(prev => ({ ...prev, loading: true }));
-      
-      try {
-        const storeId = authStore?.id || user.store_id;
-        const targetCompanyId = company.id;
+    console.log('[POS] Carregando dados para empresa:', company.name);
+    setState(prev => ({ ...prev, loading: true }));
+    
+    try {
+      const storeId = authStore?.id || user.store_id;
+      const targetCompanyId = company.id;
 
-        // Fetch all data in parallel, filtering by company_id where applicable
-        const [
-          productsRes,
-          storesRes,
-          cashRegistersRes,
-          salesRes,
-        ] = await Promise.all([
-          supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true),
-          supabase.from('stores').select('*').eq('company_id', targetCompanyId),
-          supabase.from('cash_registers').select('*').order('opened_at', { ascending: false }).limit(50),
-          supabase.from('sales').select('*, sale_items(*)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100),
-        ]);
+      // Fetch all data in parallel, filtering by company_id where applicable
+      const [
+        productsRes,
+        storesRes,
+        cashRegistersRes,
+        salesRes,
+      ] = await Promise.all([
+        supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true).order('name'),
+        supabase.from('stores').select('*').eq('company_id', targetCompanyId),
+        supabase.from('cash_registers').select('*').order('opened_at', { ascending: false }).limit(50),
+        supabase.from('sales').select('*, sale_items(*)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100),
+      ]);
 
-        if (productsRes.error) throw productsRes.error;
-        if (storesRes.error) throw storesRes.error;
+      if (productsRes.error) throw productsRes.error;
+      if (storesRes.error) throw storesRes.error;
 
-        // Fetch stock for these products in the current store
-        let stockMap = new Map<string, number>();
-        if (storeId) {
-          const { data: stockData } = await supabase
-            .from('product_stock')
-            .select('*')
-            .eq('store_id', storeId);
-          
-          (stockData || []).forEach((s: any) => {
-            stockMap.set(s.product_id, s.quantity || 0);
-          });
-        }
-
-        const products: LocalProduct[] = (productsRes.data || []).map((p: any) =>
-          mapDbProductToLocal(p, stockMap.get(p.id) || 0)
-        );
-
-        const stores: LocalStore[] = (storesRes.data || []).map(mapDbStoreToLocal);
-        const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : FALLBACK_STORE);
-
-        // Map cash registers
-        const crUserIds = [...new Set((cashRegistersRes.data || []).map((cr: any) => cr.user_id))];
-        let profileMap = new Map<string, string>();
-        if (crUserIds.length > 0) {
-          const { data: profilesData } = await supabase
-            .from('profiles')
-            .select('id, full_name')
-            .in('id', crUserIds);
-          (profilesData || []).forEach((p: any) => profileMap.set(p.id, p.full_name));
-        }
+      // Fetch stock for these products in the current store
+      let stockMap = new Map<string, number>();
+      if (storeId) {
+        const { data: stockData } = await supabase
+          .from('product_stock')
+          .select('*')
+          .eq('store_id', storeId);
         
-        const cashRegisters = (cashRegistersRes.data || []).map((cr: any) =>
-          mapDbCashRegisterToLocal(cr, profileMap.get(cr.user_id))
-        );
-        const openRegister = cashRegisters.find(cr => cr.status === 'open' && cr.sellerId === user.id) || null;
-
-        const sales: LocalSale[] = (salesRes.data || []).map((s: any) =>
-          mapDbSaleToLocal(s, s.sale_items || [], profileMap.get(s.user_id))
-        );
-
-        console.log(`[POS] ✅ ${products.length} produtos e ${sales.length} vendas carregados.`);
-
-        setState(prev => ({
-          ...prev,
-          products,
-          stores,
-          currentStore,
-          cashRegisters,
-          currentCashRegister: openRegister,
-          sales,
-          loading: false,
-        }));
-        
-        dataLoaded.current = true;
-      } catch (error) {
-        console.error('[POS] Erro ao carregar dados:', error);
-        toast.error('Erro ao carregar dados do sistema');
-        setState(prev => ({ ...prev, loading: false }));
+        (stockData || []).forEach((s: any) => {
+          stockMap.set(s.product_id, s.quantity || 0);
+        });
       }
-    };
 
-    loadData();
+      const products: LocalProduct[] = (productsRes.data || []).map((p: any) =>
+        mapDbProductToLocal(p, stockMap.get(p.id) || 0)
+      );
+
+      const stores: LocalStore[] = (storesRes.data || []).map(mapDbStoreToLocal);
+      const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : FALLBACK_STORE);
+
+      // Map cash registers
+      const crUserIds = [...new Set((cashRegistersRes.data || []).map((cr: any) => cr.user_id))];
+      let profileMap = new Map<string, string>();
+      if (crUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', crUserIds);
+        (profilesData || []).forEach((p: any) => profileMap.set(p.id, p.full_name));
+      }
+      
+      const cashRegisters = (cashRegistersRes.data || []).map((cr: any) =>
+        mapDbCashRegisterToLocal(cr, profileMap.get(cr.user_id))
+      );
+      const openRegister = cashRegisters.find(cr => cr.status === 'open' && cr.sellerId === user.id) || null;
+
+      const sales: LocalSale[] = (salesRes.data || []).map((s: any) =>
+        mapDbSaleToLocal(s, s.sale_items || [], profileMap.get(s.user_id))
+      );
+
+      console.log(`[POS] ✅ ${products.length} produtos e ${sales.length} vendas carregados.`);
+
+      setState(prev => ({
+        ...prev,
+        products,
+        stores,
+        currentStore,
+        cashRegisters,
+        currentCashRegister: openRegister,
+        sales,
+        loading: false,
+      }));
+      
+      dataLoaded.current = true;
+    } catch (error) {
+      console.error('[POS] Erro ao carregar dados:', error);
+      toast.error('Erro ao carregar dados do sistema');
+      setState(prev => ({ ...prev, loading: false }));
+    }
   }, [user?.id, company?.id, authStore?.id]);
+
+  // ============ LOAD DATA FROM SUPABASE ============
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Reload when store changes in auth
   useEffect(() => {
@@ -1195,29 +1196,27 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log('[POS] Produto inserido com sucesso:', insertData);
 
       // Create stock entry
-      // Create stock entry only if store is valid UUID
-      const isValidStoreId = state.currentStore.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(state.currentStore.id);
-      
-      if (isValidStoreId) {
-        const { error: stockError } = await supabase.from('product_stock').insert({
+      const storeIdToUse = state.currentStore.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(state.currentStore.id)
+        ? state.currentStore.id
+        : authStore?.id;
+
+      if (storeIdToUse) {
+        console.log('[POS] Criando stock inicial para loja:', storeIdToUse);
+        const { error: stockError } = await supabase.from('product_stock').upsert({
           product_id: productId,
-          store_id: state.currentStore.id,
+          store_id: storeIdToUse,
           quantity: product.stock,
-        });
+        }, { onConflict: 'product_id,store_id' });
 
         if (stockError) {
           console.warn('[POS] Erro ao criar stock inicial:', stockError);
         }
       } else {
-        console.warn('[POS] Ignorando criação de stock: ID de loja inválido ou fallback');
+        console.warn('[POS] Não foi possível criar stock inicial: Loja não identificada');
       }
 
-      // Atualizar estado local após sucesso no backend
-      setState(prev => ({
-        ...prev,
-        products: [...prev.products, { ...product, id: productId }],
-      }));
-
+      // Atualizar dados do servidor para garantir sincronia total
+      await loadData();
       toast.success('Produto criado com sucesso');
     } catch (error: any) {
       console.error('[POS] Exceção ao criar produto:', error);
@@ -1260,11 +1259,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
-      // Atualizar estado local após sucesso no backend
-      setState(prev => ({
-        ...prev,
-        products: prev.products.map(p => p.id === id ? { ...p, ...updates } : p),
-      }));
+      // Atualizar dados do servidor para garantir sincronia total
+      await loadData();
 
       console.log('[POS] Produto atualizado com sucesso');
     } catch (error: any) {
@@ -1368,6 +1364,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     getSalesByPeriod,
     getCancelledSales,
     getCancellationHistory,
+    refreshData: loadData,
   };
 
   return (
