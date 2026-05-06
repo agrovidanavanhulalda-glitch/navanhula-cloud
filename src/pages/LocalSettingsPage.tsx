@@ -69,7 +69,7 @@ const LocalSettingsPage: React.FC = () => {
     toast.success('Preferências de automação salvas');
   };
 
-  const isAdmin = role === 'admin' || role === 'manager' || (role as string) === 'ceo';
+  const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
 
   // Load data
   useEffect(() => {

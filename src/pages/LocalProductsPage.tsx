@@ -58,7 +58,7 @@ const LocalProductsPage: React.FC = () => {
     imageUrl: '' as string | null,
   });
 
-  const isAdmin = role === 'admin' || role === 'manager';
+  const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
 
   // Filter products
   const filteredProducts = products.filter(p =>

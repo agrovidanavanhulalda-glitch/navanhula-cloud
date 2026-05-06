@@ -256,8 +256,9 @@ const IAMPage = () => {
     mutationFn: async () => {
       if (!companyId) throw new Error('Empresa não selecionada');
       
+      console.log('[IAM] Criando utilizador:', userForm.email);
+
       // 1. Criar utilizador no Auth do Supabase
-      // Isso criará o utilizador mas não fará sign-in automático dele
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userForm.email,
         password: "12345678",
@@ -273,7 +274,7 @@ const IAMPage = () => {
 
       const newUserId = authData.user.id;
 
-      // 2. Criar perfil na tabela profiles (para compatibilidade com o sistema atual)
+      // 2. Criar perfil na tabela profiles
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -281,22 +282,25 @@ const IAMPage = () => {
           full_name: userForm.name,
           email: userForm.email,
           company_id: companyId,
-          branch_id: userForm.branch_id || null,
+          store_id: userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null,
           status: 'active'
         });
       
       if (profileError) {
-        console.warn('Erro ao criar perfil (pode já existir trigger):', profileError);
+        console.warn('[IAM] Erro ao criar perfil (pode já existir):', profileError);
       }
 
-      // 3. Buscar o ID do cargo "Vendedor"
-      const { data: rolesData } = await supabase
-        .from('roles')
-        .select('id')
-        .eq('name', 'Vendedor')
-        .single();
+      // 3. Atribuir Cargo na tabela user_roles
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: newUserId,
+          role: 'seller'
+        });
       
-      const sellerRoleId = rolesData?.id || '94f3c923-e732-4bbf-a1c3-6f790ef6f727'; // Fallback para o ID conhecido
+      if (roleError) {
+        console.error('[IAM] Erro ao atribuir cargo:', roleError);
+      }
 
       // 4. Vincular utilizador à empresa na tabela user_company
       const { error: userCompanyError } = await supabase
@@ -304,25 +308,11 @@ const IAMPage = () => {
         .insert({
           user_id: newUserId,
           company_id: companyId,
-          role_id: sellerRoleId,
           status: 'active'
         });
 
-      if (userCompanyError) throw userCompanyError;
-
-      // 5. Também inserir na tabela company_users para compatibilidade legada se existir
-      try {
-        await supabase
-          .from('company_users')
-          .insert({
-            user_id: newUserId,
-            company_id: companyId,
-            role: 'seller',
-            status: 'active',
-            branch_id: userForm.branch_id || null
-          });
-      } catch (e) {
-        console.log('Tabela company_users não disponível ou erro ignorado:', e);
+      if (userCompanyError) {
+        console.error('[IAM] Erro ao vincular empresa:', userCompanyError);
       }
     },
     onSuccess: () => {
@@ -332,7 +322,7 @@ const IAMPage = () => {
       setUserForm({ name: '', email: '', branch_id: '' });
     },
     onError: (error: any) => {
-      console.error('Erro ao criar utilizador:', error);
+      console.error('[IAM] Erro ao criar utilizador:', error);
       toast.error('Falha ao criar utilizador: ' + (error.message || 'Erro desconhecido'));
     }
   });
