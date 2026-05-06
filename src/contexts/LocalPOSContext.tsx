@@ -1214,12 +1214,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.warn('[POS] Não foi possível criar stock inicial: Loja não identificada');
       }
 
-      // Atualizar estado local após sucesso no backend
-      setState(prev => ({
-        ...prev,
-        products: [...prev.products, { ...product, id: productId }],
-      }));
-
+      // Atualizar dados do servidor para garantir sincronia total
+      await loadData();
       toast.success('Produto criado com sucesso');
     } catch (error: any) {
       console.error('[POS] Exceção ao criar produto:', error);
@@ -1262,11 +1258,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
-      // Atualizar estado local após sucesso no backend
-      setState(prev => ({
-        ...prev,
-        products: prev.products.map(p => p.id === id ? { ...p, ...updates } : p),
-      }));
+      // Atualizar dados do servidor para garantir sincronia total
+      await loadData();
 
       console.log('[POS] Produto atualizado com sucesso');
     } catch (error: any) {
