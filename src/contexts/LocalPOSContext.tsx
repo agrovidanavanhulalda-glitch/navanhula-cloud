@@ -168,6 +168,7 @@ interface LocalPOSContextType extends LocalPOSState {
   getCancellationHistory: () => SaleCancellation[];
   store: LocalStore;
   cashRegisterOpen: boolean;
+  refreshData: () => Promise<void>;
 }
 
 const LocalPOSContext = createContext<LocalPOSContextType | undefined>(undefined);
