@@ -41,8 +41,8 @@ export const useAuth = () => {
   return context;
 };
 
-// Maximum loading time - 2 seconds (emergency mode)
-const MAX_LOADING_TIME = 2000;
+// Maximum loading time - 5 seconds (emergency mode)
+const MAX_LOADING_TIME = 5000;
 
 // Default company for fallback
 const DEFAULT_COMPANY: Company = {
@@ -125,7 +125,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const currentRole = (companyUserResult.data?.roles as any)?.name?.toLowerCase() as AppRole || 'admin';
       const needsCompany = !profile?.company_id || !profile?.onboarding_completed;
 
+      // Se já tem empresa, não tenta fazer onboarding automático
+      if (profile?.company_id && profile.company_id !== 'local-default') {
+        await fetchUserData(userId);
+        forceComplete();
+        return;
+      }
+
       if (currentRole !== 'reseller' && needsCompany) {
+        console.log('[Auth] Iniciando onboarding automático...');
         const { error: onboardError } = await supabase.rpc('complete_onboarding', {
           p_company_name: 'NAVANHULA GROUP SA',
           p_company_nif: null,
@@ -134,10 +142,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (onboardError) {
-          setCompany(DEFAULT_COMPANY);
-          setStore(DEFAULT_STORE);
+          console.warn('[Auth] Falha no onboarding automático:', onboardError);
+          // Fallback seguro se não conseguir criar empresa
+          if (!profile?.company_id) {
+            setCompany(DEFAULT_COMPANY);
+            setStore(DEFAULT_STORE);
+          }
         } else {
-          toast.success('Empresa criada automaticamente!');
+          toast.success('Empresa sincronizada!');
         }
       }
 
