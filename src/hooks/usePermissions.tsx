@@ -35,7 +35,7 @@ export function usePermissions() {
 
   const hasPermission = (permissionKey: string): boolean => {
     // Master user/CEO has all permissions
-    if (user?.is_super_admin) return true;
+    if (user?.is_super_admin || (user as any)?.role === 'ceo' || (user as any)?.role === 'super_admin') return true;
     return permissions.includes(permissionKey);
   };
 

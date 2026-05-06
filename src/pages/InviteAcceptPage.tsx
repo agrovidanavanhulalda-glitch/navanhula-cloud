@@ -24,40 +24,92 @@ const InviteAcceptPage: React.FC = () => {
   useEffect(() => {
     if (!token) return;
     (async () => {
-      const { data, error: rpcError } = await supabase.rpc('get_invitation_by_token', { p_token: token });
-      
-      if (rpcError || !data || data.length === 0) {
-        setError('Convite inválido ou expirado.');
-        setLoadingInvite(false);
-        return;
-      }
-      
-      const invitation = data[0];
-      setInvite(invitation);
+      // Direct fetch from table if RPC fails or is missing
+      const { data: invData, error: invError } = await supabase
+        .from('company_invitations')
+        .select('*')
+        .eq('token', token)
+        .eq('status', 'active')
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
 
-      // Fetch company and role names
+      if (invError || !invData) {
+        // Fallback to RPC
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_invitation_by_token', { p_token: token });
+        
+        if (rpcError || !rpcData || rpcData.length === 0) {
+          setError('Convite inválido, expirado ou já utilizado.');
+          setLoadingInvite(false);
+          return;
+        }
+        setInvite(rpcData[0]);
+      } else {
+        setInvite(invData);
+      }
+    })();
+  }, [token]);
+
+  useEffect(() => {
+    if (!invite) return;
+    (async () => {
       const [compRes, roleRes] = await Promise.all([
-        supabase.from('companies').select('name').eq('id', invitation.company_id).maybeSingle(),
-        supabase.from('roles').select('name').eq('id', invitation.role_id).maybeSingle(),
+        supabase.from('companies').select('name').eq('id', invite.company_id).maybeSingle(),
+        supabase.from('roles').select('name').eq('id', invite.role_id).maybeSingle(),
       ]);
 
       setCompany(compRes.data);
       if (roleRes.data) {
-        setInvite({ ...invitation, role_name: roleRes.data.name });
+        setInvite((prev: any) => ({ ...prev, role_name: roleRes.data.name }));
       }
-
       setLoadingInvite(false);
     })();
-  }, [token]);
+  }, [invite]);
 
   const acceptInvite = async () => {
     setIsSubmitting(true);
     try {
-      const { data, error } = await supabase.rpc('accept_company_invitation', { p_token: token! });
-      if (error) throw error;
+      if (!isAuthenticated) {
+        toast.error('Você precisa estar logado para aceitar o convite.');
+        return;
+      }
+
+      // Try RPC first
+      const { data: rpcData, error: rpcError } = await supabase.rpc('accept_company_invitation', { p_token: token! });
       
-      const result = data as any;
-      if (!result?.success) throw new Error(result?.message || 'Erro ao aceitar convite');
+      if (rpcError) {
+        console.warn('RPC accept_company_invitation failed, falling back to manual process', rpcError);
+        
+        // Manual process fallback
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Utilizador não autenticado');
+
+        // 1. Link user to company
+        const { error: linkError } = await supabase.from('user_company').upsert({
+          user_id: user.id,
+          company_id: invite.company_id,
+          role_id: invite.role_id,
+          status: 'active'
+        });
+        if (linkError) throw linkError;
+
+        // 2. Update profile
+        const { error: profError } = await supabase.from('profiles').update({
+          company_id: invite.company_id,
+          store_id: invite.branch_id,
+          onboarding_completed: true,
+          status: 'active'
+        }).eq('id', user.id);
+        if (profError) throw profError;
+
+        // 3. Increment invite count or mark used
+        await supabase.from('company_invitations').update({
+          used_count: (invite.used_count || 0) + 1,
+          status: (invite.used_count || 0) + 1 >= invite.max_uses ? 'used' : 'active'
+        }).eq('id', invite.id);
+      } else {
+        const result = rpcData as any;
+        if (!result?.success) throw new Error(result?.message || 'Erro ao aceitar convite');
+      }
       
       setAccepted(true);
       toast.success('Bem-vindo à equipa!');

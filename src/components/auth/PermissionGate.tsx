@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ShieldAlert } from 'lucide-react';
 
@@ -23,9 +24,13 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   children,
   fallback = <DefaultFallback />,
 }) => {
+  const { role } = useAuth();
   const { canViewModule, canCreateIn, canEditIn, canDeleteIn, canApproveIn } = usePermissions();
 
   const hasAccess = () => {
+    // Master user/CEO/Admin bypass
+    if (role === 'ceo' || role === 'admin' || role === 'super_admin' || role === 'director') return true;
+
     switch (action) {
       case 'view': return canViewModule(module);
       case 'create': return canCreateIn(module);
