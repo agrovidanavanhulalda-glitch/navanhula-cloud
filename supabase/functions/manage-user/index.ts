@@ -106,16 +106,35 @@ serve(async (req) => {
 
         // Link to Company
         console.log("Linking user to company:", company_id);
+        
+        // Find default role if role_id not provided
+        let finalRoleId = role_id;
+        if (!finalRoleId) {
+          const { data: roleData } = await supabaseAdmin
+            .from("roles")
+            .select("id")
+            .eq("name", "seller")
+            .maybeSingle();
+          finalRoleId = roleData?.id;
+        }
+
         const { error: linkError } = await supabaseAdmin
           .from("user_company")
           .insert({
             user_id: newUserId,
             company_id,
-            role_id: role_id || null,
+            role_id: finalRoleId || null,
             status: 'active'
           });
 
         if (linkError) console.warn("Company link warning:", linkError);
+
+        // Also add to user_roles for backward compatibility
+        await supabaseAdmin.from("user_roles").upsert({
+          user_id: newUserId,
+          role_id: finalRoleId || null,
+          role: 'seller'
+        });
 
         return new Response(JSON.stringify({ 
           success: true, 
@@ -137,6 +156,17 @@ serve(async (req) => {
           });
         }
 
+        // Find role_id for the role name if not provided
+        let finalRoleId = role_id;
+        if (!finalRoleId && role) {
+          const { data: roleData } = await supabaseAdmin
+            .from("roles")
+            .select("id")
+            .eq("name", role.toLowerCase())
+            .maybeSingle();
+          finalRoleId = roleData?.id;
+        }
+
         const token = crypto.randomUUID();
         const expires_at = new Date();
         expires_at.setDate(expires_at.getDate() + (parseInt(expires_days) || 7));
@@ -147,7 +177,7 @@ serve(async (req) => {
           .insert({
             company_id,
             role: role || 'seller',
-            role_id: role_id || null,
+            role_id: finalRoleId || null,
             token,
             expires_at: expires_at.toISOString(),
             created_by: caller.id,
