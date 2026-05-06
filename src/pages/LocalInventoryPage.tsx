@@ -36,7 +36,8 @@ interface InventoryProduct {
 type AdjustmentType = 'add' | 'remove' | 'set';
 
 const LocalInventoryPage: React.FC = () => {
-  const { user, store } = useAuth();
+  const { user, store, role } = useAuth();
+  const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
   const [products, setProducts] = useState<InventoryProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

@@ -69,7 +69,7 @@ const LocalStoresPage: React.FC = () => {
     is_active: true,
   });
 
-  const isAdmin = role === 'admin' || (role as string) === 'ceo';
+  const isAdmin = role === 'admin' || role === 'ceo' || role === 'director' || role === 'manager';
 
   const fetchStores = async () => {
     setLoading(true);

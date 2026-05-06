@@ -48,7 +48,9 @@ const LocalCashRegisterPage: React.FC = () => {
     openCashRegister,
     closeCashRegister,
   } = useLocalPOS();
+  const { role } = useAuth();
   const { updateStep } = useOnboarding();
+  const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
 
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
