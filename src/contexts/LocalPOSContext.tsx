@@ -1364,6 +1364,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     getSalesByPeriod,
     getCancelledSales,
     getCancellationHistory,
+    refreshData: loadData,
   };
 
   return (
