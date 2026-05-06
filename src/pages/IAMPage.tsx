@@ -15,7 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck,
-  Trash2, Settings2, Building2, Monitor, ScrollText, MapPin
+  Trash2, Settings2, Building2, Monitor, ScrollText, MapPin, Eye, EyeOff
 } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 
@@ -57,7 +57,8 @@ const IAMPage = () => {
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [inviteForm, setInviteForm] = useState({ role: 'seller', max_uses: '1', expires_days: '7', branch_id: '' });
   const [branchForm, setBranchForm] = useState({ name: '', address: '', phone: '', email: '' });
-  const [userForm, setUserForm] = useState({ name: '', email: '', branch_id: '' });
+  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', branch_id: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [auditFilter, setAuditFilter] = useState<string>('all');
 
@@ -256,12 +257,15 @@ const IAMPage = () => {
     mutationFn: async () => {
       if (!companyId) throw new Error('Empresa não selecionada');
       
-      console.log('[IAM] Criando utilizador:', userForm.email);
+      const email = userForm.email.trim().toLowerCase();
+      const password = userForm.password || "12345678";
+      
+      console.log('[IAM] Criando utilizador:', email);
 
       // 1. Criar utilizador no Auth do Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userForm.email,
-        password: "12345678",
+        email: email,
+        password: password,
         options: {
           data: {
             full_name: userForm.name,
@@ -280,21 +284,26 @@ const IAMPage = () => {
         .insert({
           id: newUserId,
           full_name: userForm.name,
-          email: userForm.email,
+          email: email,
           company_id: companyId,
           store_id: userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null,
-          status: 'active'
+          status: 'active',
+          onboarding_completed: true
         });
       
       if (profileError) {
-        console.warn('[IAM] Erro ao criar perfil (pode já existir):', profileError);
+        console.warn('[IAM] Erro ao criar perfil:', profileError);
       }
 
       // 3. Atribuir Cargo na tabela user_roles
+      // Primeiro tentamos ver se já existe um role_id para 'seller'
+      const { data: roleData } = await supabase.from('roles').select('id').eq('name', 'seller').maybeSingle();
+      
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({
           user_id: newUserId,
+          role_id: roleData?.id,
           role: 'seller'
         });
       
@@ -308,6 +317,7 @@ const IAMPage = () => {
         .insert({
           user_id: newUserId,
           company_id: companyId,
+          role_id: roleData?.id,
           status: 'active'
         });
 
@@ -317,9 +327,9 @@ const IAMPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
-      toast.success('Utilizador criado com sucesso! Senha padrão: 12345678');
+      toast.success('Utilizador criado com sucesso!');
       setShowCreateUser(false);
-      setUserForm({ name: '', email: '', branch_id: '' });
+      setUserForm({ name: '', email: '', password: '', branch_id: '' });
     },
     onError: (error: any) => {
       console.error('[IAM] Erro ao criar utilizador:', error);
@@ -364,6 +374,28 @@ const IAMPage = () => {
                   <div>
                     <Label htmlFor="user-email">Email *</Label>
                     <Input id="user-email" type="email" value={userForm.email} onChange={e => setUserForm(f => ({ ...f, email: e.target.value }))} placeholder="joao@exemplo.com" />
+                  </div>
+                  <div>
+                    <Label htmlFor="user-password">Senha *</Label>
+                    <div className="relative">
+                      <Input 
+                        id="user-password" 
+                        type={showPassword ? "text" : "password"} 
+                        value={userForm.password} 
+                        onChange={e => setUserForm(f => ({ ...f, password: e.target.value }))} 
+                        placeholder="Mínimo 8 caracteres" 
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                      </Button>
+                    </div>
+                    {!userForm.password && <p className="text-[10px] text-muted-foreground mt-1">Padrão se vazio: 12345678</p>}
                   </div>
                   {branches.length > 0 && (
                     <div>

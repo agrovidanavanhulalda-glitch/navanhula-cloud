@@ -40,8 +40,9 @@ const routeRoleMap: Record<string, AppRole[]> = {
 
 export function canAccessRoute(path: string, role: AppRole | null): boolean {
   if (!role) return false;
-  // CEO and admin can access everything
-  if (role === 'ceo' || role === 'admin') return true;
+  
+  // CEO and admin can access everything (Super Admin Bypass)
+  if (role === 'ceo' || role === 'admin' || role === 'super_admin' || role === 'director') return true;
 
   for (const [prefix, allowedRoles] of Object.entries(routeRoleMap)) {
     if (path === prefix || path.startsWith(prefix + '/') || path.startsWith(prefix + '?')) {
