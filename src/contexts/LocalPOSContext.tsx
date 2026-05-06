@@ -1195,21 +1195,23 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log('[POS] Produto inserido com sucesso:', insertData);
 
       // Create stock entry
-      // Create stock entry only if store is valid UUID
-      const isValidStoreId = state.currentStore.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(state.currentStore.id);
-      
-      if (isValidStoreId) {
-        const { error: stockError } = await supabase.from('product_stock').insert({
+      const storeIdToUse = state.currentStore.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(state.currentStore.id)
+        ? state.currentStore.id
+        : authStore?.id;
+
+      if (storeIdToUse) {
+        console.log('[POS] Criando stock inicial para loja:', storeIdToUse);
+        const { error: stockError } = await supabase.from('product_stock').upsert({
           product_id: productId,
-          store_id: state.currentStore.id,
+          store_id: storeIdToUse,
           quantity: product.stock,
-        });
+        }, { onConflict: 'product_id,store_id' });
 
         if (stockError) {
           console.warn('[POS] Erro ao criar stock inicial:', stockError);
         }
       } else {
-        console.warn('[POS] Ignorando criação de stock: ID de loja inválido ou fallback');
+        console.warn('[POS] Não foi possível criar stock inicial: Loja não identificada');
       }
 
       // Atualizar estado local após sucesso no backend
