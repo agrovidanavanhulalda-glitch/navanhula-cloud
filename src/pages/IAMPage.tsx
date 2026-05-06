@@ -275,70 +275,25 @@ const IAMPage = () => {
       const email = userForm.email.trim().toLowerCase();
       const password = userForm.password || "12345678";
       
-      console.log('[IAM] Criando utilizador:', email);
+      console.log('[IAM] Solicitando criação de utilizador via Edge Function:', email);
 
-      // 1. Criar utilizador no Auth do Supabase
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            full_name: userForm.name,
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: {
+          action: 'create_user',
+          payload: {
+            email,
+            password,
+            name: userForm.name,
+            company_id: companyId,
+            branch_id: userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null,
           }
         }
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Falha ao criar utilizador no Auth');
+      if (error) throw error;
+      if (!data.success) throw new Error(data.message || 'Erro ao criar utilizador');
 
-      const newUserId = authData.user.id;
-
-      // 2. Criar perfil na tabela profiles
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: newUserId,
-          full_name: userForm.name,
-          email: email,
-          company_id: companyId,
-          store_id: userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null,
-          status: 'active',
-          onboarding_completed: true
-        });
-      
-      if (profileError) {
-        console.warn('[IAM] Erro ao criar perfil:', profileError);
-      }
-
-      // 3. Atribuir Cargo na tabela user_roles
-      // Primeiro tentamos ver se já existe um role_id para 'seller'
-      const { data: roleData } = await supabase.from('roles').select('id').eq('name', 'seller').maybeSingle();
-      
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: newUserId,
-          role_id: roleData?.id,
-          role: 'seller'
-        });
-      
-      if (roleError) {
-        console.error('[IAM] Erro ao atribuir cargo:', roleError);
-      }
-
-      // 4. Vincular utilizador à empresa na tabela user_company
-      const { error: userCompanyError } = await supabase
-        .from('user_company')
-        .insert({
-          user_id: newUserId,
-          company_id: companyId,
-          role_id: roleData?.id,
-          status: 'active'
-        });
-
-      if (userCompanyError) {
-        console.error('[IAM] Erro ao vincular empresa:', userCompanyError);
-      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
