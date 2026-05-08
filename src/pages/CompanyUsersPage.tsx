@@ -217,8 +217,8 @@ const CompanyUsersPage = () => {
                     <TableCell className="font-medium">{m.profiles?.full_name}</TableCell>
                     <TableCell>{m.profiles?.email}</TableCell>
                     <TableCell>
-                      <Badge variant={getRoleBadgeVariant(m.roles?.name || '')}>
-                        {m.roles?.name || 'Sem Cargo'}
+                      <Badge variant={getRoleBadgeVariant(m.role || '')}>
+                        {m.role || 'Sem Cargo'}
                       </Badge>
                     </TableCell>
                     <TableCell>
