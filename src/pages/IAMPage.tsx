@@ -632,20 +632,28 @@ const IAMPage = () => {
                     <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum convite</TableCell></TableRow>
                   ) : invitations.map((inv: any) => (
                     <TableRow key={inv.id}>
-                      <TableCell className="font-medium">{inv.email}</TableCell>
+                      <TableCell className="font-medium max-w-[200px] truncate">
+                        {inv.token.substring(0, 8)}...
+                      </TableCell>
                       <TableCell><Badge variant="outline">{roleLabels[inv.role] || inv.role}</Badge></TableCell>
                       <TableCell className="text-sm">{branchName(inv.branch_id)}</TableCell>
                       <TableCell className="text-sm">{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString('pt-MZ') : '-'}</TableCell>
+                      <TableCell className="text-sm">{inv.used_count || 0} / {inv.max_uses}</TableCell>
                       <TableCell>
-                        <Badge variant={inv.status === 'active' || inv.status === 'pending' ? 'default' : 'secondary'}>
-                          {inv.status === 'active' || inv.status === 'pending' ? 'Pendente' : inv.status === 'revoked' ? 'Revogado' : 'Concluído'}
+                        <Badge variant={inv.status === 'active' ? 'default' : 'secondary'}>
+                          {inv.status === 'active' ? 'Ativo' : inv.status === 'revoked' ? 'Revogado' : 'Expirado'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right flex gap-1 justify-end">
-                        {(inv.status === 'active' || inv.status === 'pending') && (
-                          <Button variant="ghost" size="sm" onClick={() => revokeInvite.mutate(inv.id)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+                        {inv.status === 'active' && (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => copyInviteLink(inv.token)}>
+                              {copiedToken === inv.token ? <Check className="w-4 h-4 text-emerald-500" /> : <Link2 className="w-4 h-4" />}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => revokeInvite.mutate(inv.id)}>
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </>
                         )}
                       </TableCell>
                     </TableRow>
