@@ -146,27 +146,58 @@ const IAMPage = () => {
     mutationFn: async () => {
       if (!companyId) throw new Error('Empresa não selecionada');
       
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: {
-          action: 'invite_user',
-          payload: {
+      try {
+        const { data, error } = await supabase.functions.invoke('manage-user', {
+          body: {
+            action: 'invite_user',
+            payload: {
+              company_id: companyId,
+              role: inviteForm.role,
+              max_uses: inviteForm.max_uses,
+              expires_days: inviteForm.expires_days,
+              branch_id: inviteForm.branch_id || null,
+            }
+          }
+        });
+
+        if (error) throw error;
+        if (data && !data.success) throw new Error(data.message || 'Erro ao criar convite');
+        return data;
+      } catch (err: any) {
+        console.warn('[IAM] Edge Function falhou, tentando fallback...', err);
+        // Fallback: Criar convite diretamente na tabela se as permissões RLS permitirem
+        const token = crypto.randomUUID();
+        const expires_at = new Date();
+        expires_at.setDate(expires_at.getDate() + (parseInt(inviteForm.expires_days) || 7));
+
+        const { data, error } = await supabase
+          .from('company_invitations')
+          .insert({
             company_id: companyId,
             role: inviteForm.role,
-            max_uses: inviteForm.max_uses,
-            expires_days: inviteForm.expires_days,
+            token,
+            expires_at: expires_at.toISOString(),
+            created_by: user?.id,
+            max_uses: parseInt(inviteForm.max_uses) || 1,
             branch_id: inviteForm.branch_id || null,
-          }
-        }
-      });
+            status: 'active'
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.message || 'Erro ao criar convite');
-      
-      return data;
+        if (error) throw new Error('Falha no convite e no fallback: ' + error.message);
+        
+        return { 
+          success: true, 
+          invite: data, 
+          inviteLink: `${window.location.origin}/convite/${token}`,
+          isFallback: true 
+        };
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
-      toast.success('Convite criado com sucesso!');
+      toast.success(data.isFallback ? 'Convite criado via Fallback!' : 'Convite criado com sucesso!');
       if (data.inviteLink) {
         navigator.clipboard.writeText(data.inviteLink);
         toast.info('Link do convite copiado para a área de transferência');
