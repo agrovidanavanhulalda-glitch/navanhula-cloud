@@ -60,11 +60,8 @@ const CompanyUsersPage = () => {
     queryKey: ['team-invites', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('invites')
-        .select(`
-          *,
-          roles:role_id(name)
-        `)
+        .from('invitations')
+        .select(`*`)
         .eq('company_id', companyId!)
         .order('created_at', { ascending: false });
       if (error) throw error;
