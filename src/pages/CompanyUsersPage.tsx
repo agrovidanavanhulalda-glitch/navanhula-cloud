@@ -73,42 +73,32 @@ const CompanyUsersPage = () => {
   const inviteUser = useMutation({
     mutationFn: async () => {
       const email = inviteForm.email.trim().toLowerCase();
-      
-      // 1. Criar utilizador no Auth (password aleatória)
-      const tempPassword = Math.random().toString(36).slice(-10);
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password: tempPassword,
-        options: {
-          data: {
-            full_name: 'Convidado',
-            company_id: companyId,
-          }
-        }
-      });
-
-      if (authError) throw authError;
-
-      // 2. Guardar na tabela de convites
       const roleName = roles.find(r => r.id === inviteForm.role_id)?.name || 'Vendedor';
-      const { data, error } = await supabase
-        .from('invitations')
+      const token = crypto.randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      const { error } = await supabase
+        .from('company_invitations')
         .insert({
           company_id: companyId,
           role: roleName,
-          email: email,
-          status: 'pending',
+          token: token,
+          expires_at: expiresAt.toISOString(),
           created_by: user?.id,
-        })
-        .select()
-        .single();
+          max_uses: 1,
+          status: 'active',
+        });
 
       if (error) throw error;
-      return data;
+      return { token };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['team-invites'] });
-      toast.success('Convite enviado! O utilizador pode fazer login agora.');
+      const inviteLink = `${window.location.origin}/convite/${data.token}`;
+      navigator.clipboard.writeText(inviteLink);
+      toast.success('Convite gerado com sucesso!');
+      toast.info('Link copiado: ' + inviteLink);
       setShowInvite(false);
       setInviteForm({ role_id: '', email: '' });
     },
