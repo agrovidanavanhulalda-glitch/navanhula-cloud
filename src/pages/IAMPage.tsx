@@ -381,22 +381,6 @@ const IAMPage = () => {
     }
   });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.message || 'Erro ao criar utilizador');
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['iam-members'] });
-      toast.success('Utilizador criado com sucesso!');
-      setShowCreateUser(false);
-      setUserForm({ name: '', email: '', password: '', branch_id: '' });
-    },
-    onError: (error: any) => {
-      console.error('[IAM] Erro ao criar utilizador:', error);
-      toast.error('Falha ao criar utilizador: ' + (error.message || 'Erro desconhecido'));
-    }
-  });
 
   const copyInviteLink = (token: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/convite/${token}`);
