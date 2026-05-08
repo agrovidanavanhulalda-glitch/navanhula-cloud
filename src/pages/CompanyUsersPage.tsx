@@ -253,36 +253,32 @@ const CompanyUsersPage = () => {
             <CardHeader>
               <CardTitle className="text-lg">Convites Pendentes</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Cargo</TableHead>
-                    <TableHead>Expira em</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Expira em</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invitations.map((inv: any) => (
+                  <TableRow key={inv.id}>
+                    <TableCell>{inv.email}</TableCell>
+                    <TableCell>{inv.role}</TableCell>
+                    <TableCell>{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '-'}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" className="text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invitations.map((inv: any) => (
-                    <TableRow key={inv.id}>
-                      <TableCell>{inv.email}</TableCell>
-                      <TableCell>{inv.roles?.name}</TableCell>
-                      <TableCell>{new Date(inv.expires_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => {
-                          const url = `${window.location.origin}/convite/${inv.token}`;
-                          navigator.clipboard.writeText(url);
-                          toast.success('Link copiado!');
-                        }}>
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
           </Card>
         )}
 
