@@ -41,11 +41,10 @@ const CompanyUsersPage = () => {
     queryKey: ['team-members', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('user_company')
+        .from('company_users')
         .select(`
           *,
-          profiles:user_id(full_name, email),
-          roles:role_id(name)
+          profiles:user_id(full_name, email)
         `)
         .eq('company_id', companyId!)
         .order('created_at', { ascending: false });
@@ -60,7 +59,7 @@ const CompanyUsersPage = () => {
     queryKey: ['team-invites', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('invitations')
+        .from('company_invitations')
         .select(`*`)
         .eq('company_id', companyId!)
         .order('created_at', { ascending: false });
