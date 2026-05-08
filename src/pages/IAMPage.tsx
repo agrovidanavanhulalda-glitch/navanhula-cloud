@@ -95,7 +95,7 @@ const IAMPage = () => {
     queryKey: ['iam-invitations', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('company_invitations')
+        .from('invitations')
         .select('*')
         .eq('company_id', companyId!)
         .order('created_at', { ascending: false });
