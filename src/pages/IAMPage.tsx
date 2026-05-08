@@ -95,7 +95,7 @@ const IAMPage = () => {
     queryKey: ['iam-invitations', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('invitations')
+        .from('company_invitations')
         .select('*')
         .eq('company_id', companyId!)
         .order('created_at', { ascending: false });
@@ -149,39 +149,41 @@ const IAMPage = () => {
       const email = inviteForm.email?.trim().toLowerCase();
       if (!email) throw new Error('Email é obrigatório');
 
-      console.log('[IAM] Enviando convite via Edge Function:', email);
+      console.log('[IAM] Gerando convite direto:', email);
 
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: {
-          action: 'invite_user',
-          payload: {
-            email,
-            company_id: companyId,
-            role: inviteForm.role,
-            max_uses: inviteForm.max_uses,
-            expires_days: inviteForm.expires_days,
-            branch_id: inviteForm.branch_id
-          }
-        }
+      const token = crypto.randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + parseInt(inviteForm.expires_days || '7'));
+
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+
+      const { error } = await supabase.from('company_invitations').insert({
+        company_id: companyId,
+        role: inviteForm.role,
+        token: token,
+        expires_at: expiresAt.toISOString(),
+        created_by: currentUser?.id,
+        max_uses: parseInt(inviteForm.max_uses || '1'),
+        status: 'active',
+        branch_id: inviteForm.branch_id || null
       });
 
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.message || 'Erro ao criar convite');
       
-      return data;
+      return { success: true, token };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
+      const inviteLink = `${window.location.origin}/convite/${data.token}`;
+      navigator.clipboard.writeText(inviteLink);
       toast.success('Convite gerado com sucesso!');
-      if (data.inviteLink) {
-        navigator.clipboard.writeText(data.inviteLink);
-        toast.info('Link de convite copiado para a área de transferência');
-      }
+      toast.info('Link de convite: ' + inviteLink);
       setShowInvite(false);
     },
     onError: (error: any) => {
       console.error('[IAM] Erro convite:', error);
-      toast.error(error.message || 'Erro ao criar convite');
+      toast.error('Falha ao criar convite: ' + (error.message || 'Erro desconhecido'));
     },
   });
 
@@ -253,7 +255,7 @@ const IAMPage = () => {
 
   const revokeInvite = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('invitations').update({ status: 'revoked' }).eq('id', id);
+      const { error } = await supabase.from('company_invitations').update({ status: 'revoked' }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -283,30 +285,57 @@ const IAMPage = () => {
       const name = userForm.name;
       const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
       
-      console.log('[IAM] Criando utilizador via Edge Function:', email);
+      console.log('[IAM] Criando utilizador direto:', email);
 
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: {
-          action: 'create_user',
-          payload: {
-            email,
-            password,
-            name,
-            company_id: companyId,
-            role: 'seller',
-            branch_id: branchId
+      // 1. Create user in Auth
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name
           }
         }
       });
 
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.message || 'Erro ao criar utilizador');
+      if (signUpError) throw signUpError;
+      if (!signUpData.user) throw new Error('Erro ao criar conta de utilizador');
 
-      return data;
+      const newUser = signUpData.user;
+
+      // 2. Create profile
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: newUser.id,
+        full_name: name,
+        email: email,
+        company_id: companyId,
+        status: 'active',
+        onboarding_completed: true,
+        branch_id: branchId
+      });
+
+      if (profileError) {
+        console.error('[IAM] Erro ao criar perfil:', profileError);
+      }
+
+      // 3. Link to company
+      const { error: linkError } = await supabase.from('company_users').insert({
+        user_id: newUser.id,
+        company_id: companyId,
+        role: 'seller', 
+        status: 'active',
+        branch_id: branchId
+      });
+
+      if (linkError) {
+        console.error('[IAM] Erro ao ligar utilizador à empresa:', linkError);
+      }
+
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
-      toast.success('Utilizador criado com sucesso!');
+      toast.success('Utilizador criado. Ele deve verificar o email para activar a conta.');
       setShowCreateUser(false);
       setUserForm({ name: '', email: '', password: '', branch_id: '' });
     },
@@ -430,20 +459,25 @@ const IAMPage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Gerar Link de Convite</DialogTitle></DialogHeader>
                 <div className="space-y-3">
-                  <div>
-                    <Label>Email do Colaborador *</Label>
-                    <Input 
-                      placeholder="email@exemplo.com" 
-                      value={inviteForm.email} 
-                      onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} 
-                    />
-                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Este link permitirá que qualquer pessoa se junte à sua empresa com o cargo selecionado.
+                  </p>
                   <div>
                     <Label>Cargo</Label>
                     <Select value={inviteForm.role} onValueChange={v => setInviteForm(f => ({ ...f, role: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>{ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
                     </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Expira em (dias)</Label>
+                      <Input type="number" value={inviteForm.expires_days} onChange={e => setInviteForm(f => ({ ...f, expires_days: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>Máximo de usos</Label>
+                      <Input type="number" value={inviteForm.max_uses} onChange={e => setInviteForm(f => ({ ...f, max_uses: e.target.value }))} />
+                    </div>
                   </div>
                   {branches.length > 0 && (
                     <div>
@@ -589,33 +623,42 @@ const IAMPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Email</TableHead>
+                    <TableHead>Token / Link</TableHead>
                     <TableHead>Cargo</TableHead>
                     <TableHead>Filial</TableHead>
                     <TableHead>Expira</TableHead>
+                    <TableHead>Usos</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {invitations.length === 0 ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum convite</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum convite</TableCell></TableRow>
                   ) : invitations.map((inv: any) => (
                     <TableRow key={inv.id}>
-                      <TableCell className="font-medium">{inv.email}</TableCell>
+                      <TableCell className="font-medium max-w-[200px] truncate">
+                        {inv.token.substring(0, 8)}...
+                      </TableCell>
                       <TableCell><Badge variant="outline">{roleLabels[inv.role] || inv.role}</Badge></TableCell>
                       <TableCell className="text-sm">{branchName(inv.branch_id)}</TableCell>
                       <TableCell className="text-sm">{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString('pt-MZ') : '-'}</TableCell>
+                      <TableCell className="text-sm">{inv.used_count || 0} / {inv.max_uses}</TableCell>
                       <TableCell>
-                        <Badge variant={inv.status === 'active' || inv.status === 'pending' ? 'default' : 'secondary'}>
-                          {inv.status === 'active' || inv.status === 'pending' ? 'Pendente' : inv.status === 'revoked' ? 'Revogado' : 'Concluído'}
+                        <Badge variant={inv.status === 'active' ? 'default' : 'secondary'}>
+                          {inv.status === 'active' ? 'Ativo' : inv.status === 'revoked' ? 'Revogado' : 'Expirado'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right flex gap-1 justify-end">
-                        {(inv.status === 'active' || inv.status === 'pending') && (
-                          <Button variant="ghost" size="sm" onClick={() => revokeInvite.mutate(inv.id)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+                        {inv.status === 'active' && (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => copyInviteLink(inv.token)}>
+                              {copiedToken === inv.token ? <Check className="w-4 h-4 text-emerald-500" /> : <Link2 className="w-4 h-4" />}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => revokeInvite.mutate(inv.id)}>
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </>
                         )}
                       </TableCell>
                     </TableRow>

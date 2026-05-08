@@ -41,11 +41,10 @@ const CompanyUsersPage = () => {
     queryKey: ['team-members', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('user_company')
+        .from('company_users')
         .select(`
           *,
-          profiles:user_id(full_name, email),
-          roles:role_id(name)
+          profiles:user_id(full_name, email)
         `)
         .eq('company_id', companyId!)
         .order('created_at', { ascending: false });
@@ -60,7 +59,7 @@ const CompanyUsersPage = () => {
     queryKey: ['team-invites', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('invitations')
+        .from('company_invitations')
         .select(`*`)
         .eq('company_id', companyId!)
         .order('created_at', { ascending: false });
@@ -74,42 +73,32 @@ const CompanyUsersPage = () => {
   const inviteUser = useMutation({
     mutationFn: async () => {
       const email = inviteForm.email.trim().toLowerCase();
-      
-      // 1. Criar utilizador no Auth (password aleatória)
-      const tempPassword = Math.random().toString(36).slice(-10);
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password: tempPassword,
-        options: {
-          data: {
-            full_name: 'Convidado',
-            company_id: companyId,
-          }
-        }
-      });
-
-      if (authError) throw authError;
-
-      // 2. Guardar na tabela de convites
       const roleName = roles.find(r => r.id === inviteForm.role_id)?.name || 'Vendedor';
-      const { data, error } = await supabase
-        .from('invitations')
+      const token = crypto.randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      const { error } = await supabase
+        .from('company_invitations')
         .insert({
           company_id: companyId,
           role: roleName,
-          email: email,
-          status: 'pending',
+          token: token,
+          expires_at: expiresAt.toISOString(),
           created_by: user?.id,
-        })
-        .select()
-        .single();
+          max_uses: 1,
+          status: 'active',
+        });
 
       if (error) throw error;
-      return data;
+      return { token };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['team-invites'] });
-      toast.success('Convite enviado! O utilizador pode fazer login agora.');
+      const inviteLink = `${window.location.origin}/convite/${data.token}`;
+      navigator.clipboard.writeText(inviteLink);
+      toast.success('Convite gerado com sucesso!');
+      toast.info('Link copiado: ' + inviteLink);
       setShowInvite(false);
       setInviteForm({ role_id: '', email: '' });
     },
@@ -122,6 +111,7 @@ const CompanyUsersPage = () => {
       const email = createUserForm.email.trim().toLowerCase();
       const password = createUserForm.password;
       const name = createUserForm.full_name;
+      const roleName = roles.find(r => r.id === createUserForm.role_id)?.name || 'Vendedor';
       
       // 1. Criar utilizador no Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -144,27 +134,28 @@ const CompanyUsersPage = () => {
           full_name: name,
           email: email,
           company_id: companyId,
-          status: 'active'
+          status: 'active',
+          onboarding_completed: true
         });
 
-        if (profileError) throw profileError;
+        if (profileError) console.error('Erro perfil:', profileError);
 
-        // 3. Inserir na tabela de equipa
-        const { error: teamError } = await supabase.from('user_company').upsert({
+        // 3. Inserir na tabela de equipa (company_users)
+        const { error: teamError } = await supabase.from('company_users').upsert({
           user_id: authData.user.id,
           company_id: companyId,
-          role_id: createUserForm.role_id,
+          role: roleName,
           status: 'active'
         });
 
-        if (teamError) throw teamError;
+        if (teamError) console.error('Erro equipa:', teamError);
       }
 
       return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
-      toast.success('Utilizador criado com sucesso! Informe o utilizador para fazer login.');
+      toast.success('Utilizador criado. Ele deve verificar o email para activar a conta.');
       setShowCreateUser(false);
       setCreateUserForm({ full_name: '', email: '', role_id: '', password: '' });
     },
@@ -226,8 +217,8 @@ const CompanyUsersPage = () => {
                     <TableCell className="font-medium">{m.profiles?.full_name}</TableCell>
                     <TableCell>{m.profiles?.email}</TableCell>
                     <TableCell>
-                      <Badge variant={getRoleBadgeVariant(m.roles?.name || '')}>
-                        {m.roles?.name || 'Sem Cargo'}
+                      <Badge variant={getRoleBadgeVariant(m.role || '')}>
+                        {m.role || 'Sem Cargo'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -257,7 +248,7 @@ const CompanyUsersPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
+                  <TableHead>Token</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Expira em</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -266,10 +257,17 @@ const CompanyUsersPage = () => {
               <TableBody>
                 {invitations.map((inv: any) => (
                   <TableRow key={inv.id}>
-                    <TableCell>{inv.email}</TableCell>
+                    <TableCell className="font-mono text-xs">{inv.token.substring(0, 8)}...</TableCell>
                     <TableCell>{inv.role}</TableCell>
                     <TableCell>{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '-'}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right flex gap-1 justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        const link = `${window.location.origin}/convite/${inv.token}`;
+                        navigator.clipboard.writeText(link);
+                        toast.success('Link copiado!');
+                      }}>
+                        <Link2 className="w-4 h-4" />
+                      </Button>
                       <Button variant="ghost" size="sm" className="text-destructive">
                         <Trash2 className="w-4 h-4" />
                       </Button>
