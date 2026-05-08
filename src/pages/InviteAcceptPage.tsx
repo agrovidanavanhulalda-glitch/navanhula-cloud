@@ -162,7 +162,7 @@ const InviteAcceptPage: React.FC = () => {
             <p className="text-gray-500 mt-1">Convidou você para fazer parte da equipa</p>
           </div>
           <Badge className="bg-[#1E5A8A] text-white px-4 py-1">
-            Cargo: {invite?.role_name || 'Membro'}
+            Cargo: {invite?.role || 'Membro'}
           </Badge>
         </div>
 
