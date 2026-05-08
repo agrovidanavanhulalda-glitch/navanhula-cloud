@@ -76,12 +76,13 @@ const InviteAcceptPage: React.FC = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Utilizador não autenticado');
 
-        // 1. Link user to company
-        const { error: linkError } = await supabase.from('user_company').upsert({
+        // 1. Link user to company using company_users
+        const { error: linkError } = await supabase.from('company_users').upsert({
           user_id: user.id,
           company_id: invite.company_id,
-          role_id: invite.role_id,
-          status: 'active'
+          role: invite.role, // now using text role
+          status: 'active',
+          branch_id: invite.branch_id
         });
         if (linkError) throw linkError;
 
