@@ -260,7 +260,14 @@ const CompanyUsersPage = () => {
                     <TableCell className="font-mono text-xs">{inv.token.substring(0, 8)}...</TableCell>
                     <TableCell>{inv.role}</TableCell>
                     <TableCell>{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '-'}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right flex gap-1 justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        const link = `${window.location.origin}/convite/${inv.token}`;
+                        navigator.clipboard.writeText(link);
+                        toast.success('Link copiado!');
+                      }}>
+                        <Link2 className="w-4 h-4" />
+                      </Button>
                       <Button variant="ghost" size="sm" className="text-destructive">
                         <Trash2 className="w-4 h-4" />
                       </Button>
