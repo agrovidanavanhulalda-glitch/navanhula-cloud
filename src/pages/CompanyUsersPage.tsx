@@ -248,7 +248,7 @@ const CompanyUsersPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
+                  <TableHead>Token</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Expira em</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
