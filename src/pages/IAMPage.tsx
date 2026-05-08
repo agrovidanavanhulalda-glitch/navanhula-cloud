@@ -466,6 +466,14 @@ const IAMPage = () => {
                 <DialogHeader><DialogTitle>Gerar Link de Convite</DialogTitle></DialogHeader>
                 <div className="space-y-3">
                   <div>
+                    <Label>Email do Colaborador *</Label>
+                    <Input 
+                      placeholder="email@exemplo.com" 
+                      value={inviteForm.email} 
+                      onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} 
+                    />
+                  </div>
+                  <div>
                     <Label>Cargo</Label>
                     <Select value={inviteForm.role} onValueChange={v => setInviteForm(f => ({ ...f, role: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -484,8 +492,6 @@ const IAMPage = () => {
                       </Select>
                     </div>
                   )}
-                  <div><Label>Máximo de usos</Label><Input type="number" min="1" max="100" value={inviteForm.max_uses} onChange={e => setInviteForm(f => ({ ...f, max_uses: e.target.value }))} /></div>
-                  <div><Label>Expira em (dias)</Label><Input type="number" min="1" max="30" value={inviteForm.expires_days} onChange={e => setInviteForm(f => ({ ...f, expires_days: e.target.value }))} /></div>
                 </div>
                 <DialogFooter>
                   <Button onClick={() => createInvite.mutate()} disabled={createInvite.isPending}>
