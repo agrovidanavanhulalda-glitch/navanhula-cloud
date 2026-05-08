@@ -624,10 +624,9 @@ const IAMPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Link</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Cargo</TableHead>
                     <TableHead>Filial</TableHead>
-                    <TableHead>Usos</TableHead>
                     <TableHead>Expira</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -635,24 +634,20 @@ const IAMPage = () => {
                 </TableHeader>
                 <TableBody>
                   {invitations.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum convite</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum convite</TableCell></TableRow>
                   ) : invitations.map((inv: any) => (
                     <TableRow key={inv.id}>
-                      <TableCell className="font-mono text-xs max-w-[180px] truncate">{`/convite/${inv.token}`}</TableCell>
+                      <TableCell className="font-medium">{inv.email}</TableCell>
                       <TableCell><Badge variant="outline">{roleLabels[inv.role] || inv.role}</Badge></TableCell>
                       <TableCell className="text-sm">{branchName(inv.branch_id)}</TableCell>
-                      <TableCell>{inv.used_count}/{inv.max_uses}</TableCell>
-                      <TableCell className="text-sm">{new Date(inv.expires_at).toLocaleDateString('pt-MZ')}</TableCell>
+                      <TableCell className="text-sm">{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString('pt-MZ') : '-'}</TableCell>
                       <TableCell>
-                        <Badge variant={inv.status === 'active' ? 'default' : 'secondary'}>
-                          {inv.status === 'active' ? 'Ativo' : inv.status === 'revoked' ? 'Revogado' : 'Expirado'}
+                        <Badge variant={inv.status === 'active' || inv.status === 'pending' ? 'default' : 'secondary'}>
+                          {inv.status === 'active' || inv.status === 'pending' ? 'Pendente' : inv.status === 'revoked' ? 'Revogado' : 'Concluído'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right flex gap-1 justify-end">
-                        <Button variant="ghost" size="sm" onClick={() => copyInviteLink(inv.token)}>
-                          {copiedToken === inv.token ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                        </Button>
-                        {inv.status === 'active' && (
+                        {(inv.status === 'active' || inv.status === 'pending') && (
                           <Button variant="ghost" size="sm" onClick={() => revokeInvite.mutate(inv.id)}>
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
