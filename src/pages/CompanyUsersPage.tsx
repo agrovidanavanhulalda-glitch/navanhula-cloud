@@ -73,52 +73,98 @@ const CompanyUsersPage = () => {
   // Invite user via edge function
   const inviteUser = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: {
-          action: 'invite_user',
-          payload: {
-            email: inviteForm.email,
+      const email = inviteForm.email.trim().toLowerCase();
+      
+      // 1. Criar utilizador no Auth (password aleatória)
+      const tempPassword = Math.random().toString(36).slice(-10);
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password: tempPassword,
+        options: {
+          data: {
+            full_name: 'Convidado',
             company_id: companyId,
-            role_id: inviteForm.role_id,
-          },
-        },
+          }
+        }
       });
+
+      if (authError) throw authError;
+
+      // 2. Guardar na tabela de convites
+      const roleName = roles.find(r => r.id === inviteForm.role_id)?.name || 'Vendedor';
+      const { data, error } = await supabase
+        .from('invitations')
+        .insert({
+          company_id: companyId,
+          role: roleName,
+          email: email,
+          status: 'pending',
+          created_by: user?.id,
+        })
+        .select()
+        .single();
+
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-invites'] });
-      toast.success('Convite gerado!');
-      const url = `${window.location.origin}/convite/${data.invite.token}`;
-      navigator.clipboard.writeText(url);
-      toast.info('Link de convite copiado para a área de transferência');
+      toast.success('Convite enviado! O utilizador pode fazer login agora.');
       setShowInvite(false);
       setInviteForm({ role_id: '', email: '' });
     },
     onError: (e: any) => toast.error('Erro ao convidar: ' + e.message),
   });
 
-  // Create user via edge function
+  // Create user via Auth API
   const createUser = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: {
-          action: 'create_user',
-          payload: {
-            email: createUserForm.email,
-            password: createUserForm.password,
-            name: createUserForm.full_name,
+      const email = createUserForm.email.trim().toLowerCase();
+      const password = createUserForm.password;
+      const name = createUserForm.full_name;
+      
+      // 1. Criar utilizador no Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
             company_id: companyId,
-            role_id: createUserForm.role_id,
-          },
-        },
+          }
+        }
       });
-      if (error) throw error;
-      return data;
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // 2. Inserir perfil
+        const { error: profileError } = await supabase.from('profiles').upsert({
+          id: authData.user.id,
+          full_name: name,
+          email: email,
+          company_id: companyId,
+          status: 'active'
+        });
+
+        if (profileError) throw profileError;
+
+        // 3. Inserir na tabela de equipa
+        const { error: teamError } = await supabase.from('user_company').upsert({
+          user_id: authData.user.id,
+          company_id: companyId,
+          role_id: createUserForm.role_id,
+          status: 'active'
+        });
+
+        if (teamError) throw teamError;
+      }
+
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
-      toast.success('Utilizador criado com sucesso!');
+      toast.success('Utilizador criado com sucesso! Informe o utilizador para fazer login.');
       setShowCreateUser(false);
       setCreateUserForm({ full_name: '', email: '', role_id: '', password: '' });
     },
