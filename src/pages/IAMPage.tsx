@@ -149,39 +149,41 @@ const IAMPage = () => {
       const email = inviteForm.email?.trim().toLowerCase();
       if (!email) throw new Error('Email é obrigatório');
 
-      console.log('[IAM] Enviando convite via Edge Function:', email);
+      console.log('[IAM] Gerando convite direto:', email);
 
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: {
-          action: 'invite_user',
-          payload: {
-            email,
-            company_id: companyId,
-            role: inviteForm.role,
-            max_uses: inviteForm.max_uses,
-            expires_days: inviteForm.expires_days,
-            branch_id: inviteForm.branch_id
-          }
-        }
+      const token = crypto.randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + parseInt(inviteForm.expires_days || '7'));
+
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+
+      const { error } = await supabase.from('company_invitations').insert({
+        company_id: companyId,
+        role: inviteForm.role,
+        token: token,
+        expires_at: expiresAt.toISOString(),
+        created_by: currentUser?.id,
+        max_uses: parseInt(inviteForm.max_uses || '1'),
+        status: 'active',
+        branch_id: inviteForm.branch_id || null
       });
 
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.message || 'Erro ao criar convite');
       
-      return data;
+      return { success: true, token };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
+      const inviteLink = `${window.location.origin}/convite/${data.token}`;
+      navigator.clipboard.writeText(inviteLink);
       toast.success('Convite gerado com sucesso!');
-      if (data.inviteLink) {
-        navigator.clipboard.writeText(data.inviteLink);
-        toast.info('Link de convite copiado para a área de transferência');
-      }
+      toast.info('Link de convite: ' + inviteLink);
       setShowInvite(false);
     },
     onError: (error: any) => {
       console.error('[IAM] Erro convite:', error);
-      toast.error(error.message || 'Erro ao criar convite');
+      toast.error('Falha ao criar convite: ' + (error.message || 'Erro desconhecido'));
     },
   });
 
