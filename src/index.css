@@ -145,13 +145,33 @@
     height: auto;
   }
 
-  /* Responsive tables */
+  /* Responsive tables & Mobile Fixes */
   table {
-    max-width: 100%;
+    width: 100%;
+    border-collapse: collapse;
   }
 
-  /* Word break for long text */
-  p, span, h1, h2, h3, h4, h5, h6, li, td, th, label {
+  /* Prevent vertical/rotated text and ensure horizontal layout */
+  th, td {
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    transform: none !important;
+    white-space: nowrap;
+    min-width: 120px; /* Minimum width to prevent squeezing */
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+  }
+
+  /* Specific fix for containers that should scroll */
+  .overflow-x-auto {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    display: block;
+  }
+
+  /* Word break for long text - restricted to non-table elements or specific cases */
+  p, span, h1, h2, h3, h4, h5, h6, li, label {
     overflow-wrap: break-word;
     word-break: break-word;
   }
