@@ -305,21 +305,81 @@ const IAMPage = () => {
       
       const email = userForm.email.trim().toLowerCase();
       const password = userForm.password || "12345678";
+      const name = userForm.name;
+      const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
       
       console.log('[IAM] Solicitando criação de utilizador via Edge Function:', email);
 
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: {
-          action: 'create_user',
-          payload: {
-            email,
-            password,
-            name: userForm.name,
-            company_id: companyId,
-            branch_id: userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null,
+      try {
+        const { data, error } = await supabase.functions.invoke('manage-user', {
+          body: {
+            action: 'create_user',
+            payload: {
+              email,
+              password,
+              name,
+              company_id: companyId,
+              role: 'seller', // Padrão
+              branch_id: branchId,
+            }
           }
+        });
+
+        if (error) throw error;
+        if (data && !data.success) throw new Error(data.message || 'Erro ao criar utilizador');
+
+        return data;
+      } catch (err: any) {
+        console.warn('[IAM] Edge Function falhou, tentando fallback (signUp)...', err);
+        
+        // Fallback: usar signUp público
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+              company_id: companyId,
+              role: 'seller'
+            }
+          }
+        });
+
+        if (authError) throw new Error('Falha na Edge Function e no fallback: ' + authError.message);
+        
+        // Tentar criar perfil manualmente se o trigger falhar
+        if (authData.user) {
+          await supabase.from('profiles').upsert({
+            id: authData.user.id,
+            full_name: name,
+            email: email,
+            company_id: companyId,
+            store_id: branchId,
+            status: 'active'
+          });
+
+          await supabase.from('company_users').upsert({
+            user_id: authData.user.id,
+            company_id: companyId,
+            role: 'seller',
+            status: 'active'
+          });
         }
-      });
+
+        return { success: true, message: 'Criado via fallback', isFallback: true };
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['iam-members'] });
+      toast.success(data.isFallback ? 'Utilizador criado via Fallback!' : 'Utilizador criado com sucesso!');
+      setShowCreateUser(false);
+      setUserForm({ name: '', email: '', password: '', branch_id: '' });
+    },
+    onError: (error: any) => {
+      console.error('[IAM] Erro ao criar utilizador:', error);
+      toast.error('Falha ao criar utilizador: ' + (error.message || 'Erro desconhecido'));
+    }
+  });
 
       if (error) throw error;
       if (!data.success) throw new Error(data.message || 'Erro ao criar utilizador');
