@@ -52,15 +52,8 @@ const InviteAcceptPage: React.FC = () => {
   useEffect(() => {
     if (!invite) return;
     (async () => {
-      const [compRes, roleRes] = await Promise.all([
-        supabase.from('companies').select('name').eq('id', invite.company_id).maybeSingle(),
-        supabase.from('roles').select('name').eq('id', invite.role_id).maybeSingle(),
-      ]);
-
-      setCompany(compRes.data);
-      if (roleRes.data) {
-        setInvite((prev: any) => ({ ...prev, role_name: roleRes.data.name }));
-      }
+      const { data: compData } = await supabase.from('companies').select('name').eq('id', invite.company_id).maybeSingle();
+      setCompany(compData);
       setLoadingInvite(false);
     })();
   }, [invite]);
