@@ -62,27 +62,48 @@ const LocalInventoryPage: React.FC = () => {
   }, [store]);
 
   const loadProducts = async () => {
-    if (!store?.id) return;
+    if (!store?.id) {
+      console.warn("LocalInventoryPage: store.id is missing", { store, user });
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
-    const { data } = await supabase
-      .from('products')
-      .select('id, name, code, cost_price, sale_price, low_stock_threshold, is_active, product_stock(quantity)')
-      .eq('product_stock.store_id', store.id)
-      .eq('is_active', true)
-      .order('name');
+    try {
+      console.log("LocalInventoryPage: Loading products for store", store.id);
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, code, cost_price, sale_price, low_stock_threshold, is_active, product_stock(quantity)')
+        .eq('product_stock.store_id', store.id)
+        .eq('is_active', true)
+        .order('name');
 
-    const mapped: InventoryProduct[] = (data || []).map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      code: p.code,
-      cost_price: p.cost_price,
-      sale_price: p.sale_price,
-      low_stock_threshold: p.low_stock_threshold ?? 10,
-      is_active: p.is_active,
-      stock_qty: p.product_stock?.[0]?.quantity ?? 0,
-    }));
-    setProducts(mapped);
-    setLoading(false);
+      if (error) {
+        console.error("LocalInventoryPage: Error loading products", error);
+        toast.error("Erro ao carregar produtos: " + error.message);
+        throw error;
+      }
+
+      console.log("LocalInventoryPage: Raw data received", data);
+
+      const mapped: InventoryProduct[] = (data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        code: p.code,
+        cost_price: p.cost_price,
+        sale_price: p.sale_price,
+        low_stock_threshold: p.low_stock_threshold ?? 10,
+        is_active: p.is_active,
+        stock_qty: p.product_stock?.[0]?.quantity ?? 0,
+      }));
+      
+      console.log("LocalInventoryPage: Mapped products", mapped);
+      setProducts(mapped);
+    } catch (err: any) {
+      console.error("LocalInventoryPage: Unexpected error", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Computed
