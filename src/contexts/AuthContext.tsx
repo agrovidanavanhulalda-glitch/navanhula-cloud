@@ -175,7 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ]);
 
       const profileData = profileResult.data;
-      const userRole = (companyUserResult.data?.roles as any)?.name?.toLowerCase() as AppRole || 'admin';
+      const userRole = ((companyUserResult.data?.roles as any)?.name?.toLowerCase() || 'admin') as AppRole;
 
       if (profileData) {
         setUser(profileData as Profile);
