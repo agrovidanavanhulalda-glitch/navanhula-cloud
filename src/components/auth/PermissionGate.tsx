@@ -28,8 +28,9 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   const { canViewModule, canCreateIn, canEditIn, canDeleteIn, canApproveIn } = usePermissions();
 
   const hasAccess = () => {
-    // Master user/CEO/Admin bypass
-    if (role === 'ceo' || role === 'admin' || role === 'super_admin' || role === 'director') return true;
+    // Master user/CEO/Admin bypass - Case Insensitive
+    const normalizedRole = role?.toLowerCase();
+    if (['ceo', 'admin', 'super_admin', 'director', 'owner'].includes(normalizedRole || '')) return true;
 
     switch (action) {
       case 'view': return canViewModule(module);
