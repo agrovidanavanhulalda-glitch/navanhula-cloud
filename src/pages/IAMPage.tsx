@@ -478,6 +478,7 @@ const IAMPage = () => {
                       <Label>Máximo de usos</Label>
                       <Input type="number" value={inviteForm.max_uses} onChange={e => setInviteForm(f => ({ ...f, max_uses: e.target.value }))} />
                     </div>
+                  </div>
                   {branches.length > 0 && (
                     <div>
                       <Label>Filial (opcional)</Label>
