@@ -459,14 +459,9 @@ const IAMPage = () => {
               <DialogContent>
                 <DialogHeader><DialogTitle>Gerar Link de Convite</DialogTitle></DialogHeader>
                 <div className="space-y-3">
-                  <div>
-                    <Label>Email do Colaborador *</Label>
-                    <Input 
-                      placeholder="email@exemplo.com" 
-                      value={inviteForm.email} 
-                      onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} 
-                    />
-                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Este link permitirá que qualquer pessoa se junte à sua empresa com o cargo selecionado.
+                  </p>
                   <div>
                     <Label>Cargo</Label>
                     <Select value={inviteForm.role} onValueChange={v => setInviteForm(f => ({ ...f, role: v }))}>
