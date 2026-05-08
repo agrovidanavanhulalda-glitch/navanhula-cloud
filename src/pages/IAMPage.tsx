@@ -55,7 +55,7 @@ const IAMPage = () => {
   const [showInvite, setShowInvite] = useState(false);
   const [showBranch, setShowBranch] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ role: 'seller', max_uses: '1', expires_days: '7', branch_id: '' });
+  const [inviteForm, setInviteForm] = useState({ email: '', role: 'seller', max_uses: '1', expires_days: '7', branch_id: '' });
   const [branchForm, setBranchForm] = useState({ name: '', address: '', phone: '', email: '' });
   const [userForm, setUserForm] = useState({ name: '', email: '', password: '', branch_id: '' });
   const [showPassword, setShowPassword] = useState(false);
