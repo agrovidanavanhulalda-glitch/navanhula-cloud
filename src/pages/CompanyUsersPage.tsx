@@ -257,7 +257,7 @@ const CompanyUsersPage = () => {
               <TableBody>
                 {invitations.map((inv: any) => (
                   <TableRow key={inv.id}>
-                    <TableCell>{inv.email}</TableCell>
+                    <TableCell className="font-mono text-xs">{inv.token.substring(0, 8)}...</TableCell>
                     <TableCell>{inv.role}</TableCell>
                     <TableCell>{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '-'}</TableCell>
                     <TableCell className="text-right">
