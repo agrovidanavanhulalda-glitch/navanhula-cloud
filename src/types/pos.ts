@@ -1,6 +1,6 @@
 // NAVANHULA CLOUD Types - Multi-tenant
 
-export type AppRole = 'admin' | 'manager' | 'seller' | 'ceo' | 'reseller' | 'director' | 'hr' | 'cashier' | 'super_admin';
+export type AppRole = 'admin' | 'manager' | 'seller' | 'ceo' | 'reseller' | 'director' | 'hr' | 'cashier' | 'super_admin' | 'owner';
 export type PaymentMethod = 'cash' | 'mpesa' | 'emola' | 'card';
 export type SaleStatus = 'pending' | 'completed' | 'cancelled' | 'refunded';
 export type CashRegisterStatus = 'open' | 'closed';

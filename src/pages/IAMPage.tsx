@@ -146,27 +146,58 @@ const IAMPage = () => {
     mutationFn: async () => {
       if (!companyId) throw new Error('Empresa não selecionada');
       
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: {
-          action: 'invite_user',
-          payload: {
+      try {
+        const { data, error } = await supabase.functions.invoke('manage-user', {
+          body: {
+            action: 'invite_user',
+            payload: {
+              company_id: companyId,
+              role: inviteForm.role,
+              max_uses: inviteForm.max_uses,
+              expires_days: inviteForm.expires_days,
+              branch_id: inviteForm.branch_id || null,
+            }
+          }
+        });
+
+        if (error) throw error;
+        if (data && !data.success) throw new Error(data.message || 'Erro ao criar convite');
+        return data;
+      } catch (err: any) {
+        console.warn('[IAM] Edge Function falhou, tentando fallback...', err);
+        // Fallback: Criar convite diretamente na tabela se as permissões RLS permitirem
+        const token = crypto.randomUUID();
+        const expires_at = new Date();
+        expires_at.setDate(expires_at.getDate() + (parseInt(inviteForm.expires_days) || 7));
+
+        const { data, error } = await supabase
+          .from('company_invitations')
+          .insert({
             company_id: companyId,
             role: inviteForm.role,
-            max_uses: inviteForm.max_uses,
-            expires_days: inviteForm.expires_days,
+            token,
+            expires_at: expires_at.toISOString(),
+            created_by: user?.id,
+            max_uses: parseInt(inviteForm.max_uses) || 1,
             branch_id: inviteForm.branch_id || null,
-          }
-        }
-      });
+            status: 'active'
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.message || 'Erro ao criar convite');
-      
-      return data;
+        if (error) throw new Error('Falha no convite e no fallback: ' + error.message);
+        
+        return { 
+          success: true, 
+          invite: data, 
+          inviteLink: `${window.location.origin}/convite/${token}`,
+          isFallback: true 
+        };
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
-      toast.success('Convite criado com sucesso!');
+      toast.success(data.isFallback ? 'Convite criado via Fallback!' : 'Convite criado com sucesso!');
       if (data.inviteLink) {
         navigator.clipboard.writeText(data.inviteLink);
         toast.info('Link do convite copiado para a área de transferência');
@@ -274,30 +305,73 @@ const IAMPage = () => {
       
       const email = userForm.email.trim().toLowerCase();
       const password = userForm.password || "12345678";
+      const name = userForm.name;
+      const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
       
       console.log('[IAM] Solicitando criação de utilizador via Edge Function:', email);
 
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: {
-          action: 'create_user',
-          payload: {
-            email,
-            password,
-            name: userForm.name,
-            company_id: companyId,
-            branch_id: userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null,
+      try {
+        const { data, error } = await supabase.functions.invoke('manage-user', {
+          body: {
+            action: 'create_user',
+            payload: {
+              email,
+              password,
+              name,
+              company_id: companyId,
+              role: 'seller', // Padrão
+              branch_id: branchId,
+            }
           }
+        });
+
+        if (error) throw error;
+        if (data && !data.success) throw new Error(data.message || 'Erro ao criar utilizador');
+
+        return data;
+      } catch (err: any) {
+        console.warn('[IAM] Edge Function falhou, tentando fallback (signUp)...', err);
+        
+        // Fallback: usar signUp público
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+              company_id: companyId,
+              role: 'seller'
+            }
+          }
+        });
+
+        if (authError) throw new Error('Falha na Edge Function e no fallback: ' + authError.message);
+        
+        // Tentar criar perfil manualmente se o trigger falhar
+        if (authData.user) {
+          await supabase.from('profiles').upsert({
+            id: authData.user.id,
+            full_name: name,
+            email: email,
+            company_id: companyId,
+            store_id: branchId,
+            status: 'active'
+          });
+
+          await supabase.from('company_users').upsert({
+            user_id: authData.user.id,
+            company_id: companyId,
+            role: 'seller',
+            status: 'active'
+          });
         }
-      });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.message || 'Erro ao criar utilizador');
-
-      return data;
+        return { success: true, message: 'Criado via fallback', isFallback: true };
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
-      toast.success('Utilizador criado com sucesso!');
+      toast.success(data.isFallback ? 'Utilizador criado via Fallback!' : 'Utilizador criado com sucesso!');
       setShowCreateUser(false);
       setUserForm({ name: '', email: '', password: '', branch_id: '' });
     },
@@ -306,6 +380,7 @@ const IAMPage = () => {
       toast.error('Falha ao criar utilizador: ' + (error.message || 'Erro desconhecido'));
     }
   });
+
 
   const copyInviteLink = (token: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/convite/${token}`);

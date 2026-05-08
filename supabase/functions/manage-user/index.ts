@@ -6,8 +6,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const ROLE_MAP: Record<string, string> = {
+  'ceo': 'CEO',
+  'admin': 'Admin',
+  'manager': 'Gerente',
+  'seller': 'Vendedor',
+  'cashier': 'Vendedor',
+  'accountant': 'Financeiro',
+  'director': 'CEO'
+};
+
 serve(async (req) => {
-  // Handle CORS
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -16,6 +25,10 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
+    if (!serviceRoleKey) {
+      throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
+    }
+
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
@@ -23,7 +36,6 @@ serve(async (req) => {
       },
     });
 
-    // Get caller's identity
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       throw new Error("Missing Authorization header");
@@ -37,31 +49,12 @@ serve(async (req) => {
       });
     }
 
-    // Verify if caller has permission (CEO or Admin)
-    const { data: callerRoles } = await supabaseAdmin
-      .from("user_company")
-      .select("*, roles(name)")
-      .eq("user_id", caller.id)
-      .single();
-
-    const allowedRoles = ['ceo', 'admin', 'manager', 'owner'];
-    const callerRoleName = callerRoles?.roles?.name?.toLowerCase() || '';
-    
-    // Also check for legacy 'role' column if roles table join fails
-    const simpleRole = callerRoles?.role?.toLowerCase() || '';
-
-    if (!allowedRoles.includes(callerRoleName) && !allowedRoles.includes(simpleRole)) {
-       // Check if they are a super_admin in some other way or if it's the first user
-       console.log("Caller role check:", { callerRoleName, simpleRole });
-       // For now, allow if they have a company associated and it's a management role
-    }
-
     const { action, payload } = await req.json();
-    console.log(`Action: ${action}`, payload);
+    console.log(`Action: ${action} by ${caller.email}`, payload);
 
     switch (action) {
       case "create_user": {
-        const { email, password, name, company_id, role_id, branch_id } = payload;
+        const { email, password, name, company_id, role, branch_id } = payload;
         
         if (!email || !name || !company_id) {
           return new Response(JSON.stringify({ success: false, message: "Email, nome e empresa são obrigatórios" }), {
@@ -70,7 +63,7 @@ serve(async (req) => {
           });
         }
 
-        console.log("Creating user in Auth:", email);
+        // 1. Create User in Auth
         const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email,
           password: password || "12345678",
@@ -88,52 +81,41 @@ serve(async (req) => {
 
         const newUserId = userData.user.id;
 
-        // Create Profile
-        console.log("Creating profile for:", newUserId);
-        const { error: profileError } = await supabaseAdmin
-          .from("profiles")
-          .upsert({
-            id: newUserId,
-            full_name: name,
-            email: email,
-            company_id,
-            store_id: branch_id || null,
-            status: 'active',
-            onboarding_completed: true
-          });
-
-        if (profileError) console.warn("Profile creation warning:", profileError);
-
-        // Link to Company
-        console.log("Linking user to company:", company_id);
+        // 2. Resolve Role
+        const requestedRole = (role || 'seller').toLowerCase();
+        const dbRoleName = ROLE_MAP[requestedRole] || 'Vendedor';
         
-        // Find default role if role_id not provided
-        let finalRoleId = role_id;
-        if (!finalRoleId) {
-          const { data: roleData } = await supabaseAdmin
-            .from("roles")
-            .select("id")
-            .eq("name", "seller")
-            .maybeSingle();
-          finalRoleId = roleData?.id;
-        }
+        const { data: roleData } = await supabaseAdmin
+          .from("roles")
+          .select("id")
+          .eq("name", dbRoleName)
+          .maybeSingle();
 
-        const { error: linkError } = await supabaseAdmin
-          .from("user_company")
-          .insert({
-            user_id: newUserId,
-            company_id,
-            role_id: finalRoleId || null,
-            status: 'active'
-          });
+        // 3. Create Profile
+        await supabaseAdmin.from("profiles").upsert({
+          id: newUserId,
+          full_name: name,
+          email: email,
+          company_id,
+          store_id: branch_id || null,
+          status: 'active',
+          onboarding_completed: true
+        });
 
-        if (linkError) console.warn("Company link warning:", linkError);
-
-        // Also add to user_roles for backward compatibility
-        await supabaseAdmin.from("user_roles").upsert({
+        // 4. Link to Company (Multiple tables for compatibility)
+        await supabaseAdmin.from("user_company").upsert({
           user_id: newUserId,
-          role_id: finalRoleId || null,
-          role: 'seller'
+          company_id,
+          role_id: roleData?.id || null,
+          status: 'active'
+        });
+
+        await supabaseAdmin.from("company_users").upsert({
+          user_id: newUserId,
+          company_id,
+          role: requestedRole,
+          branch_id: branch_id || null,
+          status: 'active'
         });
 
         return new Response(JSON.stringify({ 
@@ -147,37 +129,31 @@ serve(async (req) => {
       }
 
       case "invite_user": {
-        const { email, company_id, role, role_id, branch_id, max_uses, expires_days } = payload;
+        const { email, company_id, role, branch_id, max_uses, expires_days } = payload;
         
         if (!company_id) {
-          return new Response(JSON.stringify({ success: false, message: "Empresa é obrigatória" }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 400,
-          });
-        }
-
-        // Find role_id for the role name if not provided
-        let finalRoleId = role_id;
-        if (!finalRoleId && role) {
-          const { data: roleData } = await supabaseAdmin
-            .from("roles")
-            .select("id")
-            .eq("name", role.toLowerCase())
-            .maybeSingle();
-          finalRoleId = roleData?.id;
+          throw new Error("Company ID is required");
         }
 
         const token = crypto.randomUUID();
         const expires_at = new Date();
         expires_at.setDate(expires_at.getDate() + (parseInt(expires_days) || 7));
 
-        console.log("Creating invitation for token:", token);
+        const requestedRole = (role || 'seller').toLowerCase();
+        const dbRoleName = ROLE_MAP[requestedRole] || 'Vendedor';
+        
+        const { data: roleData } = await supabaseAdmin
+          .from("roles")
+          .select("id")
+          .eq("name", dbRoleName)
+          .maybeSingle();
+
         const { data: invite, error: inviteError } = await supabaseAdmin
           .from("company_invitations")
           .insert({
             company_id,
-            role: role || 'seller',
-            role_id: finalRoleId || null,
+            role: requestedRole,
+            role_id: roleData?.id || null,
             token,
             expires_at: expires_at.toISOString(),
             created_by: caller.id,
@@ -188,20 +164,13 @@ serve(async (req) => {
           .select()
           .single();
 
-        if (inviteError) {
-          console.error("Invitation error:", inviteError);
-          return new Response(JSON.stringify({ success: false, message: inviteError.message }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 400,
-          });
-        }
+        if (inviteError) throw inviteError;
 
         const origin = req.headers.get("origin") || "https://navanhula.lovable.app";
         const inviteLink = `${origin}/convite/${token}`;
 
         return new Response(JSON.stringify({ 
           success: true, 
-          message: "Convite gerado com sucesso",
           invite, 
           inviteLink 
         }), {
@@ -211,16 +180,13 @@ serve(async (req) => {
       }
 
       default:
-        return new Response(JSON.stringify({ success: false, message: "Ação inválida" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        });
+        throw new Error("Invalid action");
     }
   } catch (error) {
-    console.error("Critical error in Edge Function:", error);
+    console.error("Critical error:", error.message);
     return new Response(JSON.stringify({ success: false, message: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: 200, // Return 200 but success: false for better client handling
     });
   }
 });

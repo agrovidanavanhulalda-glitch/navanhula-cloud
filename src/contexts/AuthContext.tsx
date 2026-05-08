@@ -122,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ]);
 
       const profile = profileResult.data;
-      const currentRole = (companyUserResult.data?.roles as any)?.name?.toLowerCase() as AppRole || 'admin';
+      const currentRole = ((companyUserResult.data?.roles as any)?.name?.toLowerCase() || 'admin') as AppRole;
       const needsCompany = !profile?.company_id || !profile?.onboarding_completed;
 
       // Se já tem empresa, não tenta fazer onboarding automático
@@ -175,7 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ]);
 
       const profileData = profileResult.data;
-      const userRole = (companyUserResult.data?.roles as any)?.name?.toLowerCase() as AppRole || 'admin';
+      const userRole = ((companyUserResult.data?.roles as any)?.name?.toLowerCase() || 'admin') as AppRole;
 
       if (profileData) {
         setUser(profileData as Profile);
