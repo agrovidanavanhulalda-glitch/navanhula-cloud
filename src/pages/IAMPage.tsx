@@ -146,62 +146,49 @@ const IAMPage = () => {
     mutationFn: async () => {
       if (!companyId) throw new Error('Empresa não selecionada');
       
-      try {
-        const { data, error } = await supabase.functions.invoke('manage-user', {
-          body: {
-            action: 'invite_user',
-            payload: {
-              company_id: companyId,
-              role: inviteForm.role,
-              max_uses: inviteForm.max_uses,
-              expires_days: inviteForm.expires_days,
-              branch_id: inviteForm.branch_id || null,
-            }
-          }
-        });
+      const email = inviteForm.email?.trim().toLowerCase();
+      if (!email) throw new Error('Email é obrigatório');
 
-        if (error) throw error;
-        if (data && !data.success) throw new Error(data.message || 'Erro ao criar convite');
-        return data;
-      } catch (err: any) {
-        console.warn('[IAM] Edge Function falhou, tentando fallback...', err);
-        // Fallback: Criar convite diretamente na tabela se as permissões RLS permitirem
-        const token = crypto.randomUUID();
-        const expires_at = new Date();
-        expires_at.setDate(expires_at.getDate() + (parseInt(inviteForm.expires_days) || 7));
-
-        const { data, error } = await supabase
-          .from('company_invitations')
-          .insert({
+      // 1. Criar utilizador no Auth (password aleatória já que é convite)
+      const tempPassword = Math.random().toString(36).slice(-10);
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password: tempPassword,
+        options: {
+          data: {
+            full_name: 'Convidado',
             company_id: companyId,
-            role: inviteForm.role,
-            token,
-            expires_at: expires_at.toISOString(),
-            created_by: user?.id,
-            max_uses: parseInt(inviteForm.max_uses) || 1,
-            branch_id: inviteForm.branch_id || null,
-            status: 'active'
-          })
-          .select()
-          .single();
+            role: inviteForm.role
+          }
+        }
+      });
 
-        if (error) throw new Error('Falha no convite e no fallback: ' + error.message);
-        
-        return { 
-          success: true, 
-          invite: data, 
-          inviteLink: `${window.location.origin}/convite/${token}`,
-          isFallback: true 
-        };
-      }
+      if (authError) throw authError;
+
+      // 2. Guardar na tabela de convites
+      const { data, error } = await supabase
+        .from('invitations')
+        .insert({
+          company_id: companyId,
+          role: inviteForm.role,
+          email: email,
+          status: 'pending',
+          created_by: user?.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      return { 
+        success: true, 
+        invite: data, 
+        inviteLink: `${window.location.origin}/login`,
+      };
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
-      toast.success(data.isFallback ? 'Convite criado via Fallback!' : 'Convite criado com sucesso!');
-      if (data.inviteLink) {
-        navigator.clipboard.writeText(data.inviteLink);
-        toast.info('Link do convite copiado para a área de transferência');
-      }
+      toast.success('Convite enviado! O utilizador foi criado e pode fazer login.');
       setShowInvite(false);
     },
     onError: (error: any) => {
