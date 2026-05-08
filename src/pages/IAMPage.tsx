@@ -469,6 +469,15 @@ const IAMPage = () => {
                       <SelectContent>{ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Expira em (dias)</Label>
+                      <Input type="number" value={inviteForm.expires_days} onChange={e => setInviteForm(f => ({ ...f, expires_days: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>Máximo de usos</Label>
+                      <Input type="number" value={inviteForm.max_uses} onChange={e => setInviteForm(f => ({ ...f, max_uses: e.target.value }))} />
+                    </div>
                   {branches.length > 0 && (
                     <div>
                       <Label>Filial (opcional)</Label>
