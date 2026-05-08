@@ -149,46 +149,34 @@ const IAMPage = () => {
       const email = inviteForm.email?.trim().toLowerCase();
       if (!email) throw new Error('Email é obrigatório');
 
-      // 1. Criar utilizador no Auth (password aleatória já que é convite)
-      const tempPassword = Math.random().toString(36).slice(-10);
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password: tempPassword,
-        options: {
-          data: {
-            full_name: 'Convidado',
+      console.log('[IAM] Enviando convite via Edge Function:', email);
+
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: {
+          action: 'invite_user',
+          payload: {
+            email,
             company_id: companyId,
-            role: inviteForm.role
+            role: inviteForm.role,
+            max_uses: inviteForm.max_uses,
+            expires_days: inviteForm.expires_days,
+            branch_id: inviteForm.branch_id
           }
         }
       });
 
-      if (authError) throw authError;
-
-      // 2. Guardar na tabela de convites
-      const { data, error } = await supabase
-        .from('invitations')
-        .insert({
-          company_id: companyId,
-          role: inviteForm.role,
-          email: email,
-          status: 'pending',
-          created_by: user?.id,
-        })
-        .select()
-        .single();
-
       if (error) throw error;
+      if (!data?.success) throw new Error(data?.message || 'Erro ao criar convite');
       
-      return { 
-        success: true, 
-        invite: data, 
-        inviteLink: `${window.location.origin}/login`,
-      };
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
-      toast.success('Convite enviado! O utilizador foi criado e pode fazer login.');
+      toast.success('Convite gerado com sucesso!');
+      if (data.inviteLink) {
+        navigator.clipboard.writeText(data.inviteLink);
+        toast.info('Link de convite copiado para a área de transferência');
+      }
       setShowInvite(false);
     },
     onError: (error: any) => {
@@ -295,53 +283,30 @@ const IAMPage = () => {
       const name = userForm.name;
       const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
       
-      console.log('[IAM] Criando utilizador via Auth API:', email);
+      console.log('[IAM] Criando utilizador via Edge Function:', email);
 
-      // 1. Criar utilizador no Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: {
+          action: 'create_user',
+          payload: {
+            email,
+            password,
+            name,
             company_id: companyId,
-            role: 'seller'
+            role: 'seller',
+            branch_id: branchId
           }
         }
       });
 
-      if (authError) throw authError;
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.message || 'Erro ao criar utilizador');
 
-      if (authData.user) {
-        // 2. Inserir perfil
-        const { error: profileError } = await supabase.from('profiles').upsert({
-          id: authData.user.id,
-          full_name: name,
-          email: email,
-          company_id: companyId,
-          branch_id: branchId,
-          status: 'active'
-        });
-
-        if (profileError) throw profileError;
-
-        // 3. Inserir na tabela de utilizadores da empresa
-        const { error: companyUserError } = await supabase.from('company_users').upsert({
-          user_id: authData.user.id,
-          company_id: companyId,
-          role: 'seller',
-          status: 'active',
-          branch_id: branchId
-        });
-
-        if (companyUserError) throw companyUserError;
-      }
-
-      return { success: true };
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
-      toast.success('Utilizador criado com sucesso! Informe o utilizador para fazer login com as credenciais fornecidas.');
+      toast.success('Utilizador criado com sucesso!');
       setShowCreateUser(false);
       setUserForm({ name: '', email: '', password: '', branch_id: '' });
     },
