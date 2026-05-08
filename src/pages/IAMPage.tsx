@@ -618,17 +618,18 @@ const IAMPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Email</TableHead>
+                    <TableHead>Token / Link</TableHead>
                     <TableHead>Cargo</TableHead>
                     <TableHead>Filial</TableHead>
                     <TableHead>Expira</TableHead>
+                    <TableHead>Usos</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {invitations.length === 0 ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum convite</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum convite</TableCell></TableRow>
                   ) : invitations.map((inv: any) => (
                     <TableRow key={inv.id}>
                       <TableCell className="font-medium">{inv.email}</TableCell>
