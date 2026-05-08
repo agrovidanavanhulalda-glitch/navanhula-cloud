@@ -2823,6 +2823,50 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          email: string
+          expires_at: string | null
+          id: string
+          role: string
+          status: string
+          token: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          role: string
+          status?: string
+          token?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          role?: string
+          status?: string
+          token?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           company_id: string | null

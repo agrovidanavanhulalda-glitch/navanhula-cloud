@@ -55,7 +55,7 @@ const IAMPage = () => {
   const [showInvite, setShowInvite] = useState(false);
   const [showBranch, setShowBranch] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ role: 'seller', max_uses: '1', expires_days: '7', branch_id: '' });
+  const [inviteForm, setInviteForm] = useState({ email: '', role: 'seller', max_uses: '1', expires_days: '7', branch_id: '' });
   const [branchForm, setBranchForm] = useState({ name: '', address: '', phone: '', email: '' });
   const [userForm, setUserForm] = useState({ name: '', email: '', password: '', branch_id: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -95,7 +95,7 @@ const IAMPage = () => {
     queryKey: ['iam-invitations', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('company_invitations')
+        .from('invitations')
         .select('*')
         .eq('company_id', companyId!)
         .order('created_at', { ascending: false });
@@ -146,62 +146,49 @@ const IAMPage = () => {
     mutationFn: async () => {
       if (!companyId) throw new Error('Empresa não selecionada');
       
-      try {
-        const { data, error } = await supabase.functions.invoke('manage-user', {
-          body: {
-            action: 'invite_user',
-            payload: {
-              company_id: companyId,
-              role: inviteForm.role,
-              max_uses: inviteForm.max_uses,
-              expires_days: inviteForm.expires_days,
-              branch_id: inviteForm.branch_id || null,
-            }
-          }
-        });
+      const email = inviteForm.email?.trim().toLowerCase();
+      if (!email) throw new Error('Email é obrigatório');
 
-        if (error) throw error;
-        if (data && !data.success) throw new Error(data.message || 'Erro ao criar convite');
-        return data;
-      } catch (err: any) {
-        console.warn('[IAM] Edge Function falhou, tentando fallback...', err);
-        // Fallback: Criar convite diretamente na tabela se as permissões RLS permitirem
-        const token = crypto.randomUUID();
-        const expires_at = new Date();
-        expires_at.setDate(expires_at.getDate() + (parseInt(inviteForm.expires_days) || 7));
-
-        const { data, error } = await supabase
-          .from('company_invitations')
-          .insert({
+      // 1. Criar utilizador no Auth (password aleatória já que é convite)
+      const tempPassword = Math.random().toString(36).slice(-10);
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password: tempPassword,
+        options: {
+          data: {
+            full_name: 'Convidado',
             company_id: companyId,
-            role: inviteForm.role,
-            token,
-            expires_at: expires_at.toISOString(),
-            created_by: user?.id,
-            max_uses: parseInt(inviteForm.max_uses) || 1,
-            branch_id: inviteForm.branch_id || null,
-            status: 'active'
-          })
-          .select()
-          .single();
+            role: inviteForm.role
+          }
+        }
+      });
 
-        if (error) throw new Error('Falha no convite e no fallback: ' + error.message);
-        
-        return { 
-          success: true, 
-          invite: data, 
-          inviteLink: `${window.location.origin}/convite/${token}`,
-          isFallback: true 
-        };
-      }
+      if (authError) throw authError;
+
+      // 2. Guardar na tabela de convites
+      const { data, error } = await supabase
+        .from('invitations')
+        .insert({
+          company_id: companyId,
+          role: inviteForm.role,
+          email: email,
+          status: 'pending',
+          created_by: user?.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      return { 
+        success: true, 
+        invite: data, 
+        inviteLink: `${window.location.origin}/login`,
+      };
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
-      toast.success(data.isFallback ? 'Convite criado via Fallback!' : 'Convite criado com sucesso!');
-      if (data.inviteLink) {
-        navigator.clipboard.writeText(data.inviteLink);
-        toast.info('Link do convite copiado para a área de transferência');
-      }
+      toast.success('Convite enviado! O utilizador foi criado e pode fazer login.');
       setShowInvite(false);
     },
     onError: (error: any) => {
@@ -278,7 +265,7 @@ const IAMPage = () => {
 
   const revokeInvite = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('company_invitations').update({ status: 'revoked' }).eq('id', id);
+      const { error } = await supabase.from('invitations').update({ status: 'revoked' }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -308,70 +295,53 @@ const IAMPage = () => {
       const name = userForm.name;
       const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
       
-      console.log('[IAM] Solicitando criação de utilizador via Edge Function:', email);
+      console.log('[IAM] Criando utilizador via Auth API:', email);
 
-      try {
-        const { data, error } = await supabase.functions.invoke('manage-user', {
-          body: {
-            action: 'create_user',
-            payload: {
-              email,
-              password,
-              name,
-              company_id: companyId,
-              role: 'seller', // Padrão
-              branch_id: branchId,
-            }
-          }
-        });
-
-        if (error) throw error;
-        if (data && !data.success) throw new Error(data.message || 'Erro ao criar utilizador');
-
-        return data;
-      } catch (err: any) {
-        console.warn('[IAM] Edge Function falhou, tentando fallback (signUp)...', err);
-        
-        // Fallback: usar signUp público
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: name,
-              company_id: companyId,
-              role: 'seller'
-            }
-          }
-        });
-
-        if (authError) throw new Error('Falha na Edge Function e no fallback: ' + authError.message);
-        
-        // Tentar criar perfil manualmente se o trigger falhar
-        if (authData.user) {
-          await supabase.from('profiles').upsert({
-            id: authData.user.id,
+      // 1. Criar utilizador no Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
             full_name: name,
-            email: email,
             company_id: companyId,
-            store_id: branchId,
-            status: 'active'
-          });
-
-          await supabase.from('company_users').upsert({
-            user_id: authData.user.id,
-            company_id: companyId,
-            role: 'seller',
-            status: 'active'
-          });
+            role: 'seller'
+          }
         }
+      });
 
-        return { success: true, message: 'Criado via fallback', isFallback: true };
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // 2. Inserir perfil
+        const { error: profileError } = await supabase.from('profiles').upsert({
+          id: authData.user.id,
+          full_name: name,
+          email: email,
+          company_id: companyId,
+          branch_id: branchId,
+          status: 'active'
+        });
+
+        if (profileError) throw profileError;
+
+        // 3. Inserir na tabela de utilizadores da empresa
+        const { error: companyUserError } = await supabase.from('company_users').upsert({
+          user_id: authData.user.id,
+          company_id: companyId,
+          role: 'seller',
+          status: 'active',
+          branch_id: branchId
+        });
+
+        if (companyUserError) throw companyUserError;
       }
+
+      return { success: true };
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
-      toast.success(data.isFallback ? 'Utilizador criado via Fallback!' : 'Utilizador criado com sucesso!');
+      toast.success('Utilizador criado com sucesso! Informe o utilizador para fazer login com as credenciais fornecidas.');
       setShowCreateUser(false);
       setUserForm({ name: '', email: '', password: '', branch_id: '' });
     },
@@ -496,6 +466,14 @@ const IAMPage = () => {
                 <DialogHeader><DialogTitle>Gerar Link de Convite</DialogTitle></DialogHeader>
                 <div className="space-y-3">
                   <div>
+                    <Label>Email do Colaborador *</Label>
+                    <Input 
+                      placeholder="email@exemplo.com" 
+                      value={inviteForm.email} 
+                      onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} 
+                    />
+                  </div>
+                  <div>
                     <Label>Cargo</Label>
                     <Select value={inviteForm.role} onValueChange={v => setInviteForm(f => ({ ...f, role: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -514,8 +492,6 @@ const IAMPage = () => {
                       </Select>
                     </div>
                   )}
-                  <div><Label>Máximo de usos</Label><Input type="number" min="1" max="100" value={inviteForm.max_uses} onChange={e => setInviteForm(f => ({ ...f, max_uses: e.target.value }))} /></div>
-                  <div><Label>Expira em (dias)</Label><Input type="number" min="1" max="30" value={inviteForm.expires_days} onChange={e => setInviteForm(f => ({ ...f, expires_days: e.target.value }))} /></div>
                 </div>
                 <DialogFooter>
                   <Button onClick={() => createInvite.mutate()} disabled={createInvite.isPending}>
@@ -648,10 +624,9 @@ const IAMPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Link</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Cargo</TableHead>
                     <TableHead>Filial</TableHead>
-                    <TableHead>Usos</TableHead>
                     <TableHead>Expira</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -659,24 +634,20 @@ const IAMPage = () => {
                 </TableHeader>
                 <TableBody>
                   {invitations.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum convite</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum convite</TableCell></TableRow>
                   ) : invitations.map((inv: any) => (
                     <TableRow key={inv.id}>
-                      <TableCell className="font-mono text-xs max-w-[180px] truncate">{`/convite/${inv.token}`}</TableCell>
+                      <TableCell className="font-medium">{inv.email}</TableCell>
                       <TableCell><Badge variant="outline">{roleLabels[inv.role] || inv.role}</Badge></TableCell>
                       <TableCell className="text-sm">{branchName(inv.branch_id)}</TableCell>
-                      <TableCell>{inv.used_count}/{inv.max_uses}</TableCell>
-                      <TableCell className="text-sm">{new Date(inv.expires_at).toLocaleDateString('pt-MZ')}</TableCell>
+                      <TableCell className="text-sm">{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString('pt-MZ') : '-'}</TableCell>
                       <TableCell>
-                        <Badge variant={inv.status === 'active' ? 'default' : 'secondary'}>
-                          {inv.status === 'active' ? 'Ativo' : inv.status === 'revoked' ? 'Revogado' : 'Expirado'}
+                        <Badge variant={inv.status === 'active' || inv.status === 'pending' ? 'default' : 'secondary'}>
+                          {inv.status === 'active' || inv.status === 'pending' ? 'Pendente' : inv.status === 'revoked' ? 'Revogado' : 'Concluído'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right flex gap-1 justify-end">
-                        <Button variant="ghost" size="sm" onClick={() => copyInviteLink(inv.token)}>
-                          {copiedToken === inv.token ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                        </Button>
-                        {inv.status === 'active' && (
+                        {(inv.status === 'active' || inv.status === 'pending') && (
                           <Button variant="ghost" size="sm" onClick={() => revokeInvite.mutate(inv.id)}>
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
