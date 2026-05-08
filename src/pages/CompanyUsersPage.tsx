@@ -111,6 +111,7 @@ const CompanyUsersPage = () => {
       const email = createUserForm.email.trim().toLowerCase();
       const password = createUserForm.password;
       const name = createUserForm.full_name;
+      const roleName = roles.find(r => r.id === createUserForm.role_id)?.name || 'Vendedor';
       
       // 1. Criar utilizador no Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -133,27 +134,28 @@ const CompanyUsersPage = () => {
           full_name: name,
           email: email,
           company_id: companyId,
-          status: 'active'
+          status: 'active',
+          onboarding_completed: true
         });
 
-        if (profileError) throw profileError;
+        if (profileError) console.error('Erro perfil:', profileError);
 
-        // 3. Inserir na tabela de equipa
-        const { error: teamError } = await supabase.from('user_company').upsert({
+        // 3. Inserir na tabela de equipa (company_users)
+        const { error: teamError } = await supabase.from('company_users').upsert({
           user_id: authData.user.id,
           company_id: companyId,
-          role_id: createUserForm.role_id,
+          role: roleName,
           status: 'active'
         });
 
-        if (teamError) throw teamError;
+        if (teamError) console.error('Erro equipa:', teamError);
       }
 
       return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
-      toast.success('Utilizador criado com sucesso! Informe o utilizador para fazer login.');
+      toast.success('Utilizador criado. Ele deve verificar o email para activar a conta.');
       setShowCreateUser(false);
       setCreateUserForm({ full_name: '', email: '', role_id: '', password: '' });
     },
