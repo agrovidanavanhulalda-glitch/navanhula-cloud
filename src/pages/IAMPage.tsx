@@ -255,7 +255,7 @@ const IAMPage = () => {
 
   const revokeInvite = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('invitations').update({ status: 'revoked' }).eq('id', id);
+      const { error } = await supabase.from('company_invitations').update({ status: 'revoked' }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
