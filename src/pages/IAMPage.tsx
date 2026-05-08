@@ -285,30 +285,57 @@ const IAMPage = () => {
       const name = userForm.name;
       const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
       
-      console.log('[IAM] Criando utilizador via Edge Function:', email);
+      console.log('[IAM] Criando utilizador direto:', email);
 
-      const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: {
-          action: 'create_user',
-          payload: {
-            email,
-            password,
-            name,
-            company_id: companyId,
-            role: 'seller',
-            branch_id: branchId
+      // 1. Create user in Auth
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name
           }
         }
       });
 
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.message || 'Erro ao criar utilizador');
+      if (signUpError) throw signUpError;
+      if (!signUpData.user) throw new Error('Erro ao criar conta de utilizador');
 
-      return data;
+      const newUser = signUpData.user;
+
+      // 2. Create profile
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: newUser.id,
+        full_name: name,
+        email: email,
+        company_id: companyId,
+        status: 'active',
+        onboarding_completed: true,
+        branch_id: branchId
+      });
+
+      if (profileError) {
+        console.error('[IAM] Erro ao criar perfil:', profileError);
+      }
+
+      // 3. Link to company
+      const { error: linkError } = await supabase.from('company_users').insert({
+        user_id: newUser.id,
+        company_id: companyId,
+        role: 'seller', 
+        status: 'active',
+        branch_id: branchId
+      });
+
+      if (linkError) {
+        console.error('[IAM] Erro ao ligar utilizador à empresa:', linkError);
+      }
+
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
-      toast.success('Utilizador criado com sucesso!');
+      toast.success('Utilizador criado. Ele deve verificar o email para activar a conta.');
       setShowCreateUser(false);
       setUserForm({ name: '', email: '', password: '', branch_id: '' });
     },
