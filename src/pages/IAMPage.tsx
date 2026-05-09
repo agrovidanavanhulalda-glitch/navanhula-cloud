@@ -377,7 +377,7 @@ const IAMPage = () => {
                 </Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader><DialogTitle>Criar Novo Utilizador (Vendedor)</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>Criar Novo Utilizador</DialogTitle></DialogHeader>
                 <div className="space-y-3 pt-4">
                   <div>
                     <Label htmlFor="user-name">Nome Completo *</Label>
