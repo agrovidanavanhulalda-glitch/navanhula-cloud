@@ -57,9 +57,10 @@ const IAMPage = () => {
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'seller', max_uses: '1', expires_days: '7', branch_id: '' });
   const [branchForm, setBranchForm] = useState({ name: '', address: '', phone: '', email: '' });
-  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', branch_id: '' });
+  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', branch_id: '', role: 'seller' });
   const [showPassword, setShowPassword] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
   const [auditFilter, setAuditFilter] = useState<string>('all');
 
   // ── Queries ──
