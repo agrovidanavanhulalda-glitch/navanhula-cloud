@@ -409,6 +409,15 @@ const IAMPage = () => {
                     </div>
                     {!userForm.password && <p className="text-[10px] text-muted-foreground mt-1">Padrão se vazio: 12345678</p>}
                   </div>
+                  <div>
+                    <Label htmlFor="user-role">Cargo *</Label>
+                    <Select value={userForm.role} onValueChange={v => setUserForm(f => ({ ...f, role: v }))}>
+                      <SelectTrigger id="user-role"><SelectValue placeholder="Selecione um cargo" /></SelectTrigger>
+                      <SelectContent>
+                        {ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   {branches.length > 0 && (
                     <div>
                       <Label htmlFor="user-branch">Filial (opcional)</Label>
@@ -421,9 +430,6 @@ const IAMPage = () => {
                       </Select>
                     </div>
                   )}
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Nota: O utilizador será criado com o cargo de <strong>Vendedor</strong>.
-                  </p>
                 </div>
                 <DialogFooter className="mt-6">
                   <Button variant="outline" onClick={() => setShowCreateUser(false)}>Cancelar</Button>
