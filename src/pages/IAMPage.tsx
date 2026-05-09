@@ -284,9 +284,10 @@ const IAMPage = () => {
       const email = userForm.email.trim().toLowerCase();
       const password = userForm.password || "12345678";
       const name = userForm.name;
+      const role = userForm.role;
       const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
       
-      console.log('[IAM] Criando utilizador direto:', email);
+      console.log('[IAM] Criando utilizador direto:', email, role);
 
       // 1. Create user in Auth
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -317,28 +318,30 @@ const IAMPage = () => {
 
       if (profileError) {
         console.error('[IAM] Erro ao criar perfil:', profileError);
+        throw profileError;
       }
 
       // 3. Link to company
       const { error: linkError } = await supabase.from('company_users').insert({
         user_id: newUser.id,
         company_id: companyId,
-        role: 'seller', 
+        role: role, 
         status: 'active',
         branch_id: branchId
       });
 
       if (linkError) {
         console.error('[IAM] Erro ao ligar utilizador à empresa:', linkError);
+        throw linkError;
       }
 
       return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
-      toast.success('Utilizador criado. Ele deve verificar o email para activar a conta.');
+      toast.success('Utilizador criado. Ele deve verificar o e-mail para ativar a conta.');
       setShowCreateUser(false);
-      setUserForm({ name: '', email: '', password: '', branch_id: '' });
+      setUserForm({ name: '', email: '', password: '', branch_id: '', role: 'seller' });
     },
     onError: (error: any) => {
       console.error('[IAM] Erro ao criar utilizador:', error);
