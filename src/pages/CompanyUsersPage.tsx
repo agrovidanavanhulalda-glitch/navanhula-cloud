@@ -25,6 +25,7 @@ const CompanyUsersPage = () => {
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [createUserForm, setCreateUserForm] = useState({ full_name: '', email: '', role_id: '', password: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
 
   // Fetch Roles
   const { data: roles = [] } = useQuery({
