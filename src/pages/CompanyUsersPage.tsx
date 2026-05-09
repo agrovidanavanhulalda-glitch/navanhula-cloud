@@ -280,45 +280,84 @@ const CompanyUsersPage = () => {
         )}
 
         {/* Invite Dialog */}
-        <Dialog open={showInvite} onOpenChange={setShowInvite}>
-          <DialogContent>
+        <Dialog open={showInvite} onOpenChange={(open) => {
+          setShowInvite(open);
+          if (!open) {
+            setGeneratedInviteLink(null);
+            setInviteForm({ role_id: '', email: '' });
+          }
+        }}>
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Convidar para a Equipa</DialogTitle>
+              <DialogTitle>{generatedInviteLink ? 'Convite Gerado' : 'Convidar para a Equipa'}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Email do Colaborador</Label>
-                <Input 
-                  placeholder="email@exemplo.com" 
-                  value={inviteForm.email}
-                  onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })}
-                />
+            
+            {generatedInviteLink ? (
+              <div className="space-y-4 py-4">
+                <div className="flex flex-col items-center justify-center space-y-2 text-center">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <Check className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <p className="text-sm font-medium">Link de convite pronto!</p>
+                  <p className="text-xs text-muted-foreground">Partilhe este link com o colaborador para que ele se possa registar.</p>
+                </div>
+                
+                <div className="flex items-center gap-2 p-3 bg-muted rounded-md border">
+                  <code className="text-xs flex-1 break-all select-all">{generatedInviteLink}</code>
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="shrink-0"
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedInviteLink);
+                      toast.success('Link copiado!');
+                    }}
+                  >
+                    <Copy className="w-4 h-4 mr-2" /> Copiar
+                  </Button>
+                </div>
+                
+                <DialogFooter>
+                  <Button className="w-full" onClick={() => setShowInvite(false)}>Fechar</Button>
+                </DialogFooter>
               </div>
-              <div className="space-y-2">
-                <Label>Cargo</Label>
-                <Select 
-                  value={inviteForm.role_id}
-                  onValueChange={v => setInviteForm({ ...inviteForm, role_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o cargo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((r: any) => (
-                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            ) : (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Email do Colaborador</Label>
+                  <Input 
+                    placeholder="email@exemplo.com" 
+                    value={inviteForm.email}
+                    onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Cargo</Label>
+                  <Select 
+                    value={inviteForm.role_id}
+                    onValueChange={v => setInviteForm({ ...inviteForm, role_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((r: any) => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    className="w-full"
+                    onClick={() => inviteUser.mutate()} 
+                    disabled={inviteUser.isPending || !inviteForm.email || !inviteForm.role_id}
+                  >
+                    {inviteUser.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Gerar Convite'}
+                  </Button>
+                </DialogFooter>
               </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                onClick={() => inviteUser.mutate()} 
-                disabled={inviteUser.isPending || !inviteForm.email || !inviteForm.role_id}
-              >
-                {inviteUser.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Gerar Convite'}
-              </Button>
-            </DialogFooter>
+            )}
           </DialogContent>
         </Dialog>
 
