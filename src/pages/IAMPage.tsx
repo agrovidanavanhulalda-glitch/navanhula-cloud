@@ -57,9 +57,10 @@ const IAMPage = () => {
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'seller', max_uses: '1', expires_days: '7', branch_id: '' });
   const [branchForm, setBranchForm] = useState({ name: '', address: '', phone: '', email: '' });
-  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', branch_id: '' });
+  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', branch_id: '', role: 'seller' });
   const [showPassword, setShowPassword] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
   const [auditFilter, setAuditFilter] = useState<string>('all');
 
   // ── Queries ──
@@ -176,10 +177,9 @@ const IAMPage = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
       const inviteLink = `${window.location.origin}/convite/${data.token}`;
+      setGeneratedInviteLink(inviteLink);
       navigator.clipboard.writeText(inviteLink);
       toast.success('Convite gerado com sucesso!');
-      toast.info('Link de convite: ' + inviteLink);
-      setShowInvite(false);
     },
     onError: (error: any) => {
       console.error('[IAM] Erro convite:', error);
@@ -283,9 +283,10 @@ const IAMPage = () => {
       const email = userForm.email.trim().toLowerCase();
       const password = userForm.password || "12345678";
       const name = userForm.name;
+      const role = userForm.role;
       const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
       
-      console.log('[IAM] Criando utilizador direto:', email);
+      console.log('[IAM] Criando utilizador direto:', email, role);
 
       // 1. Create user in Auth
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -316,28 +317,30 @@ const IAMPage = () => {
 
       if (profileError) {
         console.error('[IAM] Erro ao criar perfil:', profileError);
+        throw profileError;
       }
 
       // 3. Link to company
       const { error: linkError } = await supabase.from('company_users').insert({
         user_id: newUser.id,
         company_id: companyId,
-        role: 'seller', 
+        role: role, 
         status: 'active',
         branch_id: branchId
       });
 
       if (linkError) {
         console.error('[IAM] Erro ao ligar utilizador à empresa:', linkError);
+        throw linkError;
       }
 
       return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
-      toast.success('Utilizador criado. Ele deve verificar o email para activar a conta.');
+      toast.success('Utilizador criado. Ele deve verificar o e-mail para ativar a conta.');
       setShowCreateUser(false);
-      setUserForm({ name: '', email: '', password: '', branch_id: '' });
+      setUserForm({ name: '', email: '', password: '', branch_id: '', role: 'seller' });
     },
     onError: (error: any) => {
       console.error('[IAM] Erro ao criar utilizador:', error);
@@ -374,7 +377,7 @@ const IAMPage = () => {
                 </Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader><DialogTitle>Criar Novo Utilizador (Vendedor)</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>Criar Novo Utilizador</DialogTitle></DialogHeader>
                 <div className="space-y-3 pt-4">
                   <div>
                     <Label htmlFor="user-name">Nome Completo *</Label>
@@ -406,6 +409,15 @@ const IAMPage = () => {
                     </div>
                     {!userForm.password && <p className="text-[10px] text-muted-foreground mt-1">Padrão se vazio: 12345678</p>}
                   </div>
+                  <div>
+                    <Label htmlFor="user-role">Cargo *</Label>
+                    <Select value={userForm.role} onValueChange={v => setUserForm(f => ({ ...f, role: v }))}>
+                      <SelectTrigger id="user-role"><SelectValue placeholder="Selecione um cargo" /></SelectTrigger>
+                      <SelectContent>
+                        {ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   {branches.length > 0 && (
                     <div>
                       <Label htmlFor="user-branch">Filial (opcional)</Label>
@@ -418,9 +430,6 @@ const IAMPage = () => {
                       </Select>
                     </div>
                   )}
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Nota: O utilizador será criado com o cargo de <strong>Vendedor</strong>.
-                  </p>
                 </div>
                 <DialogFooter className="mt-6">
                   <Button variant="outline" onClick={() => setShowCreateUser(false)}>Cancelar</Button>
@@ -452,51 +461,92 @@ const IAMPage = () => {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-            <Dialog open={showInvite} onOpenChange={setShowInvite}>
+            <Dialog open={showInvite} onOpenChange={(open) => {
+              setShowInvite(open);
+              if (!open) setGeneratedInviteLink(null);
+            }}>
               <DialogTrigger asChild>
                 <Button className="gap-2"><Link2 className="w-4 h-4" /> Gerar Convite</Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Gerar Link de Convite</DialogTitle></DialogHeader>
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Este link permitirá que qualquer pessoa se junte à sua empresa com o cargo selecionado.
-                  </p>
-                  <div>
-                    <Label>Cargo</Label>
-                    <Select value={inviteForm.role} onValueChange={v => setInviteForm(f => ({ ...f, role: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Expira em (dias)</Label>
-                      <Input type="number" value={inviteForm.expires_days} onChange={e => setInviteForm(f => ({ ...f, expires_days: e.target.value }))} />
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{generatedInviteLink ? 'Convite Gerado' : 'Gerar Link de Convite'}</DialogTitle>
+                </DialogHeader>
+                
+                {generatedInviteLink ? (
+                  <div className="space-y-4 py-4">
+                    <div className="flex flex-col items-center justify-center space-y-2 text-center">
+                      <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <Check className="w-6 h-6 text-emerald-600" />
+                      </div>
+                      <p className="text-sm font-medium">Link de convite pronto!</p>
+                      <p className="text-xs text-muted-foreground">Partilhe este link com o colaborador para que ele se possa registar.</p>
                     </div>
-                    <div>
-                      <Label>Máximo de usos</Label>
-                      <Input type="number" value={inviteForm.max_uses} onChange={e => setInviteForm(f => ({ ...f, max_uses: e.target.value }))} />
+                    
+                    <div className="flex items-center gap-2 p-3 bg-muted rounded-md border">
+                      <code className="text-xs flex-1 break-all select-all">{generatedInviteLink}</code>
+                      <Button 
+                        size="sm" 
+                        variant="secondary" 
+                        className="shrink-0"
+                        onClick={() => {
+                          navigator.clipboard.writeText(generatedInviteLink);
+                          toast.success('Link copiado!');
+                        }}
+                      >
+                        <Copy className="w-4 h-4 mr-2" /> Copiar
+                      </Button>
                     </div>
+                    
+                    <DialogFooter>
+                      <Button className="w-full" onClick={() => setShowInvite(false)}>Fechar</Button>
+                    </DialogFooter>
                   </div>
-                  {branches.length > 0 && (
-                    <div>
-                      <Label>Filial (opcional)</Label>
-                      <Select value={inviteForm.branch_id} onValueChange={v => setInviteForm(f => ({ ...f, branch_id: v }))}>
-                        <SelectTrigger><SelectValue placeholder="Sem filial" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">Sem filial</SelectItem>
-                          {branches.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-                        </SelectContent>
+                ) : (
+                  <div className="space-y-4 py-4">
+                    <p className="text-sm text-muted-foreground">
+                      Este link permitirá que qualquer pessoa se junte à sua empresa com o cargo selecionado.
+                    </p>
+                    <div className="space-y-2">
+                      <Label>Cargo</Label>
+                      <Select value={inviteForm.role} onValueChange={v => setInviteForm(f => ({ ...f, role: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>{ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button onClick={() => createInvite.mutate()} disabled={createInvite.isPending}>
-                    {createInvite.isPending ? 'Criando...' : 'Criar Link'}
-                  </Button>
-                </DialogFooter>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Expira em (dias)</Label>
+                        <Input type="number" value={inviteForm.expires_days} onChange={e => setInviteForm(f => ({ ...f, expires_days: e.target.value }))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Máximo de usos</Label>
+                        <Input type="number" value={inviteForm.max_uses} onChange={e => setInviteForm(f => ({ ...f, max_uses: e.target.value }))} />
+                      </div>
+                    </div>
+                    {branches.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Filial (opcional)</Label>
+                        <Select value={inviteForm.branch_id} onValueChange={v => setInviteForm(f => ({ ...f, branch_id: v }))}>
+                          <SelectTrigger><SelectValue placeholder="Sem filial" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Sem filial</SelectItem>
+                            {branches.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    <DialogFooter>
+                      <Button 
+                        className="w-full" 
+                        onClick={() => createInvite.mutate()} 
+                        disabled={createInvite.isPending}
+                      >
+                        {createInvite.isPending ? 'Gerando...' : 'Gerar Link de Convite'}
+                      </Button>
+                    </DialogFooter>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </div>
