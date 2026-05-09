@@ -177,10 +177,9 @@ const IAMPage = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
       const inviteLink = `${window.location.origin}/convite/${data.token}`;
+      setGeneratedInviteLink(inviteLink);
       navigator.clipboard.writeText(inviteLink);
       toast.success('Convite gerado com sucesso!');
-      toast.info('Link de convite: ' + inviteLink);
-      setShowInvite(false);
     },
     onError: (error: any) => {
       console.error('[IAM] Erro convite:', error);
