@@ -97,11 +97,9 @@ const CompanyUsersPage = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['team-invites'] });
       const inviteLink = `${window.location.origin}/convite/${data.token}`;
+      setGeneratedInviteLink(inviteLink);
       navigator.clipboard.writeText(inviteLink);
       toast.success('Convite gerado com sucesso!');
-      toast.info('Link copiado: ' + inviteLink);
-      setShowInvite(false);
-      setInviteForm({ role_id: '', email: '' });
     },
     onError: (e: any) => toast.error('Erro ao convidar: ' + e.message),
   });
