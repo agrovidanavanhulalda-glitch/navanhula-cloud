@@ -341,16 +341,29 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         productsRes,
         storesRes,
         cashRegistersRes,
-        salesRes,
       ] = await Promise.all([
         supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true).order('name'),
         supabase.from('stores').select('*').eq('company_id', targetCompanyId),
         supabase.from('cash_registers').select('*').order('opened_at', { ascending: false }).limit(50),
-        supabase.from('sales').select('*, sale_items(*)').eq('company_id', targetCompanyId).order('created_at', { ascending: false }).limit(100),
       ]);
 
       if (productsRes.error) throw productsRes.error;
       if (storesRes.error) throw storesRes.error;
+
+      const storeIds = (storesRes.data || []).map(s => s.id);
+      let salesResData = [];
+      
+      if (storeIds.length > 0) {
+        const { data, error: salesError } = await supabase
+          .from('sales')
+          .select('*, sale_items(*)')
+          .in('store_id', storeIds)
+          .order('created_at', { ascending: false })
+          .limit(100);
+        
+        if (salesError) throw salesError;
+        salesResData = data || [];
+      }
 
       // Fetch stock for these products in the current store
       let stockMap = new Map<string, number>();
