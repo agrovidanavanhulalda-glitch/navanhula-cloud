@@ -374,10 +374,6 @@ const LocalDashboardPage: React.FC = () => {
         <KPICard
           index={3} icon={AlertTriangle} label="Stock Crítico"
           value={lowStockProducts.length || 0}
-          trend="Produtos baixo/esgotado"
-          trendUp={lowStockProducts.length > 0 ? false : null}
-        />
-      </div>
           trend={lowStockProducts.length > 0 ? 'Produtos precisam reposição' : 'Tudo em ordem'}
           trendUp={lowStockProducts.length === 0 ? true : false}
         />
