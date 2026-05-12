@@ -150,7 +150,6 @@ const IAMPage = () => {
       const email = inviteForm.email?.trim().toLowerCase();
       if (!email) throw new Error('Email é obrigatório');
 
-      console.log('[IAM] Gerando convite direto:', email);
 
       const token = crypto.randomUUID();
       const expiresAt = new Date();
@@ -286,7 +285,6 @@ const IAMPage = () => {
       const role = userForm.role;
       const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
       
-      console.log('[IAM] Criando utilizador direto:', email, role);
 
       // 1. Create user in Auth
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({

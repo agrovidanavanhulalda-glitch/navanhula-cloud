@@ -357,22 +357,23 @@ const LocalDashboardPage: React.FC = () => {
       {/* 4 Core KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          index={0} icon={DollarSign} label="Dinheiro Ganho Hoje"
-          value={formatCurrency(totalRevenue)}
-          trend={`Mês: ${formatCurrency(monthRevenue)}`}
+          index={0} icon={DollarSign} label="Receita Hoje"
+          value={formatCurrency(totalRevenue || 0)}
+          trend={`Mês: ${formatCurrency(monthRevenue || 0)}`}
         />
         <KPICard
-          index={1} icon={ShoppingCart} label="Vendas Feitas"
-          value={todaySales.length}
-          trend={`${monthSales.length} este mês`}
+          index={1} icon={ShoppingCart} label="Vendas Efetuadas"
+          value={todaySales.length || 0}
+          trend={`${monthSales.length || 0} este mês`}
         />
         <KPICard
-          index={2} icon={Target} label="Gasto Médio por Cliente"
-          value={formatCurrency(avgTicket)}
+          index={2} icon={Users} label="Performance Equipa"
+          value={todaySales.length > 0 ? `${(totalRevenue / todaySales.length).toFixed(0)} MT/venda` : "0 MT/venda"}
+          trend="Média por vendedor"
         />
         <KPICard
-          index={3} icon={AlertTriangle} label="Produtos Acabando"
-          value={lowStockProducts.length}
+          index={3} icon={AlertTriangle} label="Stock Crítico"
+          value={lowStockProducts.length || 0}
           trend={lowStockProducts.length > 0 ? 'Produtos precisam reposição' : 'Tudo em ordem'}
           trendUp={lowStockProducts.length === 0 ? true : false}
         />

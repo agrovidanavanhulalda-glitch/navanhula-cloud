@@ -61,22 +61,32 @@ const LocalInventoryPage: React.FC = () => {
     loadProducts();
   }, [store]);
 
-  const loadProducts = async () => {
-    if (!store?.id) {
-      console.warn("LocalInventoryPage: store.id is missing", { store, user });
-      setLoading(false);
-      return;
+  const loadProducts = async (isManualRefresh = false) => {
+    if (!user?.id) return;
+    
+    // Maintain current products if it's a manual refresh to avoid flickering 0 counts
+    if (!isManualRefresh) {
+      setLoading(true);
     }
     
-    setLoading(true);
     try {
-      console.log("LocalInventoryPage: Loading products for store", store.id);
-      const { data, error } = await supabase
+      
+      const targetCompanyId = (user as any).company_id || (user as any).user_metadata?.company_id;
+      
+      if (!targetCompanyId) {
+        console.error("LocalInventoryPage: company_id is missing");
+        setLoading(false);
+        return;
+      }
+
+      let query = supabase
         .from('products')
-        .select('id, name, code, cost_price, sale_price, low_stock_threshold, is_active, product_stock(quantity)')
-        .eq('product_stock.store_id', store.id)
+        .select('id, name, code, cost_price, sale_price, low_stock_threshold, is_active, company_id, product_stock(quantity, store_id)')
+        .eq('company_id', targetCompanyId)
         .eq('is_active', true)
         .order('name');
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("LocalInventoryPage: Error loading products", error);
@@ -84,20 +94,23 @@ const LocalInventoryPage: React.FC = () => {
         throw error;
       }
 
-      console.log("LocalInventoryPage: Raw data received", data);
+      const mapped: InventoryProduct[] = (data || []).map((p: any) => {
+        const stockRecord = store?.id 
+          ? p.product_stock?.find((s: any) => s.store_id === store.id)
+          : p.product_stock?.[0];
 
-      const mapped: InventoryProduct[] = (data || []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        code: p.code,
-        cost_price: p.cost_price,
-        sale_price: p.sale_price,
-        low_stock_threshold: p.low_stock_threshold ?? 10,
-        is_active: p.is_active,
-        stock_qty: p.product_stock?.[0]?.quantity ?? 0,
-      }));
+        return {
+          id: p.id,
+          name: p.name,
+          code: p.code,
+          cost_price: p.cost_price,
+          sale_price: p.sale_price,
+          low_stock_threshold: p.low_stock_threshold ?? 10,
+          is_active: p.is_active,
+          stock_qty: stockRecord?.quantity ?? 0,
+        };
+      });
       
-      console.log("LocalInventoryPage: Mapped products", mapped);
       setProducts(mapped);
     } catch (err: any) {
       console.error("LocalInventoryPage: Unexpected error", err);
@@ -214,7 +227,7 @@ const LocalInventoryPage: React.FC = () => {
             {products.length} produtos | {lowStockCount} baixo | {outOfStockCount} esgotados
           </p>
         </div>
-        <Button variant="outline" onClick={loadProducts} size="sm">
+        <Button variant="outline" onClick={() => loadProducts(true)} size="sm">
           <RefreshCw className="w-4 h-4 mr-1" /> Atualizar
         </Button>
       </div>
@@ -342,10 +355,25 @@ const LocalInventoryPage: React.FC = () => {
           </table>
         </div>
 
-        {filteredProducts.length === 0 && (
+        {products.length === 0 && !loading && (
+          <div className="text-center py-12 px-4 space-y-4">
+            <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-20" />
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold">Adicione o seu primeiro produto</h3>
+              <p className="text-muted-foreground max-w-xs mx-auto">
+                Comece a gerir o seu stock adicionando produtos ao sistema.
+              </p>
+            </div>
+            <Button onClick={() => window.location.href = '/local/produtos'} className="gap-2">
+              <Plus className="w-4 h-4" /> Adicionar Produto
+            </Button>
+          </div>
+        )}
+
+        {products.length > 0 && filteredProducts.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhum produto encontrado</p>
+            <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>Nenhum produto corresponde à sua busca</p>
           </div>
         )}
       </Card>

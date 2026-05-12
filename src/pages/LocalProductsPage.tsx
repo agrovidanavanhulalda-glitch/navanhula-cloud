@@ -99,7 +99,6 @@ const LocalProductsPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    console.log('[ProductsPage] Iniciando salvamento do produto');
     
     if (!formData.name.trim()) {
       toast.error('Nome é obrigatório');
@@ -323,10 +322,25 @@ const LocalProductsPage: React.FC = () => {
               </table>
             </div>
 
-            {filteredProducts.length === 0 && (
+            {products.length === 0 && !loading && (
+              <div className="text-center py-16 px-4 space-y-4">
+                <Package className="w-20 h-20 mx-auto mb-4 text-muted-foreground opacity-20" />
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold">Adicione o seu primeiro produto</h3>
+                  <p className="text-muted-foreground max-w-sm mx-auto text-lg">
+                    O seu catálogo está vazio. Comece a adicionar produtos para vender agora mesmo.
+                  </p>
+                </div>
+                <Button size="lg" onClick={handleNewProduct} className="gap-2 px-8 py-6 text-lg">
+                  <Plus className="w-6 h-6" /> Adicionar Primeiro Produto
+                </Button>
+              </div>
+            )}
+
+            {products.length > 0 && filteredProducts.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
-                <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Nenhum produto encontrado</p>
+                <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Nenhum produto encontrado com este termo</p>
               </div>
             )}
           </Card>

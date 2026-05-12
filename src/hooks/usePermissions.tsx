@@ -1,16 +1,16 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { AppRole } from '@/types/pos';
 
 export function usePermissions() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, role, isAuthenticated } = useAuth();
 
   const { data: permissions = [] } = useQuery({
     queryKey: ['user-permissions', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       
-      // Get user's role and its permissions
       const { data, error } = await supabase
         .from('user_company')
         .select(`
@@ -34,25 +34,75 @@ export function usePermissions() {
   });
 
   const hasPermission = (permissionKey: string): boolean => {
-    // Master user/CEO has all permissions
-    if (user?.is_super_admin || (user as any)?.role === 'ceo' || (user as any)?.role === 'super_admin') return true;
+    // Master user/CEO/Admin has all permissions
+    if (
+      user?.is_super_admin || 
+      role === 'ceo' || 
+      role === 'admin' || 
+      role === 'owner' || 
+      role === 'super_admin'
+    ) return true;
+    
     return permissions.includes(permissionKey);
   };
 
-  // Compatibility helpers for existing code
   const canViewModule = (module: string) => {
-    if (module === 'stock') return hasPermission('manage_stock');
-    if (module === 'sales') return hasPermission('manage_sales');
-    if (module === 'finance') return hasPermission('manage_finance');
-    if (module === 'reports') return hasPermission('view_reports');
-    if (module === 'users') return hasPermission('create_user');
-    return true; // Default to true for unmapped modules during transition
+    // Standard role-based logic if permissions are not granularly set
+    if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
+    
+    if (module === 'users') {
+      return (role as string) === 'ceo' || (role as string) === 'admin'; 
+    }
+    
+    if (module === 'stock') {
+      return (role as string) === 'manager' || hasPermission('manage_stock');
+    }
+    
+    if (module === 'finance') {
+      return (role as string) === 'manager' || hasPermission('manage_finance');
+    }
+    
+    if (module === 'reports') {
+      return (role as string) === 'manager' || hasPermission('view_reports');
+    }
+
+    if (module === 'sales') {
+      return true; 
+    }
+
+    return true;
   };
 
-  const canCreateIn = (module: string) => canViewModule(module);
-  const canEditIn = (module: string) => canViewModule(module);
-  const canDeleteIn = (module: string) => hasPermission('delete_user');
-  const canApproveIn = (module: string) => hasPermission('manage_finance');
+  const canCreateIn = (module: string) => {
+    if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
+    if (module === 'users') return false; 
+    if (module === 'sales') return true; 
+    if (module === 'stock') return (role as string) === 'manager' || hasPermission('manage_stock');
+    return canViewModule(module);
+  };
 
-  return { permissions, hasPermission, canViewModule, canCreateIn, canEditIn, canDeleteIn, canApproveIn };
+  const canEditIn = (module: string) => canCreateIn(module);
+  const canDeleteIn = (module: string) => {
+    if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
+    return false;
+  };
+  const canApproveIn = (module: string) => {
+    if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
+    return false;
+  };
+
+  return { 
+    permissions, 
+    role,
+    hasPermission, 
+    canViewModule, 
+    canCreateIn, 
+    canEditIn, 
+    canDeleteIn, 
+    canApproveIn,
+    isCEO: (role as string) === 'ceo',
+    isAdmin: (role as string) === 'ceo' || (role as string) === 'admin' || (role as string) === 'owner',
+    isManager: (role as string) === 'manager',
+    isSeller: (role as string) === 'seller'
+  };
 }
