@@ -126,8 +126,9 @@ const CHART_COLORS = [
 ];
 
 const FinancialReportsPage: React.FC = () => {
-  const { role, store } = useAuth();
+  const { user, role, company } = useAuth();
   const isAdmin = role === 'admin' || role === 'manager' || (role as string) === 'ceo';
+  const companyId = (user as any)?.company_id || (user as any)?.user_metadata?.company_id || company?.id;
 
   const [wallets, setWallets] = useState<WalletData[]>([]);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
@@ -142,21 +143,38 @@ const FinancialReportsPage: React.FC = () => {
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (companyId) {
+      loadData();
+    }
+  }, [companyId]);
 
   const loadData = async () => {
+    if (!companyId) return;
     setLoading(true);
     try {
-      const [walletsRes, txRes, storesRes] = await Promise.all([
-        supabase.from('wallets').select('*'),
-        supabase.from('wallet_transactions').select('*').order('created_at', { ascending: false }).limit(500),
-        supabase.from('stores').select('id, name'),
+      // Get stores first to have IDs for filtering transactions if needed, 
+      // but wallet and wallet_transactions should have company_id or be linked to stores
+      const [walletsRes, storesRes] = await Promise.all([
+        supabase.from('wallets').select('*').eq('company_id', companyId),
+        supabase.from('stores').select('id, name').eq('company_id', companyId),
       ]);
 
-      if (walletsRes.data) setWallets(walletsRes.data);
-      if (txRes.data) setTransactions(txRes.data as WalletTransaction[]);
       if (storesRes.data) setStores(storesRes.data);
+      if (walletsRes.data) setWallets(walletsRes.data);
+
+      const storeIds = (storesRes.data || []).map(s => s.id);
+      
+      if (storeIds.length > 0) {
+        const { data: txData, error: txError } = await supabase
+          .from('wallet_transactions')
+          .select('*')
+          .in('store_id', storeIds)
+          .order('created_at', { ascending: false })
+          .limit(500);
+          
+        if (txError) throw txError;
+        setTransactions((txData as WalletTransaction[]) || []);
+      }
     } catch (err) {
       console.error('Error loading financial data:', err);
       toast.error('Erro ao carregar dados financeiros');
