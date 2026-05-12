@@ -235,11 +235,11 @@ const LocalReportsPage: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <BarChart3 className="w-6 h-6" />
-            Relatórios
+            <BarChart3 className="w-4 h-4" />
+            Performance
           </h1>
           <p className="text-muted-foreground">
-            Análise de vendas e desempenho
+            Dados filtrados por período
           </p>
         </div>
         <div className="flex gap-2">
