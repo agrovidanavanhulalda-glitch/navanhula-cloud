@@ -1,6 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { AppRole } from '@/types/pos';
 
 export function usePermissions() {
   const { user, role, isAuthenticated } = useAuth();
@@ -50,23 +51,23 @@ export function usePermissions() {
     if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
     
     if (module === 'users') {
-      return role === 'ceo' || role === 'admin'; // Managers and sellers can't manage users
+      return (role as string) === 'ceo' || (role as string) === 'admin'; 
     }
     
     if (module === 'stock') {
-      return role === 'manager' || hasPermission('manage_stock');
+      return (role as string) === 'manager' || hasPermission('manage_stock');
     }
     
     if (module === 'finance') {
-      return role === 'manager' || hasPermission('manage_finance');
+      return (role as string) === 'manager' || hasPermission('manage_finance');
     }
     
     if (module === 'reports') {
-      return role === 'manager' || hasPermission('view_reports');
+      return (role as string) === 'manager' || hasPermission('view_reports');
     }
 
     if (module === 'sales') {
-      return true; // Everyone can see sales (though sellers see only their own via RLS)
+      return true; 
     }
 
     return true;
@@ -74,16 +75,16 @@ export function usePermissions() {
 
   const canCreateIn = (module: string) => {
     if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
-    if (module === 'users') return false; // Only CEO/Admin can create users
-    if (module === 'sales') return true; // Everyone can sell
-    if (module === 'stock') return role === 'manager' || hasPermission('manage_stock');
+    if (module === 'users') return false; 
+    if (module === 'sales') return true; 
+    if (module === 'stock') return (role as string) === 'manager' || hasPermission('manage_stock');
     return canViewModule(module);
   };
 
   const canEditIn = (module: string) => canCreateIn(module);
   const canDeleteIn = (module: string) => {
     if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
-    return false; // Generally restrictive for others
+    return false;
   };
   const canApproveIn = (module: string) => {
     if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
@@ -99,9 +100,9 @@ export function usePermissions() {
     canEditIn, 
     canDeleteIn, 
     canApproveIn,
-    isCEO: role === 'ceo',
-    isAdmin: role === 'ceo' || role === 'admin' || role === 'owner',
-    isManager: role === 'manager',
-    isSeller: role === 'seller' || role === 'vendedor'
+    isCEO: (role as string) === 'ceo',
+    isAdmin: (role as string) === 'ceo' || (role as string) === 'admin' || (role as string) === 'owner',
+    isManager: (role as string) === 'manager',
+    isSeller: (role as string) === 'seller'
   };
 }
