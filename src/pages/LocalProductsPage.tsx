@@ -322,7 +322,7 @@ const LocalProductsPage: React.FC = () => {
               </table>
             </div>
 
-            {products.length === 0 && !loading && (
+            {products.length === 0 && !loading ? (
               <div className="text-center py-16 px-4 space-y-4">
                 <Package className="w-20 h-20 mx-auto mb-4 text-muted-foreground opacity-20" />
                 <div className="space-y-2">
@@ -335,9 +335,7 @@ const LocalProductsPage: React.FC = () => {
                   <Plus className="w-6 h-6" /> Adicionar Primeiro Produto
                 </Button>
               </div>
-            )}
-
-            {products.length > 0 && filteredProducts.length === 0 && (
+            ) : products.length > 0 && filteredProducts.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
                 <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Nenhum produto encontrado com este termo</p>
