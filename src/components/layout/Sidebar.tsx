@@ -179,17 +179,24 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
     role === 'cashier' ? 'Caixa' :
     isBackofficeAdmin ? 'Administrador' : 'Vendedor';
 
-  // Filter Dashboard sub-items by role
-  const filterDashboardItems = (items: SubItem[]): SubItem[] => {
-    const dashboardVisibility: Record<string, string[]> = {
+  // Filter sub-items by role
+  const filterSubItems = (items: SubItem[]): SubItem[] => {
+    const itemVisibility: Record<string, string[]> = {
       '/app/ceo': ['ceo', 'admin'],
       '/app/dashboard/diretor': ['director', 'ceo', 'admin'],
       '/app/dashboard/gestor': ['manager', 'director', 'ceo', 'admin'],
       '/app/dashboard/rh': ['hr', 'director', 'ceo', 'admin'],
       '/app/bi': ['ceo', 'admin', 'director'],
+      '/app/equipa': ['ceo', 'admin', 'owner'],
+      '/app/iam': ['ceo', 'admin', 'owner'],
+      '/app/fiscal': ['ceo', 'admin'],
+      '/app/auditoria': ['ceo', 'admin'],
+      '/app/api-keys': ['ceo', 'admin'],
+      '/app/configuracoes': ['ceo', 'admin', 'manager'],
+      '/app/lojas': ['ceo', 'admin'],
     };
     return items.filter(item => {
-      const allowed = dashboardVisibility[item.href];
+      const allowed = itemVisibility[item.href];
       if (!allowed) return true;
       return allowed.includes(role || '');
     });
