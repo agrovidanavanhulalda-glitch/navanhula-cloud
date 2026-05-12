@@ -84,7 +84,7 @@ const AuthLoginPage: React.FC = () => {
             NAVANHULA <span className="text-gradient-gold">CLOUD</span>
           </h1>
           <p className="mt-2 text-sm uppercase tracking-[0.3em] text-primary-foreground/60">
-            Gestão simples para o seu negócio
+            ENTERPRISE SYSTEM
           </p>
         </div>
 
