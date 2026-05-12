@@ -389,7 +389,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, full_name')
-          .in('id', crUserIds);
+          .in('id', crUserIds as string[]);
         (profilesData || []).forEach((p: any) => profileMap.set(p.id, p.full_name));
       }
       
