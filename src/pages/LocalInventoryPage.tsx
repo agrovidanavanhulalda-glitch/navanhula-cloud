@@ -64,21 +64,18 @@ const LocalInventoryPage: React.FC = () => {
   const loadProducts = async (isManualRefresh = false) => {
     if (!user?.id) return;
     
-    // We want to avoid resetting to zero if it's a manual refresh to show "Loading" state 
-    // without flickering the 0 counts in the header if possible, 
-    // but the request instructions say "don't reset data", so we'll just keep the current state if it's a refresh
+    // Maintain current products if it's a manual refresh to avoid flickering 0 counts
     if (!isManualRefresh) {
       setLoading(true);
     }
     
     try {
-      console.log(\"LocalInventoryPage: Loading products for company\", user.company_id);
+      console.log("LocalInventoryPage: Loading products for user", user.id);
       
-      // First get the company_id from user metadata or profile if not available in context
       const targetCompanyId = (user as any).company_id || (user as any).user_metadata?.company_id;
       
       if (!targetCompanyId) {
-        console.error(\"LocalInventoryPage: company_id is missing\");
+        console.error("LocalInventoryPage: company_id is missing");
         setLoading(false);
         return;
       }
@@ -93,13 +90,12 @@ const LocalInventoryPage: React.FC = () => {
       const { data, error } = await query;
 
       if (error) {
-        console.error(\"LocalInventoryPage: Error loading products\", error);
-        toast.error(\"Erro ao carregar produtos: \" + error.message);
+        console.error("LocalInventoryPage: Error loading products", error);
+        toast.error("Erro ao carregar produtos: " + error.message);
         throw error;
       }
 
       const mapped: InventoryProduct[] = (data || []).map((p: any) => {
-        // Filter stock by current store if store is selected, otherwise sum all or show first
         const stockRecord = store?.id 
           ? p.product_stock?.find((s: any) => s.store_id === store.id)
           : p.product_stock?.[0];
@@ -118,7 +114,7 @@ const LocalInventoryPage: React.FC = () => {
       
       setProducts(mapped);
     } catch (err: any) {
-      console.error(\"LocalInventoryPage: Unexpected error\", err);
+      console.error("LocalInventoryPage: Unexpected error", err);
     } finally {
       setLoading(false);
     }
