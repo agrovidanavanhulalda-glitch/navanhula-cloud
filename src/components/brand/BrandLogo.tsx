@@ -16,7 +16,7 @@ interface BrandLogoProps {
 
 /**
  * Official NAVANHULA CLOUD logo with graceful fallback.
- * If the image fails to load, renders a deep-blue rounded tile with a gold "N".
+ * If the image fails to load, renders a deep-blue rounded tile with 'NAVANHULA CLOUD' text.
  */
 const BrandLogo: React.FC<BrandLogoProps> = ({
   width = 48,
@@ -28,14 +28,12 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
 }) => {
   const [failed, setFailed] = useState(false);
   
-  // Use a timestamp to force cache-busting if needed, 
-  // though Vite usually handles this with hashes.
   const logoUrl = `${navanhulaLogo}?v=1.0.1`;
   
   const containerStyle = { 
     width: width, 
     height: height || 'auto',
-    minHeight: height ? undefined : width * 0.3 // Minimum height for horizontal layout
+    minHeight: height ? undefined : width * 0.3
   };
 
   return (
@@ -67,16 +65,16 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
         <div
           aria-label={alt}
           role="img"
-          className="rounded-lg flex items-center justify-center text-gold font-black shadow-inner"
+          className="rounded-lg flex flex-col items-center justify-center text-white font-black shadow-inner px-2 text-center leading-tight overflow-hidden"
           style={{
             width: '100%',
-            height: height || (width * 0.5), // Responsive fallback height
-            background: 'var(--gradient-premium, linear-gradient(135deg, #0f172a, #1e293b))',
-            fontSize: Math.round(width * 0.3),
-            lineHeight: 1,
+            height: height || (width * 0.35),
+            background: '#1e3a5f',
+            fontSize: Math.max(8, Math.round(width * 0.08)),
           }}
         >
-          N
+          <span style={{ fontSize: '1.2em' }}>NAVANHULA</span>
+          <span style={{ color: '#F4B400' }}>CLOUD</span>
         </div>
       )}
     </div>

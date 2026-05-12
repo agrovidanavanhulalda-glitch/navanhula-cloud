@@ -339,9 +339,9 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         storesRes,
         cashRegistersRes,
       ] = await Promise.all([
-        supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true).order('name'),
-        supabase.from('stores').select('*').eq('company_id', targetCompanyId),
-        supabase.from('cash_registers').select('*').order('opened_at', { ascending: false }).limit(50),
+        (supabase.from('products').select('*') as any).eq('company_id', targetCompanyId).eq('is_active', true).order('name'),
+        (supabase.from('stores').select('*') as any).eq('company_id', targetCompanyId),
+        (supabase.from('cash_registers').select('*') as any).eq('company_id', targetCompanyId).order('opened_at', { ascending: false }).limit(50),
       ]);
 
       if (productsRes.error) throw productsRes.error;
@@ -389,7 +389,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, full_name')
-          .in('id', crUserIds);
+          .in('id', crUserIds as string[]);
         (profilesData || []).forEach((p: any) => profileMap.set(p.id, p.full_name));
       }
       
