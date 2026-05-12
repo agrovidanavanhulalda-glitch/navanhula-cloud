@@ -302,19 +302,26 @@ const CompanyUsersPage = () => {
                   <p className="text-xs text-muted-foreground">Partilhe este link com o colaborador para que ele se possa registar.</p>
                 </div>
                 
-                <div className="flex items-center gap-2 p-3 bg-muted rounded-md border">
-                  <code className="text-xs flex-1 break-all select-all">{generatedInviteLink}</code>
-                  <Button 
-                    size="sm" 
-                    variant="secondary" 
-                    className="shrink-0"
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedInviteLink);
-                      toast.success('Link copiado!');
-                    }}
-                  >
-                    <Copy className="w-4 h-4 mr-2" /> Copiar
-                  </Button>
+                <div className="space-y-2">
+                  <Label>Link de Convite</Label>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      readOnly 
+                      value={generatedInviteLink} 
+                      className="bg-muted font-mono text-xs h-9"
+                    />
+                    <Button 
+                      size="sm" 
+                      variant="secondary" 
+                      className="shrink-0 gap-2"
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedInviteLink);
+                        toast.success('Link copiado!');
+                      }}
+                    >
+                      <Copy className="w-4 h-4" /> Copiar Link
+                    </Button>
+                  </div>
                 </div>
                 
                 <DialogFooter>
