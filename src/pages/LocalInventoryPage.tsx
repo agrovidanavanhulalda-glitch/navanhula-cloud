@@ -61,46 +61,64 @@ const LocalInventoryPage: React.FC = () => {
     loadProducts();
   }, [store]);
 
-  const loadProducts = async () => {
-    if (!store?.id) {
-      console.warn("LocalInventoryPage: store.id is missing", { store, user });
-      setLoading(false);
-      return;
+  const loadProducts = async (isManualRefresh = false) => {
+    if (!user?.id) return;
+    
+    // We want to avoid resetting to zero if it's a manual refresh to show "Loading" state 
+    // without flickering the 0 counts in the header if possible, 
+    // but the request instructions say "don't reset data", so we'll just keep the current state if it's a refresh
+    if (!isManualRefresh) {
+      setLoading(true);
     }
     
-    setLoading(true);
     try {
-      console.log("LocalInventoryPage: Loading products for store", store.id);
-      const { data, error } = await supabase
+      console.log(\"LocalInventoryPage: Loading products for company\", user.company_id);
+      
+      // First get the company_id from user metadata or profile if not available in context
+      const targetCompanyId = (user as any).company_id || (user as any).user_metadata?.company_id;
+      
+      if (!targetCompanyId) {
+        console.error(\"LocalInventoryPage: company_id is missing\");
+        setLoading(false);
+        return;
+      }
+
+      let query = supabase
         .from('products')
-        .select('id, name, code, cost_price, sale_price, low_stock_threshold, is_active, product_stock(quantity)')
-        .eq('product_stock.store_id', store.id)
+        .select('id, name, code, cost_price, sale_price, low_stock_threshold, is_active, company_id, product_stock(quantity, store_id)')
+        .eq('company_id', targetCompanyId)
         .eq('is_active', true)
         .order('name');
 
+      const { data, error } = await query;
+
       if (error) {
-        console.error("LocalInventoryPage: Error loading products", error);
-        toast.error("Erro ao carregar produtos: " + error.message);
+        console.error(\"LocalInventoryPage: Error loading products\", error);
+        toast.error(\"Erro ao carregar produtos: \" + error.message);
         throw error;
       }
 
-      console.log("LocalInventoryPage: Raw data received", data);
+      const mapped: InventoryProduct[] = (data || []).map((p: any) => {
+        // Filter stock by current store if store is selected, otherwise sum all or show first
+        const stockRecord = store?.id 
+          ? p.product_stock?.find((s: any) => s.store_id === store.id)
+          : p.product_stock?.[0];
 
-      const mapped: InventoryProduct[] = (data || []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        code: p.code,
-        cost_price: p.cost_price,
-        sale_price: p.sale_price,
-        low_stock_threshold: p.low_stock_threshold ?? 10,
-        is_active: p.is_active,
-        stock_qty: p.product_stock?.[0]?.quantity ?? 0,
-      }));
+        return {
+          id: p.id,
+          name: p.name,
+          code: p.code,
+          cost_price: p.cost_price,
+          sale_price: p.sale_price,
+          low_stock_threshold: p.low_stock_threshold ?? 10,
+          is_active: p.is_active,
+          stock_qty: stockRecord?.quantity ?? 0,
+        };
+      });
       
-      console.log("LocalInventoryPage: Mapped products", mapped);
       setProducts(mapped);
     } catch (err: any) {
-      console.error("LocalInventoryPage: Unexpected error", err);
+      console.error(\"LocalInventoryPage: Unexpected error\", err);
     } finally {
       setLoading(false);
     }
