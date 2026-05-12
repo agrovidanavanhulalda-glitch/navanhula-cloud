@@ -356,10 +356,25 @@ const LocalInventoryPage: React.FC = () => {
           </table>
         </div>
 
-        {filteredProducts.length === 0 && (
+        {products.length === 0 && !loading && (
+          <div className="text-center py-12 px-4 space-y-4">
+            <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-20" />
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold">Adicione o seu primeiro produto</h3>
+              <p className="text-muted-foreground max-w-xs mx-auto">
+                Comece a gerir o seu stock adicionando produtos ao sistema.
+              </p>
+            </div>
+            <Button onClick={() => window.location.href = '/local/produtos'} className="gap-2">
+              <Plus className="w-4 h-4" /> Adicionar Produto
+            </Button>
+          </div>
+        )}
+
+        {products.length > 0 && filteredProducts.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhum produto encontrado</p>
+            <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>Nenhum produto corresponde à sua busca</p>
           </div>
         )}
       </Card>
