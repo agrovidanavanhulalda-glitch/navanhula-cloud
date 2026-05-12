@@ -33,7 +33,6 @@ const OnboardingPage: React.FC = () => {
   // Redirect if already completed onboarding
   useEffect(() => {
     if (!loading && isAuthenticated && onboardingCompleted) {
-      console.log('[Onboarding] Already completed, redirecting to /');
       navigate('/', { replace: true });
     }
   }, [loading, isAuthenticated, onboardingCompleted, navigate]);
@@ -41,7 +40,6 @@ const OnboardingPage: React.FC = () => {
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      console.log('[Onboarding] Not authenticated, redirecting to /login');
       navigate('/login', { replace: true });
     }
   }, [loading, isAuthenticated, navigate]);
@@ -60,7 +58,6 @@ const OnboardingPage: React.FC = () => {
     setIsSubmitting(true);
     setError(null);
     
-    console.log('[Onboarding] Submitting company:', trimmedName);
 
     try {
       await completeOnboarding({
@@ -70,13 +67,11 @@ const OnboardingPage: React.FC = () => {
         companyAddress: companyAddress.trim() || undefined,
       });
       
-      console.log('[Onboarding] Company created successfully');
       
       // Refresh to confirm onboarding completed
       await refreshUserData();
       
       // Explicit navigation to dashboard
-      console.log('[Onboarding] Navigating to dashboard');
       navigate('/', { replace: true });
       
     } catch (err: any) {

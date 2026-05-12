@@ -117,12 +117,10 @@ const LocalPOSPage: React.FC = () => {
       return;
     }
     
-    console.log('[POSPage] Confirmando pagamento:', paymentDetails.method);
     
     try {
       const sale = await completeSale(paymentDetails);
       if (sale) {
-        console.log('[POSPage] Venda concluída com sucesso');
         const changeMsg = paymentDetails.change > 0 
           ? ` | Troco: ${formatCurrency(paymentDetails.change)}`
           : '';

@@ -83,9 +83,6 @@ const ProducerDashboardPage: React.FC = () => {
       const prods = (prodRes.data || []) as ProducerInfo[];
       const ords = (ordRes.data || []) as ProducerOrder[];
 
-      console.log('[ProducerDashboard] Company:', companyId);
-      console.log('[ProducerDashboard] Producers:', prods.length, prods.map(p => ({ id: p.id, nome: p.nome_granja })));
-      console.log('[ProducerDashboard] Orders:', ords.length, ords.map(o => ({ id: o.id, producer_id: o.producer_id, status: o.status })));
 
       setProducers(prods);
       setOrders(ords);

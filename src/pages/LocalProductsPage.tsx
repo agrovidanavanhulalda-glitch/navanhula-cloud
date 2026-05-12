@@ -99,7 +99,6 @@ const LocalProductsPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    console.log('[ProductsPage] Iniciando salvamento do produto');
     
     if (!formData.name.trim()) {
       toast.error('Nome é obrigatório');

@@ -77,7 +77,6 @@ export async function autoIssueFiscalDocument(options: AutoFiscalOptions): Promi
 
     const result = data as any;
     if (result?.success) {
-      console.log('[FiscalPipeline] ✅ Document issued:', result.document_number);
       return {
         success: true,
         documentNumber: result.document_number,

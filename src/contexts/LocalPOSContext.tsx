@@ -324,12 +324,9 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const loadData = useCallback(async () => {
     if (!user?.id || !company?.id) {
-      if (!user?.id) console.log('[POS] Aguardando autenticação...');
-      if (user?.id && !company?.id) console.log('[POS] Aguardando identificação da empresa...');
       return;
     }
 
-    console.log('[POS] Carregando dados para empresa:', company.name);
     setState(prev => ({ ...prev, loading: true }));
     
     try {
@@ -405,7 +402,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         mapDbSaleToLocal(s, s.sale_items || [], profileMap.get(s.user_id))
       );
 
-      console.log(`[POS] ✅ ${products.length} produtos e ${sales.length} vendas carregados.`);
 
       setState(prev => ({
         ...prev,
@@ -548,7 +544,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [state.currentStore.id]);
 
   const completeSale = useCallback(async (paymentDetails: PaymentDetails): Promise<LocalSale | null> => {
-    console.log('[POS] Iniciando conclusão de venda');
     
     if (state.cart.length === 0) {
       toast.error('Carrinho vazio');
@@ -650,7 +645,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
       }
 
-      console.log('[POS] ✅ Venda persistida com sucesso:', saleId);
 
       // 5. Atualizar estado local
       setState(prev => {
@@ -717,7 +711,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     cancelledBy: string,
     cancelledByName: string
   ): Promise<boolean> => {
-    console.log('[POS] Cancelando venda:', saleId);
     
     try {
       const sale = state.sales.find(s => s.id === saleId);
@@ -802,7 +795,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ============ CASH REGISTER ============
 
   const openCashRegister = useCallback(async (sellerId: string, sellerName: string, openingAmount: number): Promise<LocalCashRegister> => {
-    console.log('[POS] Abrindo caixa para:', sellerName);
     const registerId = crypto.randomUUID();
     const storeId = state.currentStore.id;
 
@@ -847,7 +839,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [state.currentStore.id, user?.id]);
 
   const closeCashRegister = useCallback(async (closingAmount: number) => {
-    console.log('[POS] Fechando caixa');
     if (!state.currentCashRegister) return;
 
     const expectedAmount = state.currentCashRegister.openingAmount + state.currentCashRegister.salesTotal;
@@ -973,7 +964,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const setCurrentStore = useCallback((storeId: string) => {
-    console.log('[POS] Mudando para loja:', storeId);
     setState(prev => {
       const store = prev.stores.find(s => s.id === storeId);
       if (!store) return prev;
@@ -1031,7 +1021,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [company?.id, user?.id, loadSellers]);
 
   const addSeller = useCallback(async (seller: Omit<LocalSeller, 'id'>): Promise<boolean> => {
-    console.log('[POS] Criando novo utilizador/vendedor:', seller.email);
     
     try {
       const email = seller.email?.trim();
@@ -1110,10 +1099,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           status: 'active'
         });
       } catch (e) {
-        console.log('[POS] Tabela user_company opcional ou erro:', e);
       }
 
-      console.log('[POS] ✅ Utilizador criado com sucesso:', newUserId);
       await loadSellers();
       toast.success('Vendedor criado com sucesso!');
       return true;
@@ -1171,7 +1158,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ============ PRODUCT ACTIONS ============
 
   const addProduct = useCallback(async (product: Omit<LocalProduct, 'id'>) => {
-    console.log('[POS] Criando produto:', product.name);
     const productId = crypto.randomUUID();
     
     // Validar campos obrigatórios
@@ -1206,7 +1192,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return;
       }
 
-      console.log('[POS] Produto inserido com sucesso:', insertData);
 
       // Create stock entry
       const storeIdToUse = state.currentStore.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(state.currentStore.id)
@@ -1214,7 +1199,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : authStore?.id;
 
       if (storeIdToUse) {
-        console.log('[POS] Criando stock inicial para loja:', storeIdToUse);
         const { error: stockError } = await supabase.from('product_stock').upsert({
           product_id: productId,
           store_id: storeIdToUse,
@@ -1238,7 +1222,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [state.currentStore.id, company?.id]);
 
   const updateProduct = useCallback(async (id: string, updates: Partial<LocalProduct>) => {
-    console.log('[POS] Atualizando produto:', id, updates);
     
     try {
       const dbUpdates: any = {};
@@ -1275,7 +1258,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Atualizar dados do servidor para garantir sincronia total
       await loadData();
 
-      console.log('[POS] Produto atualizado com sucesso');
     } catch (error: any) {
       console.error('[POS] Exceção ao atualizar produto:', error);
       toast.error('Falha crítica ao atualizar produto');
@@ -1283,7 +1265,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [state.currentStore.id]);
 
   const deleteProduct = useCallback(async (id: string) => {
-    console.log('[POS] Removendo produto (desativando):', id);
     try {
       const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id);
       

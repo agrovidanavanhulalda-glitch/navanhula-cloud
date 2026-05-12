@@ -32,7 +32,6 @@ export const useAppVersion = () => {
       }
 
       if (data.version && localVersion !== data.version) {
-        console.log(`New version detected: ${data.version} (current: ${localVersion})`);
         setHasUpdate(true);
         
         // Show notification but also allow forced reload if critical

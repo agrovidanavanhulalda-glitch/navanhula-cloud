@@ -70,7 +70,6 @@ const LocalInventoryPage: React.FC = () => {
     }
     
     try {
-      console.log("LocalInventoryPage: Loading products for user", user.id);
       
       const targetCompanyId = (user as any).company_id || (user as any).user_metadata?.company_id;
       

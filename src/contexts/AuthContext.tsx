@@ -133,7 +133,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (currentRole !== 'reseller' && needsCompany) {
-        console.log('[Auth] Iniciando onboarding automático...');
         const { error: onboardError } = await supabase.rpc('complete_onboarding', {
           p_company_name: 'NAVANHULA GROUP SA',
           p_company_nif: null,
