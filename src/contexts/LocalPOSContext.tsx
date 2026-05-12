@@ -346,7 +346,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true).order('name'),
         supabase.from('stores').select('*').eq('company_id', targetCompanyId),
         supabase.from('cash_registers').select('*').order('opened_at', { ascending: false }).limit(50),
-        supabase.from('sales').select('*, sale_items(*)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100),
+        supabase.from('sales').select('*, sale_items(*)').eq('company_id', targetCompanyId).order('created_at', { ascending: false }).limit(100),
       ]);
 
       if (productsRes.error) throw productsRes.error;
