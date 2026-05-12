@@ -228,7 +228,7 @@ const LocalInventoryPage: React.FC = () => {
             {products.length} produtos | {lowStockCount} baixo | {outOfStockCount} esgotados
           </p>
         </div>
-        <Button variant="outline" onClick={loadProducts} size="sm">
+        <Button variant="outline" onClick={() => loadProducts(true)} size="sm">
           <RefreshCw className="w-4 h-4 mr-1" /> Atualizar
         </Button>
       </div>
