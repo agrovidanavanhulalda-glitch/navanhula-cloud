@@ -232,7 +232,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
     if (group.roles && !group.roles.includes(role || 'seller')) return null;
     const Icon = group.icon;
     // Filter items for Dashboard group based on role
-    const visibleItems = group.title === 'Painel' ? filterDashboardItems(group.items) : group.items;
+    const visibleItems = filterSubItems(group.items);
     if (visibleItems.length === 0) return null;
     const hasActive = groupHasActive(visibleItems);
 
