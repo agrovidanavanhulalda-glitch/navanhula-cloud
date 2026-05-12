@@ -29,12 +29,14 @@ interface AccountingEntry {
 const CHART_COLORS = ['hsl(217, 91%, 60%)', 'hsl(142, 76%, 36%)', 'hsl(38, 92%, 50%)', 'hsl(0, 84%, 60%)'];
 
 const AccountingPage: React.FC = () => {
-  const { company } = useAuth();
+  const { user, company } = useAuth();
   const [entries, setEntries] = useState<AccountingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');
+  const companyId = (user as any)?.company_id || (user as any)?.user_metadata?.company_id || company?.id;
 
   const loadData = async () => {
+    if (!companyId) return;
     setLoading(true);
     try {
       const startDate = period === 'month' 
@@ -46,6 +48,7 @@ const AccountingPage: React.FC = () => {
       const { data, error } = await supabase
         .from('accounting_entries')
         .select('*')
+        .eq('company_id', companyId)
         .gte('created_at', startDate)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -57,7 +60,9 @@ const AccountingPage: React.FC = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, [period]);
+  useEffect(() => { 
+    if (companyId) loadData(); 
+  }, [period, companyId]);
 
   const revenue = entries.filter(e => e.type === 'revenue').reduce((s, e) => s + Number(e.amount), 0);
   const expenses = entries.filter(e => e.type === 'expense').reduce((s, e) => s + Number(e.amount), 0);
