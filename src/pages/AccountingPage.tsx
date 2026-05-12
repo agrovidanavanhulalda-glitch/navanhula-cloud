@@ -81,7 +81,7 @@ const AccountingPage: React.FC = () => {
   ];
 
   const categoryBreakdown = entries.reduce((acc, e) => {
-    const key = e.category || 'general';
+    const key = e.category || 'geral';
     acc[key] = (acc[key] || 0) + Number(e.amount);
     return acc;
   }, {} as Record<string, number>);
@@ -147,7 +147,6 @@ const AccountingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm"><TrendingUp className="w-4 h-4" /> Receita</div>
@@ -197,17 +196,17 @@ const AccountingPage: React.FC = () => {
                   ))}
                 </div>
                 
-                <div className=\"mt-8 space-y-2\">
-                  <h4 className=\"text-sm font-bold uppercase tracking-wider text-muted-foreground\">Detalhamento de Despesas</h4>
-                  <div className=\"divide-y border rounded-lg overflow-hidden\">
+                <div className="mt-8 space-y-2">
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Detalhamento de Despesas</h4>
+                  <div className="divide-y border rounded-lg overflow-hidden">
                     {Object.entries(categoryBreakdown).map(([cat, val], i) => (
-                      <div key={i} className=\"flex justify-between p-3 bg-white text-sm\">
-                        <span className=\"capitalize\">{cat}</span>
-                        <span className=\"font-mono text-destructive\">{formatCurrency(val)}</span>
+                      <div key={i} className="flex justify-between p-3 bg-white text-sm">
+                        <span className="capitalize">{cat}</span>
+                        <span className="font-mono text-destructive">{formatCurrency(val)}</span>
                       </div>
                     ))}
                     {Object.keys(categoryBreakdown).length === 0 && (
-                      <div className=\"p-4 text-center text-muted-foreground text-xs\">Sem despesas registradas</div>
+                      <div className="p-4 text-center text-muted-foreground text-xs">Sem despesas registradas</div>
                     )}
                   </div>
                 </div>
