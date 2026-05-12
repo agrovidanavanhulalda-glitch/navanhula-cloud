@@ -339,22 +339,9 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         storesRes,
         cashRegistersRes,
       ] = await Promise.all([
-        supabase
-          .from('products')
-          .select('*')
-          .eq('company_id', targetCompanyId)
-          .eq('is_active', true)
-          .order('name'),
-        supabase
-          .from('stores')
-          .select('*')
-          .eq('company_id', targetCompanyId),
-        supabase
-          .from('cash_registers')
-          .select('*')
-          .eq('company_id', targetCompanyId)
-          .order('opened_at', { ascending: false })
-          .limit(50),
+        supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true).order('name'),
+        supabase.from('stores').select('*').eq('company_id', targetCompanyId),
+        supabase.from('cash_registers').select('*').eq('company_id', targetCompanyId).order('opened_at', { ascending: false }).limit(50),
       ]);
 
       if (productsRes.error) throw productsRes.error;
