@@ -401,7 +401,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
       const openRegister = cashRegisters.find(cr => cr.status === 'open' && cr.sellerId === user.id) || null;
 
-      const sales: LocalSale[] = (salesRes.data || []).map((s: any) =>
+      const sales: LocalSale[] = (salesResData || []).map((s: any) =>
         mapDbSaleToLocal(s, s.sale_items || [], profileMap.get(s.user_id))
       );
 
