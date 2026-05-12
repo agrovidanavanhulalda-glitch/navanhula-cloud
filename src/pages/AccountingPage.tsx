@@ -196,6 +196,21 @@ const AccountingPage: React.FC = () => {
                     </div>
                   ))}
                 </div>
+                
+                <div className=\"mt-8 space-y-2\">
+                  <h4 className=\"text-sm font-bold uppercase tracking-wider text-muted-foreground\">Detalhamento de Despesas</h4>
+                  <div className=\"divide-y border rounded-lg overflow-hidden\">
+                    {Object.entries(categoryBreakdown).map(([cat, val], i) => (
+                      <div key={i} className=\"flex justify-between p-3 bg-white text-sm\">
+                        <span className=\"capitalize\">{cat}</span>
+                        <span className=\"font-mono text-destructive\">{formatCurrency(val)}</span>
+                      </div>
+                    ))}
+                    {Object.keys(categoryBreakdown).length === 0 && (
+                      <div className=\"p-4 text-center text-muted-foreground text-xs\">Sem despesas registradas</div>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
             <Card>
