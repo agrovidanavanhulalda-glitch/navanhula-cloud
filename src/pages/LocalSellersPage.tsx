@@ -46,7 +46,8 @@ const LocalSellersPage: React.FC = () => {
     updateSeller, 
     deleteSeller 
   } = useLocalPOS();
-  const { role } = useAuth();
+  const { role, company } = useAuth();
+  const targetCompanyId = (company as any)?.id;
   const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
 
   const [searchTerm, setSearchTerm] = useState('');

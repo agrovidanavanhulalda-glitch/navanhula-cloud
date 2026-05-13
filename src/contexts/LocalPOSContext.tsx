@@ -331,7 +331,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     try {
       const storeId = authStore?.id || user.store_id;
-      const targetCompanyId = company.id;
+      const targetCompanyId = (company as any)?.id;
+
+      if (!targetCompanyId) {
+        console.warn('[POS] Sem company_id no carregamento');
+        return;
+      }
 
       // Fetch all data in parallel, filtering by company_id where applicable
       const [

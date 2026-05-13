@@ -36,6 +36,7 @@ import PageTransition from '@/components/layout/PageTransition';
 const LocalSalesHistoryPage: React.FC = () => {
   const { sales, stores, currentStore, cancelCompletedSale, currentCashRegister, loading } = useLocalPOS();
   const { role, user, company } = useAuth();
+  const targetCompanyId = (company as any)?.id;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');

@@ -41,7 +41,8 @@ import PDFReportPreview, { exportPDFReport, exportExcelReport } from '@/componen
 
 const LocalReportsPage: React.FC = () => {
   const { sales, stores, currentStore, products, getCancelledSales, getCancellationHistory } = useLocalPOS();
-  const { role } = useAuth();
+  const { role, company } = useAuth();
+  const targetCompanyId = (company as any)?.id;
 
   // Check admin access
   const isAdmin = role === 'admin' || role === 'manager';
