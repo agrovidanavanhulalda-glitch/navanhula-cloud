@@ -410,7 +410,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
 
       setState(prev => {
-        const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : prev.currentStore);
+      const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : prev.currentStore);
         return {
           ...prev,
           products,
