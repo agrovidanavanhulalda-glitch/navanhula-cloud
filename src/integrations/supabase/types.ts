@@ -3031,6 +3031,67 @@ export type Database = {
           },
         ]
       }
+      inventory_movements: {
+        Row: {
+          branch_id: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          movement_type: string
+          product_id: string
+          quantity: number
+          reference_id: string | null
+          reference_type: string | null
+        }
+        Insert: {
+          branch_id: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          movement_type: string
+          product_id: string
+          quantity: number
+          reference_id?: string | null
+          reference_type?: string | null
+        }
+        Update: {
+          branch_id?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          movement_type?: string
+          product_id?: string
+          quantity?: number
+          reference_id?: string | null
+          reference_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           company_id: string
@@ -7615,6 +7676,16 @@ export type Database = {
       add_community_comment: {
         Args: { p_content: string; p_post_id: string }
         Returns: Json
+      }
+      add_inventory_adjustment: {
+        Args: {
+          p_product_id: string
+          p_quantity: number
+          p_reason?: string
+          p_store_id: string
+          p_type: string
+        }
+        Returns: undefined
       }
       bootstrap_current_user: { Args: never; Returns: undefined }
       capture_referral_for_user: {
