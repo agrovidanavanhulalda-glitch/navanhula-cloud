@@ -75,7 +75,8 @@ const LocalSettingsPage: React.FC = () => {
 
   // Load data
   useEffect(() => {
-    if (company && company.id !== 'local-default') {
+    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (company && isUuid(company.id)) {
       setCompanyForm({
         name: company.name || '',
         nif: (company as any).nif || '',
