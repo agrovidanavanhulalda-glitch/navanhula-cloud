@@ -390,7 +390,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
 
       const stores: LocalStore[] = (storesRes.data || []).map(mapDbStoreToLocal);
-      const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : FALLBACK_STORE);
+      const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : prev.currentStore);
 
       // Map cash registers
       const crUserIds = [...new Set((cashRegistersRes.data || []).map((cr: any) => cr.user_id))];
