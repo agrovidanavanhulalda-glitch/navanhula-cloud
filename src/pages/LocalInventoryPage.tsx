@@ -96,9 +96,11 @@ const LocalInventoryPage: React.FC = () => {
       }
 
       const mapped: InventoryProduct[] = (data || []).map((p: any) => {
+        // Strict store filtering: if we have a store, only show its stock. 
+        // Otherwise, show 0 instead of randomly picking the first store's stock.
         const stockRecord = store?.id 
-          ? p.product_stock?.find((s: any) => s.store_id === store.id)
-          : p.product_stock?.[0];
+          ? (p.product_stock || []).find((s: any) => s.store_id === store.id)
+          : null;
 
         return {
           id: p.id,
