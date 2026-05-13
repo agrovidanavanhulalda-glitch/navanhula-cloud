@@ -174,11 +174,11 @@ interface LocalPOSContextType extends LocalPOSState {
 const LocalPOSContext = createContext<LocalPOSContextType | undefined>(undefined);
 
 const FALLBACK_STORE: LocalStore = {
-  id: 'fallback',
-  name: 'NAVANHULA STORE',
-  address: 'Maputo, Moçambique',
-  phone: '+258 84 000 0000',
-  isActive: true,
+  id: '',
+  name: 'Carregando Loja...',
+  address: '',
+  phone: '',
+  isActive: false,
 };
 
 export const useLocalPOS = () => {
@@ -307,7 +307,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [state, setState] = useState<LocalPOSState>({
     stores: [],
-    currentStore: FALLBACK_STORE,
+    currentStore: { ...FALLBACK_STORE },
     sellers: [],
     cashRegisters: [],
     currentCashRegister: null,
@@ -323,7 +323,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const dataLoaded = useRef(false);
 
   const loadData = useCallback(async () => {
-    if (!user?.id || !company?.id) {
+    // Enterprise guard: block queries if UUIDs are not real
+    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+    if (!user?.id || !company?.id || !isUuid(company.id)) {
       return;
     }
 
@@ -331,10 +334,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     try {
       const storeId = authStore?.id || user.store_id;
-      const targetCompanyId = (company as any)?.id;
+      const targetCompanyId = company.id;
 
-      if (!targetCompanyId) {
-        console.warn('[POS] Sem company_id no carregamento');
+      if (!isUuid(targetCompanyId)) {
+        setState(prev => ({ ...prev, loading: false }));
         return;
       }
 
@@ -385,8 +388,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
 
       const stores: LocalStore[] = (storesRes.data || []).map(mapDbStoreToLocal);
-      const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : FALLBACK_STORE);
-
+      
       // Map cash registers
       const crUserIds = [...new Set((cashRegistersRes.data || []).map((cr: any) => cr.user_id))];
       let profileMap = new Map<string, string>();
@@ -407,17 +409,19 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         mapDbSaleToLocal(s, s.sale_items || [], profileMap.get(s.user_id))
       );
 
-
-      setState(prev => ({
-        ...prev,
-        products,
-        stores,
-        currentStore,
-        cashRegisters,
-        currentCashRegister: openRegister,
-        sales,
-        loading: false,
-      }));
+      setState(prev => {
+      const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : prev.currentStore);
+        return {
+          ...prev,
+          products,
+          stores,
+          currentStore,
+          cashRegisters,
+          currentCashRegister: openRegister,
+          sales,
+          loading: false,
+        };
+      });
       
       dataLoaded.current = true;
     } catch (error) {
@@ -625,6 +629,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     try {
       // 1. Inserir venda no Supabase
+      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (!isUuid(storeId)) {
+        toast.error('Erro crítico: Loja inválida para venda. Recarregue o sistema.');
+        return null;
+      }
+
       const { error: saleError } = await supabase.from('sales').insert({
         id: saleId,
         store_id: storeId,
@@ -1201,10 +1211,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const code = `P-${Date.now().toString(36).toUpperCase()}`;
       const targetCompanyId = company?.id;
+      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-      if (!targetCompanyId) {
-        console.error('[POS] Erro: ID da empresa não encontrado');
-        toast.error('Erro: ID da empresa não encontrado. Faça login novamente.');
+      if (!targetCompanyId || !isUuid(targetCompanyId)) {
+        console.error('[POS] Erro: ID da empresa inválido ou ausente', targetCompanyId);
+        toast.error('Erro de sessão: ID da empresa inválido. Faça login novamente.');
         return;
       }
 
@@ -1270,7 +1281,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
-      if (updates.stock !== undefined && state.currentStore.id) {
+      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (updates.stock !== undefined && state.currentStore.id && isUuid(state.currentStore.id)) {
         // Calculate difference for adjustment
         const currentProduct = state.products.find(p => p.id === id);
         const diff = updates.stock - (currentProduct?.stock || 0);

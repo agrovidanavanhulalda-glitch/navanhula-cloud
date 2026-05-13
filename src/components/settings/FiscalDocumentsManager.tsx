@@ -117,7 +117,8 @@ const FiscalDocumentsManager: React.FC = () => {
   const [stockProducts, setStockProducts] = useState<DocumentProductOption[]>([]);
 
   const loadData = useCallback(async () => {
-    if (!company?.id || company.id === 'local-default') {
+    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!company?.id || !isUuid(company.id)) {
       setLoading(false);
       return;
     }
@@ -246,7 +247,8 @@ const FiscalDocumentsManager: React.FC = () => {
   };
 
   const handleSaveSeries = async () => {
-    if (!company?.id || company.id === 'local-default') return;
+    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!company?.id || !isUuid(company.id)) return;
     if (!seriesPrefix.trim()) {
       toast.error('Defina o prefixo da série');
       return;
@@ -392,7 +394,8 @@ const FiscalDocumentsManager: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (!company?.id || company.id === 'local-default') {
+  const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  if (!company?.id || !isUuid(company.id)) {
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">

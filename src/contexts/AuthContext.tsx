@@ -44,32 +44,9 @@ export const useAuth = () => {
 // Maximum loading time - 5 seconds (emergency mode)
 const MAX_LOADING_TIME = 5000;
 
-// Default company for fallback
-const DEFAULT_COMPANY: Company = {
-  id: 'local-default',
-  name: 'NAVANHULA GROUP SA',
-  nif: null,
-  phone: null,
-  address: null,
-  is_active: true,
-  company_type: 'master',
-  is_system_owner: true,
-  billing_exempt: true,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
-
-const DEFAULT_STORE: Store = {
-  id: 'local-store',
-  name: 'Loja Principal',
-  company_id: 'local-default',
-  address: null,
-  phone: null,
-  email: null,
-  is_active: true,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
+// Deprecated fallback constants (to be removed after full UUID migration)
+const DEFAULT_COMPANY = null;
+const DEFAULT_STORE = null;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<Profile | null>(null);
@@ -118,9 +95,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .select('*')
             .eq('id', profileData.store_id)
             .maybeSingle();
-          setStore(storeData as Store || (userRole === 'reseller' ? null : DEFAULT_STORE));
+          setStore(storeData as Store || null);
         } else {
-          setStore(userRole === 'reseller' ? null : DEFAULT_STORE);
+          setStore(null);
         }
 
         if (profileData.company_id) {
@@ -129,19 +106,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .select('*')
             .eq('id', profileData.company_id)
             .maybeSingle();
-          setCompany(companyData as Company || (userRole === 'reseller' ? null : DEFAULT_COMPANY));
+          setCompany(companyData as Company || null);
         } else {
-          setCompany(userRole === 'reseller' ? null : DEFAULT_COMPANY);
+          setCompany(null);
         }
       } else {
-        setCompany(DEFAULT_COMPANY);
-        setStore(DEFAULT_STORE);
-        setRole('admin');
+        setCompany(null);
+        setStore(null);
+        setRole('viewer');
       }
     } catch (error) {
-      setCompany(DEFAULT_COMPANY);
-      setStore(DEFAULT_STORE);
-      setRole('admin');
+      console.error("[Auth] Error fetching user data:", error);
+      setCompany(null);
+      setStore(null);
+      setRole('viewer');
     }
   }, []);
 
@@ -161,9 +139,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await fetchUserData(userId);
     } catch (error) {
       console.error('[Auth] Erro crítico no setup:', error);
-      setCompany(DEFAULT_COMPANY);
-      setStore(DEFAULT_STORE);
-      setRole('admin');
+      setCompany(null);
+      setStore(null);
+      setRole('viewer');
     }
     forceComplete();
   }, [fetchUserData, forceComplete]);

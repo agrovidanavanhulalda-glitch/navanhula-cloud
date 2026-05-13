@@ -41,7 +41,8 @@ function TransfersTab({ isAdmin, user, company, sellers, products }: any) {
   const { data: transfers = [], isLoading } = useQuery({
     queryKey: ['stock-transfers', company?.id, filterStatus],
     queryFn: async () => {
-      if (!company?.id) return [];
+      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (!company?.id || !isUuid(company.id)) return [];
       let q = supabase
         .from('stock_transfers')
         .select('*, stock_transfer_items(*, products:product_id(name, code))')
@@ -418,7 +419,8 @@ function TargetsTab({ company, sellers, isAdmin }: any) {
   const { data: targets = [] } = useQuery({
     queryKey: ['sales-targets', company?.id],
     queryFn: async () => {
-      if (!company?.id) return [];
+      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (!company?.id || !isUuid(company.id)) return [];
       const { data } = await supabase
         .from('sales_targets')
         .select('*')
@@ -518,7 +520,8 @@ function AlertsTab({ company }: any) {
   const { data: alerts = [], isLoading } = useQuery({
     queryKey: ['system-alerts', company?.id],
     queryFn: async () => {
-      if (!company?.id) return [];
+      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (!company?.id || !isUuid(company.id)) return [];
       const { data } = await supabase
         .from('system_alerts')
         .select('*')

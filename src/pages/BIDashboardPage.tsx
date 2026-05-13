@@ -110,15 +110,21 @@ const BIDashboardPage: React.FC = () => {
 
   // ─── data loading ───
   const loadData = async () => {
+    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!company?.id || !isUuid(company.id)) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const [sR, pR, iR, prR, cR, stR] = await Promise.all([
-        supabase.from('sales').select('user_id, total, created_at, customer_name, profit, cost_total, payment_method').eq('status', 'completed'),
-        supabase.from('profiles').select('id, full_name, commission_rate'),
-        supabase.from('sale_items').select('sale_id, product_id, product_name, quantity, profit, created_at'),
-        supabase.from('products').select('id, name, cost_price, sale_price, low_stock_threshold').eq('is_active', true),
-        supabase.from('customers').select('full_name, total_spent, total_purchases, vip_level, last_purchase_at').order('total_spent', { ascending: false }).limit(20),
-        supabase.from('product_stock').select('product_id, quantity'),
+        supabase.from('sales').select('user_id, total, created_at, customer_name, profit, cost_total, payment_method').eq('status', 'completed').eq('company_id', company.id),
+        supabase.from('profiles').select('id, full_name, commission_rate').eq('company_id', company.id),
+        supabase.from('sale_items').select('sale_id, product_id, product_name, quantity, profit, created_at').eq('company_id', company.id),
+        supabase.from('products').select('id, name, cost_price, sale_price, low_stock_threshold').eq('is_active', true).eq('company_id', company.id),
+        supabase.from('customers').select('full_name, total_spent, total_purchases, vip_level, last_purchase_at').eq('company_id', company.id).order('total_spent', { ascending: false }).limit(20),
+        supabase.from('product_stock').select('product_id, quantity').eq('company_id', company.id),
       ]);
       setSales(sR.data || []);
       setProfiles(pR.data || []);
