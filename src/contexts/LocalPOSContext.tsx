@@ -323,7 +323,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const dataLoaded = useRef(false);
 
   const loadData = useCallback(async () => {
-    if (!user?.id || !company?.id) {
+    // Enterprise guard: block queries if UUIDs are not real
+    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+    if (!user?.id || !company?.id || !isUuid(company.id)) {
+      console.warn('[POS] loadData aborted: Missing or invalid company/user UUID', { userId: user?.id, companyId: company?.id });
       return;
     }
 
@@ -331,10 +335,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     try {
       const storeId = authStore?.id || user.store_id;
-      const targetCompanyId = (company as any)?.id;
+      const targetCompanyId = company.id;
 
-      if (!targetCompanyId) {
-        console.warn('[POS] Sem company_id no carregamento');
+      if (!isUuid(targetCompanyId)) {
+        console.error('[POS] Critical Error: company_id is not a valid UUID', targetCompanyId);
+        setState(prev => ({ ...prev, loading: false }));
         return;
       }
 
