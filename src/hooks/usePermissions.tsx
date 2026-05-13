@@ -6,103 +6,103 @@ import { AppRole } from '@/types/pos';
 export function usePermissions() {
   const { user, role, isAuthenticated } = useAuth();
 
-  const { data: permissions = [] } = useQuery({
-    queryKey: ['user-permissions', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('user_company')
-        .select(`
-          roles (
-            role_permissions (
-              permissions (key)
-            )
-          )
-        `)
-        .eq('user_id', user.id)
-        .maybeSingle();
+  // Define role hierarchy
+  const roles = ['viewer', 'seller', 'manager', 'admin', 'ceo', 'master'];
+  
+  const getRoleWeight = (r: string | null) => {
+    if (!r) return -1;
+    if (user?.is_super_admin) return 100; // Master weight
+    const normalizedRole = r.toLowerCase();
+    if (normalizedRole === 'director' || normalizedRole === 'ceo') return 5;
+    if (normalizedRole === 'admin') return 4;
+    if (normalizedRole === 'manager') return 3;
+    if (normalizedRole === 'seller') return 2;
+    if (normalizedRole === 'viewer') return 1;
+    return 0;
+  };
 
-      if (error) throw error;
-      
-      const roleData = data?.roles as any;
-      const permList = roleData?.role_permissions?.map((rp: any) => rp.permissions?.key) || [];
-      return permList as string[];
-    },
-    enabled: isAuthenticated && !!user?.id,
-    staleTime: 5 * 60 * 1000,
-  });
+  const hasMinimumRole = (minRole: string): boolean => {
+    const userWeight = getRoleWeight(role);
+    const minWeight = getRoleWeight(minRole);
+    return userWeight >= minWeight;
+  };
 
   const hasPermission = (permissionKey: string): boolean => {
-    // Master user/CEO/Admin has all permissions
-    if (
-      user?.is_super_admin || 
-      role === 'ceo' || 
-      role === 'admin' || 
-      role === 'owner' || 
-      role === 'super_admin'
-    ) return true;
+    // Master user/CEO/Admin have all permissions
+    if (user?.is_super_admin || hasMinimumRole('admin')) return true;
     
-    return permissions.includes(permissionKey);
+    // For specific granular permissions, we could add a list here if needed
+    // but for now we follow the hierarchy requirement
+    return false;
   };
 
   const canViewModule = (module: string) => {
-    // Standard role-based logic if permissions are not granularly set
-    if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
+    if (user?.is_super_admin || hasMinimumRole('admin')) return true;
     
-    if (module === 'users') {
-      return (role as string) === 'ceo' || (role as string) === 'admin'; 
+    switch (module) {
+      case 'users':
+      case 'iam':
+      case 'compliance':
+      case 'audit':
+      case 'settings':
+        return hasMinimumRole('admin');
+      case 'finance':
+      case 'reports':
+        return hasMinimumRole('manager');
+      case 'stock':
+      case 'products':
+        return hasMinimumRole('seller');
+      case 'sales':
+      case 'pos':
+        return hasMinimumRole('seller');
+      default:
+        return true;
     }
-    
-    if (module === 'stock') {
-      return (role as string) === 'manager' || hasPermission('manage_stock');
-    }
-    
-    if (module === 'finance') {
-      return (role as string) === 'manager' || hasPermission('manage_finance');
-    }
-    
-    if (module === 'reports') {
-      return (role as string) === 'manager' || hasPermission('view_reports');
-    }
-
-    if (module === 'sales') {
-      return true; 
-    }
-
-    return true;
   };
 
   const canCreateIn = (module: string) => {
-    if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
-    if (module === 'users') return false; 
-    if (module === 'sales') return true; 
-    if (module === 'stock') return (role as string) === 'manager' || hasPermission('manage_stock');
-    return canViewModule(module);
+    if (user?.is_super_admin || hasMinimumRole('admin')) return true;
+    
+    switch (module) {
+      case 'users':
+        return false;
+      case 'sales':
+      case 'pos':
+        return hasMinimumRole('seller');
+      case 'stock':
+      case 'products':
+        return hasMinimumRole('manager');
+      default:
+        return hasMinimumRole('admin');
+    }
   };
 
   const canEditIn = (module: string) => canCreateIn(module);
+  
   const canDeleteIn = (module: string) => {
-    if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
+    if (user?.is_super_admin || hasMinimumRole('ceo')) return true;
     return false;
   };
+
   const canApproveIn = (module: string) => {
-    if (role === 'ceo' || role === 'admin' || role === 'owner') return true;
+    if (user?.is_super_admin || hasMinimumRole('manager')) return true;
     return false;
   };
 
   return { 
-    permissions, 
     role,
     hasPermission, 
+    hasMinimumRole,
     canViewModule, 
     canCreateIn, 
     canEditIn, 
     canDeleteIn, 
     canApproveIn,
-    isCEO: (role as string) === 'ceo',
-    isAdmin: (role as string) === 'ceo' || (role as string) === 'admin' || (role as string) === 'owner',
-    isManager: (role as string) === 'manager',
-    isSeller: (role as string) === 'seller'
+    isMaster: !!user?.is_super_admin,
+    isCEO: hasMinimumRole('ceo'),
+    isAdmin: hasMinimumRole('admin'),
+    isManager: hasMinimumRole('manager'),
+    isSeller: hasMinimumRole('seller'),
+    isViewer: hasMinimumRole('viewer')
   };
 }
