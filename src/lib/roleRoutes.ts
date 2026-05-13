@@ -41,15 +41,32 @@ const routeRoleMap: Record<string, AppRole[]> = {
 export function canAccessRoute(path: string, role: AppRole | null): boolean {
   if (!role) return false;
   
-  // CEO and admin can access everything (Super Admin Bypass)
-  // Check for 'ceo', 'admin', 'super_admin' roles, or is_super_admin flag
-  if (role === 'ceo' || role === 'admin' || role === 'super_admin' || role === 'director') return true;
+  const roleHierarchy: Record<AppRole, number> = {
+    'super_admin': 10,
+    'owner': 10,
+    'ceo': 5,
+    'director': 5,
+    'admin': 4,
+    'manager': 3,
+    'hr': 3,
+    'cashier': 2,
+    'seller': 2,
+    'reseller': 2,
+    'viewer': 1
+  };
+
+  const getWeight = (r: AppRole) => roleHierarchy[r] || 0;
+  const userWeight = getWeight(role);
+
+  // CEO and admin can access everything
+  if (userWeight >= 4) return true;
 
   for (const [prefix, allowedRoles] of Object.entries(routeRoleMap)) {
     if (path === prefix || path.startsWith(prefix + '/') || path.startsWith(prefix + '?')) {
-      return allowedRoles.includes(role);
+      const minWeight = Math.min(...allowedRoles.map(getWeight));
+      return userWeight >= minWeight;
     }
   }
-  // If no restriction defined, allow access
+  
   return true;
 }

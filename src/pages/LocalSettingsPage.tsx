@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ import TwoFactorSetup from '@/components/settings/TwoFactorSetup';
 
 const LocalSettingsPage: React.FC = () => {
   const { role, company, user, store, refreshUserData } = useAuth();
+  const { isAdmin } = usePermissions();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -69,7 +71,7 @@ const LocalSettingsPage: React.FC = () => {
     toast.success('Preferências de automação salvas');
   };
 
-  const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
+  
 
   // Load data
   useEffect(() => {

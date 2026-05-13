@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,8 +37,8 @@ interface InventoryProduct {
 type AdjustmentType = 'add' | 'remove' | 'set';
 
 const LocalInventoryPage: React.FC = () => {
-  const { user, store, role } = useAuth();
-  const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
+  const { isAdmin } = usePermissions();
+  const { user, store } = useAuth();
   const [products, setProducts] = useState<InventoryProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

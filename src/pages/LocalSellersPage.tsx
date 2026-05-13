@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocalPOS, LocalSeller } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,9 +47,9 @@ const LocalSellersPage: React.FC = () => {
     updateSeller, 
     deleteSeller 
   } = useLocalPOS();
-  const { role, company } = useAuth();
+  const { company } = useAuth();
+  const { isAdmin, role } = usePermissions();
   const targetCompanyId = (company as any)?.id;
-  const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showDialog, setShowDialog] = useState(false);
@@ -79,9 +80,14 @@ const LocalSellersPage: React.FC = () => {
   // Get role label - human readable
   const getRoleLabel = (role: string) => {
     switch (role) {
+      case 'master': return 'Master Owner';
+      case 'ceo': return 'CEO';
       case 'admin': return 'Administrador';
+      case 'manager': return 'Gestor';
+      case 'seller': return 'Vendedor';
+      case 'viewer': return 'Visualizador';
       case 'vendedor': return 'Vendedor';
-      default: return 'Vendedor';
+      default: return role;
     }
   };
 

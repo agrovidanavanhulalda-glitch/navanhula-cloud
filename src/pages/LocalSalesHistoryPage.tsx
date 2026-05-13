@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useLocalPOS, LocalSale } from '@/contexts/LocalPOSContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -35,7 +36,8 @@ import PageTransition from '@/components/layout/PageTransition';
  */
 const LocalSalesHistoryPage: React.FC = () => {
   const { sales, stores, currentStore, cancelCompletedSale, currentCashRegister, loading } = useLocalPOS();
-  const { role, user, company } = useAuth();
+  const { isAdmin } = usePermissions();
+  const { user, company } = useAuth();
   const targetCompanyId = (company as any)?.id;
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,8 +46,6 @@ const LocalSalesHistoryPage: React.FC = () => {
   const [selectedSale, setSelectedSale] = useState<LocalSale | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-
-  const isAdmin = role === 'admin' || role === 'manager';
 
   // Filter sales
   const filteredSales = useMemo(() => {

@@ -25,6 +25,7 @@ const ROLES = [
   { value: 'manager', label: 'Gestor' },
   { value: 'seller', label: 'Vendedor' },
   { value: 'cashier', label: 'Caixa' },
+  { value: 'viewer', label: 'Visualizador (Somente Leitura)' },
 ];
 
 const MODULES = ['stock', 'sales', 'finance', 'users', 'reports', 'settings', 'compliance', 'hr'];
@@ -41,11 +42,13 @@ const ACTION_LABELS: Record<string, string> = {
 const roleLabels: Record<string, string> = {
   owner: 'Proprietário', admin: 'Administrador', manager: 'Gestor',
   seller: 'Vendedor', cashier: 'Caixa', accountant: 'Contabilista', ceo: 'CEO',
+  viewer: 'Visualizador', master: 'Master Owner'
 };
 
 const roleBadgeVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   owner: 'destructive', ceo: 'destructive', admin: 'default',
   manager: 'secondary', seller: 'outline', cashier: 'outline', accountant: 'secondary',
+  viewer: 'outline', master: 'destructive'
 };
 
 const IAMPage = () => {

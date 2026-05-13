@@ -7903,12 +7903,23 @@ export type Database = {
       get_user_company: { Args: { _user_id: string }; Returns: string }
       get_user_company_id: { Args: never; Returns: string }
       get_user_company_ids: { Args: never; Returns: string[] }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       get_user_store: { Args: { _user_id: string }; Returns: string }
       has_company_role: {
         Args: { _company_id: string; _role: string }
         Returns: boolean
       }
       has_completed_onboarding: { Args: { _user_id: string }; Returns: boolean }
+      has_minimum_role: {
+        Args: {
+          min_role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -7922,7 +7933,9 @@ export type Database = {
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_master_ceo: { Args: never; Returns: boolean }
       is_master_company_user: { Args: { p_user_id: string }; Returns: boolean }
-      is_master_owner: { Args: never; Returns: boolean }
+      is_master_owner:
+        | { Args: never; Returns: boolean }
+        | { Args: { user_id: string }; Returns: boolean }
       is_reseller: { Args: { _user_id: string }; Returns: boolean }
       issue_fiscal_document: {
         Args: {
@@ -8092,6 +8105,7 @@ export type Database = {
         | "director"
         | "hr"
         | "cashier"
+        | "viewer"
       billing_payment_method: "mpesa" | "emola" | "manual"
       cash_register_status: "open" | "closed"
       fiscal_document_type:
@@ -8266,6 +8280,7 @@ export const Constants = {
         "director",
         "hr",
         "cashier",
+        "viewer",
       ],
       billing_payment_method: ["mpesa", "emola", "manual"],
       cash_register_status: ["open", "closed"],

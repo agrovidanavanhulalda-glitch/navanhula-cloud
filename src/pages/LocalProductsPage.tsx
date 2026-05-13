@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,7 +39,7 @@ import PageTransition from '@/components/layout/PageTransition';
 const LocalProductsPage: React.FC = () => {
   const { products, addProduct, updateProduct, deleteProduct, loading } = useLocalPOS();
   const { updateStep } = useOnboarding();
-  const { role } = useAuth();
+  const { isAdmin } = usePermissions();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -58,7 +58,7 @@ const LocalProductsPage: React.FC = () => {
     imageUrl: '' as string | null,
   });
 
-  const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
+  
 
   // Filter products
   const filteredProducts = products.filter(p =>
