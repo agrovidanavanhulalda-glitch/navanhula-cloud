@@ -247,7 +247,8 @@ const FiscalDocumentsManager: React.FC = () => {
   };
 
   const handleSaveSeries = async () => {
-    if (!company?.id || company.id === 'local-default') return;
+    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!company?.id || !isUuid(company.id)) return;
     if (!seriesPrefix.trim()) {
       toast.error('Defina o prefixo da série');
       return;
