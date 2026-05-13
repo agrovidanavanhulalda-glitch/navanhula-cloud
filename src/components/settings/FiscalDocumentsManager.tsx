@@ -117,7 +117,8 @@ const FiscalDocumentsManager: React.FC = () => {
   const [stockProducts, setStockProducts] = useState<DocumentProductOption[]>([]);
 
   const loadData = useCallback(async () => {
-    if (!company?.id || company.id === 'local-default') {
+    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!company?.id || !isUuid(company.id)) {
       setLoading(false);
       return;
     }
