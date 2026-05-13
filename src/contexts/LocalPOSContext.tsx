@@ -430,7 +430,40 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ============ LOAD DATA FROM SUPABASE ============
   useEffect(() => {
     loadData();
-  }, [loadData]);
+
+    const companyId = company?.id;
+    if (!companyId) return;
+
+    // Realtime subscription for stock updates
+    const stockChannel = supabase
+      .channel('stock-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'product_stock',
+          filter: `company_id=eq.${companyId}`
+        },
+        (payload) => {
+          console.log('[POS] Realtime stock update:', payload);
+          setState(prev => {
+            const updatedProducts = prev.products.map(p => {
+              if (p.id === (payload.new as any).product_id && (payload.new as any).store_id === authStore?.id) {
+                return { ...p, stock: (payload.new as any).quantity };
+              }
+              return p;
+            });
+            return { ...prev, products: updatedProducts };
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(stockChannel);
+    };
+  }, [loadData, company?.id, authStore?.id]);
 
   // Reload when store changes in auth
   useEffect(() => {
