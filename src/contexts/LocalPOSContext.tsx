@@ -1179,16 +1179,16 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         id: productId,
         code,
         name: product.name.trim(),
-        cost_price: product.costPrice,
-        sale_price: product.salePrice,
+        cost_price: product.costPrice || 0,
+        sale_price: product.salePrice || 0,
         is_active: product.isActive,
         company_id: targetCompanyId,
+        created_by: user.id
       } as any).select();
 
       if (insertError) {
         console.error('[POS] Erro ao inserir produto no Supabase:', insertError);
-        toast.error('Erro ao salvar produto: ' + insertError.message);
-        return;
+        throw new Error(`Erro ao salvar produto: ${insertError.message}`);
       }
 
 
