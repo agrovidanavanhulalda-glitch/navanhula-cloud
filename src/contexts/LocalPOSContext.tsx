@@ -741,14 +741,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return false;
       }
 
-      // 2. Restaurar stock usando decrement com valor negativo
-      for (const item of sale.items.filter(i => !i.product.id.startsWith('manual-'))) {
-        await supabase.rpc('decrement_product_stock', {
-          p_product_id: item.product.id,
-          p_store_id: sale.storeId,
-          p_quantity: -item.quantity,
-        });
-      }
+      // 2. Restaurar stock ( handled by trigger tr_sale_cancellation_to_inventory_movement in DB )
+      // No manual loop needed anymore to prevent race conditions and double deductions
 
       // 3. Atualizar estado local
       setState(prev => {
@@ -1204,17 +1198,14 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         : authStore?.id;
 
       if (storeIdToUse) {
-        const { error: stockError } = await supabase.from('product_stock').upsert({
-          product_id: productId,
-          store_id: storeIdToUse,
-          quantity: product.stock,
-        }, { onConflict: 'product_id,store_id' });
-
-        if (stockError) {
-          console.warn('[POS] Erro ao criar stock inicial:', stockError);
-        }
-      } else {
-        console.warn('[POS] Não foi possível criar stock inicial: Loja não identificada');
+        // Use the new movement-based architecture for initial stock
+        await supabase.rpc('add_inventory_adjustment', {
+          p_product_id: productId,
+          p_store_id: storeIdToUse,
+          p_quantity: product.stock,
+          p_type: 'ENTRY',
+          p_reason: 'Criação inicial do produto'
+        });
       }
 
       // Atualizar dados do servidor para garantir sincronia total
@@ -1247,16 +1238,18 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
 
       if (updates.stock !== undefined && state.currentStore.id) {
-        const { error: stockError } = await supabase.from('product_stock').upsert({
-          product_id: id,
-          store_id: state.currentStore.id,
-          quantity: updates.stock,
-        }, { onConflict: 'product_id,store_id' });
-
-        if (stockError) {
-          console.error('[POS] Erro ao atualizar stock no Supabase:', stockError);
-          toast.error('Erro ao atualizar estoque');
-          return;
+        // Calculate difference for adjustment
+        const currentProduct = state.products.find(p => p.id === id);
+        const diff = updates.stock - (currentProduct?.stock || 0);
+        
+        if (diff !== 0) {
+          await supabase.rpc('add_inventory_adjustment', {
+            p_product_id: id,
+            p_store_id: state.currentStore.id,
+            p_quantity: diff,
+            p_type: 'ADJUSTMENT',
+            p_reason: 'Ajuste manual via edição de produto'
+          });
         }
       }
 
