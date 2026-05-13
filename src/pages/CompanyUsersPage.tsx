@@ -87,7 +87,7 @@ const CompanyUsersPage = () => {
           role_id: roleId,
           invited_by: user?.id,
           status: 'pending'
-        })
+        } as any)
         .select('token')
         .single();
 
