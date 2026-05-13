@@ -25,7 +25,8 @@ const AuthSignupPage: React.FC = () => {
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      navigate(role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard', { replace: true });
+      const redirect = searchParams.get('redirect');
+      navigate(redirect || (role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard'), { replace: true });
     }
   }, [loading, isAuthenticated, role, navigate]);
 
