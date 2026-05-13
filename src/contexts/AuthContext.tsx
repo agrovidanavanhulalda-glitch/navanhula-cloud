@@ -97,84 +97,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Auto-setup user with company (no onboarding needed)
-  const autoSetupUser = useCallback(async (userId: string) => {
-    if (setupRan.current) return;
-    setupRan.current = true;
-    
-    try {
-      const { error: bootstrapError } = await supabase.rpc('bootstrap_current_user');
-      if (bootstrapError) {
-        // Bootstrap warning - non-critical
-      }
-
-      const [profileResult, companyUserResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('id, company_id, store_id, onboarding_completed')
-          .eq('id', userId)
-          .maybeSingle(),
-        supabase
-          .from('user_company')
-          .select('*, roles(name)')
-          .eq('user_id', userId)
-          .maybeSingle(),
-      ]);
-
-      const profile = profileResult.data;
-      const currentRole = ((companyUserResult.data?.roles as any)?.name?.toLowerCase() || 'admin') as AppRole;
-      const needsCompany = !profile?.company_id || !profile?.onboarding_completed;
-
-      // Se já tem empresa, não tenta fazer onboarding automático
-      if (profile?.company_id && profile.company_id !== 'local-default') {
-        await fetchUserData(userId);
-        forceComplete();
-        return;
-      }
-
-      if (currentRole !== 'reseller' && needsCompany) {
-        const { error: onboardError } = await supabase.rpc('complete_onboarding', {
-          p_company_name: 'NAVANHULA GROUP SA',
-          p_company_nif: null,
-          p_company_phone: null,
-          p_company_address: null,
-        });
-
-        if (onboardError) {
-          console.warn('[Auth] Falha no onboarding automático:', onboardError);
-          // Fallback seguro se não conseguir criar empresa
-          if (!profile?.company_id) {
-            setCompany(DEFAULT_COMPANY);
-            setStore(DEFAULT_STORE);
-          }
-        } else {
-          toast.success('Empresa sincronizada!');
-        }
-      }
-
-      await fetchUserData(userId);
-    } catch (error) {
-      setCompany(DEFAULT_COMPANY);
-      setStore(DEFAULT_STORE);
-      setRole('admin');
-    }
-    forceComplete();
-  }, []);
-
   // Fetch user profile and related data
   const fetchUserData = useCallback(async (userId: string): Promise<void> => {
     try {
-      const [profileResult, companyUserResult] = await Promise.all([
+      const [profileResult, userRolesResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
-        supabase
-          .from('user_company')
-          .select('*, roles(name)')
-          .eq('user_id', userId)
-          .maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
       ]);
 
       const profileData = profileResult.data;
-      const userRole = ((companyUserResult.data?.roles as any)?.name?.toLowerCase() || 'admin') as AppRole;
+      const userRole = (userRolesResult.data?.role?.toLowerCase() || 'admin') as AppRole;
 
       if (profileData) {
         setUser(profileData as Profile);
@@ -212,6 +144,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRole('admin');
     }
   }, []);
+
+  // Auto-setup user with company (no onboarding needed)
+  const autoSetupUser = useCallback(async (userId: string) => {
+    if (setupRan.current) return;
+    setupRan.current = true;
+    
+    try {
+      // 1. Garante que o perfil existe e está vinculado a uma empresa
+      const { error: bootstrapError } = await supabase.rpc('bootstrap_current_user');
+      if (bootstrapError) {
+        console.error('[Auth] Erro no bootstrap:', bootstrapError);
+      }
+
+      // 2. Busca dados consolidados
+      await fetchUserData(userId);
+    } catch (error) {
+      console.error('[Auth] Erro crítico no setup:', error);
+      setCompany(DEFAULT_COMPANY);
+      setStore(DEFAULT_STORE);
+      setRole('admin');
+    }
+    forceComplete();
+  }, [fetchUserData, forceComplete]);
 
   // Refresh user data (public method)
   const refreshUserData = useCallback(async () => {
