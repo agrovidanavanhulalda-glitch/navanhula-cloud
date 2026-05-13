@@ -139,9 +139,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await fetchUserData(userId);
     } catch (error) {
       console.error('[Auth] Erro crítico no setup:', error);
-      setCompany(DEFAULT_COMPANY);
-      setStore(DEFAULT_STORE);
-      setRole('admin');
+      setCompany(null);
+      setStore(null);
+      setRole('viewer');
     }
     forceComplete();
   }, [fetchUserData, forceComplete]);
