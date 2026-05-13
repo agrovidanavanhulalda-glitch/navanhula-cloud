@@ -147,10 +147,10 @@ const InviteAcceptPage: React.FC = () => {
               Para aceitar o convite, você precisa fazer login ou criar uma conta primeiro.
             </p>
             <div className="grid grid-cols-2 gap-4">
-              <Link to="/login" className="w-full">
+              <Link to={`/login?redirect=/convite/${token}`} className="w-full">
                 <Button variant="outline" className="w-full h-12">Login</Button>
               </Link>
-              <Link to="/registrar" className="w-full">
+              <Link to={`/registrar?redirect=/convite/${token}`} className="w-full">
                 <Button className="w-full h-12 bg-[#0B3C5D]">Criar Conta</Button>
               </Link>
             </div>
