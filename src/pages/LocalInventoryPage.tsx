@@ -96,9 +96,11 @@ const LocalInventoryPage: React.FC = () => {
       }
 
       const mapped: InventoryProduct[] = (data || []).map((p: any) => {
+        // Strict store filtering: if we have a store, only show its stock. 
+        // Otherwise, show 0 instead of randomly picking the first store's stock.
         const stockRecord = store?.id 
-          ? p.product_stock?.find((s: any) => s.store_id === store.id)
-          : p.product_stock?.[0];
+          ? (p.product_stock || []).find((s: any) => s.store_id === store.id)
+          : null;
 
         return {
           id: p.id,
@@ -175,17 +177,24 @@ const LocalInventoryPage: React.FC = () => {
         p_reason: `${adjustmentReason}${adjustmentNotes ? ': ' + adjustmentNotes : ''}`,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("LocalInventoryPage: Error in record_stock_movement", error);
+        throw error;
+      }
+      
       const result = data as any;
       if (result?.success) {
         toast.success(`Estoque atualizado: ${selectedProduct.name} → ${result.new_stock} unidades`);
         setShowAdjustDialog(false);
         loadProducts();
       } else {
+        // Here result.message contains the detailed error from the trigger (e.g. Insufficient stock)
         toast.error(result?.message || 'Erro ao ajustar estoque');
+        console.error("LocalInventoryPage: RPC returned failure", result);
       }
     } catch (err: any) {
-      toast.error('Erro: ' + err.message);
+      console.error("LocalInventoryPage: Caught error", err);
+      toast.error('Erro ao atualizar: ' + (err.message || 'Erro desconhecido'));
     } finally {
       setAdjusting(false);
     }
