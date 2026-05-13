@@ -63,8 +63,8 @@ const InviteAcceptPage: React.FC = () => {
       toast.success('Bem-vindo à equipa!');
       
       // Refresh user data in context to update company and role
-      await signIn('', ''); // This is a bit hacky, but better to use a dedicated refresh if available
-      // Actually we have refreshUserData in AuthContext, but we can't call it easily here unless we expose it
+      // No need for a fake sign in, we'll use window.location.href to force a clean state reload
+      // which is safest for multi-tenant switching.
       
       setTimeout(() => {
         window.location.href = '/app/dashboard'; // Force reload to ensure all contexts are updated
