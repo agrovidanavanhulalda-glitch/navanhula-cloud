@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, ShoppingCart, Package, Settings, LogOut,
@@ -41,12 +42,15 @@ interface SubItem {
   label: string;
   href: string;
   icon: React.ElementType;
+  module?: string;
+  minRole?: string;
 }
 
 interface NavGroup {
   title: string;
   icon: React.ElementType;
-  roles?: string[];
+  module?: string;
+  minRole?: string;
   items: SubItem[];
 }
 
@@ -56,28 +60,28 @@ const navGroups: NavGroup[] = [
     icon: LayoutDashboard,
     items: [
       { label: 'Resumo Geral', href: '/app/dashboard', icon: LayoutDashboard },
-      { label: 'Visão Executiva', href: '/app/ceo', icon: TrendingUp },
-      { label: 'Visão Direção', href: '/app/dashboard/diretor', icon: Building2 },
-      { label: 'Visão Gestão', href: '/app/dashboard/gestor', icon: Users },
-      { label: 'Recursos Humanos', href: '/app/dashboard/rh', icon: User },
-      { label: 'Análise de Dados', href: '/app/bi', icon: PieChart },
+      { label: 'Visão Executiva', href: '/app/ceo', icon: TrendingUp, minRole: 'ceo' },
+      { label: 'Visão Direção', href: '/app/dashboard/diretor', icon: Building2, minRole: 'ceo' },
+      { label: 'Visão Gestão', href: '/app/dashboard/gestor', icon: Users, minRole: 'manager' },
+      { label: 'Recursos Humanos', href: '/app/dashboard/rh', icon: User, minRole: 'manager' },
+      { label: 'Análise de Dados', href: '/app/bi', icon: PieChart, minRole: 'manager' },
     ],
   },
   {
     title: 'Vendas',
     icon: ShoppingCart,
-    roles: ['admin', 'ceo', 'director', 'manager', 'seller', 'cashier'],
+    module: 'sales',
     items: [
       { label: 'Realizar Venda', href: '/app/pdv', icon: ShoppingCart },
       { label: 'Abrir/Fechar Caixa', href: '/app/caixa', icon: WalletCards },
       { label: 'Histórico de Vendas', href: '/app/vendas', icon: History },
-      { label: 'Loja Online', href: '/app/ecommerce', icon: ShoppingBag },
+      { label: 'Loja Online', href: '/app/ecommerce', icon: ShoppingBag, minRole: 'admin' },
     ],
   },
   {
     title: 'Produtos',
     icon: Package,
-    roles: ['admin', 'ceo', 'director', 'manager', 'seller'],
+    module: 'products',
     items: [
       { label: 'Meus Produtos', href: '/app/produtos', icon: Package },
     ],
@@ -85,54 +89,57 @@ const navGroups: NavGroup[] = [
   {
     title: 'Estoque',
     icon: Boxes,
-    roles: ['admin', 'ceo', 'director', 'manager', 'seller'],
+    module: 'stock',
     items: [
       { label: 'Controlo de Stock', href: '/app/estoque', icon: Boxes },
-      { label: 'Mover Stock', href: '/app/transferencias-stock', icon: ArrowRightLeft },
-      { label: 'Stock das Filiais', href: '/app/estoque-filiais', icon: Building2 },
+      { label: 'Mover Stock', href: '/app/transferencias-stock', icon: ArrowRightLeft, minRole: 'manager' },
+      { label: 'Stock das Filiais', href: '/app/estoque-filiais', icon: Building2, minRole: 'manager' },
     ],
   },
   {
     title: 'Clientes',
     icon: UserCheck,
-    roles: ['admin', 'manager', 'ceo', 'director'],
+    module: 'crm',
+    minRole: 'seller',
     items: [
       { label: 'Meus Clientes', href: '/app/crm', icon: UserCheck },
-      { label: 'Fornecedores', href: '/app/fornecedores', icon: Truck },
+      { label: 'Fornecedores', href: '/app/fornecedores', icon: Truck, minRole: 'manager' },
     ],
   },
   {
     title: 'Relatórios',
     icon: BarChart3,
-    roles: ['admin', 'manager', 'ceo', 'director'],
+    module: 'reports',
+    minRole: 'manager',
     items: [
       { label: 'Vendas e Lucros', href: '/app/relatorios', icon: BarChart3 },
       { label: 'Documentos Fiscais', href: '/app/relatorios-fiscais', icon: FileText },
-      { label: 'Ganhos e Gastos', href: '/app/financeiro-rh', icon: TrendingUp },
+      { label: 'Ganhos e Gastos', href: '/app/financeiro-rh', icon: TrendingUp, minRole: 'admin' },
     ],
   },
   {
     title: 'Ajustes',
     icon: Settings,
-    roles: ['admin', 'ceo', 'manager'],
+    module: 'settings',
+    minRole: 'manager',
     items: [
       { label: 'Geral do Sistema', href: '/app/configuracoes', icon: Settings },
-      { label: 'Regras de Impostos', href: '/app/fiscal', icon: FileText },
-      { label: 'Contas Bancárias', href: '/app/banco', icon: Landmark },
-      { label: 'Minha Equipa', href: '/app/equipa', icon: Users },
-      { label: 'Minhas Lojas', href: '/app/lojas', icon: Store },
-      { label: 'Assistente com IA', href: '/app/ai', icon: Brain },
-      { label: 'Mensagens WhatsApp', href: '/app/whatsapp', icon: MessageCircle },
-      { label: 'Segurança e Regras', href: '/app/compliance', icon: Shield },
-      { label: 'Níveis de Acesso', href: '/app/iam', icon: Shield },
-      { label: 'Tarefas Automáticas', href: '/app/automacao', icon: Settings },
-      { label: 'Chaves de Integração', href: '/app/api-keys', icon: Key },
-      { label: 'Pasta de Arquivos', href: '/app/documentos', icon: FileText },
-      { label: 'Mercado Aberto', href: '/app/marketplace', icon: ShoppingBag },
-      { label: 'Gestão Agrícola', href: '/app/agricultura', icon: Sprout },
-      { label: 'Criação de Aves', href: '/app/avicultura', icon: Egg },
-      { label: 'Clima e Ambiente', href: '/app/ambiente', icon: Cloud },
-      { label: 'Verificação de Dados', href: '/app/auditoria', icon: Shield },
+      { label: 'Regras de Impostos', href: '/app/fiscal', icon: FileText, minRole: 'admin' },
+      { label: 'Contas Bancárias', href: '/app/banco', icon: Landmark, minRole: 'admin' },
+      { label: 'Minha Equipa', href: '/app/equipa', icon: Users, minRole: 'admin' },
+      { label: 'Minhas Lojas', href: '/app/lojas', icon: Store, minRole: 'admin' },
+      { label: 'Assistente com IA', href: '/app/ai', icon: Brain, minRole: 'manager' },
+      { label: 'Mensagens WhatsApp', href: '/app/whatsapp', icon: MessageCircle, minRole: 'manager' },
+      { label: 'Segurança e Regras', href: '/app/compliance', icon: Shield, minRole: 'admin' },
+      { label: 'Níveis de Acesso', href: '/app/iam', icon: Shield, minRole: 'admin' },
+      { label: 'Tarefas Automáticas', href: '/app/automacao', icon: Settings, minRole: 'admin' },
+      { label: 'Chaves de Integração', href: '/app/api-keys', icon: Key, minRole: 'admin' },
+      { label: 'Pasta de Arquivos', href: '/app/documentos', icon: FileText, minRole: 'manager' },
+      { label: 'Mercado Aberto', href: '/app/marketplace', icon: ShoppingBag, minRole: 'manager' },
+      { label: 'Gestão Agrícola', href: '/app/agricultura', icon: Sprout, minRole: 'manager' },
+      { label: 'Criação de Aves', href: '/app/avicultura', icon: Egg, minRole: 'manager' },
+      { label: 'Clima e Ambiente', href: '/app/ambiente', icon: Cloud, minRole: 'manager' },
+      { label: 'Verificação de Dados', href: '/app/auditoria', icon: Shield, minRole: 'admin' },
     ],
   },
 ];
@@ -162,43 +169,34 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, company, store, signOut, role } = useAuth();
+  const { hasMinimumRole, canViewModule, isMaster } = usePermissions();
   const { currentCashRegister } = useLocalPOS();
   const { state } = useSidebar();
   const collapsed = forceExpanded ? false : state === 'collapsed';
 
-  const isBackofficeAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
+  const isBackofficeAdmin = hasMinimumRole('manager');
   const isReseller = role === 'reseller';
   const rawName = currentCashRegister?.sellerName || user?.full_name || '';
   const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : 'Operador';
+  
   const currentOperatorRole =
+    isMaster ? 'Master Owner' :
     role === 'reseller' ? 'Revendedor' :
     role === 'ceo' ? 'CEO' :
     role === 'director' ? 'Diretor' :
+    role === 'admin' ? 'Administrador' :
     role === 'manager' ? 'Gestor' :
     role === 'hr' ? 'RH' :
     role === 'cashier' ? 'Caixa' :
-    isBackofficeAdmin ? 'Administrador' : 'Vendedor';
+    role === 'seller' ? 'Vendedor' : 
+    role === 'viewer' ? 'Visualizador' : 'Utilizador';
 
-  // Filter sub-items by role
+  // Filter sub-items by role and module
   const filterSubItems = (items: SubItem[]): SubItem[] => {
-    const itemVisibility: Record<string, string[]> = {
-      '/app/ceo': ['ceo', 'admin'],
-      '/app/dashboard/diretor': ['director', 'ceo', 'admin'],
-      '/app/dashboard/gestor': ['manager', 'director', 'ceo', 'admin'],
-      '/app/dashboard/rh': ['hr', 'director', 'ceo', 'admin'],
-      '/app/bi': ['ceo', 'admin', 'director'],
-      '/app/equipa': ['ceo', 'admin', 'owner'],
-      '/app/iam': ['ceo', 'admin', 'owner'],
-      '/app/fiscal': ['ceo', 'admin'],
-      '/app/auditoria': ['ceo', 'admin'],
-      '/app/api-keys': ['ceo', 'admin'],
-      '/app/configuracoes': ['ceo', 'admin', 'manager'],
-      '/app/lojas': ['ceo', 'admin'],
-    };
     return items.filter(item => {
-      const allowed = itemVisibility[item.href];
-      if (!allowed) return true;
-      return allowed.includes(role || '');
+      if (item.minRole && !hasMinimumRole(item.minRole)) return false;
+      if (item.module && !canViewModule(item.module)) return false;
+      return true;
     });
   };
 
