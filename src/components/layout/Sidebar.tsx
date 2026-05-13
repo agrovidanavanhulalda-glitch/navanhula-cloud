@@ -227,8 +227,8 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   };
 
   const renderCollapsibleGroup = (group: NavGroup) => {
-    if (group.roles && !group.roles.includes(role || 'seller')) return null;
-    const Icon = group.icon;
+    if (group.minRole && !hasMinimumRole(group.minRole)) return null;
+    if (group.module && !canViewModule(group.module)) return null;
     // Filter items for Dashboard group based on role
     const visibleItems = filterSubItems(group.items);
     if (visibleItems.length === 0) return null;
