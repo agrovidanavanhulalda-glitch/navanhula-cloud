@@ -44,32 +44,9 @@ export const useAuth = () => {
 // Maximum loading time - 5 seconds (emergency mode)
 const MAX_LOADING_TIME = 5000;
 
-// Default company for fallback
-const DEFAULT_COMPANY: Company = {
-  id: 'local-default',
-  name: 'NAVANHULA GROUP SA',
-  nif: null,
-  phone: null,
-  address: null,
-  is_active: true,
-  company_type: 'master',
-  is_system_owner: true,
-  billing_exempt: true,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
-
-const DEFAULT_STORE: Store = {
-  id: 'local-store',
-  name: 'Loja Principal',
-  company_id: 'local-default',
-  address: null,
-  phone: null,
-  email: null,
-  is_active: true,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
+// Deprecated fallback constants (to be removed after full UUID migration)
+const DEFAULT_COMPANY = null;
+const DEFAULT_STORE = null;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<Profile | null>(null);
