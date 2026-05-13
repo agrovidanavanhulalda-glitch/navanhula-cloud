@@ -24,13 +24,14 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   children,
   fallback = <DefaultFallback />,
 }) => {
-  const { role } = useAuth();
-  const { canViewModule, canCreateIn, canEditIn, canDeleteIn, canApproveIn } = usePermissions();
+  const { isMaster, hasMinimumRole, canViewModule, canCreateIn, canEditIn, canDeleteIn, canApproveIn } = usePermissions();
 
   const hasAccess = () => {
-    // Master user/CEO/Admin bypass - Case Insensitive
-    const normalizedRole = role?.toLowerCase();
-    if (['ceo', 'admin', 'super_admin', 'director', 'owner'].includes(normalizedRole || '')) return true;
+    // Master bypass
+    if (isMaster) return true;
+
+    // Hierarchy bypass for Admin/CEO
+    if (hasMinimumRole('admin')) return true;
 
     switch (action) {
       case 'view': return canViewModule(module);
