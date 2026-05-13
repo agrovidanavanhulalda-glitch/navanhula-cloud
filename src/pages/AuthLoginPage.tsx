@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppVersion } from '@/hooks/useAppVersion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDefaultRouteForRole } from '@/lib/roleRoutes';
 import { Button } from '@/components/ui/button';
@@ -20,10 +20,12 @@ const AuthLoginPage: React.FC = () => {
 
   const { signIn, isAuthenticated, loading, role } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      navigate(getDefaultRouteForRole(role), { replace: true });
+      navigate(redirect || getDefaultRouteForRole(role), { replace: true });
     }
   }, [loading, isAuthenticated, role, navigate]);
 

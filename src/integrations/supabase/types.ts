@@ -7673,6 +7673,7 @@ export type Database = {
     }
     Functions: {
       accept_company_invitation: { Args: { p_token: string }; Returns: Json }
+      accept_invite_secure: { Args: { p_token: string }; Returns: Json }
       add_community_comment: {
         Args: { p_content: string; p_post_id: string }
         Returns: Json
@@ -7864,6 +7865,16 @@ export type Database = {
           id: string
           role_id: string
           status: string
+        }[]
+      }
+      get_invite_details: {
+        Args: { p_token: string }
+        Returns: {
+          company_name: string
+          email: string
+          expires_at: string
+          invite_id: string
+          role_name: string
         }[]
       }
       get_master_visible_company_ids: {
