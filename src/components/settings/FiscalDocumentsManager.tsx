@@ -394,7 +394,8 @@ const FiscalDocumentsManager: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (!company?.id || company.id === 'local-default') {
+  const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  if (!company?.id || !isUuid(company.id)) {
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
