@@ -118,9 +118,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .select('*')
             .eq('id', profileData.store_id)
             .maybeSingle();
-          setStore(storeData as Store || (userRole === 'reseller' ? null : DEFAULT_STORE));
+          setStore(storeData as Store || null);
         } else {
-          setStore(userRole === 'reseller' ? null : DEFAULT_STORE);
+          setStore(null);
         }
 
         if (profileData.company_id) {
@@ -129,19 +129,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .select('*')
             .eq('id', profileData.company_id)
             .maybeSingle();
-          setCompany(companyData as Company || (userRole === 'reseller' ? null : DEFAULT_COMPANY));
+          setCompany(companyData as Company || null);
         } else {
-          setCompany(userRole === 'reseller' ? null : DEFAULT_COMPANY);
+          setCompany(null);
         }
       } else {
-        setCompany(DEFAULT_COMPANY);
-        setStore(DEFAULT_STORE);
-        setRole('admin');
+        setCompany(null);
+        setStore(null);
+        setRole('viewer');
       }
     } catch (error) {
-      setCompany(DEFAULT_COMPANY);
-      setStore(DEFAULT_STORE);
-      setRole('admin');
+      console.error("[Auth] Error fetching user data:", error);
+      setCompany(null);
+      setStore(null);
+      setRole('viewer');
     }
   }, []);
 
