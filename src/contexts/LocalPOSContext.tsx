@@ -334,14 +334,18 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const targetCompanyId = company.id;
 
       // Fetch all data in parallel, filtering by company_id where applicable
+      const productsPromise = supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true).order('name');
+      const storesPromise = supabase.from('stores').select('*').eq('company_id', targetCompanyId);
+      const cashRegistersPromise = supabase.from('cash_registers').select('*').eq('company_id', targetCompanyId).order('opened_at', { ascending: false }).limit(50);
+
       const [
         productsRes,
         storesRes,
         cashRegistersRes,
       ] = await Promise.all([
-        supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true).order('name'),
-        supabase.from('stores').select('*').eq('company_id', targetCompanyId),
-        supabase.from('cash_registers').select('*').eq('company_id', targetCompanyId).order('opened_at', { ascending: false }).limit(50),
+        productsPromise,
+        storesPromise,
+        cashRegistersPromise,
       ]);
 
       if (productsRes.error) throw productsRes.error;
