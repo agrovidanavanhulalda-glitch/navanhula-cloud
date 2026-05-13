@@ -12,6 +12,8 @@ import { getDefaultRouteForRole, canAccessRoute } from "@/lib/roleRoutes";
 import { I18nProvider } from "@/contexts/i18n";
 import { AnimatePresence } from "framer-motion";
 import PageTransition from "./components/layout/PageTransition";
+import { ErrorBoundary } from "./components/error/ErrorBoundary";
+import { GlobalFallback } from "./components/error/GlobalFallback";
 
 // Public site — eagerly loaded (landing page)
 import PublicSiteLayout from "./components/public/PublicSiteLayout";
@@ -118,11 +120,7 @@ const legacyRoutes = [
   { from: "/avicultura", to: "/app/avicultura" },
 ];
 
-const PageLoader = () => (
-  <div className="flex-1 flex items-center justify-center min-h-[200px]">
-    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-  </div>
-);
+const PageLoader = () => <GlobalFallback />;
 
 const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
   <div
@@ -130,7 +128,10 @@ const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
     className="min-h-screen bg-background flex flex-col items-center justify-center gap-4"
   >
     <Loader2 className="w-10 h-10 animate-spin text-primary" />
-    <p className="text-sm text-muted-foreground">NAVANHULA CLOUD...</p>
+    <div className="flex flex-col items-center">
+      <p className="text-sm font-bold tracking-tight text-primary">NAVANHULA CLOUD</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-60">Segurança Ativa</p>
+    </div>
   </div>
 ));
 LoadingScreen.displayName = "LoadingScreen";
@@ -303,22 +304,24 @@ const AppRoutes = () => {
 
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <I18nProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Suspense fallback={null}>
-          <VersionUpdateAlert />
-        </Suspense>
-        <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </I18nProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <I18nProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Suspense fallback={null}>
+            <VersionUpdateAlert />
+          </Suspense>
+          <BrowserRouter>
+            <AuthProvider>
+              <AppRoutes />
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </I18nProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
