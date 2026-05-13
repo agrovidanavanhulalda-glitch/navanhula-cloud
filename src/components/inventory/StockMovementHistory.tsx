@@ -6,18 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatCurrency } from '@/lib/formatters';
 import { format } from 'date-fns';
-import { ArrowDown, ArrowUp, RefreshCw, Package } from 'lucide-react';
+import { ArrowDown, ArrowUp, RefreshCw, Package, ArrowRightLeft, CornerDownLeft } from 'lucide-react';
 
 interface StockMovement {
   id: string;
-  type: string;
+  movement_type: string;
   quantity: number;
-  previous_stock: number;
-  new_stock: number;
-  unit_cost: number;
-  total_cost: number;
   reference_type: string | null;
-  reason: string | null;
   created_at: string;
   created_by: string | null;
 }
@@ -30,7 +25,6 @@ interface Props {
 }
 
 const StockMovementHistory: React.FC<Props> = ({ productId, productName, open, onOpenChange }) => {
-  const { user } = useAuth();
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -42,39 +36,53 @@ const StockMovementHistory: React.FC<Props> = ({ productId, productName, open, o
 
   const loadMovements = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('stock_movements')
-      .select('*')
-      .eq('product_id', productId)
-      .order('created_at', { ascending: false })
-      .limit(50);
-    setMovements((data as StockMovement[]) || []);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('inventory_movements')
+        .select('*')
+        .eq('product_id', productId)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (error) throw error;
+      setMovements((data as StockMovement[]) || []);
+    } catch (err) {
+      console.error('Erro ao carregar movimentos:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (type: string, quantity: number) => {
     switch (type) {
-      case 'entrada': return <ArrowDown className="w-4 h-4 text-green-600" />;
-      case 'saida': return <ArrowUp className="w-4 h-4 text-destructive" />;
-      case 'ajuste': return <RefreshCw className="w-4 h-4 text-blue-600" />;
+      case 'ENTRY': return <ArrowDown className="w-4 h-4 text-green-600" />;
+      case 'SALE': return <ArrowUp className="w-4 h-4 text-destructive" />;
+      case 'RETURN': return <CornerDownLeft className="w-4 h-4 text-blue-600" />;
+      case 'TRANSFER': return <ArrowRightLeft className="w-4 h-4 text-orange-600" />;
+      case 'ADJUSTMENT': return <RefreshCw className="w-4 h-4 text-slate-600" />;
       default: return <Package className="w-4 h-4" />;
     }
   };
 
-  const getTypeBadge = (type: string) => {
+  const getTypeBadge = (type: string, quantity: number) => {
     switch (type) {
-      case 'entrada': return <Badge className="bg-green-100 text-green-700 border-green-200">Entrada</Badge>;
-      case 'saida': return <Badge variant="destructive">Saída</Badge>;
-      case 'ajuste': return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Ajuste</Badge>;
+      case 'ENTRY': return <Badge className="bg-green-100 text-green-700 border-green-200">Entrada</Badge>;
+      case 'SALE': return <Badge variant="destructive">Venda</Badge>;
+      case 'RETURN': return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Retorno</Badge>;
+      case 'TRANSFER': return <Badge className="bg-orange-100 text-orange-700 border-orange-200">Transferência</Badge>;
+      case 'ADJUSTMENT': return <Badge className="bg-slate-100 text-slate-700 border-slate-200">Ajuste</Badge>;
       default: return <Badge variant="secondary">{type}</Badge>;
     }
   };
 
   const getRefLabel = (ref: string | null) => {
     switch (ref) {
-      case 'purchase_order': return 'Compra';
-      case 'sale': return 'Venda';
-      case 'manual': return 'Manual';
+      case 'PURCHASE_ORDER': return 'Compra';
+      case 'SALE': return 'Venda';
+      case 'SALE_CANCEL': return 'Cancelamento';
+      case 'MANUAL_ADJUSTMENT': return 'Manual';
+      case 'TRANSFER_OUT': return 'Saída Transf.';
+      case 'TRANSFER_IN': return 'Entrada Transf.';
       default: return ref || '—';
     }
   };
@@ -89,36 +97,44 @@ const StockMovementHistory: React.FC<Props> = ({ productId, productName, open, o
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh]">
+        <ScrollArea className="max-h-[60vh] mt-4">
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+            <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-2">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+              <span>Carregando...</span>
+            </div>
           ) : movements.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Package className="w-10 h-10 mx-auto mb-2 opacity-40" />
-              Nenhuma movimentação registrada
+            <div className="text-center py-12 text-muted-foreground">
+              <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p>Nenhuma movimentação registrada para este produto.</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3 pr-4">
               {movements.map((m) => (
-                <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
-                  <div className="flex-shrink-0">{getTypeIcon(m.type)}</div>
+                <div key={m.id} className="flex items-center gap-4 p-4 rounded-xl border bg-card hover:bg-muted/50 transition-all shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                    {getTypeIcon(m.movement_type, m.quantity)}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      {getTypeBadge(m.type)}
-                      <span className="text-xs text-muted-foreground">{getRefLabel(m.reference_type)}</span>
+                      {getTypeBadge(m.movement_type, m.quantity)}
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        {getRefLabel(m.reference_type)}
+                      </span>
                     </div>
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">{m.previous_stock}</span>
-                      <span className="mx-1">→</span>
-                      <span className="font-bold">{m.new_stock}</span>
-                      <span className="text-muted-foreground ml-1">({m.type === 'saida' ? '-' : '+'}{m.quantity})</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className={`text-lg font-black ${m.quantity > 0 ? 'text-green-600' : 'text-destructive'}`}>
+                        {m.quantity > 0 ? '+' : ''}{m.quantity}
+                      </span>
+                      <span className="text-xs text-muted-foreground">unidades</span>
                     </div>
-                    {m.reason && <p className="text-xs text-muted-foreground mt-1">{m.reason}</p>}
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-sm font-medium">{formatCurrency(m.unit_cost)}</div>
+                    <div className="text-sm font-bold text-[#0B1F3A]">
+                      {format(new Date(m.created_at), 'dd/MM/yyyy')}
+                    </div>
                     <div className="text-xs text-muted-foreground">
-                      {format(new Date(m.created_at), 'dd/MM/yy HH:mm')}
+                      {format(new Date(m.created_at), 'HH:mm')}
                     </div>
                   </div>
                 </div>
