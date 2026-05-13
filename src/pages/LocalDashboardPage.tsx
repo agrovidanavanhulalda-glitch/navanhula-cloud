@@ -133,8 +133,23 @@ const QuickAction: React.FC<{ icon: React.ElementType; label: string; onClick: (
 const LocalDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { store, sales, products, cashRegisterOpen, startNewSale, loading } = useLocalPOS();
-  const { user } = useAuth();
+  const { user, company } = useAuth();
   const [chartPeriod, setChartPeriod] = useState<'today' | 'week' | 'month'>('week');
+
+  const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+  if (!loading && (!company?.id || !isUuid(company.id))) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-8 text-center">
+        <Card className="max-w-md p-8">
+          <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Configuração Incompleta</h2>
+          <p className="text-muted-foreground mb-6">Não foi possível carregar os dados da sua empresa. Por favor, tente sair e entrar novamente.</p>
+          <Button onClick={() => window.location.reload()}>Tentar Novamente</Button>
+        </Card>
+      </div>
+    );
+  }
 
   /* ── Sales calculations ── */
   const { todaySales, weekSales, monthSales, lastMonthSales } = useMemo(() => {
