@@ -226,7 +226,21 @@ const CompanyUsersPage = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" className="text-destructive">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-destructive"
+                        onClick={async () => {
+                          if (confirm('Deseja realmente remover este membro?')) {
+                            const { error } = await supabase.from('company_users').delete().eq('id', m.id);
+                            if (error) toast.error('Erro ao remover: ' + error.message);
+                            else {
+                              toast.success('Membro removido');
+                              queryClient.invalidateQueries({ queryKey: ['team-members'] });
+                            }
+                          }
+                        }}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </TableCell>
@@ -267,7 +281,21 @@ const CompanyUsersPage = () => {
                       }}>
                         <Link2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-destructive">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-destructive"
+                        onClick={async () => {
+                          if (confirm('Cancelar este convite?')) {
+                            const { error } = await supabase.from('invites').delete().eq('id', inv.id);
+                            if (error) toast.error('Erro ao cancelar: ' + error.message);
+                            else {
+                              toast.success('Convite cancelado');
+                              queryClient.invalidateQueries({ queryKey: ['team-invites'] });
+                            }
+                          }
+                        }}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </TableCell>
