@@ -188,29 +188,39 @@ const PurchaseOrderDetail: React.FC<PurchaseOrderDetailProps> = ({ orderId, open
   };
 
   const handleReceiveMerchandise = async () => {
-    // Update stock for each item
+    // Update stock for each item using the new movement architecture
     for (const item of items) {
       if (!item.product_id) continue;
 
       const storeId = user?.store_id;
-      if (!storeId) continue;
+      if (!storeId || !company?.id) continue;
 
-      // Get current stock
+      // Inserir movimento de entrada
+      const { error: movError } = await supabase.from('inventory_movements').insert({
+        company_id: company.id,
+        branch_id: storeId,
+        product_id: item.product_id,
+        movement_type: 'ENTRY',
+        quantity: item.quantity,
+        reference_type: 'PURCHASE_ORDER',
+        reference_id: orderId,
+        created_by: user.id
+      });
+
+      if (movError) {
+        console.error('Erro ao registrar movimento de estoque:', movError);
+        continue;
+      }
+
+      // Get current stock for cost average calculation
       const { data: stockRow } = await supabase
         .from('product_stock')
-        .select('id, quantity')
+        .select('quantity')
         .eq('product_id', item.product_id)
         .eq('store_id', storeId)
         .maybeSingle();
-
+      
       const currentQty = Number(stockRow?.quantity || 0);
-      const newQty = currentQty + item.quantity;
-
-      if (stockRow) {
-        await supabase.from('product_stock').update({ quantity: newQty, updated_at: new Date().toISOString() }).eq('id', stockRow.id);
-      } else {
-        await supabase.from('product_stock').insert({ product_id: item.product_id, store_id: storeId, quantity: item.quantity });
-      }
 
       // Update product cost price (weighted average)
       const { data: productData } = await supabase.from('products').select('cost_price').eq('id', item.product_id).single();
