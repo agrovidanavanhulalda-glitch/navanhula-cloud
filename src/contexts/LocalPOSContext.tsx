@@ -331,7 +331,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
-    setState(prev => ({ ...prev, loading: true }));
+    let currentState: LocalPOSState;
+    setState(prev => {
+      currentState = prev;
+      return { ...prev, loading: true };
+    });
     
     try {
       const storeId = authStore?.id || user.store_id;
