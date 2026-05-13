@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { getDefaultRouteForRole } from '@/lib/roleRoutes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,7 +27,7 @@ const AuthSignupPage: React.FC = () => {
   useEffect(() => {
     if (!loading && isAuthenticated) {
       const redirect = searchParams.get('redirect');
-      navigate(redirect || (role === 'reseller' ? '/app/revendedores/dashboard' : '/app/dashboard'), { replace: true });
+      navigate(redirect || getDefaultRouteForRole(role), { replace: true });
     }
   }, [loading, isAuthenticated, role, navigate]);
 
