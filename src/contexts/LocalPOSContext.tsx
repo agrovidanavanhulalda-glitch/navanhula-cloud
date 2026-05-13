@@ -307,7 +307,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [state, setState] = useState<LocalPOSState>({
     stores: [],
-    currentStore: FALLBACK_STORE,
+    currentStore: { ...FALLBACK_STORE },
     sellers: [],
     cashRegisters: [],
     currentCashRegister: null,
