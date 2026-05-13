@@ -419,7 +419,8 @@ function TargetsTab({ company, sellers, isAdmin }: any) {
   const { data: targets = [] } = useQuery({
     queryKey: ['sales-targets', company?.id],
     queryFn: async () => {
-      if (!company?.id) return [];
+      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (!company?.id || !isUuid(company.id)) return [];
       const { data } = await supabase
         .from('sales_targets')
         .select('*')
