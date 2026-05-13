@@ -60,8 +60,11 @@ const CompanyUsersPage = () => {
     queryKey: ['team-invites', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('company_invitations')
-        .select(`*`)
+        .from('invites')
+        .select(`
+          *,
+          roles(name)
+        `)
         .eq('company_id', companyId!)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -70,29 +73,26 @@ const CompanyUsersPage = () => {
     enabled: !!companyId,
   });
 
-  // Invite user via edge function
+  // Invite user via standard invites table
   const inviteUser = useMutation({
     mutationFn: async () => {
       const email = inviteForm.email.trim().toLowerCase();
-      const roleName = roles.find(r => r.id === inviteForm.role_id)?.name || 'Vendedor';
-      const token = crypto.randomUUID();
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
-
-      const { error } = await supabase
-        .from('company_invitations')
+      const roleId = inviteForm.role_id;
+      
+      const { data, error } = await supabase
+        .from('invites')
         .insert({
           company_id: companyId,
-          role: roleName,
-          token: token,
-          expires_at: expiresAt.toISOString(),
-          created_by: user?.id,
-          max_uses: 1,
-          status: 'active',
-        });
+          email: email,
+          role_id: roleId,
+          invited_by: user?.id,
+          status: 'pending'
+        })
+        .select('token')
+        .single();
 
       if (error) throw error;
-      return { token };
+      return { token: data.token };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['team-invites'] });
@@ -257,7 +257,7 @@ const CompanyUsersPage = () => {
                 {invitations.map((inv: any) => (
                   <TableRow key={inv.id}>
                     <TableCell className="font-mono text-xs">{inv.token.substring(0, 8)}...</TableCell>
-                    <TableCell>{inv.role}</TableCell>
+                    <TableCell>{inv.roles?.name || 'Membro'}</TableCell>
                     <TableCell>{inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '-'}</TableCell>
                     <TableCell className="text-right flex gap-1 justify-end">
                       <Button variant="ghost" size="sm" onClick={() => {

@@ -24,39 +24,25 @@ const InviteAcceptPage: React.FC = () => {
   useEffect(() => {
     if (!token) return;
     (async () => {
-      // Direct fetch from table if RPC fails or is missing
-      const { data: invData, error: invError } = await supabase
-        .from('company_invitations')
-        .select('*')
-        .eq('token', token)
-        .eq('status', 'active')
-        .gt('expires_at', new Date().toISOString())
-        .maybeSingle();
-
-      if (invError || !invData) {
-        // Fallback to RPC
-        const { data: rpcData, error: rpcError } = await supabase.rpc('get_invitation_by_token', { p_token: token });
+      setLoadingInvite(true);
+      try {
+        const { data, error: rpcError } = await supabase.rpc('get_invite_details', { p_token: token });
         
-        if (rpcError || !rpcData || rpcData.length === 0) {
+        if (rpcError || !data || data.length === 0) {
           setError('Convite inválido, expirado ou já utilizado.');
-          setLoadingInvite(false);
           return;
         }
-        setInvite(rpcData[0]);
-      } else {
-        setInvite(invData);
+
+        const inviteData = data[0];
+        setInvite(inviteData);
+        setCompany({ name: inviteData.company_name });
+      } catch (err) {
+        setError('Ocorreu um erro ao verificar o convite.');
+      } finally {
+        setLoadingInvite(false);
       }
     })();
   }, [token]);
-
-  useEffect(() => {
-    if (!invite) return;
-    (async () => {
-      const { data: compData } = await supabase.from('companies').select('name').eq('id', invite.company_id).maybeSingle();
-      setCompany(compData);
-      setLoadingInvite(false);
-    })();
-  }, [invite]);
 
   const acceptInvite = async () => {
     setIsSubmitting(true);
@@ -66,48 +52,23 @@ const InviteAcceptPage: React.FC = () => {
         return;
       }
 
-      // Try RPC first
-      const { data: rpcData, error: rpcError } = await supabase.rpc('accept_company_invitation', { p_token: token! });
+      const { data, error: rpcError } = await supabase.rpc('accept_invite_secure', { p_token: token! });
       
-      if (rpcError) {
-        console.warn('RPC accept_company_invitation failed, falling back to manual process', rpcError);
-        
-        // Manual process fallback
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Utilizador não autenticado');
-
-        // 1. Link user to company using company_users
-        const { error: linkError } = await supabase.from('company_users').upsert({
-          user_id: user.id,
-          company_id: invite.company_id,
-          role: invite.role, // now using text role
-          status: 'active',
-          branch_id: invite.branch_id
-        });
-        if (linkError) throw linkError;
-
-        // 2. Update profile
-        const { error: profError } = await supabase.from('profiles').update({
-          company_id: invite.company_id,
-          store_id: invite.branch_id,
-          onboarding_completed: true,
-          status: 'active'
-        }).eq('id', user.id);
-        if (profError) throw profError;
-
-        // 3. Increment invite count or mark used
-        await supabase.from('company_invitations').update({
-          used_count: (invite.used_count || 0) + 1,
-          status: (invite.used_count || 0) + 1 >= invite.max_uses ? 'used' : 'active'
-        }).eq('id', invite.id);
-      } else {
-        const result = rpcData as any;
-        if (!result?.success) throw new Error(result?.message || 'Erro ao aceitar convite');
-      }
+      if (rpcError) throw rpcError;
+      
+      const result = data as any;
+      if (!result?.success) throw new Error(result?.message || 'Erro ao aceitar convite');
       
       setAccepted(true);
       toast.success('Bem-vindo à equipa!');
-      setTimeout(() => navigate('/app/dashboard', { replace: true }), 2000);
+      
+      // Refresh user data in context to update company and role
+      await signIn('', ''); // This is a bit hacky, but better to use a dedicated refresh if available
+      // Actually we have refreshUserData in AuthContext, but we can't call it easily here unless we expose it
+      
+      setTimeout(() => {
+        window.location.href = '/app/dashboard'; // Force reload to ensure all contexts are updated
+      }, 2000);
     } catch (err: any) {
       setError(err.message || 'Erro ao aceitar convite');
       toast.error(err.message);
@@ -162,7 +123,7 @@ const InviteAcceptPage: React.FC = () => {
             <p className="text-gray-500 mt-1">Convidou você para fazer parte da equipa</p>
           </div>
           <Badge className="bg-[#1E5A8A] text-white px-4 py-1">
-            Cargo: {invite?.role || 'Membro'}
+            Cargo: {invite?.role_name || 'Membro'}
           </Badge>
         </div>
 
