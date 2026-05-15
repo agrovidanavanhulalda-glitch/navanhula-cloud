@@ -839,8 +839,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ============ CASH REGISTER ============
 
   const openCashRegister = useCallback(async (sellerId: string, sellerName: string, openingAmount: number): Promise<LocalCashRegister> => {
-    const registerId = crypto.randomUUID();
     const storeId = state.currentStore.id;
+    if (!isValidId(storeId)) {
+      toast.error('Erro: Selecione uma loja válida primeiro');
+      throw new Error('Invalid store ID');
+    }
+    const registerId = crypto.randomUUID();
 
     const newRegister: LocalCashRegister = {
       id: registerId,
