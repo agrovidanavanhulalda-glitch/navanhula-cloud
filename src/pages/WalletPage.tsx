@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { toast } from 'sonner';
+import { isValidId } from '@/lib/uuid';
+
 import WalletBalanceCards, { PAYMENT_LABELS } from '@/components/wallet/WalletBalanceCards';
 import WalletTransactionList from '@/components/wallet/WalletTransactionList';
 import PayoutDialog from '@/components/wallet/PayoutDialog';
