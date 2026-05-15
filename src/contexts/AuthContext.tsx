@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Profile, Store, Company, AppRole, AuthContextType } from '@/types/pos';
 import { toast } from 'sonner';
 import { setFormatterCountry } from '@/lib/formatters';
+import { isValidId } from '@/lib/uuid';
 
 /**
  * NAVANHULA CLOUD - Auth Context
