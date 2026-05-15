@@ -1290,8 +1290,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
-      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      if (updates.stock !== undefined && state.currentStore.id && isUuid(state.currentStore.id)) {
+      if (updates.stock !== undefined && isValidId(state.currentStore.id)) {
         // Calculate difference for adjustment
         const currentProduct = state.products.find(p => p.id === id);
         const diff = updates.stock - (currentProduct?.stock || 0);
