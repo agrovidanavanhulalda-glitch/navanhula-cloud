@@ -85,7 +85,7 @@ const PurchaseOrderDetail: React.FC<PurchaseOrderDetailProps> = ({ orderId, open
   };
 
   const loadOrder = async () => {
-    if (!orderId) return;
+    if (!isValidId(orderId)) return;
     setLoading(true);
     try {
       const [orderRes, itemsRes] = await Promise.all([
