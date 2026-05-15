@@ -7894,6 +7894,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: string[]
       }
+      get_my_company: { Args: never; Returns: string }
       get_my_company_id: { Args: never; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
       get_reseller_id: { Args: { _user_id: string }; Returns: string }
@@ -7926,6 +7927,7 @@ export type Database = {
         Returns: boolean
       }
       has_completed_onboarding: { Args: { _user_id: string }; Returns: boolean }
+      has_min_role: { Args: { required_role: string }; Returns: boolean }
       has_minimum_role: {
         Args: {
           min_role: Database["public"]["Enums"]["app_role"]
