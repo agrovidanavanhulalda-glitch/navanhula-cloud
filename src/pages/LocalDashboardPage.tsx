@@ -138,9 +138,7 @@ const LocalDashboardPage: React.FC = () => {
   const { user, company } = useAuth();
   const [chartPeriod, setChartPeriod] = useState<'today' | 'week' | 'month'>('week');
 
-  const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-
-  if (!loading && (!company?.id || !isUuid(company.id))) {
+  if (!loading && !isValidId(company?.id)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-8 text-center">
         <Card className="max-w-md p-8">
