@@ -42,9 +42,9 @@ export function useSubscription() {
   const [status, setStatus] = useState<SubscriptionStatus>('loading');
 
   const fetchSubscription = useCallback(async () => {
-    if (!store?.id || !isAuthenticated) {
+    if (!isValidId(store?.id) || !isAuthenticated) {
       setLoading(false);
-      setStatus('active'); // Default to active if no store
+      if (!isAuthenticated) setStatus('active'); 
       return;
     }
 
