@@ -5,6 +5,8 @@ import PageTransition from '@/components/layout/PageTransition';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { isValidId } from '@/lib/uuid';
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
