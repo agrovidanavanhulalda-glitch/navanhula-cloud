@@ -68,7 +68,11 @@ const WalletPage: React.FC = () => {
   }, [currentStoreId]);
 
   const loadData = async () => {
-    if (!currentStoreId) return;
+    if (!isValidId(currentStoreId)) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const [walletsRes, txRes, storesRes, payoutsRes] = await Promise.all([
