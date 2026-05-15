@@ -1217,9 +1217,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const code = `P-${Date.now().toString(36).toUpperCase()}`;
       const targetCompanyId = company?.id;
-      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-      if (!targetCompanyId || !isUuid(targetCompanyId)) {
+      if (!isValidId(targetCompanyId)) {
         console.error('[POS] Erro: ID da empresa inválido ou ausente', targetCompanyId);
         toast.error('Erro de sessão: ID da empresa inválido. Faça login novamente.');
         return;
