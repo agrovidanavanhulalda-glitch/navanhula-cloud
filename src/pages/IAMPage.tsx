@@ -288,52 +288,22 @@ const IAMPage = () => {
       const role = userForm.role;
       const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
       
-
-      // 1. Create user in Auth
+      // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: name
+            full_name: name,
+            company_id: companyId,
+            role: role,
+            branch_id: branchId
           }
         }
       });
 
       if (signUpError) throw signUpError;
       if (!signUpData.user) throw new Error('Erro ao criar conta de utilizador');
-
-      const newUser = signUpData.user;
-
-      // 2. Create profile
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: newUser.id,
-        full_name: name,
-        email: email,
-        company_id: companyId,
-        status: 'active',
-        onboarding_completed: true,
-        branch_id: branchId
-      });
-
-      if (profileError) {
-        console.error('[IAM] Erro ao criar perfil:', profileError);
-        throw profileError;
-      }
-
-      // 3. Link to company
-      const { error: linkError } = await supabase.from('company_users').insert({
-        user_id: newUser.id,
-        company_id: companyId,
-        role: role, 
-        status: 'active',
-        branch_id: branchId
-      });
-
-      if (linkError) {
-        console.error('[IAM] Erro ao ligar utilizador à empresa:', linkError);
-        throw linkError;
-      }
 
       return { success: true };
     },
