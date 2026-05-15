@@ -324,19 +324,19 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const loadData = useCallback(async () => {
     // Enterprise guard: block queries if UUIDs are not real
-    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-
-    if (!user?.id || !company?.id || !isUuid(company.id)) {
+    if (!isValidId(company?.id)) {
+      console.warn('[POS] Invalid company ID, skipping data load');
+      setState(prev => ({ ...prev, loading: false }));
       return;
     }
 
     setState(prev => ({ ...prev, loading: true }));
     
     try {
-      const storeId = authStore?.id || user.store_id;
+      const storeId = sanitizeId(authStore?.id || user?.store_id);
       const targetCompanyId = company.id;
 
-      if (!isUuid(targetCompanyId)) {
+      if (!isValidId(targetCompanyId)) {
         setState(prev => ({ ...prev, loading: false }));
         return;
       }
