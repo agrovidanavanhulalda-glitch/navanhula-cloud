@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { isValidId } from '@/lib/uuid';
 
 export type SubscriptionStatus = 'active' | 'warning' | 'blocked' | 'cancelled' | 'loading';
 
@@ -41,9 +42,9 @@ export function useSubscription() {
   const [status, setStatus] = useState<SubscriptionStatus>('loading');
 
   const fetchSubscription = useCallback(async () => {
-    if (!store?.id || !isAuthenticated) {
+    if (!isValidId(store?.id) || !isAuthenticated) {
       setLoading(false);
-      setStatus('active'); // Default to active if no store
+      if (!isAuthenticated) setStatus('active'); 
       return;
     }
 
@@ -88,7 +89,7 @@ export function useSubscription() {
   }, [store?.id, isAuthenticated]);
 
   const fetchPayments = useCallback(async () => {
-    if (!subscription?.id) return;
+    if (!isValidId(subscription?.id)) return;
 
     const { data } = await supabase
       .from('payment_transactions')

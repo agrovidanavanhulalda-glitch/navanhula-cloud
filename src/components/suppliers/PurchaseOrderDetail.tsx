@@ -13,6 +13,8 @@ import { Plus, Trash2, FileDown, Send, PackageCheck, X, MessageCircle, AlertTria
 import { formatCurrency } from '@/lib/formatters';
 import { downloadPurchaseOrderPdf, PurchaseOrderPdfData } from '@/lib/generatePurchaseOrderPdf';
 import { toast } from 'sonner';
+import { isValidId } from '@/lib/uuid';
+
 
 interface OrderItem {
   id?: string;
@@ -83,7 +85,7 @@ const PurchaseOrderDetail: React.FC<PurchaseOrderDetailProps> = ({ orderId, open
   };
 
   const loadOrder = async () => {
-    if (!orderId) return;
+    if (!isValidId(orderId)) return;
     setLoading(true);
     try {
       const [orderRes, itemsRes] = await Promise.all([

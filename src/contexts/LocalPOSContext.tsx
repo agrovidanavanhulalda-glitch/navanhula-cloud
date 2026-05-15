@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { autoIssueFiscalDocument } from '@/lib/fiscalPipeline';
+import { isValidId, sanitizeId, isUuid } from '@/lib/uuid';
 
 /**
  * NAVANHULA CLOUD Context - SUPABASE BACKED
@@ -324,19 +325,19 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const loadData = useCallback(async () => {
     // Enterprise guard: block queries if UUIDs are not real
-    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-
-    if (!user?.id || !company?.id || !isUuid(company.id)) {
+    if (!isValidId(company?.id)) {
+      console.warn('[POS] Invalid company ID, skipping data load');
+      setState(prev => ({ ...prev, loading: false }));
       return;
     }
 
     setState(prev => ({ ...prev, loading: true }));
     
     try {
-      const storeId = authStore?.id || user.store_id;
+      const storeId = sanitizeId(authStore?.id || user?.store_id);
       const targetCompanyId = company.id;
 
-      if (!isUuid(targetCompanyId)) {
+      if (!isValidId(targetCompanyId)) {
         setState(prev => ({ ...prev, loading: false }));
         return;
       }
@@ -629,8 +630,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     try {
       // 1. Inserir venda no Supabase
-      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      if (!isUuid(storeId)) {
+      if (!isValidId(storeId)) {
         toast.error('Erro crítico: Loja inválida para venda. Recarregue o sistema.');
         return null;
       }
@@ -838,8 +838,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ============ CASH REGISTER ============
 
   const openCashRegister = useCallback(async (sellerId: string, sellerName: string, openingAmount: number): Promise<LocalCashRegister> => {
-    const registerId = crypto.randomUUID();
     const storeId = state.currentStore.id;
+    if (!isValidId(storeId)) {
+      toast.error('Erro: Selecione uma loja válida primeiro');
+      throw new Error('Invalid store ID');
+    }
+    const registerId = crypto.randomUUID();
 
     const newRegister: LocalCashRegister = {
       id: registerId,
@@ -931,8 +935,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const storeId = crypto.randomUUID();
     const targetCompanyId = company?.id;
 
-    if (!targetCompanyId) {
-      toast.error('Empresa não identificada');
+    if (!isValidId(targetCompanyId)) {
+      toast.error('Empresa não identificada ou inválida');
       return;
     }
 
@@ -1212,9 +1216,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const code = `P-${Date.now().toString(36).toUpperCase()}`;
       const targetCompanyId = company?.id;
-      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-      if (!targetCompanyId || !isUuid(targetCompanyId)) {
+      if (!isValidId(targetCompanyId)) {
         console.error('[POS] Erro: ID da empresa inválido ou ausente', targetCompanyId);
         toast.error('Erro de sessão: ID da empresa inválido. Faça login novamente.');
         return;
@@ -1286,8 +1289,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
-      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      if (updates.stock !== undefined && state.currentStore.id && isUuid(state.currentStore.id)) {
+      if (updates.stock !== undefined && isValidId(state.currentStore.id)) {
         // Calculate difference for adjustment
         const currentProduct = state.products.find(p => p.id === id);
         const diff = updates.stock - (currentProduct?.stock || 0);

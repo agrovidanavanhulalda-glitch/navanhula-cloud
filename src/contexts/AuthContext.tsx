@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Profile, Store, Company, AppRole, AuthContextType } from '@/types/pos';
 import { toast } from 'sonner';
 import { setFormatterCountry } from '@/lib/formatters';
+import { isValidId } from '@/lib/uuid';
 
 /**
  * NAVANHULA CLOUD - Auth Context
@@ -76,6 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Fetch user profile and related data
   const fetchUserData = useCallback(async (userId: string): Promise<void> => {
+    if (!isValidId(userId)) return;
     try {
       const [profileResult, userRolesResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
@@ -89,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(profileData as Profile);
         setRole(userRole);
 
-        if (profileData.store_id) {
+        if (isValidId(profileData.store_id)) {
           const { data: storeData } = await supabase
             .from('stores')
             .select('*')
@@ -100,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setStore(null);
         }
 
-        if (profileData.company_id) {
+        if (isValidId(profileData.company_id)) {
           const { data: companyData } = await supabase
             .from('companies')
             .select('*')

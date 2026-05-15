@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { toast } from 'sonner';
+import { isValidId } from '@/lib/uuid';
+
 import WalletBalanceCards, { PAYMENT_LABELS } from '@/components/wallet/WalletBalanceCards';
 import WalletTransactionList from '@/components/wallet/WalletTransactionList';
 import PayoutDialog from '@/components/wallet/PayoutDialog';
@@ -66,7 +68,11 @@ const WalletPage: React.FC = () => {
   }, [currentStoreId]);
 
   const loadData = async () => {
-    if (!currentStoreId) return;
+    if (!isValidId(currentStoreId)) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const [walletsRes, txRes, storesRes, payoutsRes] = await Promise.all([
