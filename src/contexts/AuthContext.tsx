@@ -242,7 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setupRan.current = false;
           await handleAuthenticatedUser(session.user.id);
         }
-      } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+      } else if (event === 'INITIAL_SESSION') {
         handleNoSession();
       }
     });
