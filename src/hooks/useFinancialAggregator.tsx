@@ -26,8 +26,9 @@ export function useFinancialAggregator(periodStart?: Date, periodEnd?: Date) {
   const companyId = company?.id;
 
   const load = useCallback(async () => {
-    if (!companyId) return;
+    if (!isValidId(companyId)) return;
     setLoading(true);
+
 
     const start = periodStart || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const end = periodEnd || new Date();
