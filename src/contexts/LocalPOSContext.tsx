@@ -680,8 +680,9 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Não interrompemos pois a venda principal foi salva, mas logamos
       }
 
-      // 3. Stock é atualizado automaticamente via Trigger no Supabase (update_stock_on_sale)
-      // Não removemos manualmente aqui para evitar dupla dedução.
+      // 3. Stock é atualizado automaticamente via Trigger no Supabase (tr_handle_sale_item_stock)
+      // que cria um registro em inventory_movements para cada item da venda.
+      // Isso garante consistência mesmo que a conexão caia durante o loop.
 
       // 4. Crédito na carteira se não for dinheiro
       if (paymentDetails.method !== 'cash') {
@@ -1228,28 +1229,32 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         is_active: product.isActive,
         company_id: targetCompanyId,
         created_by: user.id
-      } as any).select();
+      } as any).select().single();
 
       if (insertError) {
         console.error('[POS] Erro ao inserir produto no Supabase:', insertError);
         throw new Error(`Erro ao salvar produto: ${insertError.message}`);
       }
 
-
       // Create stock entry
       const storeIdToUse = state.currentStore.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(state.currentStore.id)
         ? state.currentStore.id
         : authStore?.id;
 
-      if (storeIdToUse) {
-        // Use the new movement-based architecture for initial stock
-        await supabase.rpc('add_inventory_adjustment', {
+      if (storeIdToUse && product.stock !== undefined) {
+        console.log('[POS] Registrando movimento de stock inicial:', product.stock);
+        const { error: rpcError } = await supabase.rpc('add_inventory_adjustment', {
           p_product_id: productId,
           p_store_id: storeIdToUse,
-          p_quantity: product.stock,
+          p_quantity: Math.max(0, product.stock),
           p_type: 'ENTRY',
           p_reason: 'Criação inicial do produto'
         });
+
+        if (rpcError) {
+          console.error('[POS] Erro ao registrar stock inicial:', rpcError);
+          toast.warning('Produto criado, mas erro ao definir stock inicial.');
+        }
       }
 
       // Atualizar dados do servidor para garantir sincronia total

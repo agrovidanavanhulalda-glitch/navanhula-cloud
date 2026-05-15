@@ -7678,16 +7678,29 @@ export type Database = {
         Args: { p_content: string; p_post_id: string }
         Returns: Json
       }
-      add_inventory_adjustment: {
-        Args: {
-          p_product_id: string
-          p_quantity: number
-          p_reason?: string
-          p_store_id: string
-          p_type: string
-        }
-        Returns: undefined
-      }
+      add_inventory_adjustment:
+        | {
+            Args: {
+              p_product_id: string
+              p_quantity: number
+              p_reason?: string
+              p_store_id: string
+              p_type: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_product_id: string
+              p_quantity: number
+              p_reason?: string
+              p_reference_id?: string
+              p_reference_type?: string
+              p_store_id: string
+              p_type: string
+            }
+            Returns: undefined
+          }
       bootstrap_current_user: { Args: never; Returns: undefined }
       capture_referral_for_user: {
         Args: {

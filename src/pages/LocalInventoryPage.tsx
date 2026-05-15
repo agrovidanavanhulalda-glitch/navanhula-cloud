@@ -157,28 +157,28 @@ const LocalInventoryPage: React.FC = () => {
       let movQty: number;
 
       if (adjustmentType === 'add') {
-        movType = 'entrada';
+        movType = 'ENTRY';
         movQty = qty;
       } else if (adjustmentType === 'remove') {
-        movType = 'saida';
-        movQty = qty;
+        movType = 'ADJUSTMENT'; // Using ADJUSTMENT for manual removal
+        movQty = -qty;
       } else {
-        movType = 'ajuste';
-        movQty = qty;
+        movType = 'ADJUSTMENT';
+        // Calculate difference for SET
+        movQty = qty - selectedProduct.stock_qty;
       }
 
-      const { data, error } = await supabase.rpc('record_stock_movement', {
+      const { data, error } = await supabase.rpc('add_inventory_adjustment', {
         p_product_id: selectedProduct.id,
         p_store_id: store.id,
-        p_type: movType,
         p_quantity: movQty,
-        p_unit_cost: selectedProduct.cost_price,
-        p_reference_type: 'manual',
+        p_type: movType,
         p_reason: `${adjustmentReason}${adjustmentNotes ? ': ' + adjustmentNotes : ''}`,
+        p_reference_type: 'MANUAL_ADJUSTMENT'
       });
 
       if (error) {
-        console.error("LocalInventoryPage: Error in record_stock_movement", error);
+        console.error("LocalInventoryPage: Error in add_inventory_adjustment", error);
         throw error;
       }
       
