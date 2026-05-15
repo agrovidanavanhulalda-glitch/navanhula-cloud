@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { autoIssueFiscalDocument } from '@/lib/fiscalPipeline';
+import { isValidId, sanitizeId, isUuid } from '@/lib/uuid';
 
 /**
  * NAVANHULA CLOUD Context - SUPABASE BACKED
