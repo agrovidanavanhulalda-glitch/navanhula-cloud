@@ -434,8 +434,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error('[POS] Erro ao carregar dados:', error);
       toast.error('Erro ao carregar dados do sistema');
       setState(prev => ({ ...prev, loading: false }));
+    } finally {
+      fetchingRef.current = null;
     }
   }, [user?.id, company?.id, authStore?.id]);
+
 
   // ============ LOAD DATA FROM SUPABASE ============
   useEffect(() => {
