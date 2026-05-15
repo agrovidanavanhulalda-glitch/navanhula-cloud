@@ -77,6 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Fetch user profile and related data
   const fetchUserData = useCallback(async (userId: string): Promise<void> => {
+    if (!isValidId(userId)) return;
     try {
       const [profileResult, userRolesResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
