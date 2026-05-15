@@ -7716,6 +7716,14 @@ export type Database = {
         Args: { p_store_id: string }
         Returns: Database["public"]["Enums"]["subscription_status"]
       }
+      check_user_role: {
+        Args: {
+          p_company_id: string
+          p_required_roles: string[]
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       collect_ml_features: { Args: { p_batch_id: string }; Returns: undefined }
       complete_onboarding: {
         Args: {
