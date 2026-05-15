@@ -89,7 +89,7 @@ export function useSubscription() {
   }, [store?.id, isAuthenticated]);
 
   const fetchPayments = useCallback(async () => {
-    if (!subscription?.id) return;
+    if (!isValidId(subscription?.id)) return;
 
     const { data } = await supabase
       .from('payment_transactions')
