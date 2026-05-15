@@ -680,8 +680,9 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Não interrompemos pois a venda principal foi salva, mas logamos
       }
 
-      // 3. Stock é atualizado automaticamente via Trigger no Supabase (update_stock_on_sale)
-      // Não removemos manualmente aqui para evitar dupla dedução.
+      // 3. Stock é atualizado automaticamente via Trigger no Supabase (tr_handle_sale_item_stock)
+      // que cria um registro em inventory_movements para cada item da venda.
+      // Isso garante consistência mesmo que a conexão caia durante o loop.
 
       // 4. Crédito na carteira se não for dinheiro
       if (paymentDetails.method !== 'cash') {
