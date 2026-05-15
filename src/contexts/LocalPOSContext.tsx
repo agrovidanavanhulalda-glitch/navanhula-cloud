@@ -630,8 +630,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     try {
       // 1. Inserir venda no Supabase
-      const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      if (!isUuid(storeId)) {
+      if (!isValidId(storeId)) {
         toast.error('Erro crítico: Loja inválida para venda. Recarregue o sistema.');
         return null;
       }
