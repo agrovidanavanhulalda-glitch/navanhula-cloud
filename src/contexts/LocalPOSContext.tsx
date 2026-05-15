@@ -936,8 +936,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const storeId = crypto.randomUUID();
     const targetCompanyId = company?.id;
 
-    if (!targetCompanyId) {
-      toast.error('Empresa não identificada');
+    if (!isValidId(targetCompanyId)) {
+      toast.error('Empresa não identificada ou inválida');
       return;
     }
 
