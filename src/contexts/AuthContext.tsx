@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setStore(null);
         }
 
-        if (profileData.company_id) {
+        if (isValidId(profileData.company_id)) {
           const { data: companyData } = await supabase
             .from('companies')
             .select('*')
