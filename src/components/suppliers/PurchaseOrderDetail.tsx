@@ -13,6 +13,8 @@ import { Plus, Trash2, FileDown, Send, PackageCheck, X, MessageCircle, AlertTria
 import { formatCurrency } from '@/lib/formatters';
 import { downloadPurchaseOrderPdf, PurchaseOrderPdfData } from '@/lib/generatePurchaseOrderPdf';
 import { toast } from 'sonner';
+import { isValidId } from '@/lib/uuid';
+
 
 interface OrderItem {
   id?: string;
