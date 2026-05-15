@@ -160,15 +160,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthUserId(userId);
     
     // Auto-setup with timeout protection
+    // Check if we already have the profile to avoid flickering
+    if (initComplete.current && user && user.id === userId) {
+      return;
+    }
+
     const setupPromise = autoSetupUser(userId);
     const timeoutPromise = new Promise<void>((resolve) => {
-      setTimeout(() => {
-        forceComplete();
+      const timer = setTimeout(() => {
+        if (!initComplete.current) {
+          console.warn('[Auth] Initialization timeout - forcing completion');
+          forceComplete();
+        }
         resolve();
       }, MAX_LOADING_TIME);
+      return () => clearTimeout(timer);
     });
 
     await Promise.race([setupPromise, timeoutPromise]);
+
   }, [autoSetupUser, forceComplete]);
 
   // Handle no session
