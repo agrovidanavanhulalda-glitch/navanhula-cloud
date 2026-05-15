@@ -7,8 +7,11 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { isValidId } from "@/lib/uuid";
 import SubscriptionGate from "@/components/layout/SubscriptionGate";
 import { getDefaultRouteForRole, canAccessRoute } from "@/lib/roleRoutes";
+
 import { I18nProvider } from "@/contexts/i18n";
 import { AnimatePresence } from "framer-motion";
 import PageTransition from "./components/layout/PageTransition";
