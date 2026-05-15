@@ -7,8 +7,11 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { isValidId } from "@/lib/uuid";
 import SubscriptionGate from "@/components/layout/SubscriptionGate";
 import { getDefaultRouteForRole, canAccessRoute } from "@/lib/roleRoutes";
+
 import { I18nProvider } from "@/contexts/i18n";
 import { AnimatePresence } from "framer-motion";
 import PageTransition from "./components/layout/PageTransition";
@@ -137,7 +140,7 @@ const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
 LoadingScreen.displayName = "LoadingScreen";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, loading, role } = useAuth();
+  const { isAuthenticated, loading, role, company } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -148,12 +151,35 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <Navigate to="/login" replace />;
   }
 
+  // Enterprise Guard: If authenticated, we MUST have a role and company context
+  // unless we are in the middle of a transition. 
+  // This prevents crashes in child components that expect these to be present.
+  if (!role || !isValidId(company?.id)) {
+    // If we've been loading for a while but still don't have these, 
+    // it's better to show a clear error or retry than to crash.
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+        <p className="text-sm font-medium text-muted-foreground">Finalizando configuração segura...</p>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="mt-4 text-xs"
+          onClick={() => window.location.reload()}
+        >
+          Se demorar muito, clique aqui para recarregar
+        </Button>
+      </div>
+    );
+  }
+
   if (!canAccessRoute(location.pathname, role)) {
     return <Navigate to={getDefaultRouteForRole(role)} replace />;
   }
 
   return <>{children}</>;
 };
+
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading, role } = useAuth();

@@ -322,6 +322,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [lastSale, setLastSale] = useState<LocalSale | null>(null);
   const dataLoaded = useRef(false);
+  const fetchingRef = useRef<string | null>(null);
 
   const loadData = useCallback(async () => {
     // Enterprise guard: block queries if UUIDs are not real
@@ -330,6 +331,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setState(prev => ({ ...prev, loading: false }));
       return;
     }
+
+    // Prevent redundant fetches
+    if (fetchingRef.current === company.id) return;
+    fetchingRef.current = company.id;
 
     setState(prev => ({ ...prev, loading: true }));
     
@@ -429,8 +434,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error('[POS] Erro ao carregar dados:', error);
       toast.error('Erro ao carregar dados do sistema');
       setState(prev => ({ ...prev, loading: false }));
+    } finally {
+      fetchingRef.current = null;
     }
   }, [user?.id, company?.id, authStore?.id]);
+
 
   // ============ LOAD DATA FROM SUPABASE ============
   useEffect(() => {

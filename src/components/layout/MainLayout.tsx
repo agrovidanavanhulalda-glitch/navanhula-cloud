@@ -91,7 +91,8 @@ const MainLayout: React.FC = () => {
                     <Avatar className="h-8 w-8 border border-border/50">
                       <AvatarImage src={user?.avatar_url} />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                        {user?.email?.substring(0, 2).toUpperCase()}
+                        {(user?.email || 'US').substring(0, 2).toUpperCase()}
+
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start text-left">
