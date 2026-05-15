@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { isValidId } from '@/lib/uuid';
+
 
 export interface FinancialSummary {
   receitas: number;
