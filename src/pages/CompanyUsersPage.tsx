@@ -112,7 +112,7 @@ const CompanyUsersPage = () => {
       const name = createUserForm.full_name;
       const roleName = roles.find(r => r.id === createUserForm.role_id)?.name || 'Vendedor';
       
-      // 1. Criar utilizador no Auth
+      // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser automaticamente
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -120,36 +120,12 @@ const CompanyUsersPage = () => {
           data: {
             full_name: name,
             company_id: companyId,
+            role: roleName
           }
         }
       });
 
       if (authError) throw authError;
-
-      if (authData.user) {
-        // 2. Inserir perfil
-        const { error: profileError } = await supabase.from('profiles').upsert({
-          id: authData.user.id,
-          full_name: name,
-          email: email,
-          company_id: companyId,
-          status: 'active',
-          onboarding_completed: true
-        });
-
-        if (profileError) console.error('Erro perfil:', profileError);
-
-        // 3. Inserir na tabela de equipa (company_users)
-        const { error: teamError } = await supabase.from('company_users').upsert({
-          user_id: authData.user.id,
-          company_id: companyId,
-          role: roleName,
-          status: 'active'
-        });
-
-        if (teamError) console.error('Erro equipa:', teamError);
-      }
-
       return { success: true };
     },
     onSuccess: () => {
