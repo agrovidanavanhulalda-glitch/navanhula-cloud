@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(profileData as Profile);
         setRole(userRole);
 
-        if (profileData.store_id) {
+        if (isValidId(profileData.store_id)) {
           const { data: storeData } = await supabase
             .from('stores')
             .select('*')
