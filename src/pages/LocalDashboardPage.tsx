@@ -138,14 +138,19 @@ const LocalDashboardPage: React.FC = () => {
   const { user, company } = useAuth();
   const [chartPeriod, setChartPeriod] = useState<'today' | 'week' | 'month'>('week');
 
+  // Guard against crash on initial mount before POS data is loaded
+  const isReady = useMemo(() => {
+    return !loading && isValidId(company?.id) && store && products;
+  }, [loading, company?.id, store, products]);
+
   if (!loading && !isValidId(company?.id)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-8 text-center">
-        <Card className="max-w-md p-8">
+        <Card className="max-w-md p-8 border-none shadow-xl bg-background/50 backdrop-blur-sm">
           <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Configuração Incompleta</h2>
-          <p className="text-muted-foreground mb-6">Não foi possível carregar os dados da sua empresa. Por favor, tente sair e entrar novamente.</p>
-          <Button onClick={() => window.location.reload()}>Tentar Novamente</Button>
+          <h2 className="text-xl font-bold mb-2">Configuração Pendente</h2>
+          <p className="text-muted-foreground mb-6">Estamos finalizando o carregamento seguro da sua empresa.</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>Recarregar agora</Button>
         </Card>
       </div>
     );
@@ -288,19 +293,18 @@ const LocalDashboardPage: React.FC = () => {
   const handleNewSale = () => { startNewSale(); navigate('/app/pdv'); };
 
   /* ── Loading State ── */
-  if (loading) {
+  if (loading || !isReady) {
     return (
       <PageTransition>
         <div className="p-4 md:p-6 lg:p-8 space-y-6">
-          <div className="h-7 w-48 rounded-lg bg-muted animate-pulse" />
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-48 rounded-lg bg-muted animate-pulse" />
+            <div className="h-6 w-32 rounded-lg bg-muted animate-pulse" />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => <SkeletonKPI key={i} />)}
           </div>
           <SkeletonChart />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <SkeletonList rows={5} />
-            <SkeletonList rows={5} />
-          </div>
         </div>
       </PageTransition>
     );

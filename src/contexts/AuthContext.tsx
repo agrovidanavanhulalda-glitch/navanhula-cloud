@@ -66,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const initComplete = useRef(false);
   const setupRan = useRef(false);
+  const isInitializing = useRef(false);
 
   // Force loading complete
   const forceComplete = useCallback(() => {
@@ -77,12 +78,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Fetch user profile and related data
   const fetchUserData = useCallback(async (userId: string): Promise<void> => {
-    if (!isValidId(userId)) return;
+    if (!isValidId(userId)) {
+      console.warn('[Auth] Invalid userId for fetchUserData:', userId);
+      return;
+    }
+    
     try {
       const [profileResult, userRolesResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
         supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
       ]);
+
+      if (profileResult.error) throw profileResult.error;
 
       const profileData = profileResult.data;
       const userRole = (userRolesResult.data?.role?.toLowerCase() || 'admin') as AppRole;
@@ -91,24 +98,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(profileData as Profile);
         setRole(userRole);
 
+        // Batch fetching store and company
+        const fetches = [];
         if (isValidId(profileData.store_id)) {
-          const { data: storeData } = await supabase
-            .from('stores')
-            .select('*')
-            .eq('id', profileData.store_id)
-            .maybeSingle();
-          setStore(storeData as Store || null);
+          fetches.push(supabase.from('stores').select('*').eq('id', profileData.store_id).maybeSingle());
+        }
+        if (isValidId(profileData.company_id)) {
+          fetches.push(supabase.from('companies').select('*').eq('id', profileData.company_id).maybeSingle());
+        }
+
+        const results = await Promise.all(fetches);
+        
+        let storeIdx = 0;
+        if (isValidId(profileData.store_id)) {
+          setStore(results[storeIdx]?.data as Store || null);
+          storeIdx++;
         } else {
           setStore(null);
         }
 
         if (isValidId(profileData.company_id)) {
-          const { data: companyData } = await supabase
-            .from('companies')
-            .select('*')
-            .eq('id', profileData.company_id)
-            .maybeSingle();
-          setCompany(companyData as Company || null);
+          setCompany(results[storeIdx]?.data as Company || null);
         } else {
           setCompany(null);
         }
@@ -119,33 +129,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error("[Auth] Error fetching user data:", error);
-      setCompany(null);
-      setStore(null);
-      setRole('viewer');
+      // Don't wipe everything on transient error, but ensure we don't hang
     }
   }, []);
 
-  // Auto-setup user with company (no onboarding needed)
+  // Auto-setup user with company
   const autoSetupUser = useCallback(async (userId: string) => {
-    if (setupRan.current) return;
-    setupRan.current = true;
+    if (setupRan.current || isInitializing.current) return;
+    isInitializing.current = true;
     
     try {
-      // 1. Garante que o perfil existe e está vinculado a uma empresa
       const { error: bootstrapError } = await supabase.rpc('bootstrap_current_user');
       if (bootstrapError) {
-        console.error('[Auth] Erro no bootstrap:', bootstrapError);
+        console.error('[Auth] Bootstrap error:', bootstrapError);
       }
 
-      // 2. Busca dados consolidados
       await fetchUserData(userId);
+      setupRan.current = true;
     } catch (error) {
-      console.error('[Auth] Erro crítico no setup:', error);
-      setCompany(null);
-      setStore(null);
-      setRole('viewer');
+      console.error('[Auth] Critical setup error:', error);
+    } finally {
+      isInitializing.current = false;
+      forceComplete();
     }
-    forceComplete();
   }, [fetchUserData, forceComplete]);
 
   // Refresh user data (public method)
@@ -155,104 +161,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [authUserId, fetchUserData]);
 
-  // Handle authenticated session
-  const handleAuthenticatedUser = useCallback(async (userId: string) => {
-    setAuthUserId(userId);
-    
-    // Auto-setup with timeout protection
-    // Check if we already have the profile to avoid flickering
-    if (initComplete.current && user && user.id === userId) {
-      return;
-    }
-
-    const setupPromise = autoSetupUser(userId);
-    const timeoutPromise = new Promise<void>((resolve) => {
-      const timer = setTimeout(() => {
-        if (!initComplete.current) {
-          console.warn('[Auth] Initialization timeout - forcing completion');
-          forceComplete();
-        }
-        resolve();
-      }, MAX_LOADING_TIME);
-      return () => clearTimeout(timer);
-    });
-
-    await Promise.race([setupPromise, timeoutPromise]);
-
-  }, [autoSetupUser, forceComplete]);
-
-  // Handle no session
-  const handleNoSession = useCallback(() => {
-    setUser(null);
-    setRole(null);
-    setStore(null);
-    setCompany(null);
-    setAuthUserId(null);
-    setupRan.current = false;
-    initComplete.current = true;
-    setLoading(false);
-  }, []);
-
   // Initialize auth
   useEffect(() => {
     let mounted = true;
 
-    // FAIL-SAFE: Force complete after MAX_LOADING_TIME
-    const failSafeTimer = setTimeout(() => {
-      if (mounted && !initComplete.current) {
-        console.warn('[Auth] Fail-safe triggered');
-        forceComplete();
-      }
-    }, MAX_LOADING_TIME);
-
-    // Initial session check - IMMEDIATE
-    const initSession = async () => {
+    const initialize = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         
-        if (mounted && !initComplete.current) {
+        if (mounted) {
           if (session?.user) {
-            await handleAuthenticatedUser(session.user.id);
+            setAuthUserId(session.user.id);
+            await autoSetupUser(session.user.id);
           } else {
-            handleNoSession();
+            setUser(null);
+            setRole(null);
+            setStore(null);
+            setCompany(null);
+            setAuthUserId(null);
+            setLoading(false);
+            initComplete.current = true;
           }
         }
       } catch (err) {
-        console.error('[Auth] Initial session error:', err);
-        if (mounted) handleNoSession();
+        console.error('[Auth] Init error:', err);
+        if (mounted) {
+          setLoading(false);
+          initComplete.current = true;
+        }
       }
     };
 
-    initSession();
+    initialize();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-
       console.log(`[Auth] Event: ${event}`);
 
       if (event === 'SIGNED_OUT') {
-        handleNoSession();
+        setUser(null);
+        setRole(null);
+        setStore(null);
+        setCompany(null);
+        setAuthUserId(null);
+        setupRan.current = false;
+        setLoading(false);
         return;
       }
 
-      if (session?.user) {
-        // Only run setup if not already initialized for this user
-        if (authUserId !== session.user.id) {
-          setupRan.current = false;
-          await handleAuthenticatedUser(session.user.id);
-        }
-      } else if (event === 'INITIAL_SESSION') {
-        handleNoSession();
+      if (session?.user && authUserId !== session.user.id) {
+        setAuthUserId(session.user.id);
+        setupRan.current = false;
+        await autoSetupUser(session.user.id);
       }
     });
 
+    const failSafe = setTimeout(() => {
+      if (mounted && !initComplete.current) {
+        console.warn('[Auth] Fail-safe forced completion');
+        forceComplete();
+      }
+    }, MAX_LOADING_TIME);
+
     return () => {
       mounted = false;
-      clearTimeout(failSafeTimer);
       subscription.unsubscribe();
+      clearTimeout(failSafe);
     };
-  }, [handleAuthenticatedUser, handleNoSession, forceComplete, authUserId]);
+  }, [autoSetupUser, forceComplete, authUserId]);
 
 
   // Computed values - ALWAYS true if authenticated (no onboarding needed)

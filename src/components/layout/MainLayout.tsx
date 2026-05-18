@@ -31,7 +31,7 @@ import WhatsAppFloat from '../public/landing/WhatsAppFloat';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
-  const { user, company, signOut, role } = useAuth();
+  const { user, company, signOut, role, loading } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
@@ -71,7 +71,7 @@ const MainLayout: React.FC = () => {
             <div className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/50 border border-border/40">
               <Building2 className="w-4 h-4 text-primary" />
               <span className="font-semibold text-sm text-foreground truncate max-w-[200px]">
-                {company?.name || 'Navanhula Cloud'}
+                {company?.name || (loading ? 'Carregando...' : 'Navanhula Cloud')}
               </span>
             </div>
 

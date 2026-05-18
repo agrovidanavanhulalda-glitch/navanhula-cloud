@@ -323,6 +323,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [lastSale, setLastSale] = useState<LocalSale | null>(null);
   const dataLoaded = useRef(false);
   const fetchingRef = useRef<string | null>(null);
+  const lastFetchTime = useRef<number>(0);
 
   const loadData = useCallback(async () => {
     // Enterprise guard: block queries if UUIDs are not real
@@ -332,9 +333,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
-    // Prevent redundant fetches
-    if (fetchingRef.current === company.id) return;
+    // Prevent redundant fetches (deduplication 2s)
+    const now = Date.now();
+    if (fetchingRef.current === company.id && now - lastFetchTime.current < 2000) return;
     fetchingRef.current = company.id;
+    lastFetchTime.current = now;
 
     setState(prev => ({ ...prev, loading: true }));
     
