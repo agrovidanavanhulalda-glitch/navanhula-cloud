@@ -183,8 +183,13 @@ const LocalProductsPage: React.FC = () => {
         
         if (!name || salePrice <= 0) continue;
         
-        addProduct({ name, salePrice, costPrice: costPrice || 0, stock: stock || 0, isActive: true });
-        imported++;
+        try {
+          // Await to ensure sequential processing and proper state updates
+          await addProduct({ name, salePrice, costPrice: costPrice || 0, stock: stock || 0, isActive: true });
+          imported++;
+        } catch (err) {
+          console.error(`Erro ao importar produto ${name}:`, err);
+        }
       }
       
       toast.success(`${imported} produtos importados com sucesso.`);
