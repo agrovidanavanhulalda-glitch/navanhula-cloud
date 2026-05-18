@@ -3039,6 +3039,7 @@ export type Database = {
           created_by: string | null
           id: string
           movement_type: string
+          notes: string | null
           product_id: string
           quantity: number
           reference_id: string | null
@@ -3051,6 +3052,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           movement_type: string
+          notes?: string | null
           product_id: string
           quantity: number
           reference_id?: string | null
@@ -3063,6 +3065,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           movement_type?: string
+          notes?: string | null
           product_id?: string
           quantity?: number
           reference_id?: string | null
@@ -7678,29 +7681,18 @@ export type Database = {
         Args: { p_content: string; p_post_id: string }
         Returns: Json
       }
-      add_inventory_adjustment:
-        | {
-            Args: {
-              p_product_id: string
-              p_quantity: number
-              p_reason?: string
-              p_store_id: string
-              p_type: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_product_id: string
-              p_quantity: number
-              p_reason?: string
-              p_reference_id?: string
-              p_reference_type?: string
-              p_store_id: string
-              p_type: string
-            }
-            Returns: undefined
-          }
+      add_inventory_adjustment: {
+        Args: {
+          p_product_id: string
+          p_quantity: number
+          p_reason?: string
+          p_reference_id?: string
+          p_reference_type?: string
+          p_store_id: string
+          p_type: string
+        }
+        Returns: undefined
+      }
       bootstrap_current_user: { Args: never; Returns: undefined }
       capture_referral_for_user: {
         Args: {
@@ -7762,6 +7754,22 @@ export type Database = {
           p_reference?: string
           p_reference_id?: string
           p_reference_type?: string
+        }
+        Returns: Json
+      }
+      create_product_with_stock: {
+        Args: {
+          p_category_id?: string
+          p_code?: string
+          p_company_id: string
+          p_cost_price: number
+          p_description?: string
+          p_image_url?: string
+          p_initial_stock: number
+          p_is_active?: boolean
+          p_name: string
+          p_sale_price: number
+          p_store_id: string
         }
         Returns: Json
       }
