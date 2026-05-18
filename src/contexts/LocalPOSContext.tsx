@@ -25,6 +25,8 @@ export interface LocalProduct {
   code?: string;
   barcode?: string;
   imageUrl?: string | null;
+  description?: string | null;
+  categoryId?: string | null;
 }
 
 export interface LocalCartItem {
@@ -242,6 +244,8 @@ const mapDbProductToLocal = (p: any, stockQty: number): LocalProduct => ({
   code: p.code,
   barcode: p.barcode,
   imageUrl: p.image_url || null,
+  description: p.description || null,
+  categoryId: p.category_id || null,
 });
 
 const mapDbStoreToLocal = (s: any): LocalStore => ({
@@ -1216,8 +1220,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ============ PRODUCT ACTIONS ============
 
   const addProduct = useCallback(async (product: Omit<LocalProduct, 'id'>) => {
-    const productId = crypto.randomUUID();
-    
     // Validar campos obrigatórios
     if (!product.name.trim()) {
       toast.error('O nome do produto é obrigatório');
@@ -1225,60 +1227,51 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     try {
-      const code = `P-${Date.now().toString(36).toUpperCase()}`;
       const targetCompanyId = company?.id;
-
       if (!isValidId(targetCompanyId)) {
         console.error('[POS] Erro: ID da empresa inválido ou ausente', targetCompanyId);
         toast.error('Erro de sessão: ID da empresa inválido. Faça login novamente.');
         return;
       }
 
-      const { data: insertData, error: insertError } = await supabase.from('products').insert({
-        id: productId,
-        code,
-        name: product.name.trim(),
-        cost_price: product.costPrice || 0,
-        sale_price: product.salePrice || 0,
-        is_active: product.isActive,
-        company_id: targetCompanyId,
-        created_by: user.id
-      } as any).select().single();
-
-      if (insertError) {
-        console.error('[POS] Erro ao inserir produto no Supabase:', insertError);
-        throw new Error(`Erro ao salvar produto: ${insertError.message}`);
+      // Determinar loja para stock inicial
+      const storeIdToUse = sanitizeId(state.currentStore.id) || sanitizeId(authStore?.id);
+      
+      if (!storeIdToUse && product.stock > 0) {
+        toast.warning('Sem loja ativa. O produto será criado com stock zero.');
       }
 
-      // Create stock entry
-      const storeIdToUse = state.currentStore.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(state.currentStore.id)
-        ? state.currentStore.id
-        : authStore?.id;
+      console.log('[POS] Criando produto via RPC atómico:', product.name);
 
-      if (storeIdToUse && product.stock !== undefined) {
-        console.log('[POS] Registrando movimento de stock inicial:', product.stock);
-        const { error: rpcError } = await supabase.rpc('add_inventory_adjustment', {
-          p_product_id: productId,
-          p_store_id: storeIdToUse,
-          p_quantity: Math.max(0, product.stock),
-          p_type: 'ENTRY',
-          p_reason: 'Criação inicial do produto'
-        });
+      const { data, error } = await supabase.rpc('create_product_with_stock', {
+        p_name: product.name.trim(),
+        p_cost_price: product.costPrice || 0,
+        p_sale_price: product.salePrice || 0,
+        p_initial_stock: Math.max(0, product.stock || 0),
+        p_store_id: sanitizeId(storeIdToUse),
+        p_company_id: targetCompanyId,
+        p_is_active: product.isActive !== false,
+        p_image_url: product.imageUrl || null,
+        p_code: product.code || null,
+        p_category_id: product.categoryId || null,
+        p_description: product.description || null
+      });
 
-        if (rpcError) {
-          console.error('[POS] Erro ao registrar stock inicial:', rpcError);
-          toast.warning('Produto criado, mas erro ao definir stock inicial.');
-        }
+      if (error) {
+        console.error('[POS] Erro no RPC create_product_with_stock:', error);
+        throw new Error(error.message);
       }
 
-      // Atualizar dados do servidor para garantir sincronia total
+      console.log('[POS] Produto criado com sucesso:', data);
+      
+      // Sincronizar estado local
       await loadData();
       toast.success('Produto criado com sucesso');
     } catch (error: any) {
       console.error('[POS] Exceção ao criar produto:', error);
-      toast.error('Falha crítica ao criar produto');
+      toast.error(`Falha ao criar produto: ${error.message || 'Erro desconhecido'}`);
     }
-  }, [state.currentStore.id, company?.id]);
+  }, [state.currentStore.id, authStore?.id, company?.id, loadData]);
 
   const updateProduct = useCallback(async (id: string, updates: Partial<LocalProduct>) => {
     
@@ -1300,7 +1293,9 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
-      if (updates.stock !== undefined && isValidId(state.currentStore.id)) {
+      const storeIdToUse = sanitizeId(state.currentStore.id) || sanitizeId(authStore?.id);
+
+      if (updates.stock !== undefined && storeIdToUse) {
         // Calculate difference for adjustment
         const currentProduct = state.products.find(p => p.id === id);
         const diff = updates.stock - (currentProduct?.stock || 0);
@@ -1308,7 +1303,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (diff !== 0) {
           await supabase.rpc('add_inventory_adjustment', {
             p_product_id: id,
-            p_store_id: state.currentStore.id,
+            p_store_id: storeIdToUse,
             p_quantity: diff,
             p_type: 'ADJUSTMENT',
             p_reason: 'Ajuste manual via edição de produto'
