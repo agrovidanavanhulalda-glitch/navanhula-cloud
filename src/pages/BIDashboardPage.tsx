@@ -110,8 +110,8 @@ const BIDashboardPage: React.FC = () => {
 
   // ─── data loading ───
   const loadData = async () => {
-    const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    if (!company?.id || !isUuid(company.id)) {
+    const isUuidValid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!company?.id || !isUuidValid(company.id)) {
       setLoading(false);
       return;
     }
