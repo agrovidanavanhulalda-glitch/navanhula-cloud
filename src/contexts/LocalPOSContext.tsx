@@ -25,6 +25,8 @@ export interface LocalProduct {
   code?: string;
   barcode?: string;
   imageUrl?: string | null;
+  description?: string | null;
+  categoryId?: string | null;
 }
 
 export interface LocalCartItem {
@@ -1247,7 +1249,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         p_store_id: sanitizeId(storeIdToUse),
         p_company_id: targetCompanyId,
         p_is_active: product.isActive !== false,
-        p_image_url: (product as any).imageUrl || null
+        p_image_url: product.imageUrl || null,
+        p_code: product.code || null,
+        p_category_id: product.categoryId || null,
+        p_description: product.description || null
       });
 
       if (error) {
