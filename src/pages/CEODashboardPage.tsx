@@ -107,6 +107,51 @@ const CEODashboardPage: React.FC = () => {
 
   useEffect(() => { 
     fetchData(); 
+
+    // Real-time subscription for CEO Dashboard
+    const channel = supabase
+      .channel('ceo-dashboard-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'companies',
+        },
+        () => {
+          console.log('[CEO] Companies change detected, refreshing stats...');
+          fetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'branches',
+        },
+        () => {
+          console.log('[CEO] Branches change detected, refreshing stats...');
+          fetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sales',
+        },
+        () => {
+          // Refresh stats when new sales happen globally
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchData]);
 
   if (!isMaster && !loading) {

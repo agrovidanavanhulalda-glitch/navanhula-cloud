@@ -458,9 +458,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const companyId = company?.id;
     if (!companyId) return;
 
-    // Realtime subscription for stock updates
-    const stockChannel = supabase
-      .channel('stock-updates')
+    // Enterprise Realtime subscriptions
+    const channel = supabase
+      .channel('pos-realtime-updates')
+      // 1. Stock updates
       .on(
         'postgres_changes',
         {
@@ -473,8 +474,9 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           console.log('[POS] Realtime stock update:', payload);
           setState(prev => {
             const updatedProducts = prev.products.map(p => {
-              if (p.id === (payload.new as any).product_id && (payload.new as any).store_id === authStore?.id) {
-                return { ...p, stock: (payload.new as any).quantity };
+              const data = payload.new as any;
+              if (p.id === data?.product_id && data?.store_id === (authStore?.id || user?.store_id)) {
+                return { ...p, stock: data.quantity };
               }
               return p;
             });
@@ -482,10 +484,112 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           });
         }
       )
+      // 2. Product updates
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products',
+          filter: `company_id=eq.${companyId}`
+        },
+        async (payload) => {
+          console.log('[POS] Realtime product update:', payload.eventType);
+          if (payload.eventType === 'INSERT') {
+            const newProd = payload.new as any;
+            // When a new product is added, we might need to fetch its stock too
+            // or just add it with 0 stock initially
+            setState(prev => ({
+              ...prev,
+              products: [...prev.products, mapDbProductToLocal(newProd, 0)].sort((a, b) => a.name.localeCompare(b.name))
+            }));
+            // Refresh to get correct stock mapping if needed
+            loadData(true);
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as any;
+            setState(prev => ({
+              ...prev,
+              products: prev.products.map(p => p.id === updated.id ? { ...p, ...mapDbProductToLocal(updated, p.stock) } : p)
+            }));
+          } else if (payload.eventType === 'DELETE') {
+            const oldId = (payload.old as any).id;
+            setState(prev => ({
+              ...prev,
+              products: prev.products.filter(p => p.id !== oldId)
+            }));
+          }
+        }
+      )
+      // 3. Store updates
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'stores',
+          filter: `company_id=eq.${companyId}`
+        },
+        (payload) => {
+          console.log('[POS] Realtime store update:', payload.eventType);
+          if (payload.eventType === 'INSERT') {
+            const newStore = mapDbStoreToLocal(payload.new);
+            setState(prev => ({
+              ...prev,
+              stores: [...prev.stores, newStore]
+            }));
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = mapDbStoreToLocal(payload.new);
+            setState(prev => ({
+              ...prev,
+              stores: prev.stores.map(s => s.id === updated.id ? updated : s)
+            }));
+          } else if (payload.eventType === 'DELETE') {
+            const oldId = (payload.old as any).id;
+            setState(prev => ({
+              ...prev,
+              stores: prev.stores.filter(s => s.id !== oldId)
+            }));
+          }
+        }
+      )
+      // 3.1 Branch updates (in case branches is used instead of stores)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'branches',
+          filter: `company_id=eq.${companyId}`
+        },
+        (payload) => {
+          console.log('[POS] Realtime branch update:', payload.eventType);
+          loadData(true);
+        }
+      )
+      // 4. Sales updates (for history)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sales',
+        },
+        (payload) => {
+          // If the sale belongs to one of our stores, refresh
+          const newSale = payload.new as any;
+          setState(prev => {
+            const isOurStore = prev.stores.some(s => s.id === newSale.store_id);
+            if (isOurStore && !prev.sales.some(s => s.id === newSale.id)) {
+              loadData(true);
+            }
+            return prev;
+          });
+        }
+      )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(stockChannel);
+      supabase.removeChannel(channel);
     };
   }, [loadData, company?.id, authStore?.id]);
 

@@ -54,6 +54,58 @@ const roleBadgeVariant: Record<string, 'default' | 'secondary' | 'outline' | 'de
 const IAMPage = () => {
   const { company, user } = useAuth();
   const queryClient = useQueryClient();
+
+  React.useEffect(() => {
+    if (!company?.id) return;
+
+    // Real-time subscription for IAM Page
+    const channel = supabase
+      .channel('iam-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'branches',
+          filter: `company_id=eq.${company.id}`
+        },
+        () => {
+          console.log('[IAM] Branches change detected, invalidating query...');
+          queryClient.invalidateQueries({ queryKey: ['iam-branches'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'company_users',
+          filter: `company_id=eq.${company.id}`
+        },
+        () => {
+          console.log('[IAM] Members change detected, invalidating query...');
+          queryClient.invalidateQueries({ queryKey: ['iam-members'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'company_invitations',
+          filter: `company_id=eq.${company.id}`
+        },
+        () => {
+          console.log('[IAM] Invitations change detected, invalidating query...');
+          queryClient.invalidateQueries({ queryKey: ['iam-invitations'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [company?.id, queryClient]);
   const companyId = company?.id;
   const [showInvite, setShowInvite] = useState(false);
   const [showBranch, setShowBranch] = useState(false);
