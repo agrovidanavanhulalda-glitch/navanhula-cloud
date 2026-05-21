@@ -134,7 +134,8 @@ describe('NAVANHULA CLOUD E2E Workflows', () => {
   it('Flow 3: Logout and Login workflow', async () => {
     // Render a dummy component that uses auth
     const TestComp = () => {
-      const { signOut, signIn, isAuthenticated } = (require('@/contexts/AuthContext')).useAuth();
+      const { signOut, signIn, isAuthenticated } = (await import('@/contexts/AuthContext')).useAuth();
+
       return (
         <div>
           <span data-testid="auth-status">{isAuthenticated ? 'logged-in' : 'logged-out'}</span>
