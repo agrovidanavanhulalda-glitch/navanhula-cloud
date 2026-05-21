@@ -342,7 +342,7 @@ const CEODashboardPage: React.FC = () => {
             <DollarSign className="w-16 h-16 text-primary/20 mx-auto mb-6" />
             <h3 className="text-xl font-bold mb-2">Módulo de Faturamento Global</h3>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Visualização detalhada de assinaturas, métodos de pagamento e fluxo de caixa consolidado da plataforma.
+              Visualização detalhada de assinaturas, métodos de pagamento e fluxo de caixa consolidado do sistema.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
               <div className="p-6 bg-[#F5F7FA] rounded-2xl">

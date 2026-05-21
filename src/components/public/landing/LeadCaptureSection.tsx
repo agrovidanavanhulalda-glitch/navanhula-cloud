@@ -42,7 +42,7 @@ const LeadCaptureSection: React.FC = () => {
           <SectionHeading
             eyebrow="Oferta especial"
             title="Teste grátis por 14 dias. Sem compromisso."
-            description="Cadastre-se agora e receba acesso completo à plataforma. Sem limites, sem cartão de crédito."
+            description="Cadastre-se agora e receba acesso completo ao sistema. Sem limites, sem cartão de crédito."
           />
           <div className="grid gap-3 sm:grid-cols-2">
             {offers.map((o) => (
