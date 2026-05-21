@@ -329,7 +329,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const fetchingRef = useRef<string | null>(null);
   const lastFetchTime = useRef<number>(0);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (force = false) => {
     // Enterprise guard: block queries if UUIDs are not real
     if (!isValidId(company?.id)) {
       console.warn('[POS] Invalid company ID, skipping data load');
@@ -337,11 +337,15 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
-    // Prevent redundant fetches (deduplication 3s for dashboard stability)
+    // Prevent redundant fetches (deduplication 3s for dashboard stability), unless forced
     const now = Date.now();
-    if (fetchingRef.current === company.id && now - lastFetchTime.current < 3000) return;
+    if (!force && fetchingRef.current === company.id && now - lastFetchTime.current < 3000) return;
     fetchingRef.current = company.id;
     lastFetchTime.current = now;
+
+    if (force) {
+      console.log('[POS] Forced refresh requested');
+    }
 
     setState(prev => ({ ...prev, loading: true }));
     
@@ -971,15 +975,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return;
       }
 
-      setState(prev => ({
-        ...prev,
-        stores: [...prev.stores, { ...store, id: storeId }],
-      }));
+      await loadData(true);
       toast.success('Loja criada!');
     } catch (error) {
       console.error('[POS] Exceção ao criar loja:', error);
     }
-  }, [company?.id]);
+  }, [company?.id, loadData]);
 
   const updateStore = useCallback(async (id: string, updates: Partial<LocalStore>) => {
     try {

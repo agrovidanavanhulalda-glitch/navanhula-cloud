@@ -48,8 +48,7 @@ const PLANS = [
 
 const LocalStoresPage: React.FC = () => {
   const { role, company, store: activeStore } = useAuth();
-  const [stores, setStores] = useState<StoreRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { stores, loading, addStore, updateStore, deleteStore, refreshData } = useLocalPOS();
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingStore, setEditingStore] = useState<StoreRow | null>(null);
@@ -70,24 +69,6 @@ const LocalStoresPage: React.FC = () => {
   });
 
   const isAdmin = role === 'admin' || role === 'ceo' || role === 'director' || role === 'manager';
-
-  const fetchStores = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('stores')
-        .select('*')
-        .order('name');
-      if (error) throw error;
-      setStores((data || []) as unknown as StoreRow[]);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchStores(); }, []);
 
   const filteredStores = stores.filter(s =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,33 +110,27 @@ const LocalStoresPage: React.FC = () => {
 
     setSaving(true);
     try {
-      const payload: any = {
+      const storeData: any = {
         name: formData.name.trim(),
+        address: (formData.address.trim() || null) as string,
+        phone: (formData.phone.trim() || null) as string,
+        isActive: formData.is_active,
         city: formData.city.trim(),
-        address: formData.address.trim() || null,
-        phone: formData.phone.trim() || null,
         business_type: formData.business_type,
         nuit: formData.nuit.trim() || null,
         plan: formData.plan,
         fiscal_regime: formData.fiscal_regime,
         default_min_stock: formData.default_min_stock,
-        is_active: formData.is_active,
       };
 
       if (editingStore) {
-        const { error } = await supabase.from('stores').update(payload).eq('id', editingStore.id);
-        if (error) throw error;
-        toast.success('Loja atualizada');
+        await updateStore(editingStore.id, storeData);
       } else {
-        payload.company_id = company?.id;
-        const { error } = await supabase.from('stores').insert(payload);
-        if (error) throw error;
-        toast.success('Loja criada');
+        await addStore(storeData);
       }
 
       setShowForm(false);
       resetForm();
-      fetchStores();
     } catch (err: any) {
       toast.error('Erro: ' + err.message);
     } finally {
@@ -166,11 +141,8 @@ const LocalStoresPage: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (stores.length <= 1) { toast.error('Não é possível excluir a única loja'); return; }
     try {
-      const { error } = await supabase.from('stores').delete().eq('id', id);
-      if (error) throw error;
-      toast.success('Loja excluída');
+      await deleteStore(id);
       setDeleteConfirm(null);
-      fetchStores();
     } catch (err: any) {
       toast.error('Erro: ' + err.message);
     }
