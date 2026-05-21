@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: 'NAVANHULA CLOUD',
         short_name: 'NAVANHULA CLOUD',
-        description: 'Plataforma SaaS Empresarial',
+        description: 'Plataforma Sistema Empresarial',
         theme_color: '#1e3a8a',
         background_color: '#0f172a',
         display: 'standalone',

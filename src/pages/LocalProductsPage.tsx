@@ -34,7 +34,7 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { SkeletonTable } from '@/components/ui/skeleton-card';
 import PageTransition from '@/components/layout/PageTransition';
 
-// HYBRID: Local POS data + SaaS Auth
+// HYBRID: Local POS data + Sistema Auth
 
 const LocalProductsPage: React.FC = () => {
   const { products, addProduct, updateProduct, deleteProduct, loading } = useLocalPOS();

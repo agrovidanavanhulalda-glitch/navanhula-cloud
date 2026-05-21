@@ -3,7 +3,7 @@ import { LocalSeller, useLocalPOS } from './LocalPOSContext';
 
 /**
  * Local Seller Auth Context
- * Controls which local seller is logged in (separate from SaaS auth)
+ * Controls which local seller is logged in (separate from Sistema auth)
  * Used for RBAC within the POS system
  */
 

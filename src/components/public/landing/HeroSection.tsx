@@ -21,7 +21,7 @@ const HeroSection: React.FC = () => (
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1E5A8A] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#1E5A8A]"></span>
             </span>
-            SaaS de Gestão Empresarial
+            Sistema de Gestão Empresarial
           </div>
 
           <h1 className="text-5xl font-black leading-[1.1] tracking-tight text-[#0B3C5D] sm:text-6xl lg:text-7xl">
