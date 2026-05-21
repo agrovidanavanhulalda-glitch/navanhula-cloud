@@ -20,7 +20,6 @@ import { GlobalFallback } from "./components/error/GlobalFallback";
 import { supabase } from "@/integrations/supabase/client";
 
 // Public site — eagerly loaded (landing page)
-import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
 import Index from "./pages/Index";
 
@@ -211,14 +210,12 @@ const AppRoutes = () => {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
 
-        <Route element={<PublicSiteLayout />}>
-          <Route path="/" element={<Index />} />
-          <Route path="/home" element={<Index />} />
-          <Route path="/sobre" element={<AboutPage />} />
-          <Route path="/precos" element={<PricingPage />} />
-          <Route path="/recursos" element={<FeaturesPage />} />
-          <Route path="/contato" element={<ContactPage />} />
-        </Route>
+        <Route path="/" element={<Index />} />
+        <Route path="/home" element={<Index />} />
+        <Route path="/sobre" element={<AboutPage />} />
+        <Route path="/precos" element={<PricingPage />} />
+        <Route path="/recursos" element={<FeaturesPage />} />
+        <Route path="/contato" element={<ContactPage />} />
 
         <Route
           path="/login"
