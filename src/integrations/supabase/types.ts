@@ -8128,6 +8128,7 @@ export type Database = {
       }
       get_my_company: { Args: never; Returns: string }
       get_my_company_id: { Args: never; Returns: string }
+      get_my_store_id: { Args: never; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
       get_reseller_id: { Args: { _user_id: string }; Returns: string }
       get_revenue_by_company: {
