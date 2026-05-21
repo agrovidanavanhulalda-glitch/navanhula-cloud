@@ -21,7 +21,7 @@ const LandingHeader: React.FC = () => {
   const navLinks = [
     { name: 'Funcionalidades', href: '#recursos' },
     { name: 'Preços', href: '#precos' },
-    { name: 'Entrar', href: '/login' },
+    { name: 'Entrar', href: '/login', isRouterLink: true },
   ];
 
   return (
@@ -43,13 +43,23 @@ const LandingHeader: React.FC = () => {
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a 
-              key={link.name} 
-              href={link.href}
-              className="text-sm font-bold text-[#0B3C5D] hover:text-[#1E5A8A] transition-colors"
-            >
-              {link.name}
-            </a>
+            link.isRouterLink ? (
+              <Link 
+                key={link.name} 
+                to={link.href}
+                className="text-sm font-bold text-[#0B3C5D] hover:text-[#1E5A8A] transition-colors"
+              >
+                {link.name}
+              </Link>
+            ) : (
+              <a 
+                key={link.name} 
+                href={link.href}
+                className="text-sm font-bold text-[#0B3C5D] hover:text-[#1E5A8A] transition-colors"
+              >
+                {link.name}
+              </a>
+            )
           ))}
           <Button 
             asChild 
@@ -81,14 +91,25 @@ const LandingHeader: React.FC = () => {
           >
             <div className="container py-8 flex flex-col gap-6 text-center">
               {navLinks.map((link) => (
-                <a 
-                  key={link.name} 
-                  href={link.href}
-                  className="text-lg font-bold text-[#0B3C5D]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </a>
+                link.isRouterLink ? (
+                  <Link 
+                    key={link.name} 
+                    to={link.href}
+                    className="text-lg font-bold text-[#0B3C5D]"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                ) : (
+                  <a 
+                    key={link.name} 
+                    href={link.href}
+                    className="text-lg font-bold text-[#0B3C5D]"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </a>
+                )
               ))}
               <Button 
                 asChild 
