@@ -1,6 +1,7 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { 
   Warehouse, 
   QrCode, 
@@ -12,6 +13,7 @@ import {
 import WarehouseManagement from '@/components/inventory/WarehouseManagement';
 import BarcodeManager from '@/components/inventory/BarcodeManager';
 import PageTransition from '@/components/layout/PageTransition';
+
 
 const WMSDashboard: React.FC = () => {
   return (
