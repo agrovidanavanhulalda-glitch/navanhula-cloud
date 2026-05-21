@@ -1592,6 +1592,7 @@ export type Database = {
           plan: string | null
           status: string | null
           subscription_status: string | null
+          timezone: string | null
           trial_end_date: string | null
           trial_expires_at: string | null
           updated_at: string | null
@@ -1621,6 +1622,7 @@ export type Database = {
           plan?: string | null
           status?: string | null
           subscription_status?: string | null
+          timezone?: string | null
           trial_end_date?: string | null
           trial_expires_at?: string | null
           updated_at?: string | null
@@ -1650,6 +1652,7 @@ export type Database = {
           plan?: string | null
           status?: string | null
           subscription_status?: string | null
+          timezone?: string | null
           trial_end_date?: string | null
           trial_expires_at?: string | null
           updated_at?: string | null
