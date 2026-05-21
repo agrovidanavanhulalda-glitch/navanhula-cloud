@@ -76,7 +76,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Fetch user profile and related data
   const fetchUserData = useCallback(async (userId: string): Promise<void> => {
     if (!isValidId(userId)) {
       console.warn('[Auth] Invalid userId for fetchUserData:', userId);
@@ -84,52 +83,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     try {
+      // Use maybeSingle to prevent 406 errors on missing profiles
       const [profileResult, userRolesResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
         supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
       ]);
 
-      if (profileResult.error) throw profileResult.error;
+      if (profileResult.error) {
+        console.error('[Auth] Profile error:', profileResult.error);
+        throw profileResult.error;
+      }
 
       const profileData = profileResult.data;
-      const userRole = (userRolesResult.data?.role?.toLowerCase() || 'admin') as AppRole;
+      const userRole = (userRolesResult.data?.role?.toLowerCase() || 'viewer') as AppRole;
 
       if (profileData) {
+        // Hydrate profile
         setUser(profileData as Profile);
         setRole(userRole);
 
-        // Batch fetching store and company
+        // Batch fetching store and company - only if IDs are valid UUIDs
         const fetches = [];
-        if (isValidId(profileData.store_id)) {
-          fetches.push(supabase.from('stores').select('*').eq('id', profileData.store_id).maybeSingle());
+        const validStoreId = isValidId(profileData.store_id) ? profileData.store_id : null;
+        const validCompanyId = isValidId(profileData.company_id) ? profileData.company_id : null;
+
+        if (validStoreId) {
+          fetches.push(supabase.from('stores').select('*').eq('id', validStoreId).maybeSingle());
         }
-        if (isValidId(profileData.company_id)) {
-          fetches.push(supabase.from('companies').select('*').eq('id', profileData.company_id).maybeSingle());
+        if (validCompanyId) {
+          fetches.push(supabase.from('companies').select('*').eq('id', validCompanyId).maybeSingle());
         }
 
-        const results = await Promise.all(fetches);
-        
-        let storeIdx = 0;
-        if (isValidId(profileData.store_id)) {
-          setStore(results[storeIdx]?.data as Store || null);
-          storeIdx++;
+        if (fetches.length > 0) {
+          const results = await Promise.all(fetches);
+          let resIdx = 0;
+          
+          if (validStoreId) {
+            setStore(results[resIdx]?.data as Store || null);
+            resIdx++;
+          } else {
+            setStore(null);
+          }
+
+          if (validCompanyId) {
+            setCompany(results[resIdx]?.data as Company || null);
+          } else {
+            setCompany(null);
+          }
         } else {
           setStore(null);
-        }
-
-        if (isValidId(profileData.company_id)) {
-          setCompany(results[storeIdx]?.data as Company || null);
-        } else {
           setCompany(null);
         }
       } else {
+        // Fallback for missing profile
+        console.warn('[Auth] No profile found for user:', userId);
         setCompany(null);
         setStore(null);
         setRole('viewer');
       }
     } catch (error) {
       console.error("[Auth] Error fetching user data:", error);
-      // Don't wipe everything on transient error, but ensure we don't hang
+      // In emergency mode, we ensure we don't hang the loading screen indefinitely
+      // but we also don't wipe data if it's already there (stale-while-revalidate style)
     }
   }, []);
 

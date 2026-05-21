@@ -1592,6 +1592,7 @@ export type Database = {
           plan: string | null
           status: string | null
           subscription_status: string | null
+          timezone: string | null
           trial_end_date: string | null
           trial_expires_at: string | null
           updated_at: string | null
@@ -1621,6 +1622,7 @@ export type Database = {
           plan?: string | null
           status?: string | null
           subscription_status?: string | null
+          timezone?: string | null
           trial_end_date?: string | null
           trial_expires_at?: string | null
           updated_at?: string | null
@@ -1650,6 +1652,7 @@ export type Database = {
           plan?: string | null
           status?: string | null
           subscription_status?: string | null
+          timezone?: string | null
           trial_end_date?: string | null
           trial_expires_at?: string | null
           updated_at?: string | null
@@ -7084,6 +7087,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "system_audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_errors: {
+        Row: {
+          company_id: string | null
+          component_name: string | null
+          created_at: string | null
+          error_message: string
+          error_stack: string | null
+          id: string
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          component_name?: string | null
+          created_at?: string | null
+          error_message: string
+          error_stack?: string | null
+          id?: string
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          component_name?: string | null
+          created_at?: string | null
+          error_message?: string
+          error_stack?: string | null
+          id?: string
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_errors_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"

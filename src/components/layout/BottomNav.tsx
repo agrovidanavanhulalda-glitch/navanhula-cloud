@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ShoppingCart, Users, BarChart3, Menu, Package, Boxes } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -80,4 +80,4 @@ const BottomNav: React.FC = () => {
   );
 };
 
-export default BottomNav;
+export default memo(BottomNav);

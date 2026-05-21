@@ -34,7 +34,7 @@ const LandingFooter: React.FC = () => {
             <ul className="space-y-4 text-gray-500">
               <li><a href="#" className="hover:text-[#1E5A8A]">Termos de Uso</a></li>
               <li><a href="#" className="hover:text-[#1E5A8A]">Privacidade</a></li>
-              <li><a href="/login" className="hover:text-[#1E5A8A]">Área do Cliente</a></li>
+              <li><Link to="/login" className="hover:text-[#1E5A8A]">Área do Cliente</Link></li>
             </ul>
           </div>
         </div>

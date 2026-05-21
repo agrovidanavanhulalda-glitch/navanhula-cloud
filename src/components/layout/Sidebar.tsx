@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
@@ -195,13 +195,18 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
     role === 'viewer' ? 'Visualizador' : 'Utilizador';
 
   // Filter sub-items by role and module
-  const filterSubItems = (items: SubItem[]): SubItem[] => {
+  const filterSubItems = useCallback((items: SubItem[]): SubItem[] => {
     return items.filter(item => {
-      if (item.minRole && !hasMinimumRole(item.minRole)) return false;
-      if (item.module && !canViewModule(item.module)) return false;
-      return true;
+      try {
+        if (item.minRole && !hasMinimumRole(item.minRole)) return false;
+        if (item.module && !canViewModule(item.module)) return false;
+        return true;
+      } catch (e) {
+        console.warn('[Sidebar] Permission check failed for item:', item.label, e);
+        return false;
+      }
     });
-  };
+  }, [hasMinimumRole, canViewModule]);
 
   const handleLogout = async () => {
     await signOut();
@@ -234,7 +239,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
     if (group.module && !canViewModule(group.module)) return null;
     const Icon = group.icon;
     // Filter items for Dashboard group based on role
-    const visibleItems = filterSubItems(group.items);
+    const visibleItems = React.useMemo(() => filterSubItems(group.items), [group.items, filterSubItems]);
     if (visibleItems.length === 0) return null;
     const hasActive = groupHasActive(visibleItems);
 

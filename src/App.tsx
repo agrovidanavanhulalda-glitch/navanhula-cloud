@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,9 +17,9 @@ import { AnimatePresence } from "framer-motion";
 import PageTransition from "./components/layout/PageTransition";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import { GlobalFallback } from "./components/error/GlobalFallback";
+import { supabase } from "@/integrations/supabase/client";
 
 // Public site — eagerly loaded (landing page)
-import PublicSiteLayout from "./components/public/PublicSiteLayout";
 import MainLayout from "./components/layout/MainLayout";
 import Index from "./pages/Index";
 
@@ -210,14 +210,12 @@ const AppRoutes = () => {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
 
-        <Route element={<PublicSiteLayout />}>
-          <Route path="/" element={<Index />} />
-          <Route path="/home" element={<Index />} />
-          <Route path="/sobre" element={<AboutPage />} />
-          <Route path="/precos" element={<PricingPage />} />
-          <Route path="/recursos" element={<FeaturesPage />} />
-          <Route path="/contato" element={<ContactPage />} />
-        </Route>
+        <Route path="/" element={<Index />} />
+        <Route path="/home" element={<Index />} />
+        <Route path="/sobre" element={<AboutPage />} />
+        <Route path="/precos" element={<PricingPage />} />
+        <Route path="/recursos" element={<FeaturesPage />} />
+        <Route path="/contato" element={<ContactPage />} />
 
         <Route
           path="/login"
@@ -333,25 +331,69 @@ const AppRoutes = () => {
 };
 
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <I18nProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Suspense fallback={null}>
-            <VersionUpdateAlert />
-          </Suspense>
-          <BrowserRouter>
-            <AuthProvider>
-              <AppRoutes />
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </I18nProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+const App = () => {
+  // Global event listener for uncaught errors
+  useEffect(() => {
+    const handleError = async (event: ErrorEvent) => {
+      console.error('[GlobalError]', event.error);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        await supabase.from('system_errors').insert({
+          user_id: session?.user?.id,
+          error_message: event.message || 'Unknown Error',
+          error_stack: event.error?.stack,
+          url: window.location.href,
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        // Fallback to console
+      }
+    };
+
+    const handleRejection = async (event: PromiseRejectionEvent) => {
+      console.error('[UnhandledRejection]', event.reason);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        await supabase.from('system_errors').insert({
+          user_id: session?.user?.id,
+          error_message: `Promise Rejection: ${event.reason?.message || String(event.reason)}`,
+          error_stack: event.reason?.stack,
+          url: window.location.href,
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        // Fallback to console
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <I18nProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Suspense fallback={null}>
+              <VersionUpdateAlert />
+              <BrowserRouter>
+                <AuthProvider>
+                  <AppRoutes />
+                </AuthProvider>
+              </BrowserRouter>
+            </Suspense>
+          </TooltipProvider>
+        </I18nProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;
