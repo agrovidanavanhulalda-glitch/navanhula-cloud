@@ -106,7 +106,7 @@ const PublicSiteLayout: React.FC = () => {
               <p className="text-xl font-black tracking-tight text-white">NAVANHULA CLOUD</p>
             </div>
             <p className="text-sm leading-7 text-blue-100/70">
-              A plataforma de gestão empresarial líder para negócios que buscam crescimento e controle total.
+              O sistema de gestão empresarial líder para negócios que buscam crescimento e controle total.
             </p>
             <p className="text-xs text-blue-100/50">© {new Date().getFullYear()} NAVANHULA GROUP LDA · Todos os direitos reservados.</p>
           </div>

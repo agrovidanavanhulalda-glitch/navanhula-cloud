@@ -37,7 +37,7 @@ const AboutPage: React.FC = () => {
     <div className="container space-y-16 py-16 lg:py-20">
       <section className="grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
         <div className="space-y-5">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Sobre a plataforma</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Sobre o sistema</p>
           <h1 className="text-4xl font-black tracking-tight sm:text-5xl">Um sistema criado para ligar marketing, vendas e operação real.</h1>
           <p className="text-lg leading-8 text-muted-foreground">
             O NAVANHULA CLOUD nasce para resolver um problema comum: o software de gestão normalmente vende mal para o visitante e opera mal
@@ -56,7 +56,7 @@ const AboutPage: React.FC = () => {
         <Card className="rounded-[2rem] border-border bg-card/70 p-8">
           <p className="text-sm uppercase tracking-[0.18em] text-muted-foreground">Missão</p>
           <p className="mt-4 text-2xl font-semibold leading-10">
-            Dar ao comerciante uma plataforma moderna para vender mais, controlar melhor e crescer com segurança.
+            Dar ao comerciante um sistema moderno para vender mais, controlar melhor e crescer com segurança.
           </p>
           <div className="mt-8 grid gap-4">
             {audiences.map((audience) => (
