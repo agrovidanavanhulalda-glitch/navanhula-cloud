@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { syncManager } from '@/lib/syncQueue';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -213,29 +214,38 @@ const LocalInventoryPage: React.FC = () => {
         movQty = qty - selectedProduct.stock_qty;
       }
 
-      const { data, error } = await supabase.rpc('add_inventory_adjustment', {
+      const adjustmentPayload = {
         p_product_id: selectedProduct.id,
         p_store_id: store.id,
         p_quantity: movQty,
         p_type: movType,
         p_reason: `${adjustmentReason}${adjustmentNotes ? ': ' + adjustmentNotes : ''}`,
         p_reference_type: 'MANUAL_ADJUSTMENT'
-      });
+      };
 
-      if (error) {
-        console.error("LocalInventoryPage: Error in add_inventory_adjustment", error);
-        throw error;
-      }
-      
-      const result = data as any;
-      if (result?.success) {
-        toast.success(`Estoque atualizado: ${selectedProduct.name} → ${result.new_stock} unidades`);
-        setShowAdjustDialog(false);
-        loadProducts();
+      if (navigator.onLine) {
+        const { data, error } = await supabase.rpc('add_inventory_adjustment', adjustmentPayload);
+
+        if (error) {
+          console.error("LocalInventoryPage: Error in add_inventory_adjustment, queuing...", error);
+          await syncManager.addTask('STOCK_ADJUSTMENT', adjustmentPayload);
+          toast.info('Erro de conexão. Ajuste agendado para sincronização.');
+          setShowAdjustDialog(false);
+          return;
+        }
+        
+        const result = data as any;
+        if (result?.success) {
+          toast.success(`Estoque atualizado: ${selectedProduct.name} → ${result.new_stock} unidades`);
+          setShowAdjustDialog(false);
+          loadProducts();
+        } else {
+          toast.error(result?.message || 'Erro ao ajustar estoque');
+        }
       } else {
-        // Here result.message contains the detailed error from the trigger (e.g. Insufficient stock)
-        toast.error(result?.message || 'Erro ao ajustar estoque');
-        console.error("LocalInventoryPage: RPC returned failure", result);
+        await syncManager.addTask('STOCK_ADJUSTMENT', adjustmentPayload);
+        toast.info('Modo offline: Ajuste de estoque agendado.');
+        setShowAdjustDialog(false);
       }
     } catch (err: any) {
       console.error("LocalInventoryPage: Caught error", err);
