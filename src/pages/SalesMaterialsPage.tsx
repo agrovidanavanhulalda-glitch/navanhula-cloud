@@ -122,7 +122,7 @@ Posso te ajudar a criar a conta agora mesmo! É muito simples.`,
 Sistema Empresarial
 
 SOBRE A SOLUÇÃO:
-O NAVANHULA CLOUD é uma plataforma de gestão empresarial desenvolvida para o mercado moçambicano, oferecendo controlo completo de operações comerciais, financeiras e fiscais.
+O NAVANHULA CLOUD é um sistema de gestão empresarial desenvolvido para o mercado moçambicano, oferecendo controlo completo de operações comerciais, financeiras e fiscais.
 
 MÓDULOS INCLUSOS:
 • Ponto de Venda (PDV) profissional
