@@ -440,6 +440,8 @@ const LocalProductsPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                   placeholder="0"
                 />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
                 <Input
