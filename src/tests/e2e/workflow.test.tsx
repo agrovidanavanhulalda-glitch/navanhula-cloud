@@ -1,6 +1,5 @@
-import { render } from '@testing-library/react';
-import * as rtl from '@testing-library/react';
-const { screen, fireEvent, waitFor } = rtl;
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
