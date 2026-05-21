@@ -11,12 +11,15 @@ import { pt } from "date-fns/locale";
 interface AuditLog {
   id: string;
   user_id: string | null;
+  company_id: string | null;
+  store_id: string | null;
   action: string;
   table_name: string;
   details?: any;
   new_data?: any;
   old_data?: any;
   created_at: string;
+  query_text?: string;
   profiles?: {
     full_name: string;
     email: string;
@@ -29,11 +32,17 @@ const SystemAuditPage: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("audit_logs")
-        .select("*")
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            email
+          )
+        `)
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      return data as any[];
+      return data as AuditLog[];
     },
   });
 
@@ -94,7 +103,7 @@ const SystemAuditPage: React.FC = () => {
                   <div key={log.id} className="flex flex-col p-4 rounded-lg border bg-card hover:shadow-sm transition-all">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="capitalize px-2 py-0.5 text-[10px] font-bold">
+                        <Badge variant={log.action === 'DELETE' ? 'destructive' : log.action === 'INSERT' ? 'default' : 'outline'} className="capitalize px-2 py-0.5 text-[10px] font-bold">
                           {log.action}
                         </Badge>
                         <ArrowRight className="w-3 h-3 text-muted-foreground" />
@@ -106,21 +115,37 @@ const SystemAuditPage: React.FC = () => {
                       </span>
                     </div>
                     
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="w-4 h-4 text-primary" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <User className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold leading-none">{log.profiles?.full_name || 'Sistema'}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">{log.profiles?.email || 'Ação Automatizada'}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold leading-none">{log.profiles?.full_name || 'Sistema'}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">{log.profiles?.email || 'Ação Automatizada'}</p>
+                      <div className="flex flex-col justify-center text-[10px] text-muted-foreground space-y-1 md:text-right">
+                        {log.company_id && <p>Empresa: <span className="font-mono">{log.company_id}</span></p>}
+                        {log.store_id && <p>Loja/Ref: <span className="font-mono">{log.store_id}</span></p>}
                       </div>
                     </div>
 
-                    {(log.details || log.new_data || log.old_data) && (
-                      <div className="mt-2 p-2 rounded bg-muted/50 text-[11px] font-mono overflow-hidden">
-                        <pre className="whitespace-pre-wrap break-all">
-                          {JSON.stringify(log.details || log.new_data || log.old_data, null, 2)}
-                        </pre>
+                    {log.query_text && (
+                      <div className="mb-2 p-2 rounded bg-slate-900 text-slate-100 text-[10px] font-mono">
+                        <p className="text-[8px] uppercase text-slate-500 mb-1">Query Original</p>
+                        {log.query_text}
+                      </div>
+                    )}
+
+                    {(log.new_data || log.old_data || log.details) && (
+                      <div className="mt-1">
+                        <p className="text-[8px] uppercase text-muted-foreground mb-1">Payload / Mudanças</p>
+                        <div className="p-2 rounded bg-muted/50 text-[11px] font-mono overflow-hidden max-h-40 overflow-y-auto">
+                          <pre className="whitespace-pre-wrap break-all">
+                            {JSON.stringify(log.new_data || log.details || log.old_data, null, 2)}
+                          </pre>
+                        </div>
                       </div>
                     )}
                   </div>
