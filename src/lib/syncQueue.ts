@@ -109,7 +109,8 @@ class SyncManager {
         return this.syncSale(task.payload);
       case 'STOCK_ADJUSTMENT':
         return this.syncStockAdjustment(task.payload);
-      // Add other cases as needed
+      case 'ONBOARDING':
+        return this.syncOnboarding(task.payload);
       default:
         throw new Error(`Unknown task type: ${task.type}`);
     }
