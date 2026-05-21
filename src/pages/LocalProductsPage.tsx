@@ -51,11 +51,13 @@ const LocalProductsPage: React.FC = () => {
   // Form state
   const [formData, setFormData] = useState({
     name: '',
+    code: '',
     costPrice: '',
     salePrice: '',
     stock: '',
     isActive: true,
     imageUrl: '' as string | null,
+    description: '',
   });
 
   
@@ -69,11 +71,13 @@ const LocalProductsPage: React.FC = () => {
   const resetForm = () => {
     setFormData({
       name: '',
+      code: '',
       costPrice: '',
       salePrice: '',
       stock: '',
       isActive: true,
       imageUrl: null,
+      description: '',
     });
     setEditingProduct(null);
   };
@@ -88,11 +92,13 @@ const LocalProductsPage: React.FC = () => {
   const handleEdit = (product: LocalProduct) => {
     setFormData({
       name: product.name,
+      code: product.code || '',
       costPrice: product.costPrice.toString(),
       salePrice: product.salePrice.toString(),
       stock: product.stock.toString(),
       isActive: product.isActive,
       imageUrl: (product as any).imageUrl || null,
+      description: (product as any).description || '',
     });
     setEditingProduct(product);
     setShowForm(true);
@@ -126,11 +132,13 @@ const LocalProductsPage: React.FC = () => {
 
     const productData = {
       name: formData.name.trim(),
+      code: formData.code.trim() || undefined,
       costPrice,
       salePrice,
       stock,
       isActive: formData.isActive,
-      imageUrl: formData.imageUrl
+      imageUrl: formData.imageUrl,
+      description: formData.description.trim() || undefined
     };
 
     try {
@@ -266,6 +274,7 @@ const LocalProductsPage: React.FC = () => {
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
+                    <th className="text-left p-4 font-medium w-16">SKU</th>
                     <th className="text-left p-4 font-medium">Produto</th>
                     <th className="text-right p-4 font-medium">Preço Compra</th>
                     <th className="text-right p-4 font-medium">Preço Venda</th>
@@ -278,6 +287,9 @@ const LocalProductsPage: React.FC = () => {
                 <tbody className="divide-y">
                   {filteredProducts.map((product) => (
                     <tr key={product.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="p-4">
+                        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{product.code || '---'}</code>
+                      </td>
                       <td className="p-4">
                         <div className="font-medium">{product.name}</div>
                       </td>
@@ -369,14 +381,25 @@ const LocalProductsPage: React.FC = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Nome do produto"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Nome do produto"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="code">Código (SKU)</Label>
+                  <Input
+                    id="code"
+                    value={formData.code}
+                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    placeholder="Automático se vazio"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -416,6 +439,16 @@ const LocalProductsPage: React.FC = () => {
                   value={formData.stock}
                   onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                   placeholder="0"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Descrição</Label>
+                <Input
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Detalhes do produto"
                 />
               </div>
 

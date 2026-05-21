@@ -8038,6 +8038,7 @@ export type Database = {
         Returns: Json
       }
       generate_nava_reference: { Args: never; Returns: string }
+      generate_product_sku: { Args: never; Returns: string }
       generate_reseller_code: { Args: never; Returns: string }
       generate_tax_report: {
         Args: {

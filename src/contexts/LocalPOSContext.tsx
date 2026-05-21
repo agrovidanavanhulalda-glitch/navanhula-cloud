@@ -1345,7 +1345,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const storeIdToUse = sanitizeId(state.currentStore.id) || sanitizeId(authStore?.id);
       const finalStoreId = isValidId(storeIdToUse) ? storeIdToUse : null;
       
-      if (!finalStoreId && product.stock > 0) {
+      if (!finalStoreId && Number(product.stock) > 0) {
         console.warn('[POS] Criando produto com stock solicitado mas sem loja válida identificada.', { 
           requestedStock: product.stock, 
           storeId: storeIdToUse 
@@ -1353,24 +1353,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         toast.warning('Stock inicial ignorado: Nenhuma loja ativa selecionada.');
       }
 
-      console.group('[POS] Criação de Produto (Enterprise)');
-      console.log('Dados do produto:', product);
-      console.log('Parâmetros RPC:', {
-        p_name: product.name.trim(),
-        p_cost_price: product.costPrice || 0,
-        p_sale_price: product.salePrice || 0,
-        p_initial_stock: Math.max(0, product.stock || 0),
-        p_store_id: finalStoreId,
-        p_company_id: targetCompanyId,
-        p_is_active: product.isActive !== false,
-        p_image_url: product.imageUrl || null,
-        p_code: product.code || null,
-        p_category_id: product.categoryId || null,
-        p_description: product.description || null
-      });
-
-      // 2. Chamada RPC Atómica
-      const { data, error } = await supabase.rpc('create_product_with_stock', {
+      const rpcPayload = {
         p_name: product.name.trim(),
         p_cost_price: Number(product.costPrice) || 0,
         p_sale_price: Number(product.salePrice) || 0,
@@ -1379,34 +1362,41 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         p_company_id: targetCompanyId,
         p_is_active: product.isActive !== false,
         p_image_url: product.imageUrl || null,
-        p_code: product.code || null,
+        p_code: product.code?.trim() || null, // Se vazio, o banco gera SKU automático
         p_category_id: product.categoryId || null,
-        p_description: product.description || null
-      });
+        p_description: product.description?.trim() || null
+      };
+
+      console.group('[POS] Criação de Produto (Enterprise)');
+      console.log('Payload enviado:', rpcPayload);
+
+      // 2. Chamada RPC Atómica
+      const { data, error } = await supabase.rpc('create_product_with_stock', rpcPayload);
 
       if (error) {
-        console.error('[POS] Erro RPC:', error);
+        console.error('[POS] Erro Supabase RPC:', error);
         console.groupEnd();
-        throw new Error(error.message);
+        toast.error(`Erro ao criar produto: ${error.message}`);
+        return;
       }
 
       const result = data as any;
       if (result && result.success === false) {
-        console.error('[POS] Erro lógico na função SQL:', result.error);
+        console.error('[POS] Erro de negócio SQL:', result.error, result.detail);
         console.groupEnd();
-        toast.error(`Erro: ${result.error}`);
+        toast.error(`Falha: ${result.error}`);
         return;
       }
 
-      console.log('[POS] Produto criado com sucesso:', result);
+      console.log('[POS] Resposta Sucesso:', result);
       console.groupEnd();
       
       // 3. Sincronizar estado local
-      await loadData();
-      toast.success('Produto criado com sucesso');
+      await loadData(true); // Forçar refresh para garantir que o novo produto apareça
+      toast.success('Produto criado com sucesso!');
     } catch (error: any) {
       console.error('[POS] Exceção crítica ao criar produto:', error);
-      toast.error(`Falha ao criar produto: ${error.message || 'Erro desconhecido'}`);
+      toast.error(`Falha crítica: ${error.message || 'Erro desconhecido'}`);
     }
   }, [state.currentStore.id, authStore?.id, company?.id, loadData]);
 
