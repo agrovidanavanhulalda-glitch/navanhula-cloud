@@ -87,7 +87,9 @@ const InviteAcceptPage = React.lazy(() => import("./pages/InviteAcceptPage"));
 const LeadsPipelinePage = React.lazy(() => import("./pages/LeadsPipelinePage"));
 const GrowthDashboardPage = React.lazy(() => import("./pages/GrowthDashboardPage"));
 const ReferralPage = React.lazy(() => import("./pages/ReferralPage"));
+const WMSDashboard = React.lazy(() => import("./pages/WMSDashboard"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
+
 const VersionUpdateAlert = React.lazy(() => import("@/components/common/VersionUpdateAlert"));
 
 const queryClient = new QueryClient({
@@ -315,7 +317,9 @@ const AppRoutes = () => {
           <Route path="revendedores/performance" element={<ResellersNetworkPage />} />
           <Route path="revendedores/materiais" element={<SalesMaterialsPage />} />
           <Route path="materiais-venda" element={<SalesMaterialsPage />} />
+          <Route path="wms" element={<SubscriptionGate><WMSDashboard /></SubscriptionGate>} />
         </Route>
+
 
         {legacyRoutes.map((route) => (
           <Route key={route.from} path={route.from} element={<Navigate to={route.to} replace />} />

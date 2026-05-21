@@ -92,8 +92,10 @@ const navGroups: NavGroup[] = [
     module: 'stock',
     items: [
       { label: 'Controlo de Stock', href: '/app/estoque', icon: Boxes },
+      { label: 'Gestão WMS', href: '/app/wms', icon: Warehouse, minRole: 'manager' },
       { label: 'Mover Stock', href: '/app/transferencias-stock', icon: ArrowRightLeft, minRole: 'manager' },
       { label: 'Stock das Filiais', href: '/app/estoque-filiais', icon: Building2, minRole: 'manager' },
+
     ],
   },
   {
