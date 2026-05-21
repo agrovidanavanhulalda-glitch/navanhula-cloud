@@ -1,4 +1,7 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as rtl from '@testing-library/react';
+const { screen, fireEvent, waitFor } = rtl;
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import LocalStoresPage from '@/pages/LocalStoresPage';
