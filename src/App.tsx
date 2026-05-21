@@ -334,25 +334,69 @@ const AppRoutes = () => {
 };
 
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <I18nProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Suspense fallback={null}>
-            <VersionUpdateAlert />
-          </Suspense>
-          <BrowserRouter>
-            <AuthProvider>
-              <AppRoutes />
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </I18nProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+const App = () => {
+  // Global event listener for uncaught errors
+  useEffect(() => {
+    const handleError = async (event: ErrorEvent) => {
+      console.error('[GlobalError]', event.error);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        await supabase.from('system_errors').insert({
+          user_id: session?.user?.id,
+          error_message: event.message || 'Unknown Error',
+          error_stack: event.error?.stack,
+          url: window.location.href,
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        // Fallback to console
+      }
+    };
+
+    const handleRejection = async (event: PromiseRejectionEvent) => {
+      console.error('[UnhandledRejection]', event.reason);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        await supabase.from('system_errors').insert({
+          user_id: session?.user?.id,
+          error_message: `Promise Rejection: ${event.reason?.message || String(event.reason)}`,
+          error_stack: event.reason?.stack,
+          url: window.location.href,
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        // Fallback to console
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <I18nProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Suspense fallback={null}>
+              <VersionUpdateAlert />
+              <BrowserRouter>
+                <AuthProvider>
+                  <AppRoutes />
+                </AuthProvider>
+              </BrowserRouter>
+            </Suspense>
+          </TooltipProvider>
+        </I18nProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;
