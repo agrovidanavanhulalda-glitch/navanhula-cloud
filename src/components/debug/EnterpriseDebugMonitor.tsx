@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Database, Shield, Store, Building2, User, Wifi, WifiOff, CloudSync } from 'lucide-react';
+import { Database, Shield, Store, Building2, User, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { syncManager } from '@/lib/syncQueue';
 
 const EnterpriseDebugMonitor: React.FC = () => {
@@ -47,7 +47,7 @@ const EnterpriseDebugMonitor: React.FC = () => {
       {pendingSync > 0 && (
         <div className="mb-3 p-2 bg-orange-100 text-orange-800 rounded border border-orange-200 flex items-center justify-between animate-pulse">
           <span className="flex items-center gap-1.5 font-bold">
-            <CloudSync className="w-4 h-4" /> Sincronização:
+            <RefreshCw className="w-4 h-4 animate-spin" /> Sincronização:
           </span>
           <Badge variant="secondary" className="bg-orange-200">{pendingSync} pendentes</Badge>
         </div>
