@@ -30,9 +30,12 @@ interface InventoryProduct {
   cost_price: number;
   sale_price: number;
   low_stock_threshold: number;
+  unit_type: string;
+  conversion_factor: number;
   is_active: boolean;
   stock_qty: number;
 }
+
 
 type AdjustmentType = 'add' | 'remove' | 'set';
 
@@ -82,7 +85,8 @@ const LocalInventoryPage: React.FC = () => {
 
       let query = (supabase
         .from('products')
-        .select('id, name, code, cost_price, sale_price, low_stock_threshold, is_active, company_id, product_stock(quantity, store_id)') as any)
+        .select('id, name, code, cost_price, sale_price, low_stock_threshold, unit_type, conversion_factor, is_active, company_id, product_stock(quantity, store_id)') as any)
+
         .eq('company_id', targetCompanyId)
         .eq('is_active', true)
         .order('name');
@@ -109,8 +113,11 @@ const LocalInventoryPage: React.FC = () => {
           cost_price: p.cost_price,
           sale_price: p.sale_price,
           low_stock_threshold: p.low_stock_threshold ?? 10,
+          unit_type: p.unit_type ?? 'unit',
+          conversion_factor: p.conversion_factor ?? 1,
           is_active: p.is_active,
           stock_qty: stockRecord?.quantity ?? 0,
+
         };
       });
       

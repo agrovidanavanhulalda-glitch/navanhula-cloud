@@ -3031,6 +3031,99 @@ export type Database = {
           },
         ]
       }
+      inventory_audit_items: {
+        Row: {
+          audit_id: string
+          created_at: string | null
+          discrepancy_reason: string | null
+          id: string
+          physical_qty: number
+          product_id: string
+          system_qty: number
+        }
+        Insert: {
+          audit_id: string
+          created_at?: string | null
+          discrepancy_reason?: string | null
+          id?: string
+          physical_qty: number
+          product_id: string
+          system_qty: number
+        }
+        Update: {
+          audit_id?: string
+          created_at?: string | null
+          discrepancy_reason?: string | null
+          id?: string
+          physical_qty?: number
+          product_id?: string
+          system_qty?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_audit_items_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_audit_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_audits: {
+        Row: {
+          company_id: string
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          notes: string | null
+          status: string | null
+          store_id: string | null
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          status?: string | null
+          store_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          status?: string | null
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_audits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_audits_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           branch_id: string
@@ -4886,69 +4979,87 @@ export type Database = {
           category_id: string | null
           code: string
           company_id: string | null
+          conversion_factor: number | null
           cost_price: number
           created_at: string | null
           created_by: string | null
           description: string | null
+          dimensions: Json | null
           id: string
           image_url: string | null
           is_active: boolean | null
           last_sale_date: string | null
           low_stock_threshold: number | null
           max_stock: number | null
+          max_stock_level: number | null
           min_stock: number | null
+          min_stock_level: number | null
           name: string
           reorder_point: number | null
           sale_price: number
           tax_rate: number | null
           tax_type: string | null
+          unit_type: string | null
           updated_at: string | null
+          weight: number | null
         }
         Insert: {
           barcode?: string | null
           category_id?: string | null
           code: string
           company_id?: string | null
+          conversion_factor?: number | null
           cost_price?: number
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          dimensions?: Json | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           last_sale_date?: string | null
           low_stock_threshold?: number | null
           max_stock?: number | null
+          max_stock_level?: number | null
           min_stock?: number | null
+          min_stock_level?: number | null
           name: string
           reorder_point?: number | null
           sale_price?: number
           tax_rate?: number | null
           tax_type?: string | null
+          unit_type?: string | null
           updated_at?: string | null
+          weight?: number | null
         }
         Update: {
           barcode?: string | null
           category_id?: string | null
           code?: string
           company_id?: string | null
+          conversion_factor?: number | null
           cost_price?: number
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          dimensions?: Json | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           last_sale_date?: string | null
           low_stock_threshold?: number | null
           max_stock?: number | null
+          max_stock_level?: number | null
           min_stock?: number | null
+          min_stock_level?: number | null
           name?: string
           reorder_point?: number | null
           sale_price?: number
           tax_rate?: number | null
           tax_type?: string | null
+          unit_type?: string | null
           updated_at?: string | null
+          weight?: number | null
         }
         Relationships: [
           {
@@ -6205,6 +6316,64 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      serial_numbers: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          current_store_id: string | null
+          id: string
+          product_id: string
+          serial_number: string
+          status: string | null
+          updated_at: string | null
+          warranty_expiry: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          current_store_id?: string | null
+          id?: string
+          product_id: string
+          serial_number: string
+          status?: string | null
+          updated_at?: string | null
+          warranty_expiry?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          current_store_id?: string | null
+          id?: string
+          product_id?: string
+          serial_number?: string
+          status?: string | null
+          updated_at?: string | null
+          warranty_expiry?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "serial_numbers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "serial_numbers_current_store_id_fkey"
+            columns: ["current_store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "serial_numbers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]

@@ -11,8 +11,9 @@ import {
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
   Cloud, Store, ChevronDown, Calculator, CreditCard, Banknote,
   Building2, MapPin, Bird, MessageCircle, ArrowRightLeft, Landmark, Key,
-  Target, Gift, Rocket, ShieldCheck, Database
+  Target, Gift, Rocket, ShieldCheck, Database, Warehouse
 } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import {
   Sidebar as ShadcnSidebar,
@@ -92,8 +93,10 @@ const navGroups: NavGroup[] = [
     module: 'stock',
     items: [
       { label: 'Controlo de Stock', href: '/app/estoque', icon: Boxes },
+      { label: 'Gestão WMS', href: '/app/wms', icon: Warehouse, minRole: 'manager' },
       { label: 'Mover Stock', href: '/app/transferencias-stock', icon: ArrowRightLeft, minRole: 'manager' },
       { label: 'Stock das Filiais', href: '/app/estoque-filiais', icon: Building2, minRole: 'manager' },
+
     ],
   },
   {
