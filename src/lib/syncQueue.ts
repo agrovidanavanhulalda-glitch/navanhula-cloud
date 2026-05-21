@@ -1,0 +1,155 @@
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+export interface SyncTask {
+  id: string;
+  type: 'SALE' | 'STOCK_ADJUSTMENT' | 'STORE_UPDATE' | 'PRODUCT_UPDATE';
+  payload: any;
+  retryCount: number;
+  lastAttempt?: number;
+  error?: string;
+  createdAt: number;
+}
+
+const STORAGE_KEY = 'navanhula_sync_queue';
+const MAX_RETRIES = 5;
+const BACKOFF_FACTOR = 2000; // 2s base
+
+class SyncManager {
+  private queue: SyncTask[] = [];
+  private isProcessing = false;
+
+  constructor() {
+    this.loadQueue();
+    // Start processing loop if online
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', () => this.processQueue());
+      // Initial process
+      setTimeout(() => this.processQueue(), 5000);
+    }
+  }
+
+  private loadQueue() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        this.queue = JSON.parse(saved);
+      } catch (e) {
+        console.error('[Sync] Error parsing queue', e);
+        this.queue = [];
+      }
+    }
+  }
+
+  private saveQueue() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.queue));
+  }
+
+  async addTask(type: SyncTask['type'], payload: any) {
+    const task: SyncTask = {
+      id: crypto.randomUUID(),
+      type,
+      payload,
+      retryCount: 0,
+      createdAt: Date.now(),
+    };
+    this.queue.push(task);
+    this.saveQueue();
+    this.processQueue();
+  }
+
+  async processQueue() {
+    if (this.isProcessing || !navigator.onLine || this.queue.length === 0) return;
+
+    this.isProcessing = true;
+    console.log(`[Sync] Processing queue (${this.queue.length} tasks)`);
+
+    const tasksToProcess = [...this.queue];
+    
+    for (const task of tasksToProcess) {
+      // Check backoff
+      if (task.lastAttempt) {
+        const waitTime = Math.pow(2, task.retryCount) * BACKOFF_FACTOR;
+        if (Date.now() - task.lastAttempt < waitTime) continue;
+      }
+
+      try {
+        await this.executeTask(task);
+        // Success: remove from queue
+        this.queue = this.queue.filter(t => t.id !== task.id);
+        this.saveQueue();
+        console.log(`[Sync] Task ${task.type} (${task.id}) synced successfully`);
+      } catch (error: any) {
+        console.error(`[Sync] Task ${task.type} failed:`, error);
+        
+        task.retryCount++;
+        task.lastAttempt = Date.now();
+        task.error = error.message || 'Unknown error';
+
+        if (task.retryCount >= MAX_RETRIES) {
+          console.error(`[Sync] Task ${task.id} reached max retries. Moving to graveyard or alerting user.`);
+          toast.error(`Falha persistente ao sincronizar ${task.type}. Verifique sua conexão.`);
+          // We keep it in queue for manual retry or UI intervention
+        }
+        this.saveQueue();
+      }
+    }
+
+    this.isProcessing = false;
+    
+    // If there are still items, schedule next run
+    if (this.queue.length > 0) {
+      setTimeout(() => this.processQueue(), 10000);
+    }
+  }
+
+  private async executeTask(task: SyncTask) {
+    switch (task.type) {
+      case 'SALE':
+        return this.syncSale(task.payload);
+      case 'STOCK_ADJUSTMENT':
+        return this.syncStockAdjustment(task.payload);
+      // Add other cases as needed
+      default:
+        throw new Error(`Unknown task type: ${task.type}`);
+    }
+  }
+
+  private async syncSale(payload: any) {
+    const { sale, items, paymentDetails } = payload;
+    
+    // Insert Sale
+    const { error: saleError } = await supabase.from('sales').insert(sale);
+    if (saleError) throw saleError;
+
+    // Insert Items
+    const { error: itemsError } = await supabase.from('sale_items').insert(items);
+    if (itemsError) throw itemsError;
+
+    // Wallet Credit
+    if (paymentDetails && paymentDetails.method !== 'cash') {
+      const { error: rpcError } = await supabase.rpc('credit_wallet_from_sale', {
+        p_store_id: sale.store_id,
+        p_payment_method: paymentDetails.method,
+        p_amount: sale.total,
+        p_sale_id: sale.id,
+      });
+      if (rpcError) throw rpcError;
+    }
+  }
+
+  private async syncStockAdjustment(payload: any) {
+    const { error } = await supabase.rpc('add_inventory_adjustment', payload);
+    if (error) throw error;
+  }
+
+  getQueueStatus() {
+    return {
+      pending: this.queue.length,
+      isOnline: navigator.onLine,
+      lastProcessed: Date.now()
+    };
+  }
+}
+
+export const syncManager = new SyncManager();

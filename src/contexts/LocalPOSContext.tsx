@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { autoIssueFiscalDocument } from '@/lib/fiscalPipeline';
 import { isValidId, sanitizeId, isUuid } from '@/lib/uuid';
+import { syncManager } from '@/lib/syncQueue';
 
 /**
  * NAVANHULA CLOUD Context - SUPABASE BACKED
@@ -758,7 +759,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return null;
       }
 
-      const { error: saleError } = await supabase.from('sales').insert({
+      const salePayload = {
         id: saleId,
         store_id: storeId,
         user_id: user?.id,
@@ -769,19 +770,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         cost_total: costTotal,
         profit: saleProfit,
         payment_method: paymentDetails.method as any,
-        status: 'completed',
+        status: 'completed' as const,
         seller_name: sellerName,
         customer_name: paymentDetails.voucherDetails?.customerName || null,
         customer_phone: paymentDetails.voucherDetails?.phoneNumber || null,
-      } as any);
+      };
 
-      if (saleError) {
-        console.error('[POS] Erro ao salvar venda:', saleError);
-        toast.error('Erro ao salvar venda: ' + saleError.message);
-        return null;
-      }
-
-      // 2. Inserir itens da venda
       const saleItems = state.cart.map(item => {
         const isManual = item.product.id.startsWith('manual-');
         return {
@@ -797,24 +791,28 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         };
       });
 
-      const { error: itemsError } = await supabase.from('sale_items').insert(saleItems as any);
-      if (itemsError) {
-        console.error('[POS] Erro ao salvar itens da venda:', itemsError);
-        // Não interrompemos pois a venda principal foi salva, mas logamos
-      }
-
-      // 3. Stock é atualizado automaticamente via Trigger no Supabase (tr_handle_sale_item_stock)
-      // que cria um registro em inventory_movements para cada item da venda.
-      // Isso garante consistência mesmo que a conexão caia durante o loop.
-
-      // 4. Crédito na carteira se não for dinheiro
-      if (paymentDetails.method !== 'cash') {
-        await supabase.rpc('credit_wallet_from_sale', {
-          p_store_id: storeId,
-          p_payment_method: paymentDetails.method,
-          p_amount: total,
-          p_sale_id: saleId,
-        });
+      if (navigator.onLine) {
+        const { error: saleError } = await supabase.from('sales').insert(salePayload);
+        if (saleError) {
+          console.warn('[POS] Online sync failed, queuing for retry:', saleError);
+          await syncManager.addTask('SALE', { sale: salePayload, items: saleItems, paymentDetails });
+        } else {
+          const { error: itemsError } = await supabase.from('sale_items').insert(saleItems);
+          if (itemsError) console.error('[POS] Items sync error:', itemsError);
+          
+          if (paymentDetails.method !== 'cash') {
+            await supabase.rpc('credit_wallet_from_sale', {
+              p_store_id: storeId,
+              p_payment_method: paymentDetails.method,
+              p_amount: total,
+              p_sale_id: saleId,
+            }).catch(e => console.error('[POS] Wallet credit error:', e));
+          }
+        }
+      } else {
+        console.log('[POS] Offline mode: Queuing sale for sync');
+        await syncManager.addTask('SALE', { sale: salePayload, items: saleItems, paymentDetails });
+        toast.info('Venda salva localmente (offline). Sincronizará automaticamente quando online.');
       }
 
 
