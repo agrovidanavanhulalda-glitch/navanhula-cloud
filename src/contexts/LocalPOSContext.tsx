@@ -552,6 +552,20 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
         }
       )
+      // 3.1 Branch updates (in case branches is used instead of stores)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'branches',
+          filter: `company_id=eq.${companyId}`
+        },
+        (payload) => {
+          console.log('[POS] Realtime branch update:', payload.eventType);
+          loadData(true);
+        }
+      )
       // 4. Sales updates (for history)
       .on(
         'postgres_changes',
@@ -566,7 +580,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setState(prev => {
             const isOurStore = prev.stores.some(s => s.id === newSale.store_id);
             if (isOurStore && !prev.sales.some(s => s.id === newSale.id)) {
-              // We refresh data to get items too (sale_items)
               loadData(true);
             }
             return prev;
