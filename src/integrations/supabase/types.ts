@@ -760,7 +760,9 @@ export type Database = {
           metadata: Json | null
           new_data: Json | null
           old_data: Json | null
+          query_text: string | null
           record_id: string | null
+          store_id: string | null
           table_name: string | null
           user_id: string | null
         }
@@ -775,7 +777,9 @@ export type Database = {
           metadata?: Json | null
           new_data?: Json | null
           old_data?: Json | null
+          query_text?: string | null
           record_id?: string | null
+          store_id?: string | null
           table_name?: string | null
           user_id?: string | null
         }
@@ -790,7 +794,9 @@ export type Database = {
           metadata?: Json | null
           new_data?: Json | null
           old_data?: Json | null
+          query_text?: string | null
           record_id?: string | null
+          store_id?: string | null
           table_name?: string | null
           user_id?: string | null
         }
