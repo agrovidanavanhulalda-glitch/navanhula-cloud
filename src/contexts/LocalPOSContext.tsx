@@ -337,9 +337,9 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
-    // Prevent redundant fetches (deduplication 2s)
+    // Prevent redundant fetches (deduplication 3s for dashboard stability)
     const now = Date.now();
-    if (fetchingRef.current === company.id && now - lastFetchTime.current < 2000) return;
+    if (fetchingRef.current === company.id && now - lastFetchTime.current < 3000) return;
     fetchingRef.current = company.id;
     lastFetchTime.current = now;
 

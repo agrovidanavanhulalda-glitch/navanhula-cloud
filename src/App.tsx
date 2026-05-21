@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +17,7 @@ import { AnimatePresence } from "framer-motion";
 import PageTransition from "./components/layout/PageTransition";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import { GlobalFallback } from "./components/error/GlobalFallback";
+import { supabase } from "@/integrations/supabase/client";
 
 // Public site — eagerly loaded (landing page)
 import PublicSiteLayout from "./components/public/PublicSiteLayout";

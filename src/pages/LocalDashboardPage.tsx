@@ -145,12 +145,25 @@ const LocalDashboardPage: React.FC = () => {
 
   if (!loading && !isValidId(company?.id)) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] p-8 text-center">
-        <Card className="max-w-md p-8 border-none shadow-xl bg-background/50 backdrop-blur-sm">
-          <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Configuração Pendente</h2>
-          <p className="text-muted-foreground mb-6">Estamos finalizando o carregamento seguro da sua empresa.</p>
-          <Button variant="outline" onClick={() => window.location.reload()}>Recarregar agora</Button>
+      <div className="flex items-center justify-center min-h-[60vh] p-8 text-center bg-background/50 animate-in fade-in duration-700">
+        <Card className="max-w-md p-10 border-none shadow-2xl bg-white/80 backdrop-blur-md">
+          <div className="w-16 h-16 bg-warning/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertTriangle className="w-8 h-8 text-warning" />
+          </div>
+          <h2 className="text-2xl font-black mb-3 tracking-tighter uppercase">Identidade em Verificação</h2>
+          <p className="text-muted-foreground mb-8 text-sm leading-relaxed">
+            O sistema está a sincronizar as credenciais de segurança da sua empresa. 
+            Este processo é automático e garante o isolamento total dos seus dados.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Button className="w-full gap-2 h-11" onClick={() => window.location.reload()}>
+              <RefreshCw className="w-4 h-4" />
+              Tentar Sincronização Forçada
+            </Button>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+              Security Protocol: {company?.id || 'UUID_PENDING'}
+            </p>
+          </div>
         </Card>
       </div>
     );
