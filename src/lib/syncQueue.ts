@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 export interface SyncTask {
   id: string;
-  type: 'SALE' | 'STOCK_ADJUSTMENT' | 'STORE_UPDATE' | 'PRODUCT_UPDATE';
+  type: 'SALE' | 'STOCK_ADJUSTMENT' | 'STORE_UPDATE' | 'PRODUCT_UPDATE' | 'ONBOARDING';
   payload: any;
   retryCount: number;
   lastAttempt?: number;
@@ -140,6 +140,22 @@ class SyncManager {
 
   private async syncStockAdjustment(payload: any) {
     const { error } = await supabase.rpc('add_inventory_adjustment', payload);
+    if (error) {
+      // If error is business logic (e.g. Insufficient stock), don't retry forever
+      if (error.message?.includes('Insufficient') || error.message?.includes('Estoque insuficiente')) {
+        console.warn('[Sync] Business logic error, task marked as failed', error.message);
+        // We could move to a manual resolution queue here
+      }
+      throw error;
+    }
+  }
+
+  private async syncOnboarding(payload: any) {
+    const { step, value, userId } = payload;
+    const { error } = await supabase
+      .from('onboarding_progress')
+      .update({ [step]: value })
+      .eq('user_id', userId);
     if (error) throw error;
   }
 
