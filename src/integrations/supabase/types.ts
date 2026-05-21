@@ -8305,6 +8305,8 @@ export type Database = {
         Returns: undefined
       }
       set_active_store: { Args: { p_store_id: string }; Returns: Json }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       sync_company_subscription_pricing: {
         Args: { p_company_id: string }
         Returns: undefined
