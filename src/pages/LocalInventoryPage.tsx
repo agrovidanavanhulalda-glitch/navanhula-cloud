@@ -63,7 +63,45 @@ const LocalInventoryPage: React.FC = () => {
 
   useEffect(() => {
     loadProducts();
-  }, [store]);
+
+    const companyId = (user as any)?.company_id || (user as any)?.user_metadata?.company_id;
+    if (!companyId) return;
+
+    // Real-time subscription for inventory page
+    const channel = supabase
+      .channel('inventory-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'product_stock',
+          filter: `company_id=eq.${companyId}`
+        },
+        () => {
+          console.log('[Inventory] Stock change detected, refreshing...');
+          loadProducts(true);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products',
+          filter: `company_id=eq.${companyId}`
+        },
+        () => {
+          console.log('[Inventory] Product change detected, refreshing...');
+          loadProducts(true);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [store, user]);
 
   const loadProducts = async (isManualRefresh = false) => {
     if (!user?.id) return;
