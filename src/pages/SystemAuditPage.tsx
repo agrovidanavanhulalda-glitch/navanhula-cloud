@@ -33,8 +33,18 @@ const SystemAuditPage: React.FC = () => {
       const { data, error } = await supabase
         .from("audit_logs")
         .select(`
-          *,
-          profiles:user_id (
+          id,
+          user_id,
+          company_id,
+          store_id,
+          action,
+          table_name,
+          details,
+          new_data,
+          old_data,
+          created_at,
+          query_text,
+          profiles (
             full_name,
             email
           )
@@ -42,7 +52,10 @@ const SystemAuditPage: React.FC = () => {
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      return data as AuditLog[];
+      return (data as any[]).map(log => ({
+        ...log,
+        profiles: Array.isArray(log.profiles) ? log.profiles[0] : log.profiles
+      })) as AuditLog[];
     },
   });
 
