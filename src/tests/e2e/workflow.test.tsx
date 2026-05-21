@@ -9,6 +9,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
+const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440001';
+const TEST_COMPANY_ID = '550e8400-e29b-41d4-a716-446655440002';
+const TEST_STORE_ID = '550e8400-e29b-41d4-a716-446655440003';
+
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => {
   return {
@@ -16,10 +20,10 @@ vi.mock('@/integrations/supabase/client', () => {
       from: vi.fn(),
       rpc: vi.fn(),
       auth: {
-        getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: 'test-user-id' } } }, error: null }),
+        getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } } }, error: null }),
         onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
-        signInWithPassword: vi.fn().mockResolvedValue({ data: { user: { id: 'test-user-id' } }, error: null }),
-        signUp: vi.fn().mockResolvedValue({ data: { user: { id: 'test-user-id' } }, error: null }),
+        signInWithPassword: vi.fn().mockResolvedValue({ data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, error: null }),
+        signUp: vi.fn().mockResolvedValue({ data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, error: null }),
         signOut: vi.fn().mockResolvedValue({ error: null }),
       },
       channel: vi.fn(() => ({
@@ -71,7 +75,7 @@ describe('NAVANHULA CLOUD E2E Workflows', () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn(),
-        insert: vi.fn().mockResolvedValue({ data: { id: 'new-id' }, error: null }),
+        insert: vi.fn().mockResolvedValue({ data: { id: '550e8400-e29b-41d4-a716-446655449999' }, error: null }),
         order: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
         in: vi.fn().mockReturnThis(),
@@ -80,16 +84,16 @@ describe('NAVANHULA CLOUD E2E Workflows', () => {
 
       if (table === 'profiles') {
         queryBuilder.maybeSingle.mockResolvedValue({ 
-          data: { id: 'test-user-id', company_id: 'test-company-id', store_id: 'test-store-id', full_name: 'Test User' }, 
+          data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, store_id: TEST_STORE_ID, full_name: 'Test User' }, 
           error: null 
         });
       } else if (table === 'user_roles') {
         queryBuilder.maybeSingle.mockResolvedValue({ data: { role: 'admin' }, error: null });
       } else if (table === 'companies') {
-        queryBuilder.maybeSingle.mockResolvedValue({ data: { id: 'test-company-id', name: 'Test Company' }, error: null });
+        queryBuilder.maybeSingle.mockResolvedValue({ data: { id: TEST_COMPANY_ID, name: 'Test Company' }, error: null });
       } else if (table === 'stores') {
-        queryBuilder.maybeSingle.mockResolvedValue({ data: { id: 'test-store-id', name: 'Test Store' }, error: null });
-        queryBuilder.then.mockImplementation((cb) => cb({ data: [{ id: 'test-store-id', name: 'Test Store' }], error: null }));
+        queryBuilder.maybeSingle.mockResolvedValue({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
+        queryBuilder.then.mockImplementation((cb) => cb({ data: [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true, company_id: TEST_COMPANY_ID }], error: null }));
       } else if (table === 'products') {
         queryBuilder.then.mockImplementation((cb) => cb({ data: [], error: null }));
       }
@@ -104,12 +108,15 @@ describe('NAVANHULA CLOUD E2E Workflows', () => {
   it('Flow 1: Create a Store and validate it appears in the list', async () => {
     render(<LocalStoresPage />, { wrapper: AllProviders });
 
+    // Wait for the button to appear (Auth loading finish)
     const newStoreBtn = await screen.findByText(/Nova Loja/i);
     fireEvent.click(newStoreBtn);
 
+    // Fill form
     fireEvent.change(screen.getByPlaceholderText(/Nome da loja/i), { target: { value: 'Filial Maputo' } });
     fireEvent.change(screen.getByPlaceholderText(/Maputo, Beira.../i), { target: { value: 'Maputo' } });
 
+    // Submit
     const createBtn = screen.getByRole('button', { name: /Criar/i });
     fireEvent.click(createBtn);
 
@@ -127,9 +134,9 @@ describe('NAVANHULA CLOUD E2E Workflows', () => {
     fireEvent.change(screen.getByPlaceholderText(/Nome do produto/i), { target: { value: 'Arroz 5kg' } });
     
     // Labels might vary, using broad match
-    const costInput = screen.getByLabelText(/Preço de Compra/i);
-    const saleInput = screen.getByLabelText(/Preço de Venda/i);
-    const stockInput = screen.getByLabelText(/Estoque/i);
+    const costInput = screen.getByLabelText(/Preço de Compra \*/i);
+    const saleInput = screen.getByLabelText(/Preço de Venda \*/i);
+    const stockInput = screen.getByLabelText(/Estoque \*/i);
 
     fireEvent.change(costInput, { target: { value: '100' } });
     fireEvent.change(saleInput, { target: { value: '150' } });
