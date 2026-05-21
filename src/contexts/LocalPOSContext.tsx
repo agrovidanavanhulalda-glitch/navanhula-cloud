@@ -801,12 +801,16 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (itemsError) console.error('[POS] Items sync error:', itemsError);
           
           if (paymentDetails.method !== 'cash') {
-            await supabase.rpc('credit_wallet_from_sale', {
-              p_store_id: storeId,
-              p_payment_method: paymentDetails.method,
-              p_amount: total,
-              p_sale_id: saleId,
-            }).catch(e => console.error('[POS] Wallet credit error:', e));
+            try {
+              await supabase.rpc('credit_wallet_from_sale', {
+                p_store_id: storeId,
+                p_payment_method: paymentDetails.method,
+                p_amount: total,
+                p_sale_id: saleId,
+              });
+            } catch (e) {
+              console.error('[POS] Wallet credit error:', e);
+            }
           }
         }
       } else {
