@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
 import { Loader2 } from "lucide-react";
+import EnterpriseDebugMonitor from "./components/debug/EnterpriseDebugMonitor";
 import { Button } from "@/components/ui/button";
 import { isValidId } from "@/lib/uuid";
 import SubscriptionGate from "@/components/layout/SubscriptionGate";
