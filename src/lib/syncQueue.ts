@@ -145,7 +145,6 @@ class SyncManager {
       // If error is business logic (e.g. Insufficient stock), don't retry forever
       if (error.message?.includes('Insufficient') || error.message?.includes('Estoque insuficiente')) {
         console.warn('[Sync] Business logic error, task marked as failed', error.message);
-        // We could move to a manual resolution queue here
       }
       throw error;
     }
@@ -163,7 +162,7 @@ class SyncManager {
   getQueueStatus() {
     return {
       pending: this.queue.length,
-      isOnline: navigator.onLine,
+      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
       lastProcessed: Date.now()
     };
   }
