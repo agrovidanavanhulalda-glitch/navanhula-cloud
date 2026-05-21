@@ -1220,7 +1220,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ============ PRODUCT ACTIONS ============
 
   const addProduct = useCallback(async (product: Omit<LocalProduct, 'id'>) => {
-    // Validar campos obrigatórios
+    // 1. Validar campos obrigatórios
     if (!product.name.trim()) {
       toast.error('O nome do produto é obrigatório');
       return;
@@ -1229,26 +1229,46 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const targetCompanyId = company?.id;
       if (!isValidId(targetCompanyId)) {
-        console.error('[POS] Erro: ID da empresa inválido ou ausente', targetCompanyId);
+        console.error('[POS] Erro: ID da empresa inválido ou ausente', { companyId: targetCompanyId });
         toast.error('Erro de sessão: ID da empresa inválido. Faça login novamente.');
         return;
       }
 
       // Determinar loja para stock inicial
       const storeIdToUse = sanitizeId(state.currentStore.id) || sanitizeId(authStore?.id);
+      const finalStoreId = isValidId(storeIdToUse) ? storeIdToUse : null;
       
-      if (!storeIdToUse && product.stock > 0) {
-        toast.warning('Sem loja ativa. O produto será criado com stock zero.');
+      if (!finalStoreId && product.stock > 0) {
+        console.warn('[POS] Criando produto com stock solicitado mas sem loja válida identificada.', { 
+          requestedStock: product.stock, 
+          storeId: storeIdToUse 
+        });
+        toast.warning('Stock inicial ignorado: Nenhuma loja ativa selecionada.');
       }
 
-      console.log('[POS] Criando produto via RPC atómico:', product.name);
-
-      const { data, error } = await supabase.rpc('create_product_with_stock', {
+      console.group('[POS] Criação de Produto (Enterprise)');
+      console.log('Dados do produto:', product);
+      console.log('Parâmetros RPC:', {
         p_name: product.name.trim(),
         p_cost_price: product.costPrice || 0,
         p_sale_price: product.salePrice || 0,
         p_initial_stock: Math.max(0, product.stock || 0),
-        p_store_id: sanitizeId(storeIdToUse),
+        p_store_id: finalStoreId,
+        p_company_id: targetCompanyId,
+        p_is_active: product.isActive !== false,
+        p_image_url: product.imageUrl || null,
+        p_code: product.code || null,
+        p_category_id: product.categoryId || null,
+        p_description: product.description || null
+      });
+
+      // 2. Chamada RPC Atómica
+      const { data, error } = await supabase.rpc('create_product_with_stock', {
+        p_name: product.name.trim(),
+        p_cost_price: Number(product.costPrice) || 0,
+        p_sale_price: Number(product.salePrice) || 0,
+        p_initial_stock: Math.floor(Number(product.stock)) || 0,
+        p_store_id: finalStoreId,
         p_company_id: targetCompanyId,
         p_is_active: product.isActive !== false,
         p_image_url: product.imageUrl || null,
@@ -1258,17 +1278,27 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
 
       if (error) {
-        console.error('[POS] Erro no RPC create_product_with_stock:', error);
+        console.error('[POS] Erro RPC:', error);
+        console.groupEnd();
         throw new Error(error.message);
       }
 
-      console.log('[POS] Produto criado com sucesso:', data);
+      const result = data as any;
+      if (result && result.success === false) {
+        console.error('[POS] Erro lógico na função SQL:', result.error);
+        console.groupEnd();
+        toast.error(`Erro: ${result.error}`);
+        return;
+      }
+
+      console.log('[POS] Produto criado com sucesso:', result);
+      console.groupEnd();
       
-      // Sincronizar estado local
+      // 3. Sincronizar estado local
       await loadData();
       toast.success('Produto criado com sucesso');
     } catch (error: any) {
-      console.error('[POS] Exceção ao criar produto:', error);
+      console.error('[POS] Exceção crítica ao criar produto:', error);
       toast.error(`Falha ao criar produto: ${error.message || 'Erro desconhecido'}`);
     }
   }, [state.currentStore.id, authStore?.id, company?.id, loadData]);
