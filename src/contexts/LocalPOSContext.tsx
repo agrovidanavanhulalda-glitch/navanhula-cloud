@@ -305,6 +305,7 @@ const mapDbSaleToLocal = (s: any, items: any[], sellerName?: string): LocalSale 
     sellerId: s.user_id,
     sellerName: s.seller_name || sellerName || undefined,
     cancellationReason: s.notes || undefined,
+    synced: true,
   };
 };
 
