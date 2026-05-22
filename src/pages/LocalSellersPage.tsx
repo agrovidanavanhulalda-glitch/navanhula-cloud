@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocalPOS, LocalSeller } from '@/contexts/LocalPOSContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,9 @@ import {
   Edit,
   Trash2,
   UserCheck,
-  UserX
+  UserX,
+  Copy,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -45,7 +48,8 @@ const LocalSellersPage: React.FC = () => {
     currentStore,
     addSeller, 
     updateSeller, 
-    deleteSeller 
+    deleteSeller,
+    refreshData,
   } = useLocalPOS();
   const { company } = useAuth();
   const { isAdmin, role } = usePermissions();
