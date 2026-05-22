@@ -94,7 +94,7 @@ describe('POS Offline & Sync E2E', () => {
       } else if (table === 'user_roles') {
         queryBuilder.maybeSingle.mockResolvedValue({ data: { role: 'admin' }, error: null });
       } else if (table === 'companies') {
-        queryBuilder.maybeSingle.mockResolvedValue({ data: { id: TEST_COMPANY_ID, name: 'Test Company' }, error: null });
+        queryBuilder.maybeSingle.mockResolvedValue({ data: { id: TEST_COMPANY_ID, name: 'Test Company', country: 'MZ', nif: '123456789' }, error: null });
       } else if (table === 'stores') {
         queryBuilder.maybeSingle.mockResolvedValue({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
       }
