@@ -12,8 +12,39 @@ import { syncManager } from '@/lib/syncQueue';
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: vi.fn(),
-    rpc: vi.fn(),
+    from: vi.fn().mockImplementation((table: string) => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockImplementation(() => {
+        if (table === 'profiles') return Promise.resolve({ data: { id: '550e8400-e29b-41d4-a716-446655440001', company_id: '550e8400-e29b-41d4-a716-446655440002', store_id: '550e8400-e29b-41d4-a716-446655440003', full_name: 'Test User' }, error: null });
+        if (table === 'companies') return Promise.resolve({ data: { id: '550e8400-e29b-41d4-a716-446655440002', name: 'Test Company', country: 'MZ', nif: '123456789' }, error: null });
+        if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
+        if (table === 'stores') return Promise.resolve({ data: { id: '550e8400-e29b-41d4-a716-446655440003', name: 'Test Store' }, error: null });
+        return Promise.resolve({ data: null, error: null });
+      }),
+      single: vi.fn().mockReturnValue(Promise.resolve({ data: { id: 'new-id' }, error: null })),
+      insert: vi.fn().mockImplementation(() => ({
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockReturnThis(),
+        then: (cb: any) => Promise.resolve(cb({ data: [], error: null }))
+      })),
+      update: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      then: vi.fn().mockImplementation((cb) => {
+        if (table === 'stores') return Promise.resolve(cb({ data: [{ id: '550e8400-e29b-41d4-a716-446655440003', name: 'Test Store', is_active: true, company_id: '550e8400-e29b-41d4-a716-446655440002' }], error: null }));
+        if (table === 'products') return Promise.resolve(cb({ data: [{ id: '550e8400-e29b-41d4-a716-446655440004', name: 'Arroz', sale_price: 100, cost_price: 80, is_active: true, company_id: '550e8400-e29b-41d4-a716-446655440002' }], error: null }));
+        if (table === 'cash_registers') return Promise.resolve(cb({ data: [{ id: 'cr-1', status: 'open', user_id: '550e8400-e29b-41d4-a716-446655440001', store_id: '550e8400-e29b-41d4-a716-446655440003', opening_amount: 1000, opened_at: new Date().toISOString() }], error: null }));
+        if (table === 'profiles') return Promise.resolve(cb({ data: [{ id: '550e8400-e29b-41d4-a716-446655440001', full_name: 'Test User', store_id: '550e8400-e29b-41d4-a716-446655440003', company_id: '550e8400-e29b-41d4-a716-446655440002' }], error: null }));
+        if (table === 'companies') return Promise.resolve(cb({ data: [{ id: '550e8400-e29b-41d4-a716-446655440002', name: 'Test Company', country: 'MZ', nif: '123456789' }], error: null }));
+        if (table === 'user_roles') return Promise.resolve(cb({ data: [{ user_id: '550e8400-e29b-41d4-a716-446655440001', role: 'admin' }], error: null }));
+        if (table === 'product_stock') return Promise.resolve(cb({ data: [{ product_id: '550e8400-e29b-41d4-a716-446655440004', store_id: '550e8400-e29b-41d4-a716-446655440003', quantity: 100 }], error: null }));
+        return Promise.resolve(cb({ data: [], error: null }));
+      }),
+    })),
+    rpc: vi.fn().mockResolvedValue({ data: { success: true }, error: null }),
     removeChannel: vi.fn().mockResolvedValue({}),
     auth: {
       getSession: vi.fn().mockResolvedValue({ 
