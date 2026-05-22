@@ -199,6 +199,8 @@ describe('POS Offline & Sync E2E', () => {
       expect(syncManager.getQueueStatus().pending).toBe(0);
       expect(insertMock).toHaveBeenCalled();
     }, { timeout: 20000 });
+  });
+
   it('persists cart when going offline in the middle of a sale', { timeout: 45000 }, async () => {
     // 1. Start ONLINE
     (navigator as any).onLine = true;
