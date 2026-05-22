@@ -9,16 +9,18 @@ import { BrowserRouter } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import * as PDFReportExports from '@/components/reports/PDFReport';
 
+// Real UUIDs for enterprise validation
+const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440001';
+const TEST_COMPANY_ID = '550e8400-e29b-41d4-a716-446655440002';
+const TEST_STORE_ID = '550e8400-e29b-41d4-a716-446655440003';
+
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(),
     rpc: vi.fn(),
     auth: {
-      getSession: vi.fn().mockResolvedValue({ 
-        data: { session: { user: { id: 'test-user-id' } } }, 
-        error: null 
-      }),
+      getSession: vi.fn(),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
     },
   },
@@ -64,17 +66,15 @@ const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 );
 
 describe('Sales Export E2E', () => {
-  const TEST_STORE_ID = 'store-1';
-  const TEST_SALE_OFFLINE_ID = 'sale-offline-1';
-  const TEST_SALE_SYNCED_ID = 'sale-synced-1';
+  const TEST_SALE_SYNCED_ID = '550e8400-e29b-41d4-a716-446655440004';
 
   beforeEach(() => {
     vi.resetAllMocks();
     localStorage.clear();
 
-    // Mock session
+    // Mock session correctly
     (supabase.auth.getSession as any).mockResolvedValue({ 
-      data: { session: { user: { id: 'test-user-id' } } }, 
+      data: { session: { user: { id: TEST_USER_ID } } }, 
       error: null 
     });
 
@@ -82,13 +82,18 @@ describe('Sales Export E2E', () => {
       data: { subscription: { unsubscribe: vi.fn() } } 
     });
 
+    // Mock RPC for Auth bootstrap
+    (supabase.rpc as any).mockResolvedValue({ data: { success: true }, error: null });
+
     // Mock profiles, stores, etc.
     (supabase.from as any).mockImplementation((table: string) => ({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn().mockImplementation(() => {
-        if (table === 'profiles') return Promise.resolve({ data: { id: 'test-user-id', company_id: 'company-1', store_id: TEST_STORE_ID }, error: null });
+        if (table === 'profiles') return Promise.resolve({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, store_id: TEST_STORE_ID }, error: null });
         if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
+        if (table === 'companies') return Promise.resolve({ data: { id: TEST_COMPANY_ID, name: 'Test Company' }, error: null });
+        if (table === 'stores') return Promise.resolve({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
         return Promise.resolve({ data: null, error: null });
       }),
       then: vi.fn().mockImplementation((cb) => {
@@ -114,8 +119,8 @@ describe('Sales Export E2E', () => {
         paymentMethod: 'cash'
       }
     ];
-    localStorage.setItem('pos_sales_company-1', JSON.stringify(sales));
-    localStorage.setItem('pos_stores_company-1', JSON.stringify([{ id: TEST_STORE_ID, name: 'Test Store' }]));
+    localStorage.setItem(`pos_sales_${TEST_COMPANY_ID}`, JSON.stringify(sales));
+    localStorage.setItem(`pos_stores_${TEST_COMPANY_ID}`, JSON.stringify([{ id: TEST_STORE_ID, name: 'Test Store' }]));
   });
 
   it('exports sales including synced offline sales when filtered by store', async () => {
