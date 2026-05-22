@@ -111,6 +111,7 @@ describe('POS Offline & Sync E2E', () => {
     vi.clearAllMocks();
     localStorage.clear();
     syncManager.clearQueue();
+    syncManager.forceSetProcessing(false);
     
     // Default online
     Object.defineProperty(navigator, 'onLine', {
@@ -118,9 +119,6 @@ describe('POS Offline & Sync E2E', () => {
       value: true,
       writable: true
     });
-
-    // Reset the internal process status of syncManager
-    (syncManager as any).isProcessing = false;
 
     (supabase.from as any).mockImplementation((table: string) => ({
       select: vi.fn().mockReturnThis(),
