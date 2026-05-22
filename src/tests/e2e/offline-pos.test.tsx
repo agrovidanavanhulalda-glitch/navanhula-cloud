@@ -119,45 +119,7 @@ describe('POS Offline & Sync E2E', () => {
       writable: true
     });
 
-    (supabase.from as any).mockImplementation((table: string) => {
-      const queryBuilder: any = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockReturnThis(),
-        insert: vi.fn().mockImplementation((payload) => {
-          return insertMock(payload);
-        }),
-        update: vi.fn().mockReturnThis(),
-        match: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockReturnThis(),
-        in: vi.fn().mockReturnThis(),
-        single: vi.fn().mockReturnThis(),
-        then: vi.fn().mockImplementation((cb) => {
-          if (table === 'stores') return Promise.resolve(cb({ data: [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true, company_id: TEST_COMPANY_ID }], error: null }));
-          if (table === 'products') return Promise.resolve(cb({ data: [{ id: TEST_PRODUCT_ID, name: 'Arroz', sale_price: 100, cost_price: 80, is_active: true, company_id: TEST_COMPANY_ID }], error: null }));
-          if (table === 'cash_registers') return Promise.resolve(cb({ data: [{ id: 'cr-1', status: 'open', user_id: TEST_USER_ID, store_id: TEST_STORE_ID, opening_amount: 1000, opened_at: new Date().toISOString() }], error: null }));
-          if (table === 'profiles') return Promise.resolve(cb({ data: [{ id: TEST_USER_ID, full_name: 'Test User', store_id: TEST_STORE_ID, company_id: TEST_COMPANY_ID }], error: null }));
-          if (table === 'companies') return Promise.resolve(cb({ data: [{ id: TEST_COMPANY_ID, name: 'Test Company', country: 'MZ', nif: '123456789' }], error: null }));
-          if (table === 'user_roles') return Promise.resolve(cb({ data: [{ user_id: TEST_USER_ID, role: 'admin' }], error: null }));
-          if (table === 'product_stock') return Promise.resolve(cb({ data: [{ product_id: TEST_PRODUCT_ID, store_id: TEST_STORE_ID, quantity: 100 }], error: null }));
-          return Promise.resolve(cb({ data: [], error: null }));
-        }),
-      };
-
-      queryBuilder.maybeSingle.mockImplementation(() => {
-        if (table === 'profiles') return Promise.resolve({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, store_id: TEST_STORE_ID, full_name: 'Test User' }, error: null });
-        if (table === 'companies') return Promise.resolve({ data: { id: TEST_COMPANY_ID, name: 'Test Company', country: 'MZ', nif: '123456789' }, error: null });
-        if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
-        if (table === 'stores') return Promise.resolve({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
-        return Promise.resolve({ data: null, error: null });
-      });
-      queryBuilder.single.mockReturnValue(Promise.resolve({ data: { id: 'new-id' }, error: null }));
-      
-      return queryBuilder;
-    });
-
-    (supabase.rpc as any).mockResolvedValue({ data: { success: true }, error: null });
+    // We'll use the implementations already provided in the mock
   });
 
   it('completes an online sale successfully', { timeout: 20000 }, async () => {
