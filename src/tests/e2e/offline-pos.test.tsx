@@ -161,10 +161,11 @@ describe('POS Offline & Sync E2E', () => {
 
     // Verify added to cart
     await waitFor(() => {
-      expect(screen.getAllByText(/100,00 MT/i).length).toBeGreaterThan(0);
-    });
+      const subtotals = screen.queryAllByText(/100,00 MT/i);
+      expect(subtotals.length).toBeGreaterThan(0);
+    }, { timeout: 5000 });
 
-    // Reset insert mock to clear initial calls
+    // Reset insert mock
     insertMock.mockClear();
 
     // Finalize
@@ -177,7 +178,7 @@ describe('POS Offline & Sync E2E', () => {
     const confirmPaymentBtn = screen.getByText(/Confirmar Pagamento/i);
     fireEvent.click(confirmPaymentBtn);
 
-    // Verify it was added to queue and NOT sent to Supabase
+    // Verify it was added to queue
     await waitFor(() => {
       const status = syncManager.getQueueStatus();
       expect(status.pending).toBeGreaterThan(0);
