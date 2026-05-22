@@ -7,22 +7,20 @@ import { BrowserRouter } from 'react-router-dom';
 import * as PDFReportExports from '@/components/reports/PDFReport';
 import * as LocalPOSContextExports from '@/contexts/LocalPOSContext';
 
-// Mock jsPDF and URL methods
-const mockDoc = {
-  setFont: vi.fn().mockReturnThis(),
-  setFontSize: vi.fn().mockReturnThis(),
-  text: vi.fn().mockReturnThis(),
-  line: vi.fn().mockReturnThis(),
-  setLineWidth: vi.fn().mockReturnThis(),
-  addPage: vi.fn().mockReturnThis(),
-  save: vi.fn().mockReturnThis(),
-};
-
+// Robust mock for jsPDF
 vi.mock('jspdf', () => {
-  const jsPDF = vi.fn().mockImplementation(() => mockDoc);
+  function MockDoc() {}
+  MockDoc.prototype.setFont = vi.fn().mockReturnThis();
+  MockDoc.prototype.setFontSize = vi.fn().mockReturnThis();
+  MockDoc.prototype.text = vi.fn().mockReturnThis();
+  MockDoc.prototype.line = vi.fn().mockReturnThis();
+  MockDoc.prototype.setLineWidth = vi.fn().mockReturnThis();
+  MockDoc.prototype.addPage = vi.fn().mockReturnThis();
+  MockDoc.prototype.save = vi.fn().mockReturnThis();
+  
   return {
-    default: jsPDF,
-    jsPDF: jsPDF
+    default: MockDoc,
+    jsPDF: MockDoc
   };
 });
 
@@ -93,7 +91,6 @@ describe('Sales Export E2E', () => {
 
     await screen.findByText(/Performance/i);
     
-    // Check Excel export contains offline/synced flags
     const excelBtn = screen.getByRole('button', { name: /Excel/i });
     fireEvent.click(excelBtn);
     expect(excelSpy).toHaveBeenCalled();
@@ -103,7 +100,6 @@ describe('Sales Export E2E', () => {
     expect(exportedSale.isOffline).toBe(true);
     expect(exportedSale.synced).toBe(true);
 
-    // Check PDF export
     const pdfBtn = screen.getByRole('button', { name: /Relatório/i });
     fireEvent.click(pdfBtn);
     expect(pdfSpy).toHaveBeenCalled();
