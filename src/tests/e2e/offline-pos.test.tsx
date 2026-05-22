@@ -133,11 +133,87 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent.click(gridItem);
   };
 
+  it('queues a sale when offline and syncs when online', { timeout: 40000 }, async () => {
+    (navigator as any).onLine = false;
+    render(<AllProviders><LocalPOSPage /></AllProviders>);
+    await selectProduct();
+    fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
+    fireEvent.click(await screen.findByText(/Dinheiro/i, {}, { timeout: 10000 }));
+    fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
+    
+    await waitFor(() => {
+        expect(syncManager.getQueueStatus().pending).toBe(1);
+    }, { timeout: 20000 });
+
+    (navigator as any).onLine = true;
+    fireEvent(window, new Event('online'));
+
+    await waitFor(() => {
+      expect(insertMock).toHaveBeenCalled();
+      expect(syncManager.getQueueStatus().pending).toBe(0);
+    }, { timeout: 25000 });
+  });
+
+  it('keeps sale in queue if sync fails when returning online', { timeout: 45000 }, async () => {
+    const networkError = new Error('Database connection failed');
+    insertMock.mockImplementationOnce(() => ({
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockReturnThis(),
+      then: (cb: any) => Promise.resolve(cb({ data: null, error: networkError }))
+    }));
+
+    (navigator as any).onLine = false;
+    render(<AllProviders><LocalPOSPage /></AllProviders>);
+    await selectProduct();
+    fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
+    fireEvent.click(await screen.findByText(/Dinheiro/i));
+    fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
+    
+    await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 20000 });
+    
+    (navigator as any).onLine = true;
+    fireEvent(window, new Event('online'));
+    
+    await new Promise(r => setTimeout(r, 2000));
+    expect(syncManager.getQueueStatus().pending).toBe(1);
+
+    insertMock.mockImplementation(() => ({
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockReturnThis(),
+      then: (cb: any) => Promise.resolve(cb({ data: [], error: null }))
+    }));
+
+    await syncManager.processQueue();
+    await waitFor(() => {
+      expect(syncManager.getQueueStatus().pending).toBe(0);
+      expect(insertMock).toHaveBeenCalled();
+    }, { timeout: 20000 });
+  });
+
+  it('persists cart when going offline in the middle of a sale', { timeout: 45000 }, async () => {
+    (navigator as any).onLine = true;
+    render(<AllProviders><LocalPOSPage /></AllProviders>);
+    await selectProduct();
+    await screen.findByRole('heading', { name: /Arroz/i, level: 4 });
+    (navigator as any).onLine = false;
+    fireEvent(window, new Event('offline'));
+    await screen.findByRole('heading', { name: /Arroz/i, level: 4 });
+    fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
+    fireEvent.click(await screen.findByText(/Dinheiro/i));
+    fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
+    await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 20000 });
+    (navigator as any).onLine = true;
+    fireEvent(window, new Event('online'));
+    await waitFor(() => {
+      expect(syncManager.getQueueStatus().pending).toBe(0);
+      expect(insertMock).toHaveBeenCalled();
+    }, { timeout: 25000 });
+  });
+
   it('decrements stock immediately offline and finalizes after sync', { timeout: 45000 }, async () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
     
-    // Wait for the specific stock display using findAllByText which is more resilient
     const stockElements = await screen.findAllByText(/100 un/i);
     expect(stockElements.length).toBeGreaterThan(0);
     
@@ -146,7 +222,6 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent.click(await screen.findByText(/Dinheiro/i));
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
     
-    // UI should update stock IMMEDIATELY from 100 to 99
     await screen.findByText(/99 un/i);
     
     await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 20000 });
@@ -154,6 +229,44 @@ describe('POS Offline & Sync E2E', () => {
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
     
+    await waitFor(() => {
+      expect(syncManager.getQueueStatus().pending).toBe(0);
+      expect(insertMock).toHaveBeenCalled();
+    }, { timeout: 25000 });
+  });
+
+  it('displays digital receipt offline and remains consistent after sync', { timeout: 45000 }, async () => {
+    // 1. Start OFFLINE
+    (navigator as any).onLine = false;
+    render(<AllProviders><LocalPOSPage /></AllProviders>);
+    
+    // 2. Complete a sale offline
+    await selectProduct();
+    fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
+    fireEvent.click(await screen.findByText(/Dinheiro/i));
+    fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
+    
+    // 3. Verify PostSaleModal is displayed (even while offline)
+    await screen.findByText(/Venda concluída com sucesso/i);
+    await screen.findByText(/100,00 MT/i);
+    
+    // 4. Click to see thermal receipt
+    fireEvent.click(screen.getByText(/Imprimir Recibo/i));
+    
+    // 5. Verify ThermalReceipt content
+    await screen.findByText(/Recibo de Venda/i);
+    await screen.findByText(/TOTAL:/i);
+    const totalEl = await screen.findByText(/100,00 MT/i);
+    expect(totalEl).toBeDefined();
+    
+    // 6. Close receipt
+    fireEvent.click(screen.getByRole('button', { name: /X/i }));
+    
+    // 7. GO ONLINE
+    (navigator as any).onLine = true;
+    fireEvent(window, new Event('online'));
+    
+    // 8. Verify sync
     await waitFor(() => {
       expect(syncManager.getQueueStatus().pending).toBe(0);
       expect(insertMock).toHaveBeenCalled();
