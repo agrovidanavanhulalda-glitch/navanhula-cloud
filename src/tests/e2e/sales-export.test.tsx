@@ -19,9 +19,10 @@ const mockDoc = {
 };
 
 vi.mock('jspdf', () => {
+  const jsPDF = vi.fn().mockImplementation(() => mockDoc);
   return {
-    default: vi.fn().mockImplementation(() => mockDoc),
-    jsPDF: vi.fn().mockImplementation(() => mockDoc)
+    default: jsPDF,
+    jsPDF: jsPDF
   };
 });
 
