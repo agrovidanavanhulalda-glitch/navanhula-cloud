@@ -770,6 +770,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       storeId,
       sellerId: user?.id,
       sellerName,
+      isOffline: !navigator.onLine,
+      synced: navigator.onLine,
     };
 
     try {
