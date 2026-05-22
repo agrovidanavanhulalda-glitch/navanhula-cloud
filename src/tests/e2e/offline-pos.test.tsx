@@ -77,6 +77,7 @@ describe('POS Offline & Sync E2E', () => {
   });
 
   beforeEach(() => {
+    vi.resetAllMocks();
     vi.clearAllMocks();
     localStorage.clear();
     syncManager.clearQueue();
