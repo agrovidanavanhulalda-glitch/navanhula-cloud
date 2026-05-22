@@ -114,7 +114,19 @@ describe('Sales Export E2E', () => {
       then: vi.fn().mockImplementation((cb) => {
         if (table === 'stores') return Promise.resolve(cb({ data: [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true }], error: null }));
         if (table === 'products') return Promise.resolve(cb({ data: [], error: null }));
-        if (table === 'sales') return Promise.resolve(cb({ data: [], error: null }));
+        if (table === 'sales') return Promise.resolve(cb({ 
+          data: [{ 
+            id: TEST_SALE_SYNCED_ID, 
+            store_id: TEST_STORE_ID, 
+            total: 1500, 
+            subtotal: 1500, 
+            discount_amount: 0, 
+            status: 'completed', 
+            created_at: new Date().toISOString(),
+            payment_method: 'cash'
+          }], 
+          error: null 
+        }));
         if (table === 'profiles') return Promise.resolve(cb({ data: [{ id: TEST_USER_ID, full_name: 'Test User' }], error: null }));
         return Promise.resolve(cb({ data: [], error: null }));
       }),
