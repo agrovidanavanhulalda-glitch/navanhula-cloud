@@ -58,7 +58,10 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
           height={height || undefined}
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
-          onError={() => setErrorCount(prev => prev + 1)}
+          onError={() => {
+            console.error(`[BrandLogo] Failed to load logo from: ${logoUrl}`);
+            setErrorCount(prev => prev + 1);
+          }}
           className="h-full w-full object-contain"
           style={{ filter: glow ? 'drop-shadow(0 6px 18px hsl(var(--gold) / 0.35))' : undefined }}
         />
