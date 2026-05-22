@@ -291,8 +291,8 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className={cn('flex items-center gap-3', collapsed ? 'justify-center px-0' : 'px-1')}>
           <BrandLogo 
-            width={collapsed ? 32 : 120} 
-            height={collapsed ? 32 : undefined}
+            width={collapsed ? 36 : 140} 
+            height={collapsed ? 36 : undefined}
             className="transition-all duration-300"
           />
           {!collapsed && (

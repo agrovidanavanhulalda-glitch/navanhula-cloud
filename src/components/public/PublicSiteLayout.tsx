@@ -61,9 +61,8 @@ const PublicSiteLayout: React.FC = () => {
       <UrgencyBanner />
       <header className="sticky top-0 z-50 border-b border-border/60 bg-white/90 backdrop-blur-md">
         <div className="container flex h-20 items-center justify-between">
-          <button type="button" onClick={() => handleSectionNavigation('#top')} className="flex items-center gap-2 group">
-            <BrandLogo width={40} priority className="transition-transform group-hover:scale-105" />
-            <span className="text-xl font-black tracking-tighter text-[#0B3C5D]">NAVANHULA</span>
+          <button type="button" onClick={() => handleSectionNavigation('#top')} className="flex items-center gap-3 group">
+            <BrandLogo width={160} priority className="transition-transform group-hover:scale-105" />
           </button>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -102,8 +101,7 @@ const PublicSiteLayout: React.FC = () => {
         <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-end md:justify-between">
           <div className="max-w-xl space-y-4">
             <div className="flex items-center gap-2">
-              <BrandLogo width={32} />
-              <p className="text-xl font-black tracking-tight text-white">NAVANHULA CLOUD</p>
+              <BrandLogo width={140} />
             </div>
             <p className="text-sm leading-7 text-blue-100/70">
               O sistema de gestão empresarial líder para negócios que buscam crescimento e controle total.
