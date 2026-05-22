@@ -248,8 +248,8 @@ describe('POS Offline & Sync E2E', () => {
       return builder;
     });
 
-    // 2. Start OFFLINE
-    Object.defineProperty(navigator, 'onLine', { value: false });
+    // 3. Start OFFLINE
+    (navigator as any).onLine = false;
     
     render(<AllProviders><LocalPOSPage /></AllProviders>);
 
