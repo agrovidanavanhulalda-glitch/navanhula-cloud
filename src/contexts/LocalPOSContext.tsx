@@ -76,6 +76,8 @@ export interface LocalSale {
   cancelledBy?: string;
   cancelledByName?: string;
   cancellationReason?: string;
+  isOffline?: boolean;
+  synced?: boolean;
 }
 
 export interface LocalStore {
