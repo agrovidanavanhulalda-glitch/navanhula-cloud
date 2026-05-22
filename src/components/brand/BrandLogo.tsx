@@ -28,7 +28,7 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
 }) => {
   const [failed, setFailed] = useState(false);
   
-  const logoUrl = `${navanhulaLogo}?v=1.0.1`;
+  const logoUrl = navanhulaLogo;
   
   const containerStyle = { 
     width: width, 
