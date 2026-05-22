@@ -263,9 +263,9 @@ const LocalReportsPage: React.FC = () => {
       <Card className="p-4 mb-6">
         <div className="flex flex-wrap gap-4 items-end">
           <div className="space-y-2">
-            <Label>Loja</Label>
+            <Label htmlFor="store-filter">Loja</Label>
             <Select value={selectedStore} onValueChange={setSelectedStore}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger id="store-filter" className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
