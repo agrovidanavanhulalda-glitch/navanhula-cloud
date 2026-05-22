@@ -1057,7 +1057,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ============ STORE ACTIONS ============
 
   const addStore = useCallback(async (store: Omit<LocalStore, 'id'>) => {
-    const storeId = crypto.randomUUID();
     const targetCompanyId = company?.id;
 
     if (!isValidId(targetCompanyId)) {
@@ -1066,14 +1065,13 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     try {
-      const { error } = await supabase.from('stores').insert({
-        id: storeId,
+      const { data, error } = await supabase.from('stores').insert({
         name: store.name,
         address: store.address || null,
         phone: store.phone || null,
         company_id: targetCompanyId,
-        is_active: store.isActive,
-      });
+        is_active: true, // Force active enterprise-style
+      }).select().single();
 
       if (error) {
         console.error('[POS] Erro ao criar loja:', error);
@@ -1081,12 +1079,20 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return;
       }
 
+      toast.success('Loja criada com sucesso');
+      
+      // Auto-activate the new store immediately
+      await supabase.rpc('set_active_store', { p_store_id: data.id });
+      
+      if (refreshUserData) {
+        await refreshUserData();
+      }
+      
       await loadData(true);
-      toast.success('Loja criada!');
     } catch (error) {
       console.error('[POS] Exceção ao criar loja:', error);
     }
-  }, [company?.id, loadData]);
+  }, [company?.id, loadData, refreshUserData]);
 
   const updateStore = useCallback(async (id: string, updates: Partial<LocalStore>) => {
     try {
