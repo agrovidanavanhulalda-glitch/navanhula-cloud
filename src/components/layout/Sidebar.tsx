@@ -289,14 +289,16 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
     <ShadcnSidebar collapsible={forceExpanded ? "none" : "icon"} className="border-r border-sidebar-border">
       {/* Brand Header */}
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Cloud className="w-5 h-5 text-primary" />
-          </div>
+        <div className={cn('flex items-center gap-3', collapsed ? 'justify-center px-0' : 'px-1')}>
+          <BrandLogo 
+            width={collapsed ? 32 : 120} 
+            height={collapsed ? 32 : undefined}
+            className="transition-all duration-300"
+          />
           {!collapsed && (
             <div className="min-w-0">
-              <h1 className="font-bold text-sm text-sidebar-primary-foreground tracking-tight leading-none uppercase">Menu Principal</h1>
-              <p className="text-[10px] font-medium tracking-widest text-sidebar-foreground/50 uppercase">Navanhula Cloud</p>
+              <h1 className="font-bold text-[11px] text-sidebar-primary-foreground tracking-tight leading-none uppercase">Menu Principal</h1>
+              <p className="text-[9px] font-medium tracking-widest text-sidebar-foreground/50 uppercase">Navanhula Cloud</p>
             </div>
           )}
         </div>
