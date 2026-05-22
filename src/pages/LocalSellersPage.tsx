@@ -119,6 +119,9 @@ const LocalSellersPage: React.FC = () => {
     setShowDialog(true);
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdSellerInfo, setCreatedSellerInfo] = useState<{ email: string; pass: string } | null>(null);
+
   const handleSave = async () => {
     if (!formData.name.trim()) {
       toast.error('Nome é obrigatório');
@@ -135,25 +138,44 @@ const LocalSellersPage: React.FC = () => {
       return;
     }
 
-    if (editingSeller) {
-      updateSeller(editingSeller.id, formData);
-      toast.success('Vendedor atualizado!');
+    setIsSubmitting(true);
+    try {
+      if (editingSeller) {
+        await updateSeller(editingSeller.id, formData);
+        toast.success('Vendedor atualizado!');
+        setShowDialog(false);
+        setEditingSeller(null);
+        return;
+      }
+
+      // Enterprise Auto-creation via RPC
+      const password = formData.password.trim() || 'NAV@12345';
+      const { data, error } = await supabase.rpc('create_enterprise_seller', {
+        p_email: formData.email.trim().toLowerCase(),
+        p_password: password,
+        p_full_name: formData.name.trim(),
+        p_store_id: formData.storeId,
+        p_role: formData.role
+      });
+
+      if (error) throw error;
+      const result = data as any;
+      if (!result?.success) throw new Error(result?.message || 'Erro ao criar vendedor');
+
+      setCreatedSellerInfo({ email: result.email, pass: result.password });
+      toast.success('Vendedor criado com sucesso!');
+      
+      // Refresh local POS data
+      await refreshData();
+      
+      // Don't close dialog yet if we want to show info, but for now we follow the objective
       setShowDialog(false);
       setEditingSeller(null);
-      return;
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao salvar vendedor');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const created = await addSeller({
-      ...formData,
-      password: formData.password.trim() || '123456',
-    });
-
-    if (!created) {
-      return;
-    }
-
-    setShowDialog(false);
-    setEditingSeller(null);
   };
 
   // Toggle active status
