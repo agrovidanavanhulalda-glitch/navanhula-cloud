@@ -152,7 +152,7 @@ describe('POS Offline & Sync E2E', () => {
     const finalizeBtn = await screen.findByText(/RECEBER PAGAMENTO/i);
     fireEvent.click(finalizeBtn);
 
-    const cashBtn = await screen.findByText(/Dinheiro/i, { timeout: 5000 });
+    const cashBtn = await screen.findByText(/Dinheiro/i, {}, { timeout: 5000 });
     fireEvent.click(cashBtn);
 
     const confirmPaymentBtn = screen.getByText(/Confirmar Pagamento/i);
