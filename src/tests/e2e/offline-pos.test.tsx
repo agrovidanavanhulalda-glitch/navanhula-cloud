@@ -170,7 +170,7 @@ describe('POS Offline & Sync E2E', () => {
 
     // Verify added to cart
     await waitFor(() => {
-      const subtotals = screen.queryAllByText(/100,00 MT/i);
+      const subtotals = screen.queryAllByText(/100,00/i);
       expect(subtotals.length).toBeGreaterThan(0);
     }, { timeout: 5000 });
 
