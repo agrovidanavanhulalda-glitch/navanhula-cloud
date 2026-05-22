@@ -23,6 +23,11 @@ vi.mock('@/integrations/supabase/client', () => ({
       getSession: vi.fn(),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
     },
+    channel: vi.fn(() => ({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn(),
+    })),
+    removeChannel: vi.fn().mockResolvedValue({}),
   },
 }));
 
@@ -85,10 +90,20 @@ describe('Sales Export E2E', () => {
     // Mock RPC for Auth bootstrap
     (supabase.rpc as any).mockResolvedValue({ data: { success: true }, error: null });
 
-    // Mock profiles, stores, etc.
-    (supabase.from as any).mockImplementation((table: string) => ({
+    // Helper for fluent mock
+    const mockFluent = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(),
+      then: vi.fn()
+    };
+
+    // Mock profiles, stores, etc.
+    (supabase.from as any).mockImplementation((table: string) => ({
+      ...mockFluent,
       maybeSingle: vi.fn().mockImplementation(() => {
         if (table === 'profiles') return Promise.resolve({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, store_id: TEST_STORE_ID }, error: null });
         if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
@@ -99,6 +114,8 @@ describe('Sales Export E2E', () => {
       then: vi.fn().mockImplementation((cb) => {
         if (table === 'stores') return Promise.resolve(cb({ data: [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true }], error: null }));
         if (table === 'products') return Promise.resolve(cb({ data: [], error: null }));
+        if (table === 'sales') return Promise.resolve(cb({ data: [], error: null }));
+        if (table === 'profiles') return Promise.resolve(cb({ data: [{ id: TEST_USER_ID, full_name: 'Test User' }], error: null }));
         return Promise.resolve(cb({ data: [], error: null }));
       }),
     }));
