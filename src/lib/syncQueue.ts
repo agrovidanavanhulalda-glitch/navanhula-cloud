@@ -163,8 +163,14 @@ class SyncManager {
     return {
       pending: this.queue.length,
       isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-      lastProcessed: Date.now()
+      lastProcessed: Date.now(),
+      isProcessing: this.isProcessing
     };
+  }
+
+  // Used for testing
+  forceSetProcessing(val: boolean) {
+    this.isProcessing = val;
   }
 
   // Used for testing
