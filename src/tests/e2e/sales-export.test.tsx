@@ -18,9 +18,12 @@ const mockDoc = {
   save: vi.fn().mockReturnThis(),
 };
 
-vi.mock('jspdf', () => ({
-  default: vi.fn().mockImplementation(() => mockDoc),
-}));
+vi.mock('jspdf', () => {
+  return {
+    default: vi.fn().mockImplementation(() => mockDoc),
+    jsPDF: vi.fn().mockImplementation(() => mockDoc)
+  };
+});
 
 global.URL.createObjectURL = vi.fn();
 global.URL.revokeObjectURL = vi.fn();
