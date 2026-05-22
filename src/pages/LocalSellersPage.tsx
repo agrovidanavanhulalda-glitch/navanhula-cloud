@@ -157,9 +157,8 @@ const LocalSellersPage: React.FC = () => {
       
       // ENTERPRISE: Use RPC to create user without email confirmation
       const { data: rpcData, error: rpcError } = await supabase.rpc('create_enterprise_seller', {
-        p_company_id: targetCompanyId,
         p_store_id: formData.storeId,
-        p_name: formData.name.trim(),
+        p_full_name: formData.name.trim(),
         p_email: formData.email.trim().toLowerCase(),
         p_password: tempPassword,
         p_role: formData.role
