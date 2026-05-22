@@ -209,6 +209,7 @@ describe('POS Offline & Sync E2E', () => {
       expect(status.pending).toBe(0);
     }, { timeout: 10000 });
   });
+
   it('keeps sale in queue if sync fails when returning online', { timeout: 30000 }, async () => {
     // 1. Mock Supabase to FAIL
     const networkError = new Error('Database connection failed');
@@ -249,7 +250,6 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent(window, new Event('online'));
 
     // 6. Verify it remains in queue after failure
-    // We wait a bit for the processing loop to try and fail
     await waitFor(() => {
       const status = syncManager.getQueueStatus();
       expect(status.pending).toBe(1);
