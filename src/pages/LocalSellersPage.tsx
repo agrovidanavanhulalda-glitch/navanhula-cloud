@@ -154,23 +154,30 @@ const LocalSellersPage: React.FC = () => {
       }
 
       const tempPassword = formData.password.trim() || 'NAV@12345';
-      const sellerData = {
-        ...formData,
-        password: tempPassword
-      };
-
-      const success = await addSeller(sellerData);
       
-      if (success) {
-        setCreatedSellerInfo({ 
-          email: formData.email.trim().toLowerCase(), 
-          pass: tempPassword,
-          name: formData.name.trim()
-        });
-        setShowDialog(false);
-        setEditingSeller(null);
-        setShowSuccessDialog(true);
-      }
+      // ENTERPRISE: Use RPC to create user without email confirmation
+      const { data: rpcData, error: rpcError } = await supabase.rpc('create_enterprise_seller', {
+        p_company_id: targetCompanyId,
+        p_store_id: formData.storeId,
+        p_name: formData.name.trim(),
+        p_email: formData.email.trim().toLowerCase(),
+        p_password: tempPassword,
+        p_role: formData.role
+      });
+
+      if (rpcError) throw rpcError;
+
+      // Update local context
+      await refreshData();
+      
+      setCreatedSellerInfo({ 
+        email: formData.email.trim().toLowerCase(), 
+        pass: tempPassword,
+        name: formData.name.trim()
+      });
+      setShowDialog(false);
+      setEditingSeller(null);
+      setShowSuccessDialog(true);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar vendedor');
     } finally {
