@@ -58,17 +58,18 @@ const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 );
 
 describe('POS Offline & Sync E2E', () => {
-  let lastInsertTable: string | null = null;
   const insertMock = vi.fn().mockImplementation(() => {
-    return {
+    const builder: any = {
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockReturnThis(),
       then: (cb: any) => Promise.resolve(cb({ data: [], error: null }))
     };
+    return builder;
   });
 
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    lastInsertTable = null;
     
     // Default online
     Object.defineProperty(navigator, 'onLine', {
@@ -83,7 +84,6 @@ describe('POS Offline & Sync E2E', () => {
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockReturnThis(),
         insert: vi.fn().mockImplementation((payload) => {
-          lastInsertTable = table;
           return insertMock(payload);
         }),
         update: vi.fn().mockReturnThis(),
@@ -127,10 +127,10 @@ describe('POS Offline & Sync E2E', () => {
     const productItem = await screen.findByText(/Arroz/i, {}, { timeout: 10000 });
     fireEvent.click(productItem);
 
-    // Verify item added to cart
+    // Verify item added to cart by checking if subtotal exists
     await waitFor(() => {
-      // The total should update
-      expect(screen.getByText(/100,00 MT/i)).toBeInTheDocument();
+      const subtotals = screen.getAllByText(/100,00 MT/i);
+      expect(subtotals.length).toBeGreaterThan(0);
     }, { timeout: 5000 });
 
     // Click on finalize sale button (RECEBER PAGAMENTO)
@@ -144,11 +144,9 @@ describe('POS Offline & Sync E2E', () => {
     const confirmPaymentBtn = screen.getByText(/Confirmar Pagamento/i);
     fireEvent.click(confirmPaymentBtn);
 
-    // Verify Supabase was called for sales and sale_items
+    // Verify Supabase was called
     await waitFor(() => {
       expect(insertMock).toHaveBeenCalled();
-      // We can't easily check the table name here without more complex mocking, 
-      // but the fact that it was called is a good sign.
     }, { timeout: 10000 });
   });
 
