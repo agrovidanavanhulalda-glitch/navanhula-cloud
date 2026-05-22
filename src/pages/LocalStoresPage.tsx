@@ -151,9 +151,13 @@ const LocalStoresPage: React.FC = () => {
 
   const handleSelectStore = async (storeId: string) => {
     try {
-      const { error } = await supabase.rpc('set_active_store', { p_store_id: storeId });
+      const { data, error } = await supabase.rpc('set_active_store', { p_store_id: storeId });
       if (error) throw error;
+      const result = data as any;
+      if (!result?.success) throw new Error(result?.message || 'Erro ao selecionar loja');
+      
       toast.success('Loja selecionada');
+      // Enterprise sync: update auth context then reload
       window.location.reload();
     } catch (err: any) {
       toast.error('Erro: ' + err.message);
