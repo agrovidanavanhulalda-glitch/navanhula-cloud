@@ -221,7 +221,7 @@ describe('POS Offline & Sync E2E', () => {
     }, { timeout: 10000 });
 
     // GO ONLINE
-    Object.defineProperty(navigator, 'onLine', { value: true });
+    (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
 
     // Verify Supabase was eventually called
