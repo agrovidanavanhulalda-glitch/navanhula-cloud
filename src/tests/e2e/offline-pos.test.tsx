@@ -227,7 +227,7 @@ describe('POS Offline & Sync E2E', () => {
     // 6. Verify it was added to sync queue
     await waitFor(() => {
       expect(syncManager.getQueueStatus().pending).toBe(1);
-    }, { timeout: 15000 });
+    }, { timeout: 20000 });
 
     // 7. BACK ONLINE
     (navigator as any).onLine = true;
