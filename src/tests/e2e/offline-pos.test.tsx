@@ -199,5 +199,42 @@ describe('POS Offline & Sync E2E', () => {
       expect(syncManager.getQueueStatus().pending).toBe(0);
       expect(insertMock).toHaveBeenCalled();
     }, { timeout: 20000 });
+  it('persists cart when going offline in the middle of a sale', { timeout: 45000 }, async () => {
+    // 1. Start ONLINE
+    (navigator as any).onLine = true;
+    render(<AllProviders><LocalPOSPage /></AllProviders>);
+
+    // 2. Select a product online
+    await selectProduct();
+    
+    // Verify it is in cart (H4)
+    await screen.findByRole('heading', { name: /Arroz/i, level: 4 });
+
+    // 3. GO OFFLINE in the middle
+    (navigator as any).onLine = false;
+    fireEvent(window, new Event('offline'));
+
+    // 4. Verify cart still has the item
+    await screen.findByRole('heading', { name: /Arroz/i, level: 4 });
+
+    // 5. Finalize while OFFLINE
+    fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
+    fireEvent.click(await screen.findByText(/Dinheiro/i));
+    fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
+
+    // 6. Verify it was added to sync queue
+    await waitFor(() => {
+      expect(syncManager.getQueueStatus().pending).toBe(1);
+    }, { timeout: 15000 });
+
+    // 7. BACK ONLINE
+    (navigator as any).onLine = true;
+    fireEvent(window, new Event('online'));
+
+    // 8. Verify it eventually syncs
+    await waitFor(() => {
+      expect(syncManager.getQueueStatus().pending).toBe(0);
+      expect(insertMock).toHaveBeenCalled();
+    }, { timeout: 25000 });
   });
 });
