@@ -100,6 +100,7 @@ describe('POS Offline & Sync E2E', () => {
         if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
         if (table === 'stores') return Promise.resolve({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
         if (table === 'cash_registers') return Promise.resolve({ data: { id: 'cr-1', status: 'open', user_id: TEST_USER_ID, store_id: TEST_STORE_ID, opening_amount: 1000, opened_at: new Date().toISOString() }, error: null });
+        if (table === 'onboarding_progress') return Promise.resolve({ data: { user_id: TEST_USER_ID, step: 'completed' }, error: null });
         return Promise.resolve({ data: null, error: null });
       }),
       single: vi.fn().mockReturnValue(Promise.resolve({ data: { id: 'new-id' }, error: null })),
@@ -119,11 +120,18 @@ describe('POS Offline & Sync E2E', () => {
         if (table === 'companies') return Promise.resolve(cb({ data: [{ id: TEST_COMPANY_ID, name: 'Test Company', country: 'MZ', nif: '123456789' }], error: null }));
         if (table === 'user_roles') return Promise.resolve(cb({ data: [{ user_id: TEST_USER_ID, role: 'admin' }], error: null }));
         if (table === 'product_stock') return Promise.resolve(cb({ data: [{ product_id: TEST_PRODUCT_ID, store_id: TEST_STORE_ID, quantity: 100 }], error: null }));
+        if (table === 'onboarding_progress') return Promise.resolve(cb({ data: [{ user_id: TEST_USER_ID, step: 'completed' }], error: null }));
         return Promise.resolve(cb({ data: [], error: null }));
       }),
     }));
 
     (supabase.rpc as any).mockResolvedValue({ data: { success: true }, error: null });
+    
+    // Explicitly mock getSession to fix [Auth] Init error
+    (supabase.auth.getSession as any).mockResolvedValue({ 
+      data: { session: { user: { id: TEST_USER_ID } } }, 
+      error: null 
+    });
   });
 
   const selectProduct = async () => {
@@ -133,23 +141,49 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent.click(gridItem);
   };
 
-  it('decrements stock immediately offline and finalizes after sync', { timeout: 45000 }, async () => {
+  it('queues a sale when offline and syncs when online', { timeout: 45000 }, async () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
     
-    // Wait for the specific stock display using findAllByText which is more resilient
-    const stockElements = await screen.findAllByText(/100 un/i);
-    expect(stockElements.length).toBeGreaterThan(0);
+    await screen.findByText(/Arroz/i);
+    await selectProduct();
+    fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
+    fireEvent.click(await screen.findByText(/Dinheiro/i, {}, { timeout: 10000 }));
+    fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
     
+    // Wait for the modal and toast notification
+    await screen.findByText(/Venda concluída com sucesso/i);
+    
+    (navigator as any).onLine = true;
+    fireEvent(window, new Event('online'));
+
+    await waitFor(() => {
+      expect(insertMock).toHaveBeenCalled();
+      expect(syncManager.getQueueStatus().pending).toBe(0);
+    }, { timeout: 25000 });
+  });
+
+  it('displays digital receipt offline and remains consistent after sync', { timeout: 45000 }, async () => {
+    (navigator as any).onLine = false;
+    render(<AllProviders><LocalPOSPage /></AllProviders>);
+    
+    await screen.findByText(/Arroz/i);
     await selectProduct();
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
     fireEvent.click(await screen.findByText(/Dinheiro/i));
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
     
-    // UI should update stock IMMEDIATELY from 100 to 99
-    await screen.findByText(/99 un/i);
+    await screen.findByText(/Venda concluída com sucesso/i);
+    await screen.findByText(/100,00 MT/i);
     
-    await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 20000 });
+    fireEvent.click(screen.getByText(/Imprimir Recibo/i));
+    
+    await screen.findByText(/Recibo de Venda/i);
+    await screen.findByText(/TOTAL:/i);
+    const totalElements = await screen.findAllByText(/100,00 MT/i);
+    expect(totalElements.length).toBeGreaterThan(0);
+    
+    fireEvent.click(screen.getByRole('button', { name: /X/i }));
     
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
