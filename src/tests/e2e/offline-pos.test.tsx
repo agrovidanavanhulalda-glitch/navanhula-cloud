@@ -186,7 +186,7 @@ describe('POS Offline & Sync E2E', () => {
 
   it('queues a sale when offline and syncs when online', { timeout: 30000 }, async () => {
     // Start OFFLINE
-    Object.defineProperty(navigator, 'onLine', { value: false });
+    (navigator as any).onLine = false;
     
     render(<AllProviders><LocalPOSPage /></AllProviders>);
 
