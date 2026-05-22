@@ -116,9 +116,10 @@ describe('POS Offline & Sync E2E', () => {
     // Default online
     Object.defineProperty(navigator, 'onLine', {
       configurable: true,
-      value: true,
-      writable: true
+      get() { return this._val ?? true; },
+      set(v) { this._val = v; }
     });
+    (navigator as any).onLine = true;
 
     (supabase.from as any).mockImplementation((table: string) => ({
       select: vi.fn().mockReturnThis(),
