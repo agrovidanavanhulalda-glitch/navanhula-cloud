@@ -145,7 +145,7 @@ describe('POS Offline & Sync E2E', () => {
     render(<LocalPOSPage />, { wrapper: AllProviders });
 
     // Add product
-    const productItem = await screen.findByText(/Arroz/i, { timeout: 5000 });
+    const productItem = await screen.findByText(/Arroz/i, {}, { timeout: 5000 });
     fireEvent.click(productItem);
 
     // Finalize
