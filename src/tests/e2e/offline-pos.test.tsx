@@ -125,7 +125,6 @@ describe('POS Offline & Sync E2E', () => {
   });
 
   const selectProduct = async () => {
-    // Find item in grid (H3) specifically to avoid cart (H4)
     const items = await screen.findAllByText(/Arroz/i);
     const gridItem = items.find(el => el.tagName === 'H3');
     if (!gridItem) throw new Error('Grid product not found');
@@ -135,29 +134,14 @@ describe('POS Offline & Sync E2E', () => {
   it('queues a sale when offline and syncs when online', { timeout: 40000 }, async () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
-
     await selectProduct();
-
-    const finalizeBtn = screen.getByText(/RECEBER PAGAMENTO/i);
-    fireEvent.click(finalizeBtn);
-
-    const cashBtn = await screen.findByText(/Dinheiro/i, {}, { timeout: 10000 });
-    fireEvent.click(cashBtn);
-
-    const confirmPaymentBtn = screen.getByText(/Confirmar Pagamento/i);
-    fireEvent.click(confirmPaymentBtn);
-
-    // Give it a bit of time to settle
+    fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
+    fireEvent.click(await screen.findByText(/Dinheiro/i, {}, { timeout: 10000 }));
+    fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
     await new Promise(r => setTimeout(r, 1000));
-
-    await waitFor(() => {
-      const status = syncManager.getQueueStatus();
-      expect(status.pending).toBe(1);
-    }, { timeout: 20000 });
-
+    await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 20000 });
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
-
     await waitFor(() => {
       expect(insertMock).toHaveBeenCalled();
       expect(syncManager.getQueueStatus().pending).toBe(0);
@@ -171,34 +155,23 @@ describe('POS Offline & Sync E2E', () => {
       single: vi.fn().mockReturnThis(),
       then: (cb: any) => Promise.resolve(cb({ data: null, error: networkError }))
     }));
-
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
-
     await selectProduct();
-
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
     fireEvent.click(await screen.findByText(/Dinheiro/i));
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
-
     await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 20000 });
-
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
-
-    // Should stay in queue due to failure
     await new Promise(r => setTimeout(r, 2000));
     expect(syncManager.getQueueStatus().pending).toBe(1);
-
-    // Make successful
     insertMock.mockImplementation(() => ({
       select: vi.fn().mockReturnThis(),
       single: vi.fn().mockReturnThis(),
       then: (cb: any) => Promise.resolve(cb({ data: [], error: null }))
     }));
-
     await syncManager.processQueue();
-
     await waitFor(() => {
       expect(syncManager.getQueueStatus().pending).toBe(0);
       expect(insertMock).toHaveBeenCalled();
@@ -206,69 +179,37 @@ describe('POS Offline & Sync E2E', () => {
   });
 
   it('persists cart when going offline in the middle of a sale', { timeout: 45000 }, async () => {
-    // 1. Start ONLINE
     (navigator as any).onLine = true;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
-
-    // 2. Select a product online
     await selectProduct();
-    
-    // Verify it is in cart (H4)
     await screen.findByRole('heading', { name: /Arroz/i, level: 4 });
-
-    // 3. GO OFFLINE in the middle
     (navigator as any).onLine = false;
     fireEvent(window, new Event('offline'));
-
-    // 4. Verify cart still has the item
     await screen.findByRole('heading', { name: /Arroz/i, level: 4 });
-
-    // 5. Finalize while OFFLINE
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
     fireEvent.click(await screen.findByText(/Dinheiro/i));
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
-
-    // 6. Verify it was added to sync queue
-    await waitFor(() => {
-      expect(syncManager.getQueueStatus().pending).toBe(1);
-    }, { timeout: 20000 });
-
-    // 7. BACK ONLINE
+    await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 20000 });
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
-
-    // 8. Verify it eventually syncs
     await waitFor(() => {
       expect(syncManager.getQueueStatus().pending).toBe(0);
       expect(insertMock).toHaveBeenCalled();
     }, { timeout: 25000 });
+  });
+
   it('decrements stock immediately offline and finalizes after sync', { timeout: 45000 }, async () => {
-    // 1. Start OFFLINE
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
-
-    // 2. Verify initial stock in grid (100 from mock)
     await screen.findByText(/100 un/i);
-
-    // 3. Sell 1 item while offline
     await selectProduct();
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
     fireEvent.click(await screen.findByText(/Dinheiro/i));
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
-
-    // 4. Verify stock decremented IMMEDIATELY in the UI (99)
     await screen.findByText(/99 un/i);
-
-    // 5. Verify it is in sync queue
-    await waitFor(() => {
-      expect(syncManager.getQueueStatus().pending).toBe(1);
-    }, { timeout: 20000 });
-
-    // 6. BACK ONLINE
+    await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 20000 });
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
-
-    // 7. Verify sync completion
     await waitFor(() => {
       expect(syncManager.getQueueStatus().pending).toBe(0);
       expect(insertMock).toHaveBeenCalled();
