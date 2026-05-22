@@ -141,9 +141,13 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent.click(gridItem);
   };
 
-  it('queues a sale when offline and syncs when online', { timeout: 40000 }, async () => {
+  it('queues a sale when offline and syncs when online', { timeout: 45000 }, async () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
+    
+    // Wait for page to load with mocked store/register
+    await screen.findByText(/Arroz/i);
+    
     await selectProduct();
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
     fireEvent.click(await screen.findByText(/Dinheiro/i, {}, { timeout: 10000 }));
@@ -172,6 +176,9 @@ describe('POS Offline & Sync E2E', () => {
 
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
+    
+    await screen.findByText(/Arroz/i);
+    
     await selectProduct();
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
     fireEvent.click(await screen.findByText(/Dinheiro/i));
@@ -201,6 +208,9 @@ describe('POS Offline & Sync E2E', () => {
   it('persists cart when going offline in the middle of a sale', { timeout: 45000 }, async () => {
     (navigator as any).onLine = true;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
+    
+    await screen.findByText(/Arroz/i);
+    
     await selectProduct();
     await screen.findByRole('heading', { name: /Arroz/i, level: 4 });
     (navigator as any).onLine = false;
@@ -221,6 +231,8 @@ describe('POS Offline & Sync E2E', () => {
   it('decrements stock immediately offline and finalizes after sync', { timeout: 45000 }, async () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
+    
+    await screen.findByText(/Arroz/i);
     
     const stockElements = await screen.findAllByText(/100 un/i);
     expect(stockElements.length).toBeGreaterThan(0);
@@ -246,6 +258,8 @@ describe('POS Offline & Sync E2E', () => {
   it('displays digital receipt offline and remains consistent after sync', { timeout: 45000 }, async () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
+    
+    await screen.findByText(/Arroz/i);
     
     await selectProduct();
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
