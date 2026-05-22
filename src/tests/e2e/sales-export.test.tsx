@@ -8,16 +8,18 @@ import * as PDFReportExports from '@/components/reports/PDFReport';
 import * as LocalPOSContextExports from '@/contexts/LocalPOSContext';
 
 // Mock jsPDF and URL methods
+const mockDoc = {
+  setFont: vi.fn().mockReturnThis(),
+  setFontSize: vi.fn().mockReturnThis(),
+  text: vi.fn().mockReturnThis(),
+  line: vi.fn().mockReturnThis(),
+  setLineWidth: vi.fn().mockReturnThis(),
+  addPage: vi.fn().mockReturnThis(),
+  save: vi.fn().mockReturnThis(),
+};
+
 vi.mock('jspdf', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    setFont: vi.fn().mockReturnThis(),
-    setFontSize: vi.fn().mockReturnThis(),
-    text: vi.fn().mockReturnThis(),
-    line: vi.fn().mockReturnThis(),
-    setLineWidth: vi.fn().mockReturnThis(),
-    addPage: vi.fn().mockReturnThis(),
-    save: vi.fn().mockReturnThis(),
-  })),
+  default: vi.fn().mockImplementation(() => mockDoc),
 }));
 
 global.URL.createObjectURL = vi.fn();
