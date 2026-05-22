@@ -100,6 +100,7 @@ describe('POS Offline & Sync E2E', () => {
         if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
         if (table === 'stores') return Promise.resolve({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
         if (table === 'cash_registers') return Promise.resolve({ data: { id: 'cr-1', status: 'open', user_id: TEST_USER_ID, store_id: TEST_STORE_ID, opening_amount: 1000, opened_at: new Date().toISOString() }, error: null });
+        if (table === 'onboarding_progress') return Promise.resolve({ data: { user_id: TEST_USER_ID, step: 'completed' }, error: null });
         return Promise.resolve({ data: null, error: null });
       }),
       single: vi.fn().mockReturnValue(Promise.resolve({ data: { id: 'new-id' }, error: null })),
@@ -119,6 +120,7 @@ describe('POS Offline & Sync E2E', () => {
         if (table === 'companies') return Promise.resolve(cb({ data: [{ id: TEST_COMPANY_ID, name: 'Test Company', country: 'MZ', nif: '123456789' }], error: null }));
         if (table === 'user_roles') return Promise.resolve(cb({ data: [{ user_id: TEST_USER_ID, role: 'admin' }], error: null }));
         if (table === 'product_stock') return Promise.resolve(cb({ data: [{ product_id: TEST_PRODUCT_ID, store_id: TEST_STORE_ID, quantity: 100 }], error: null }));
+        if (table === 'onboarding_progress') return Promise.resolve(cb({ data: [{ user_id: TEST_USER_ID, step: 'completed' }], error: null }));
         return Promise.resolve(cb({ data: [], error: null }));
       }),
     }));
