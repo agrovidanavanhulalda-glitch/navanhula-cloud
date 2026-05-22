@@ -156,8 +156,13 @@ describe('Sales Export E2E', () => {
     expect(screen.getByLabelText(/Loja/i)).toBeDefined();
 
     // Verify stats include our sale
-    const revenueElements = await screen.findAllByText(/1.500,00/);
-    expect(revenueElements.length).toBeGreaterThan(0);
+    // Flexible matcher for currency "1.500,00"
+    await waitFor(() => {
+      const elements = screen.queryAllByText((content, element) => {
+        return element?.tagName === 'P' && content.includes('1.500,00');
+      });
+      expect(elements.length).toBeGreaterThan(0);
+    });
 
     // Click Excel export
     const excelBtn = screen.getByRole('button', { name: /Excel/i });
@@ -168,6 +173,8 @@ describe('Sales Export E2E', () => {
     const excelArgs = excelSpy.mock.calls[0][0];
     const exportedSale = excelArgs.sales.find((s: any) => s.id === TEST_SALE_SYNCED_ID);
     expect(exportedSale).toBeDefined();
+    expect(exportedSale.isOffline).toBe(true);
+    expect(exportedSale.synced).toBe(true);
 
     // Click PDF export
     const pdfBtn = screen.getByRole('button', { name: /Relatório/i });
@@ -178,6 +185,7 @@ describe('Sales Export E2E', () => {
     const pdfArgs = pdfSpy.mock.calls[0][0];
     const pdfExportedSale = pdfArgs.sales.find((s: any) => s.id === TEST_SALE_SYNCED_ID);
     expect(pdfExportedSale).toBeDefined();
+    expect(pdfExportedSale.synced).toBe(true);
   });
 
   it('filters by date range correctly in export', async () => {
