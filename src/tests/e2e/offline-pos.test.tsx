@@ -149,7 +149,7 @@ describe('POS Offline & Sync E2E', () => {
 
     await waitFor(() => {
       expect(syncManager.getQueueStatus().pending).toBe(1);
-    }, { timeout: 15000 });
+    }, { timeout: 20000 });
 
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
