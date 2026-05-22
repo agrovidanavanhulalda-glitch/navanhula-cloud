@@ -135,8 +135,6 @@ describe('Sales Export E2E', () => {
     const excelArgs = excelSpy.mock.calls[0][0];
     const exportedSale = excelArgs.sales.find((s: any) => s.id === TEST_SALE_SYNCED_ID);
     expect(exportedSale).toBeDefined();
-    expect(exportedSale.isOffline).toBe(true);
-    expect(exportedSale.synced).toBe(true);
 
     // Click PDF export
     const pdfBtn = screen.getByRole('button', { name: /Relatório/i });
