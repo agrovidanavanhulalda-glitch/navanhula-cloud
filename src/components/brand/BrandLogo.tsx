@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 const navanhulaLogo = "https://qtbkvshbmqlszncxlcuc.supabase.co/storage/v1/object/public/dsl-uploads/3sVHtgrqtmP6nkDS43FlF6Hz8rY2/3521ae58-7302-4684-a9d2-e26cb6da4752.png";
+const localLogoFallback = "/logo.png"; // Fallback to local asset if remote fails
 
 interface BrandLogoProps {
   /** Width in pixels. Default 48. */
@@ -26,9 +27,9 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
   alt = 'NAVANHULA CLOUD',
   priority = false,
 }) => {
-  const [failed, setFailed] = useState(false);
+  const [errorCount, setErrorCount] = useState(0);
   
-  const logoUrl = navanhulaLogo;
+  const logoUrl = errorCount === 0 ? navanhulaLogo : localLogoFallback;
   
   const containerStyle = { 
     width: width, 
@@ -49,7 +50,7 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
         />
       )}
 
-      {!failed ? (
+      {errorCount < 2 ? (
         <img
           src={logoUrl}
           alt={alt}
@@ -57,7 +58,7 @@ const BrandLogo: React.FC<BrandLogoProps> = ({
           height={height || undefined}
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
-          onError={() => setFailed(true)}
+          onError={() => setErrorCount(prev => prev + 1)}
           className="h-full w-full object-contain"
           style={{ filter: glow ? 'drop-shadow(0 6px 18px hsl(var(--gold) / 0.35))' : undefined }}
         />
