@@ -272,7 +272,7 @@ describe('POS Offline & Sync E2E', () => {
     });
 
     // 5. GO ONLINE (but sync will fail once)
-    Object.defineProperty(navigator, 'onLine', { value: true });
+    (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
 
     // 6. Verify it remains in queue after failure
