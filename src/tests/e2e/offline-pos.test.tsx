@@ -119,6 +119,9 @@ describe('POS Offline & Sync E2E', () => {
       writable: true
     });
 
+    // Reset the internal process status of syncManager
+    (syncManager as any).isProcessing = false;
+
     (supabase.from as any).mockImplementation((table: string) => ({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
