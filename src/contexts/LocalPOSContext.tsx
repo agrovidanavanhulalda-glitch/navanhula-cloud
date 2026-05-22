@@ -428,7 +428,25 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
 
       setState(prev => {
-      const currentStore = stores.find(s => s.id === storeId) || (stores.length > 0 ? stores[0] : prev.currentStore);
+        let currentStore = stores.find(s => s.id === storeId);
+        
+        // AUTO-FALLBACK ENTERPRISE: Se não houver loja selecionada mas existem lojas, escolhe a primeira
+        if (!currentStore && stores.length > 0) {
+          currentStore = stores[0];
+          console.log('[POS] Fallback automático para primeira loja:', currentStore.id);
+          
+          // Sincroniza em background sem bloquear
+          supabase.rpc('set_active_store', { p_store_id: currentStore.id }).then(({ error }) => {
+            if (error) console.error('[POS] Erro ao sincronizar fallback de loja:', error);
+            else {
+              console.log('[POS] Sincronização de fallback concluída');
+              refreshUserData(); // Atualiza AuthContext para refletir a nova loja
+            }
+          });
+        } else if (!currentStore) {
+          currentStore = prev.currentStore;
+        }
+
         return {
           ...prev,
           products,
@@ -1138,17 +1156,23 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
-  const setCurrentStore = useCallback((storeId: string) => {
+  const setCurrentStore = useCallback(async (storeId: string) => {
     setState(prev => {
       const store = prev.stores.find(s => s.id === storeId);
       if (!store) return prev;
       return { ...prev, currentStore: store };
     });
 
-    supabase.rpc('set_active_store', { p_store_id: storeId }).then(() => {
+    const { error } = await supabase.rpc('set_active_store', { p_store_id: storeId });
+    if (!error) {
       dataLoaded.current = false;
-    });
-  }, []);
+      await refreshUserData();
+      toast.success('Loja alterada');
+    } else {
+      console.error('[POS] Erro ao trocar loja:', error);
+      toast.error('Erro ao trocar de loja');
+    }
+  }, [refreshUserData]);
 
   // ============ SELLER ACTIONS ============
   // Sellers are persisted to Supabase profiles table
