@@ -9,12 +9,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { syncManager } from '@/lib/syncQueue';
 
-// Test IDs
-const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440001';
-const TEST_COMPANY_ID = '550e8400-e29b-41d4-a716-446655440002';
-const TEST_STORE_ID = '550e8400-e29b-41d4-a716-446655440003';
-const TEST_PRODUCT_ID = '550e8400-e29b-41d4-a716-446655440004';
-
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
@@ -22,10 +16,19 @@ vi.mock('@/integrations/supabase/client', () => ({
     rpc: vi.fn(),
     removeChannel: vi.fn().mockResolvedValue({}),
     auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: TEST_USER_ID } } }, error: null }),
+      getSession: vi.fn().mockResolvedValue({ 
+        data: { session: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } } }, 
+        error: null 
+      }),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
-      signInWithPassword: vi.fn().mockResolvedValue({ data: { user: { id: TEST_USER_ID } }, error: null }),
-      signUp: vi.fn().mockResolvedValue({ data: { user: { id: TEST_USER_ID } }, error: null }),
+      signInWithPassword: vi.fn().mockResolvedValue({ 
+        data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, 
+        error: null 
+      }),
+      signUp: vi.fn().mockResolvedValue({ 
+        data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, 
+        error: null 
+      }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
       updateUser: vi.fn().mockResolvedValue({ data: {}, error: null }),
     },
@@ -35,6 +38,12 @@ vi.mock('@/integrations/supabase/client', () => ({
     })),
   },
 }));
+
+// Test IDs
+const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440001';
+const TEST_COMPANY_ID = '550e8400-e29b-41d4-a716-446655440002';
+const TEST_STORE_ID = '550e8400-e29b-41d4-a716-446655440003';
+const TEST_PRODUCT_ID = '550e8400-e29b-41d4-a716-446655440004';
 
 const queryClient = new QueryClient({
   defaultOptions: { 
