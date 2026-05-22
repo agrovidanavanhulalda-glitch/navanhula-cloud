@@ -48,7 +48,7 @@ const PLANS = [
 ];
 
 const LocalStoresPage: React.FC = () => {
-  const { role, company, store: activeStore } = useAuth();
+  const { role, company, store: activeStore, refreshUserData } = useAuth();
   const { stores, loading, addStore, updateStore, deleteStore, refreshData } = useLocalPOS();
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -156,9 +156,13 @@ const LocalStoresPage: React.FC = () => {
       const result = data as any;
       if (!result?.success) throw new Error(result?.message || 'Erro ao selecionar loja');
       
-      toast.success('Loja selecionada');
-      // Enterprise sync: update auth context then reload
-      window.location.reload();
+      toast.success('Loja selecionada com sucesso');
+      // Enterprise sync: update auth context immediately
+      if (refreshUserData) {
+        await refreshUserData();
+      }
+      // Force refresh data in POS context too
+      await refreshData();
     } catch (err: any) {
       toast.error('Erro: ' + err.message);
     }
@@ -197,9 +201,8 @@ const LocalStoresPage: React.FC = () => {
                   <div>
                     <h3 className="font-semibold">{store.name}</h3>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant={store.is_active ? 'default' : 'secondary'}>{store.is_active ? 'Ativa' : 'Inativa'}</Badge>
                       {store.id === activeStore?.id && (
-                        <Badge variant="outline" className="gap-1"><CheckCircle className="w-3 h-3" /> Atual</Badge>
+                        <Badge variant="outline" className="gap-1 border-primary text-primary bg-primary/5 font-bold"><CheckCircle className="w-3 h-3" /> ATUAL</Badge>
                       )}
                     </div>
                   </div>
