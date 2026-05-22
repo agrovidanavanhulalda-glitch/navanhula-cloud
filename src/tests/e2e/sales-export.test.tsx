@@ -72,6 +72,16 @@ describe('Sales Export E2E', () => {
     vi.resetAllMocks();
     localStorage.clear();
 
+    // Mock session
+    (supabase.auth.getSession as any).mockResolvedValue({ 
+      data: { session: { user: { id: 'test-user-id' } } }, 
+      error: null 
+    });
+
+    (supabase.auth.onAuthStateChange as any).mockReturnValue({ 
+      data: { subscription: { unsubscribe: vi.fn() } } 
+    });
+
     // Mock profiles, stores, etc.
     (supabase.from as any).mockImplementation((table: string) => ({
       select: vi.fn().mockReturnThis(),
