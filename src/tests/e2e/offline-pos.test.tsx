@@ -242,5 +242,36 @@ describe('POS Offline & Sync E2E', () => {
       expect(syncManager.getQueueStatus().pending).toBe(0);
       expect(insertMock).toHaveBeenCalled();
     }, { timeout: 25000 });
+  it('decrements stock immediately offline and finalizes after sync', { timeout: 45000 }, async () => {
+    // 1. Start OFFLINE
+    (navigator as any).onLine = false;
+    render(<AllProviders><LocalPOSPage /></AllProviders>);
+
+    // 2. Verify initial stock in grid (100 from mock)
+    await screen.findByText(/100 un/i);
+
+    // 3. Sell 1 item while offline
+    await selectProduct();
+    fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
+    fireEvent.click(await screen.findByText(/Dinheiro/i));
+    fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
+
+    // 4. Verify stock decremented IMMEDIATELY in the UI (99)
+    await screen.findByText(/99 un/i);
+
+    // 5. Verify it is in sync queue
+    await waitFor(() => {
+      expect(syncManager.getQueueStatus().pending).toBe(1);
+    }, { timeout: 20000 });
+
+    // 6. BACK ONLINE
+    (navigator as any).onLine = true;
+    fireEvent(window, new Event('online'));
+
+    // 7. Verify sync completion
+    await waitFor(() => {
+      expect(syncManager.getQueueStatus().pending).toBe(0);
+      expect(insertMock).toHaveBeenCalled();
+    }, { timeout: 25000 });
   });
 });
