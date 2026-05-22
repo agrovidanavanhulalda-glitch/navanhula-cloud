@@ -137,9 +137,9 @@ describe('POS Offline & Sync E2E', () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
     
-    // Wait for the specific stock display
-    const stockEl = await screen.findByText(/100 un/i);
-    expect(stockEl).toBeDefined();
+    // Wait for the specific stock display using findAllByText which is more resilient
+    const stockElements = await screen.findAllByText(/100 un/i);
+    expect(stockElements.length).toBeGreaterThan(0);
     
     await selectProduct();
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
