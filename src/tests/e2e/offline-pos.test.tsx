@@ -160,6 +160,9 @@ describe('POS Offline & Sync E2E', () => {
     const productItem = await screen.findByText(/Arroz/i, {}, { timeout: 10000 });
     fireEvent.click(productItem);
 
+    // Clear mocks to ignore initial onboarding/profile inserts
+    insertMock.mockClear();
+
     // Finalize
     const finalizeBtn = await screen.findByText(/RECEBER PAGAMENTO/i, {}, { timeout: 5000 });
     fireEvent.click(finalizeBtn);
