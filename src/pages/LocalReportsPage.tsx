@@ -263,9 +263,9 @@ const LocalReportsPage: React.FC = () => {
       <Card className="p-4 mb-6">
         <div className="flex flex-wrap gap-4 items-end">
           <div className="space-y-2">
-            <Label>Loja</Label>
+            <Label htmlFor="store-filter">Loja</Label>
             <Select value={selectedStore} onValueChange={setSelectedStore}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger id="store-filter" className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -278,8 +278,9 @@ const LocalReportsPage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Data Início</Label>
+            <Label htmlFor="start-date">Data Início</Label>
             <Input
+              id="start-date"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
@@ -288,8 +289,9 @@ const LocalReportsPage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Data Fim</Label>
+            <Label htmlFor="end-date">Data Fim</Label>
             <Input
+              id="end-date"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}

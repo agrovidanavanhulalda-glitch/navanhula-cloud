@@ -76,6 +76,8 @@ export interface LocalSale {
   cancelledBy?: string;
   cancelledByName?: string;
   cancellationReason?: string;
+  isOffline?: boolean;
+  synced?: boolean;
 }
 
 export interface LocalStore {
@@ -303,6 +305,7 @@ const mapDbSaleToLocal = (s: any, items: any[], sellerName?: string): LocalSale 
     sellerId: s.user_id,
     sellerName: s.seller_name || sellerName || undefined,
     cancellationReason: s.notes || undefined,
+    synced: true,
   };
 };
 
@@ -768,6 +771,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       storeId,
       sellerId: user?.id,
       sellerName,
+      isOffline: !navigator.onLine,
+      synced: navigator.onLine,
     };
 
     try {
