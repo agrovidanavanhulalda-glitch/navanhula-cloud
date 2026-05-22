@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import navanhulaLogo from '@/assets/navanhula-cloud-logo.png';
+const navanhulaLogo = "https://qtbkvshbmqlszncxlcuc.supabase.co/storage/v1/object/public/dsl-uploads/3sVHtgrqtmP6nkDS43FlF6Hz8rY2/3521ae58-7302-4684-a9d2-e26cb6da4752.png";
 
 interface BrandLogoProps {
   /** Width in pixels. Default 48. */
