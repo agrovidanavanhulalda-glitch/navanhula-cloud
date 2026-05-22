@@ -143,7 +143,7 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent.click(productItem);
 
     // Finalize
-    const finalizeBtn = screen.getByText(/Finalizar Venda/i);
+    const finalizeBtn = screen.getByText(/RECEBER PAGAMENTO/i);
     fireEvent.click(finalizeBtn);
 
     const cashBtn = await screen.findByText(/Dinheiro/i);
