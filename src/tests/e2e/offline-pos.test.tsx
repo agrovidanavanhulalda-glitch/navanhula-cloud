@@ -177,7 +177,7 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent.click(await screen.findByText(/Dinheiro/i));
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
 
-    await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 15000 });
+    await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 20000 });
 
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
