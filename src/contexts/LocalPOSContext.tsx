@@ -309,7 +309,7 @@ const mapDbSaleToLocal = (s: any, items: any[], sellerName?: string): LocalSale 
 // ============ PROVIDER ============
 
 export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, store: authStore, company } = useAuth();
+  const { user, store: authStore, company, refreshUserData } = useAuth();
 
   const [state, setState] = useState<LocalPOSState>({
     stores: [],
