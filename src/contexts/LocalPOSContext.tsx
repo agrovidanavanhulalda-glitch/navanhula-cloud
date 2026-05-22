@@ -1220,92 +1220,43 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [company?.id, user?.id, loadSellers]);
 
   const addSeller = useCallback(async (seller: Omit<LocalSeller, 'id'>): Promise<boolean> => {
-    
     try {
-      const email = seller.email?.trim();
+      const email = seller.email?.trim().toLowerCase();
       const name = seller.name?.trim();
       const rawPassword = seller.password?.trim();
       const password = rawPassword && rawPassword.length >= 6 ? rawPassword : '123456';
       
-      const targetCompanyId = company?.id;
-
       if (!name || !email) {
         toast.error('Nome e Email são obrigatórios');
         return false;
       }
 
-      if (!targetCompanyId) {
-        toast.error('Empresa não identificada');
+      const { data, error } = await supabase.rpc('create_enterprise_seller', {
+        p_email: email,
+        p_password: password,
+        p_full_name: name,
+        p_store_id: seller.storeId,
+        p_role: seller.role
+      });
+
+      if (error) {
+        console.error('[POS] Erro ao criar vendedor via RPC:', error);
+        toast.error('Erro ao criar vendedor: ' + error.message);
         return false;
       }
 
-      // 1. Criar utilizador no Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-          }
-        }
-      });
-
-      if (authError) {
-        console.error('[POS] Erro no Auth signUp:', authError);
-        toast.error('Erro ao criar acesso: ' + authError.message);
+      const result = data as any;
+      if (!result?.success) {
+        toast.error(result?.message || 'Erro ao criar vendedor');
         return false;
-      }
-
-      if (!authData.user) {
-        toast.error('Falha ao gerar utilizador');
-        return false;
-      }
-
-      const newUserId = authData.user.id;
-
-      // 2. Criar perfil
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: newUserId,
-        full_name: name,
-        email: email,
-        company_id: targetCompanyId,
-        store_id: seller.storeId || authStore?.id || null,
-        is_active: true
-      });
-
-      if (profileError) {
-        console.warn('[POS] Erro ao criar perfil (pode já existir):', profileError);
-      }
-
-      // 3. Atribuir Cargo
-      const dbRole = seller.role === 'admin' ? 'manager' : 'seller';
-      const { error: roleError } = await supabase.from('user_roles').insert({
-        user_id: newUserId,
-        role: dbRole
-      });
-
-      if (roleError) {
-        console.error('[POS] Erro ao atribuir cargo:', roleError);
-      }
-
-      // 4. Vincular à empresa (tabela user_company)
-      // Buscar ID do cargo correspondente na tabela roles se necessário, 
-      // mas aqui estamos simplificando conforme pedido.
-      try {
-        await supabase.from('user_company').insert({
-          user_id: newUserId,
-          company_id: targetCompanyId,
-          status: 'active'
-        });
-      } catch (e) {
       }
 
       await loadSellers();
-      toast.success('Vendedor criado com sucesso!');
+      toast.success('Vendedor criado e ativado automaticamente!');
       return true;
     } catch (error: any) {
       console.error('[POS] addSeller exception:', error);
-      toast.error('Falha ao processar criação de utilizador');
+      toast.error('Falha ao processar criação de vendedor');
       return false;
     }
   }, [authStore?.id, company?.id, loadSellers]);
