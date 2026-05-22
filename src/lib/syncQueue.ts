@@ -166,6 +166,12 @@ class SyncManager {
       lastProcessed: Date.now()
     };
   }
+
+  // Used for testing
+  clearQueue() {
+    this.queue = [];
+    this.saveQueue();
+  }
 }
 
 export const syncManager = new SyncManager();
