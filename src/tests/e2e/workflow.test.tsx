@@ -111,9 +111,6 @@ describe('NAVANHULA CLOUD E2E Workflows', () => {
     fireEvent.change(screen.getByPlaceholderText(/Nome completo/i), { target: { value: 'João Vendedor' } });
     fireEvent.change(screen.getByPlaceholderText(/email@exemplo.com/i), { target: { value: 'joao@test.com' } });
     
-    // Ensure store is loaded in Select by waiting for it if necessary
-    // But since we mock it, it should be there.
-    
     const createBtn = screen.getByRole('button', { name: /Criar Vendedor/i });
     fireEvent.click(createBtn);
 
@@ -123,7 +120,7 @@ describe('NAVANHULA CLOUD E2E Workflows', () => {
     }, { timeout: 4000 });
 
     // Look for success popup - it should be rendered in the DOM now
-    const successTitle = await screen.findByText(/Vendedor Criado/i, {}, { timeout: 4000 });
+    const successTitle = await screen.findByText(/Vendedor Criado com Sucesso/i, {}, { timeout: 4000 });
     expect(successTitle).toBeInTheDocument();
     
     // Check if the temporary password is shown
