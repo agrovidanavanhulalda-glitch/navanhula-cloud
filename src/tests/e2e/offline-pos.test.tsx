@@ -124,14 +124,19 @@ describe('POS Offline & Sync E2E', () => {
     (supabase.rpc as any).mockResolvedValue({ data: { success: true }, error: null });
   });
 
+  const selectProduct = async () => {
+    // Find item in grid (H3) specifically to avoid cart (H4)
+    const items = await screen.findAllByText(/Arroz/i);
+    const gridItem = items.find(el => el.tagName === 'H3');
+    if (!gridItem) throw new Error('Grid product not found');
+    fireEvent.click(gridItem);
+  };
+
   it('queues a sale when offline and syncs when online', { timeout: 40000 }, async () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
 
-    // Use queryAllByText and pick the one in the grid (h3)
-    const arrozItems = await screen.findAllByText(/Arroz/i);
-    const gridItem = arrozItems.find(el => el.tagName === 'H3');
-    fireEvent.click(gridItem!);
+    await selectProduct();
 
     const finalizeBtn = screen.getByText(/RECEBER PAGAMENTO/i);
     fireEvent.click(finalizeBtn);
@@ -166,9 +171,7 @@ describe('POS Offline & Sync E2E', () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
 
-    const arrozItems = await screen.findAllByText(/Arroz/i);
-    const gridItem = arrozItems.find(el => el.tagName === 'H3');
-    fireEvent.click(gridItem!);
+    await selectProduct();
 
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
     fireEvent.click(await screen.findByText(/Dinheiro/i));
