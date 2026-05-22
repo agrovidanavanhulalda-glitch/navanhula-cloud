@@ -101,7 +101,6 @@ describe('POS Offline & Sync E2E', () => {
           if (table === 'companies') return Promise.resolve(cb({ data: [{ id: TEST_COMPANY_ID, name: 'Test Company', country: 'MZ', nif: '123456789' }], error: null }));
           if (table === 'user_roles') return Promise.resolve(cb({ data: [{ user_id: TEST_USER_ID, role: 'admin' }], error: null }));
           if (table === 'product_stock') return Promise.resolve(cb({ data: [{ product_id: TEST_PRODUCT_ID, store_id: TEST_STORE_ID, quantity: 100 }], error: null }));
-          if (table === 'sales') return Promise.resolve(cb({ data: [], error: null }));
           return Promise.resolve(cb({ data: [], error: null }));
         }),
       };
@@ -128,17 +127,16 @@ describe('POS Offline & Sync E2E', () => {
     const productItem = await screen.findByText(/Arroz/i, {}, { timeout: 10000 });
     fireEvent.click(productItem);
 
-    // Verify item added to cart by checking if subtotal exists
+    // Verify item added to cart
     await waitFor(() => {
       const subtotals = screen.getAllByText(/100,00 MT/i);
       expect(subtotals.length).toBeGreaterThan(0);
     }, { timeout: 5000 });
 
-    // Click on finalize sale button (RECEBER PAGAMENTO)
+    // Finalize
     const finalizeBtn = screen.getByText(/RECEBER PAGAMENTO/i);
     fireEvent.click(finalizeBtn);
 
-    // In PaymentModal, select Cash and confirm
     const cashBtn = await screen.findByText(/Dinheiro/i, {}, { timeout: 5000 });
     fireEvent.click(cashBtn);
 
@@ -152,20 +150,25 @@ describe('POS Offline & Sync E2E', () => {
   });
 
   it('queues a sale when offline and syncs when online', { timeout: 30000 }, async () => {
-    // Set offline
+    // Start OFFLINE
     Object.defineProperty(navigator, 'onLine', { value: false });
     
     render(<AllProviders><LocalPOSPage /></AllProviders>);
 
-    // Add product
+    // Wait for Arroz
     const productItem = await screen.findByText(/Arroz/i, {}, { timeout: 10000 });
     fireEvent.click(productItem);
 
-    // Clear mocks to ignore initial onboarding/profile inserts
+    // Verify added to cart
+    await waitFor(() => {
+      expect(screen.getAllByText(/100,00 MT/i).length).toBeGreaterThan(0);
+    });
+
+    // Reset insert mock to clear initial calls
     insertMock.mockClear();
 
     // Finalize
-    const finalizeBtn = await screen.findByText(/RECEBER PAGAMENTO/i, {}, { timeout: 5000 });
+    const finalizeBtn = screen.getByText(/RECEBER PAGAMENTO/i);
     fireEvent.click(finalizeBtn);
 
     const cashBtn = await screen.findByText(/Dinheiro/i, {}, { timeout: 5000 });
@@ -174,23 +177,21 @@ describe('POS Offline & Sync E2E', () => {
     const confirmPaymentBtn = screen.getByText(/Confirmar Pagamento/i);
     fireEvent.click(confirmPaymentBtn);
 
-    // Verify it was NOT sent to Supabase but added to queue
+    // Verify it was added to queue and NOT sent to Supabase
     await waitFor(() => {
-      expect(insertMock).not.toHaveBeenCalled();
       const status = syncManager.getQueueStatus();
       expect(status.pending).toBeGreaterThan(0);
+      expect(insertMock).not.toHaveBeenCalled();
     }, { timeout: 10000 });
 
-    // Mock going online
+    // GO ONLINE
     Object.defineProperty(navigator, 'onLine', { value: true });
-    
-    // Trigger online event
     fireEvent(window, new Event('online'));
 
-    // Verify Supabase was eventually called after going online
+    // Verify Supabase was eventually called
     await waitFor(() => {
       expect(insertMock).toHaveBeenCalled();
-    }, { timeout: 20000 }); 
+    }, { timeout: 15000 }); 
 
     // Verify queue is eventually empty
     await waitFor(() => {
