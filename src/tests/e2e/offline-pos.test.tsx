@@ -199,4 +199,69 @@ describe('POS Offline & Sync E2E', () => {
       expect(status.pending).toBe(0);
     }, { timeout: 10000 });
   });
+  it('keeps sale in queue if sync fails when returning online', { timeout: 30000 }, async () => {
+    // 1. Mock Supabase to FAIL
+    const networkError = new Error('Database connection failed');
+    insertMock.mockImplementationOnce(() => {
+      const builder: any = {
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockReturnThis(),
+        then: (cb: any) => Promise.resolve(cb({ data: null, error: networkError }))
+      };
+      return builder;
+    });
+
+    // 2. Start OFFLINE
+    Object.defineProperty(navigator, 'onLine', { value: false });
+    
+    render(<AllProviders><LocalPOSPage /></AllProviders>);
+
+    // 3. Add item and finalize
+    const productItem = await screen.findByText(/Arroz/i, {}, { timeout: 10000 });
+    fireEvent.click(productItem);
+
+    const finalizeBtn = screen.getByText(/RECEBER PAGAMENTO/i);
+    fireEvent.click(finalizeBtn);
+
+    const cashBtn = await screen.findByText(/Dinheiro/i, {}, { timeout: 5000 });
+    fireEvent.click(cashBtn);
+
+    const confirmPaymentBtn = screen.getByText(/Confirmar Pagamento/i);
+    fireEvent.click(confirmPaymentBtn);
+
+    // 4. Verify in queue
+    await waitFor(() => {
+      expect(syncManager.getQueueStatus().pending).toBe(1);
+    });
+
+    // 5. GO ONLINE (but sync will fail once)
+    Object.defineProperty(navigator, 'onLine', { value: true });
+    fireEvent(window, new Event('online'));
+
+    // 6. Verify it remains in queue after failure
+    // We wait a bit for the processing loop to try and fail
+    await waitFor(() => {
+      const status = syncManager.getQueueStatus();
+      expect(status.pending).toBe(1);
+    }, { timeout: 10000 });
+
+    // 7. Now make it SUCCESSFUL
+    insertMock.mockImplementation(() => {
+      const builder: any = {
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockReturnThis(),
+        then: (cb: any) => Promise.resolve(cb({ data: [], error: null }))
+      };
+      return builder;
+    });
+
+    // 8. Trigger sync again
+    await syncManager.processQueue();
+
+    // 9. Verify queue is eventually empty
+    await waitFor(() => {
+      expect(syncManager.getQueueStatus().pending).toBe(0);
+      expect(insertMock).toHaveBeenCalled();
+    }, { timeout: 10000 });
+  });
 });
