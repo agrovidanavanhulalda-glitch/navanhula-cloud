@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAppVersion } from '@/hooks/useAppVersion';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { getDefaultRouteForRole } from '@/lib/roleRoutes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +15,11 @@ import BrandLogo from '@/components/brand/BrandLogo';
 const AuthLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { currentVersion } = useAppVersion();
 
@@ -31,6 +36,36 @@ const AuthLoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (showChangePassword) {
+      if (!newPassword.trim() || newPassword.length < 6) {
+        setError('A nova senha deve ter pelo menos 6 caracteres');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setError('As senhas não coincidem');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { error: updateError } = await supabase.auth.updateUser({ 
+          password: newPassword.trim() 
+        });
+        
+        if (updateError) throw updateError;
+        
+        toast.success('Senha atualizada com sucesso!');
+        navigate(redirect || getDefaultRouteForRole(role), { replace: true });
+      } catch (err: any) {
+        setError(err?.message || 'Erro ao atualizar senha');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     if (!email.trim() || !password.trim()) {
       setError('Email e senha são obrigatórios');
       return;
@@ -38,10 +73,24 @@ const AuthLoginPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      await signIn(email, password);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ 
+        email: email.trim(), 
+        password: password.trim() 
+      });
+
+      if (signInError) throw signInError;
+
+      // Check if temporary password was used
+      if (password.trim() === 'NAV@12345') {
+        setShowChangePassword(true);
+        toast.info('Por segurança, altere sua senha temporária');
+        setIsLoading(false);
+        return;
+      }
+
+      // If not temporary, let useEffect handle navigation
     } catch (err: any) {
       setError(err?.message || 'Erro ao fazer login');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -117,50 +166,87 @@ const AuthLoginPage: React.FC = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@empresa.com"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(null); }}
-                required
-                autoComplete="email"
-                disabled={isLoading}
-                className="h-14 text-lg"
-              />
-            </div>
+            {!showChangePassword ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@empresa.com"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                    required
+                    autoComplete="email"
+                    disabled={isLoading}
+                    className="h-14 text-lg"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Senha
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                  required
-                  autoComplete="current-password"
-                  disabled={isLoading}
-                  className="h-14 text-lg pr-12"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
-                </Button>
-              </div>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Senha
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                      required
+                      autoComplete="current-password"
+                      disabled={isLoading}
+                      className="h-14 text-lg pr-12"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Nova Senha Definida
+                  </Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="Sua nova senha segura"
+                    value={newPassword}
+                    onChange={(e) => { setNewPassword(e.target.value); setError(null); }}
+                    required
+                    disabled={isLoading}
+                    className="h-14 text-lg"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Confirmar Nova Senha
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Repita a nova senha"
+                    value={confirmPassword}
+                    onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}
+                    required
+                    disabled={isLoading}
+                    className="h-14 text-lg"
+                  />
+                </div>
+              </>
+            )}
 
             <Button
               type="submit"
@@ -170,15 +256,27 @@ const AuthLoginPage: React.FC = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Entrando...
+                  {showChangePassword ? 'Atualizando...' : 'Entrando...'}
                 </>
               ) : (
                 <>
                   <LogIn className="mr-2 h-5 w-5" />
-                  ENTRAR AGORA
+                  {showChangePassword ? 'DEFINIR E ENTRAR' : 'ENTRAR AGORA'}
                 </>
               )}
             </Button>
+            
+            {showChangePassword && (
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="w-full text-xs" 
+                onClick={() => setShowChangePassword(false)}
+                disabled={isLoading}
+              >
+                Voltar ao login
+              </Button>
+            )}
           </form>
 
           <div className="mt-6 text-center">

@@ -124,7 +124,8 @@ const LocalSellersPage: React.FC = () => {
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [createdSellerInfo, setCreatedSellerInfo] = useState<{ email: string; pass: string } | null>(null);
+  const [createdSellerInfo, setCreatedSellerInfo] = useState<{ email: string; pass: string; name: string } | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
@@ -152,16 +153,34 @@ const LocalSellersPage: React.FC = () => {
         return;
       }
 
-      const success = await addSeller(formData);
+      const tempPassword = formData.password.trim() || 'NAV@12345';
+      const sellerData = {
+        ...formData,
+        password: tempPassword
+      };
+
+      const success = await addSeller(sellerData);
+      
       if (success) {
+        setCreatedSellerInfo({ 
+          email: formData.email.trim().toLowerCase(), 
+          pass: tempPassword,
+          name: formData.name.trim()
+        });
         setShowDialog(false);
         setEditingSeller(null);
+        setShowSuccessDialog(true);
       }
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar vendedor');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copiado!`);
   };
 
   // Toggle active status
@@ -407,6 +426,70 @@ const LocalSellersPage: React.FC = () => {
             </Button>
             <Button onClick={handleSave}>
               {editingSeller ? 'Salvar' : 'Criar Vendedor'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md border-2 border-primary/20">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <UserCheck className="w-6 h-6" />
+              Vendedor Criado com Sucesso!
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="bg-muted/50 p-6 rounded-xl space-y-4 border border-border">
+            <p className="text-sm text-muted-foreground">
+              O vendedor <strong>{createdSellerInfo?.name}</strong> foi ativado. 
+              Copie as credenciais abaixo para o primeiro acesso:
+            </p>
+            
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest opacity-70">Email de Acesso</Label>
+                <div className="flex items-center gap-2 bg-background p-3 rounded-lg border border-border group">
+                  <code className="flex-1 text-sm font-mono truncate">{createdSellerInfo?.email}</code>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0" 
+                    onClick={() => createdSellerInfo && copyToClipboard(createdSellerInfo.email, 'Email')}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase tracking-widest opacity-70">Senha Temporária</Label>
+                <div className="flex items-center gap-2 bg-background p-3 rounded-lg border border-border">
+                  <code className="flex-1 text-sm font-mono tracking-wider">{createdSellerInfo?.pass}</code>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0" 
+                    onClick={() => createdSellerInfo && copyToClipboard(createdSellerInfo.pass, 'Senha')}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2 bg-primary/5 p-3 rounded-lg border border-primary/10">
+              <Shield className="w-4 h-4 text-primary mt-0.5" />
+              <p className="text-[11px] text-primary/80 leading-relaxed">
+                Por segurança, o sistema solicitará a troca obrigatória de senha no primeiro login deste vendedor.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="sm:justify-center">
+            <Button className="w-full sm:w-auto px-8" onClick={() => setShowSuccessDialog(false)}>
+              Concluído
             </Button>
           </DialogFooter>
         </DialogContent>

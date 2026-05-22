@@ -214,6 +214,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!mounted) return;
       console.log(`[Auth] Event: ${event}`);
 
+      if (event === 'PASSWORD_RECOVERY') {
+        // Handle password recovery state if needed
+      }
+
       if (event === 'SIGNED_OUT') {
         setUser(null);
         setRole(null);
