@@ -24,8 +24,8 @@ vi.mock('@/integrations/supabase/client', () => ({
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: TEST_USER_ID } } }, error: null }),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
-      signInWithPassword: vi.fn().mockResolvedValue({ data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, error: null }),
-      signUp: vi.fn().mockResolvedValue({ data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, error: null }),
+      signInWithPassword: vi.fn().mockResolvedValue({ data: { user: { id: TEST_USER_ID } }, error: null }),
+      signUp: vi.fn().mockResolvedValue({ data: { user: { id: TEST_USER_ID } }, error: null }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
       updateUser: vi.fn().mockResolvedValue({ data: {}, error: null }),
     },
