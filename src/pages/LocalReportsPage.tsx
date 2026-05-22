@@ -278,8 +278,9 @@ const LocalReportsPage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Data Início</Label>
+            <Label htmlFor="start-date">Data Início</Label>
             <Input
+              id="start-date"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
@@ -288,8 +289,9 @@ const LocalReportsPage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Data Fim</Label>
+            <Label htmlFor="end-date">Data Fim</Label>
             <Input
+              id="end-date"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
