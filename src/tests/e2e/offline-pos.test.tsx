@@ -124,6 +124,12 @@ describe('POS Offline & Sync E2E', () => {
     }));
 
     (supabase.rpc as any).mockResolvedValue({ data: { success: true }, error: null });
+    
+    // Explicitly mock getSession to fix [Auth] Init error
+    (supabase.auth.getSession as any).mockResolvedValue({ 
+      data: { session: { user: { id: TEST_USER_ID } } }, 
+      error: null 
+    });
   });
 
   const selectProduct = async () => {
@@ -236,37 +242,29 @@ describe('POS Offline & Sync E2E', () => {
   });
 
   it('displays digital receipt offline and remains consistent after sync', { timeout: 45000 }, async () => {
-    // 1. Start OFFLINE
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
     
-    // 2. Complete a sale offline
     await selectProduct();
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
     fireEvent.click(await screen.findByText(/Dinheiro/i));
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
     
-    // 3. Verify PostSaleModal is displayed (even while offline)
     await screen.findByText(/Venda concluída com sucesso/i);
     await screen.findByText(/100,00 MT/i);
     
-    // 4. Click to see thermal receipt
     fireEvent.click(screen.getByText(/Imprimir Recibo/i));
     
-    // 5. Verify ThermalReceipt content
     await screen.findByText(/Recibo de Venda/i);
     await screen.findByText(/TOTAL:/i);
-    const totalEl = await screen.findByText(/100,00 MT/i);
-    expect(totalEl).toBeDefined();
+    const totalElements = await screen.findAllByText(/100,00 MT/i);
+    expect(totalElements.length).toBeGreaterThan(0);
     
-    // 6. Close receipt
     fireEvent.click(screen.getByRole('button', { name: /X/i }));
     
-    // 7. GO ONLINE
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
     
-    // 8. Verify sync
     await waitFor(() => {
       expect(syncManager.getQueueStatus().pending).toBe(0);
       expect(insertMock).toHaveBeenCalled();
