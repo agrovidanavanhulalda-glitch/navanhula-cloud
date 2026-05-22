@@ -70,6 +70,7 @@ describe('POS Offline & Sync E2E', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    syncManager.clearQueue();
     
     // Default online
     Object.defineProperty(navigator, 'onLine', {
@@ -176,9 +177,8 @@ describe('POS Offline & Sync E2E', () => {
     // Verify it was NOT sent to Supabase but added to queue
     await waitFor(() => {
       expect(insertMock).not.toHaveBeenCalled();
-      const savedQueueString = localStorage.getItem('navanhula_sync_queue');
-      const savedQueue = JSON.parse(savedQueueString || '[]');
-      expect(savedQueue.length).toBeGreaterThan(0);
+      const status = syncManager.getQueueStatus();
+      expect(status.pending).toBeGreaterThan(0);
     }, { timeout: 10000 });
 
     // Mock going online
@@ -194,9 +194,8 @@ describe('POS Offline & Sync E2E', () => {
 
     // Verify queue is eventually empty
     await waitFor(() => {
-      const finalQueueString = localStorage.getItem('navanhula_sync_queue');
-      const finalQueue = JSON.parse(finalQueueString || '[]');
-      expect(finalQueue.length).toBe(0);
+      const status = syncManager.getQueueStatus();
+      expect(status.pending).toBe(0);
     }, { timeout: 10000 });
   });
 });
