@@ -99,7 +99,7 @@ describe('POS Offline & Sync E2E', () => {
         if (table === 'companies') return Promise.resolve({ data: { id: TEST_COMPANY_ID, name: 'Test Company', country: 'MZ', nif: '123456789' }, error: null });
         if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
         if (table === 'stores') return Promise.resolve({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
-        if (table === 'cash_registers') return Promise.resolve({ data: { id: 'cr-1', status: 'open', user_id: TEST_USER_ID, store_id: TEST_STORE_ID }, error: null });
+        if (table === 'cash_registers') return Promise.resolve({ data: { id: 'cr-1', status: 'open', user_id: TEST_USER_ID, store_id: TEST_STORE_ID, opening_amount: 1000, opened_at: new Date().toISOString() }, error: null });
         return Promise.resolve({ data: null, error: null });
       }),
       single: vi.fn().mockReturnValue(Promise.resolve({ data: { id: 'new-id' }, error: null })),
@@ -137,8 +137,9 @@ describe('POS Offline & Sync E2E', () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalPOSPage /></AllProviders>);
     
-    // Initial stock check
-    await screen.findByText(/100 un/i);
+    // Wait for the specific stock display
+    const stockEl = await screen.findByText(/100 un/i);
+    expect(stockEl).toBeDefined();
     
     await selectProduct();
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
