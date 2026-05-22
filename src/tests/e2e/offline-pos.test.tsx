@@ -267,4 +267,3 @@ describe('POS Offline & Sync E2E', () => {
     }, { timeout: 15000 });
   });
 });
-});
