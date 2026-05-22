@@ -125,8 +125,8 @@ describe('POS Offline & Sync E2E', () => {
   });
 
   const selectProduct = async () => {
-    const items = await screen.findAllByText(/Arroz/i);
-    const gridItem = items.find(el => el.tagName === 'H3');
+    const arrozItems = await screen.findAllByText(/Arroz/i);
+    const gridItem = arrozItems.find(el => el.tagName === 'H3');
     if (!gridItem) throw new Error('Grid product not found');
     fireEvent.click(gridItem);
   };
@@ -138,8 +138,10 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
     fireEvent.click(await screen.findByText(/Dinheiro/i, {}, { timeout: 10000 }));
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
-    await new Promise(r => setTimeout(r, 1000));
-    await waitFor(() => expect(syncManager.getQueueStatus().pending).toBe(1), { timeout: 20000 });
+    await waitFor(() => {
+        const status = syncManager.getQueueStatus();
+        expect(status.pending).toBe(1);
+    }, { timeout: 20000 });
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
     await waitFor(() => {
