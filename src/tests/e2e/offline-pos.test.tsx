@@ -113,7 +113,7 @@ describe('POS Offline & Sync E2E', () => {
     render(<LocalPOSPage />, { wrapper: AllProviders });
 
     // Wait for data load and Arroz to appear
-    const productItem = await screen.findByText(/Arroz/i, { timeout: 5000 });
+    const productItem = await screen.findByText(/Arroz/i, {}, { timeout: 5000 });
     fireEvent.click(productItem);
 
     // Verify item added to cart (should see subtotal or similar)
