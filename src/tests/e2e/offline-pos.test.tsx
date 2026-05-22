@@ -111,8 +111,8 @@ describe('POS Offline & Sync E2E', () => {
     const productItem = await screen.findByText(/Arroz/i);
     fireEvent.click(productItem);
 
-    // Click on finalize sale button (usually shows total)
-    const finalizeBtn = screen.getByText(/Finalizar Venda/i);
+    // Click on finalize sale button (RECEBER PAGAMENTO)
+    const finalizeBtn = screen.getByText(/RECEBER PAGAMENTO/i);
     fireEvent.click(finalizeBtn);
 
     // In PaymentModal, select Cash and confirm
