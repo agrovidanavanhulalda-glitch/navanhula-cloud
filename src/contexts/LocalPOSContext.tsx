@@ -467,7 +467,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } finally {
       fetchingRef.current = null;
     }
-  }, [user?.id, company?.id, authStore?.id]);
+  }, [user?.id, company?.id, authStore?.id, refreshUserData]);
 
 
   // ============ LOAD DATA FROM SUPABASE ============
