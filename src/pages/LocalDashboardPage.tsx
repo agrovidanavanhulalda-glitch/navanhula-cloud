@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import { useNavigate } from 'react-router-dom';
 import PageTransition from '@/components/layout/PageTransition';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+
 
 import { useAuth } from '@/contexts/AuthContext';
 import { isValidId } from '@/lib/uuid';
@@ -134,14 +136,17 @@ const QuickAction: React.FC<{ icon: React.ElementType; label: string; onClick: (
 /* ─── Main Dashboard ─── */
 const LocalDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { store, sales, products, cashRegisterOpen, startNewSale, loading } = useLocalPOS();
+  const { store, sales, products, cashRegisterOpen, startNewSale, loading: posLoading } = useLocalPOS();
   const { user, company } = useAuth();
   const [chartPeriod, setChartPeriod] = useState<'today' | 'week' | 'month'>('week');
 
+  const { data: stats, isLoading: statsLoading } = useDashboardStats(store?.id);
+
   // Guard against crash on initial mount before POS data is loaded
   const isReady = useMemo(() => {
-    return !loading && isValidId(company?.id) && store && products;
-  }, [loading, company?.id, store, products]);
+    return !posLoading && !statsLoading && isValidId(company?.id) && store;
+  }, [posLoading, statsLoading, company?.id, store]);
+
 
   if (!loading && !isValidId(company?.id)) {
     return (
@@ -185,12 +190,13 @@ const LocalDashboardPage: React.FC = () => {
     };
   }, [sales]);
 
-  const totalRevenue = todaySales.reduce((a, s) => a + s.total, 0);
-  const monthRevenue = monthSales.reduce((a, s) => a + s.total, 0);
-  const lastMonthRevenue = lastMonthSales.reduce((a, s) => a + s.total, 0);
-  const avgTicket = todaySales.length > 0 ? totalRevenue / todaySales.length : 0;
-  const lowStockProducts = products.filter(p => p.stock <= 10 && p.isActive);
+  const totalRevenue = stats?.today_revenue || 0;
+  const monthRevenue = stats?.month_revenue || 0;
+  const lastMonthRevenue = stats?.last_month_revenue || 0;
+  const avgTicket = stats?.today_sales_count ? totalRevenue / stats.today_sales_count : 0;
+  const lowStockCount = stats?.low_stock_count || 0;
   const revenueGrowth = lastMonthRevenue > 0 ? ((monthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
+
 
   /* ── Daily goal ── */
   const dailyGoal = useMemo(() => {
@@ -254,9 +260,10 @@ const LocalDashboardPage: React.FC = () => {
     if (!cashRegisterOpen) {
       alerts.push({ icon: Clock, type: 'warning', message: 'O caixa ainda está fechado. Abra para começar a vender.', actionLabel: 'Abrir Caixa', onAction: () => navigate('/app/caixa') });
     }
-    if (lowStockProducts.length >= 5) {
-      alerts.push({ icon: AlertTriangle, type: 'danger', message: `${lowStockProducts.length} produtos com estoque crítico precisam de reposição.`, actionLabel: 'Ver Estoque', onAction: () => navigate('/app/estoque') });
+    if (lowStockCount >= 5) {
+      alerts.push({ icon: AlertTriangle, type: 'danger', message: `${lowStockCount} produtos com estoque crítico precisam de reposição.`, actionLabel: 'Ver Estoque', onAction: () => navigate('/app/estoque') });
     }
+
     if (todaySales.length === 0 && new Date().getHours() >= 10 && cashRegisterOpen) {
       alerts.push({ icon: ShoppingCart, type: 'warning', message: 'Ainda sem vendas hoje. Que tal iniciar uma promoção?', actionLabel: 'Nova Venda', onAction: () => { startNewSale(); navigate('/app/pdv'); } });
     }
@@ -306,7 +313,7 @@ const LocalDashboardPage: React.FC = () => {
   const handleNewSale = () => { startNewSale(); navigate('/app/pdv'); };
 
   /* ── Loading State ── */
-  if (loading || !isReady) {
+  if (posLoading || statsLoading || !isReady) {
     return (
       <PageTransition>
         <div className="p-4 md:p-6 lg:p-8 space-y-6">
