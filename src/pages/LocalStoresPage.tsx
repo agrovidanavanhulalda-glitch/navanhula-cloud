@@ -216,12 +216,13 @@ const LocalStoresPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {store.id !== activeStore?.id && (
+                {store.id !== (activeStore as any)?.id && (
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => handleSelectStore(store.id)}>Selecionar</Button>
                 )}
+
                 {isAdmin && (
                   <>
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(store)}><Pencil className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(store as any)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteConfirm(store.id)} disabled={stores.length <= 1}>
                       <Trash2 className="w-4 h-4" />
                     </Button>

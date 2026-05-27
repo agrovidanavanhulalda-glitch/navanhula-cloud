@@ -65,7 +65,7 @@ const AIBusinessEnginePage: React.FC = () => {
     const lastMonthRev = lastMonthSales.reduce((a, s) => a + s.total, 0);
 
     // Product sales map
-    const productSales: Record<string, { name: string; qty: number; revenue: number; profit: number; lastSaleDate: string }> = {};
+    const productSales: Record<string, { name: string; qty: number; revenue: number; profit: number; lastSaleDate: Date }> = {};
     sales.forEach(s => {
       s.items.forEach(i => {
         if (!productSales[i.product.id]) {
@@ -74,7 +74,7 @@ const AIBusinessEnginePage: React.FC = () => {
         productSales[i.product.id].qty += i.quantity;
         productSales[i.product.id].revenue += i.total;
         productSales[i.product.id].profit += (i.product.salePrice - i.product.costPrice) * i.quantity;
-        if (s.createdAt > productSales[i.product.id].lastSaleDate) {
+        if (s.createdAt.getTime() > productSales[i.product.id].lastSaleDate.getTime()) {
           productSales[i.product.id].lastSaleDate = s.createdAt;
         }
       });

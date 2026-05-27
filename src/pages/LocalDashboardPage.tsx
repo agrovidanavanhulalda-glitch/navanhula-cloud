@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import { useNavigate } from 'react-router-dom';
 import PageTransition from '@/components/layout/PageTransition';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+
 
 import { useAuth } from '@/contexts/AuthContext';
 import { isValidId } from '@/lib/uuid';
@@ -134,16 +136,19 @@ const QuickAction: React.FC<{ icon: React.ElementType; label: string; onClick: (
 /* ─── Main Dashboard ─── */
 const LocalDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { store, sales, products, cashRegisterOpen, startNewSale, loading } = useLocalPOS();
+  const { store, sales, products, cashRegisterOpen, startNewSale, loading: posLoading } = useLocalPOS();
   const { user, company } = useAuth();
   const [chartPeriod, setChartPeriod] = useState<'today' | 'week' | 'month'>('week');
 
+  const { data: stats, isLoading: statsLoading } = useDashboardStats(store?.id);
+
   // Guard against crash on initial mount before POS data is loaded
   const isReady = useMemo(() => {
-    return !loading && isValidId(company?.id) && store && products;
-  }, [loading, company?.id, store, products]);
+    return !posLoading && !statsLoading && isValidId(company?.id) && store;
+  }, [posLoading, statsLoading, company?.id, store]);
 
-  if (!loading && !isValidId(company?.id)) {
+
+  if (!posLoading && !isValidId(company?.id)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-8 text-center bg-background/50 animate-in fade-in duration-700">
         <Card className="max-w-md p-10 border-none shadow-2xl bg-white/80 backdrop-blur-md">
@@ -185,12 +190,13 @@ const LocalDashboardPage: React.FC = () => {
     };
   }, [sales]);
 
-  const totalRevenue = todaySales.reduce((a, s) => a + s.total, 0);
-  const monthRevenue = monthSales.reduce((a, s) => a + s.total, 0);
-  const lastMonthRevenue = lastMonthSales.reduce((a, s) => a + s.total, 0);
-  const avgTicket = todaySales.length > 0 ? totalRevenue / todaySales.length : 0;
-  const lowStockProducts = products.filter(p => p.stock <= 10 && p.isActive);
+  const totalRevenue = stats?.today_revenue || 0;
+  const monthRevenue = stats?.month_revenue || 0;
+  const lastMonthRevenue = stats?.last_month_revenue || 0;
+  const avgTicket = stats?.today_sales_count ? totalRevenue / stats.today_sales_count : 0;
+  const lowStockCount = stats?.low_stock_count || 0;
   const revenueGrowth = lastMonthRevenue > 0 ? ((monthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
+
 
   /* ── Daily goal ── */
   const dailyGoal = useMemo(() => {
@@ -254,14 +260,16 @@ const LocalDashboardPage: React.FC = () => {
     if (!cashRegisterOpen) {
       alerts.push({ icon: Clock, type: 'warning', message: 'O caixa ainda está fechado. Abra para começar a vender.', actionLabel: 'Abrir Caixa', onAction: () => navigate('/app/caixa') });
     }
-    if (lowStockProducts.length >= 5) {
-      alerts.push({ icon: AlertTriangle, type: 'danger', message: `${lowStockProducts.length} produtos com estoque crítico precisam de reposição.`, actionLabel: 'Ver Estoque', onAction: () => navigate('/app/estoque') });
+    if (lowStockCount >= 5) {
+      alerts.push({ icon: AlertTriangle, type: 'danger', message: `${lowStockCount} produtos com estoque crítico precisam de reposição.`, actionLabel: 'Ver Estoque', onAction: () => navigate('/app/estoque') });
     }
+
     if (todaySales.length === 0 && new Date().getHours() >= 10 && cashRegisterOpen) {
       alerts.push({ icon: ShoppingCart, type: 'warning', message: 'Ainda sem vendas hoje. Que tal iniciar uma promoção?', actionLabel: 'Nova Venda', onAction: () => { startNewSale(); navigate('/app/pdv'); } });
     }
     return alerts;
-  }, [cashRegisterOpen, lowStockProducts, todaySales, navigate, startNewSale]);
+  }, [cashRegisterOpen, lowStockCount, todaySales, navigate, startNewSale]);
+
 
   /* ── AI Insights (action-driven) ── */
   const aiInsights = useMemo(() => {
@@ -306,7 +314,7 @@ const LocalDashboardPage: React.FC = () => {
   const handleNewSale = () => { startNewSale(); navigate('/app/pdv'); };
 
   /* ── Loading State ── */
-  if (loading || !isReady) {
+  if (posLoading || statsLoading || !isReady) {
     return (
       <PageTransition>
         <div className="p-4 md:p-6 lg:p-8 space-y-6">
@@ -405,10 +413,11 @@ const LocalDashboardPage: React.FC = () => {
         />
         <KPICard
           index={3} icon={AlertTriangle} label="Stock Crítico"
-          value={lowStockProducts.length || 0}
-          trend={lowStockProducts.length > 0 ? 'Produtos precisam reposição' : 'Tudo em ordem'}
-          trendUp={lowStockProducts.length === 0 ? true : false}
+          value={lowStockCount || 0}
+          trend={lowStockCount > 0 ? 'Produtos precisam reposição' : 'Tudo em ordem'}
+          trendUp={lowStockCount === 0 ? true : false}
         />
+
       </div>
 
       {/* Main Content Grid */}
@@ -546,19 +555,19 @@ const LocalDashboardPage: React.FC = () => {
       </div>
 
       {/* Low Stock Alert — actionable */}
-      {lowStockProducts.length > 0 && (
+      {lowStockCount > 0 && products.length > 0 && (
         <Card className="p-5 border-warning/30">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-warning uppercase tracking-wider flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
-              Estoque Baixo ({lowStockProducts.length})
+              Estoque Baixo ({lowStockCount})
             </h2>
             <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => navigate('/app/estoque')}>
               <RefreshCw className="w-3 h-3" /> Repor Tudo
             </Button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {lowStockProducts.slice(0, 8).map(p => (
+            {products.filter(p => p.stock <= 10 && p.isActive).slice(0, 8).map(p => (
               <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 text-sm">
                 <span className="truncate mr-2 text-foreground text-xs">{p.name}</span>
                 <Badge variant={p.stock <= 3 ? 'destructive' : 'secondary'} className="text-[10px] flex-shrink-0">{p.stock}</Badge>
@@ -567,6 +576,7 @@ const LocalDashboardPage: React.FC = () => {
           </div>
         </Card>
       )}
+
       </div>
     </PageTransition>
   );
