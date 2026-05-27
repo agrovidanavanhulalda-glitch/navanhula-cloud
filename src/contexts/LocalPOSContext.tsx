@@ -362,16 +362,28 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return;
       }
 
-      // Fetch all data in parallel, filtering by company_id where applicable
+      // Fetch essential data in parallel, filtering by company_id
       const [
         productsRes,
         storesRes,
         cashRegistersRes,
       ] = await Promise.all([
-        (supabase.from('products').select('*') as any).eq('company_id', targetCompanyId).eq('is_active', true).order('name'),
-        (supabase.from('stores').select('*') as any).eq('company_id', targetCompanyId),
-        (supabase.from('cash_registers').select('*') as any).eq('company_id', targetCompanyId).order('opened_at', { ascending: false }).limit(50),
+        supabase.from('products')
+          .select('id, name, cost_price, sale_price, is_active, code, barcode, image_url, description, category_id')
+          .eq('company_id', targetCompanyId)
+          .eq('is_active', true)
+          .order('name')
+          .limit(1000), // Enterprise limit for POS stability
+        supabase.from('stores')
+          .select('id, name, address, phone, is_active')
+          .eq('company_id', targetCompanyId),
+        supabase.from('cash_registers')
+          .select('*')
+          .eq('company_id', targetCompanyId)
+          .order('opened_at', { ascending: false })
+          .limit(20),
       ]);
+
 
       if (productsRes.error) throw productsRes.error;
       if (storesRes.error) throw storesRes.error;
@@ -382,10 +394,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (storeIds.length > 0) {
         const { data, error: salesError } = await supabase
           .from('sales')
-          .select('*, sale_items(*)')
+          .select('id, total, subtotal, discount_amount, status, payment_method, created_at, store_id, user_id, notes, sale_items(product_id, product_name, quantity, unit_price, total, cost_price)')
           .in('store_id', storeIds)
           .order('created_at', { ascending: false })
-          .limit(100);
+          .limit(50);
+
         
         if (salesError) throw salesError;
         salesResData = data || [];
@@ -396,8 +409,9 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (storeId) {
         const { data: stockData } = await supabase
           .from('product_stock')
-          .select('*')
+          .select('product_id, quantity')
           .eq('store_id', storeId);
+
         
         (stockData || []).forEach((s: any) => {
           stockMap.set(s.product_id, s.quantity || 0);
