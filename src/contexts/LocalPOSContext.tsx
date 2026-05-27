@@ -1357,8 +1357,13 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.group('[POS] Criação de Produto (Enterprise)');
       console.log('Payload enviado:', rpcPayload);
 
-      // 2. Chamada RPC Atómica
-      const { data, error } = await supabase.rpc('create_product_with_stock', rpcPayload);
+      // 2. Chamada RPC Atómica com timeout de 20s (Enterprise protection)
+      const rpcPromise = supabase.rpc('create_product_with_stock', rpcPayload);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Tempo de resposta excedido. A operação pode ainda estar sendo processada no servidor.')), 20000)
+      );
+
+      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error('[POS] Erro Supabase RPC:', error);
