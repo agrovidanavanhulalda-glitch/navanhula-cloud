@@ -160,9 +160,9 @@ interface LocalPOSContextType extends LocalPOSState {
   updateSeller: (id: string, seller: Partial<LocalSeller>) => Promise<void>;
   deleteSeller: (id: string) => Promise<void>;
   getSellersByStore: (storeId: string) => LocalSeller[];
-  addProduct: (product: Omit<LocalProduct, 'id'>) => Promise<void>;
-  updateProduct: (id: string, product: Partial<LocalProduct>) => Promise<void>;
-  deleteProduct: (id: string) => Promise<void>;
+  addProduct: (product: Omit<LocalProduct, 'id'>) => Promise<boolean>;
+  updateProduct: (id: string, product: Partial<LocalProduct>) => Promise<boolean>;
+  deleteProduct: (id: string) => Promise<boolean>;
   getSubtotal: () => number;
   getTotal: () => number;
   getTotalDiscount: () => number;
@@ -1316,17 +1316,18 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // 1. Validar campos obrigatórios
     if (!product.name.trim()) {
       toast.error('O nome do produto é obrigatório');
-      return;
+      return false;
+    }
+
+    const targetCompanyId = company?.id;
+    if (!isValidId(targetCompanyId)) {
+      const msg = 'Erro de sessão: ID da empresa inválido ou ausente. Faça login novamente.';
+      console.error('[POS] ' + msg, { companyId: targetCompanyId });
+      toast.error(msg);
+      return false;
     }
 
     try {
-      const targetCompanyId = company?.id;
-      if (!isValidId(targetCompanyId)) {
-        console.error('[POS] Erro: ID da empresa inválido ou ausente', { companyId: targetCompanyId });
-        toast.error('Erro de sessão: ID da empresa inválido. Faça login novamente.');
-        return;
-      }
-
       // Determinar loja para stock inicial
       const storeIdToUse = sanitizeId(state.currentStore.id) || sanitizeId(authStore?.id);
       const finalStoreId = isValidId(storeIdToUse) ? storeIdToUse : null;
@@ -1338,7 +1339,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
         toast.warning('Stock inicial ignorado: Nenhuma loja ativa selecionada.');
       }
-
+      
       const rpcPayload = {
         p_name: product.name.trim(),
         p_cost_price: Number(product.costPrice) || 0,
@@ -1348,7 +1349,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         p_company_id: targetCompanyId,
         p_is_active: product.isActive !== false,
         p_image_url: product.imageUrl || null,
-        p_code: product.code?.trim() || null, // Se vazio, o banco gera SKU automático
+        p_code: product.code?.trim() || null,
         p_category_id: product.categoryId || null,
         p_description: product.description?.trim() || null
       };
@@ -1356,38 +1357,42 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.group('[POS] Criação de Produto (Enterprise)');
       console.log('Payload enviado:', rpcPayload);
 
-      // 2. Chamada RPC Atómica
-      const { data, error } = await supabase.rpc('create_product_with_stock', rpcPayload);
+      // 2. Chamada RPC Atómica com timeout de 20s (Enterprise protection)
+      const rpcPromise = supabase.rpc('create_product_with_stock', rpcPayload);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Tempo de resposta excedido. A operação pode ainda estar sendo processada no servidor.')), 20000)
+      );
+
+      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error('[POS] Erro Supabase RPC:', error);
         console.groupEnd();
-        toast.error(`Erro ao criar produto: ${error.message}`);
-        return;
+        throw new Error(error.message);
       }
 
       const result = data as any;
       if (result && result.success === false) {
         console.error('[POS] Erro de negócio SQL:', result.error, result.detail);
         console.groupEnd();
-        toast.error(`Falha: ${result.error}`);
-        return;
+        throw new Error(result.error);
       }
 
       console.log('[POS] Resposta Sucesso:', result);
       console.groupEnd();
       
-      // 3. Sincronizar estado local
-      await loadData(true); // Forçar refresh para garantir que o novo produto apareça
-      toast.success('Produto criado com sucesso!');
+      // 3. Sincronizar estado local de forma estável
+      await loadData(true);
+      toast.success(result.message || 'Produto criado com sucesso!');
+      return true;
     } catch (error: any) {
       console.error('[POS] Exceção crítica ao criar produto:', error);
       toast.error(`Falha crítica: ${error.message || 'Erro desconhecido'}`);
+      return false;
     }
   }, [state.currentStore.id, authStore?.id, company?.id, loadData]);
 
   const updateProduct = useCallback(async (id: string, updates: Partial<LocalProduct>) => {
-    
     try {
       const dbUpdates: any = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name.trim();
@@ -1398,58 +1403,56 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (Object.keys(dbUpdates).length > 0) {
         const { error: updateError } = await supabase.from('products').update(dbUpdates).eq('id', id);
-        
         if (updateError) {
-          console.error('[POS] Erro ao atualizar produto no Supabase:', updateError);
+          console.error('[POS] Erro ao atualizar produto:', updateError);
           toast.error('Erro ao atualizar produto: ' + updateError.message);
-          return;
+          return false;
         }
       }
 
       const storeIdToUse = sanitizeId(state.currentStore.id) || sanitizeId(authStore?.id);
-
       if (updates.stock !== undefined && storeIdToUse) {
-        // Calculate difference for adjustment
         const currentProduct = state.products.find(p => p.id === id);
-        const diff = updates.stock - (currentProduct?.stock || 0);
-        
+        const diff = Number(updates.stock) - (currentProduct?.stock || 0);
         if (diff !== 0) {
-          await supabase.rpc('add_inventory_adjustment', {
-            p_product_id: id,
-            p_store_id: storeIdToUse,
-            p_quantity: diff,
-            p_type: 'ADJUSTMENT',
-            p_reason: 'Ajuste manual via edição de produto'
+          await supabase.from('inventory_movements').insert({
+            product_id: id,
+            branch_id: storeIdToUse,
+            company_id: company?.id,
+            movement_type: diff > 0 ? 'ADJUSTMENT' : 'LOSS',
+            quantity: diff,
+            reference_type: 'manual_adjustment',
+            notes: 'Ajuste manual via edição de produto'
           });
         }
       }
-
-      // Atualizar dados do servidor para garantir sincronia total
-      await loadData();
-
+      await loadData(true);
+      toast.success('Produto atualizado com sucesso!');
+      return true;
     } catch (error: any) {
       console.error('[POS] Exceção ao atualizar produto:', error);
       toast.error('Falha crítica ao atualizar produto');
+      return false;
     }
-  }, [state.currentStore.id]);
+  }, [state.currentStore.id, authStore?.id, state.products, company?.id, loadData]);
 
   const deleteProduct = useCallback(async (id: string) => {
     try {
       const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id);
-      
       if (error) {
-        console.error('[POS] Erro ao remover produto no Supabase:', error);
-        toast.error('Erro ao remover produto');
-        return;
+        console.error('[POS] Erro ao desativar produto:', error);
+        toast.error('Erro ao excluir produto');
+        return false;
       }
-
-      setState(prev => ({ ...prev, products: prev.products.filter(p => p.id !== id) }));
-      toast.success('Produto removido com sucesso');
-    } catch (error: any) {
-      console.error('[POS] Exceção ao remover produto:', error);
-      toast.error('Falha crítica ao remover produto');
+      await loadData(true);
+      toast.success('Produto desativado com sucesso');
+      return true;
+    } catch (error) {
+      console.error('[POS] Exceção ao excluir produto:', error);
+      toast.error('Falha ao processar exclusão');
+      return false;
     }
-  }, []);
+  }, [loadData]);
 
   // ============ GETTERS ============
 

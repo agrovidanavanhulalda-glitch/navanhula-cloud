@@ -37,7 +37,7 @@ import PageTransition from '@/components/layout/PageTransition';
 // HYBRID: Local POS data + Sistema Auth
 
 const LocalProductsPage: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct, loading } = useLocalPOS();
+  const { products, addProduct, updateProduct, deleteProduct, loading, currentStore } = useLocalPOS();
   const { updateStep } = useOnboarding();
   const { isAdmin } = usePermissions();
 
@@ -142,19 +142,24 @@ const LocalProductsPage: React.FC = () => {
     };
 
     try {
+      let success = false;
       if (editingProduct) {
         await updateProduct(editingProduct.id, productData);
-        // Note: updateProduct context handles the toast and state update
+        success = true; // updateProduct handles its own errors
       } else {
-        await addProduct(productData);
-        updateStep('first_product_added');
+        success = await addProduct(productData);
+        if (success) {
+          updateStep('first_product_added');
+        }
       }
 
-      setShowForm(false);
-      resetForm();
+      if (success) {
+        setShowForm(false);
+        resetForm();
+      }
     } catch (error) {
       console.error('[ProductsPage] Erro ao salvar:', error);
-      toast.error('Erro ao salvar produto');
+      // addProduct/updateProduct toast the error, so we just log it here
     }
   };
 
@@ -431,7 +436,9 @@ const LocalProductsPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="stock">Estoque *</Label>
+                <Label htmlFor="stock">
+                  Estoque Inicial {currentStore?.name ? `(${currentStore.name})` : ''} *
+                </Label>
                 <Input
                   id="stock"
                   type="number"
