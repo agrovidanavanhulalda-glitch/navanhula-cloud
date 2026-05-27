@@ -575,7 +575,7 @@ const LocalReportsPage: React.FC = () => {
                       <tr key={i} className="hover:bg-muted/30">
                         <td className="p-3 font-mono text-sm">#{sale.id.slice(-6).toUpperCase()}</td>
                         <td className="p-3">{new Date(sale.createdAt).toLocaleString('pt-MZ')}</td>
-                        <td className="p-3">{sale.cancelledByName || 'N/A'}</td>
+                        <td className="p-3">{sale.sellerName || 'N/A'}</td>
                         <td className="p-3 text-sm max-w-xs truncate">{sale.cancellationReason || 'N/A'}</td>
                         <td className="p-3 text-right font-bold text-destructive">{formatCurrency(sale.total)}</td>
                       </tr>
