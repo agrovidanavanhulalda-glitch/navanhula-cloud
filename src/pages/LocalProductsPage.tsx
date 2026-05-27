@@ -37,7 +37,7 @@ import PageTransition from '@/components/layout/PageTransition';
 // HYBRID: Local POS data + Sistema Auth
 
 const LocalProductsPage: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct, loading } = useLocalPOS();
+  const { products, addProduct, updateProduct, deleteProduct, loading, currentStore } = useLocalPOS();
   const { updateStep } = useOnboarding();
   const { isAdmin } = usePermissions();
 
@@ -436,7 +436,9 @@ const LocalProductsPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="stock">Estoque *</Label>
+                <Label htmlFor="stock">
+                  Estoque Inicial {currentStore?.name ? `(${currentStore.name})` : ''} *
+                </Label>
                 <Input
                   id="stock"
                   type="number"
