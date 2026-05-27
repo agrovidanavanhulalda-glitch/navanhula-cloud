@@ -4933,7 +4933,7 @@ export type Database = {
           created_by: string | null
           id: string
           product_id: string
-          quantity: number | null
+          quantity: number
           store_id: string
           updated_at: string | null
           warehouse_id: string | null
@@ -4943,7 +4943,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           product_id: string
-          quantity?: number | null
+          quantity?: number
           store_id: string
           updated_at?: string | null
           warehouse_id?: string | null
@@ -4953,7 +4953,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           product_id?: string
-          quantity?: number | null
+          quantity?: number
           store_id?: string
           updated_at?: string | null
           warehouse_id?: string | null
@@ -4994,7 +4994,7 @@ export type Database = {
           barcode: string | null
           category_id: string | null
           code: string
-          company_id: string | null
+          company_id: string
           conversion_factor: number | null
           cost_price: number
           created_at: string | null
@@ -5023,7 +5023,7 @@ export type Database = {
           barcode?: string | null
           category_id?: string | null
           code: string
-          company_id?: string | null
+          company_id: string
           conversion_factor?: number | null
           cost_price?: number
           created_at?: string | null
@@ -5052,7 +5052,7 @@ export type Database = {
           barcode?: string | null
           category_id?: string | null
           code?: string
-          company_id?: string | null
+          company_id?: string
           conversion_factor?: number | null
           cost_price?: number
           created_at?: string | null
