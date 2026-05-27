@@ -1316,29 +1316,22 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // 1. Validar campos obrigatórios
     if (!product.name.trim()) {
       toast.error('O nome do produto é obrigatório');
-      return;
+      return false;
+    }
+
+    const targetCompanyId = company?.id;
+    if (!isValidId(targetCompanyId)) {
+      const msg = 'Erro de sessão: ID da empresa inválido ou ausente. Faça login novamente.';
+      console.error('[POS] ' + msg, { companyId: targetCompanyId });
+      toast.error(msg);
+      return false;
     }
 
     try {
-      const targetCompanyId = company?.id;
-      if (!isValidId(targetCompanyId)) {
-        console.error('[POS] Erro: ID da empresa inválido ou ausente', { companyId: targetCompanyId });
-        toast.error('Erro de sessão: ID da empresa inválido. Faça login novamente.');
-        return;
-      }
-
       // Determinar loja para stock inicial
       const storeIdToUse = sanitizeId(state.currentStore.id) || sanitizeId(authStore?.id);
       const finalStoreId = isValidId(storeIdToUse) ? storeIdToUse : null;
       
-      if (!finalStoreId && Number(product.stock) > 0) {
-        console.warn('[POS] Criando produto com stock solicitado mas sem loja válida identificada.', { 
-          requestedStock: product.stock, 
-          storeId: storeIdToUse 
-        });
-        toast.warning('Stock inicial ignorado: Nenhuma loja ativa selecionada.');
-      }
-
       const rpcPayload = {
         p_name: product.name.trim(),
         p_cost_price: Number(product.costPrice) || 0,
@@ -1348,7 +1341,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         p_company_id: targetCompanyId,
         p_is_active: product.isActive !== false,
         p_image_url: product.imageUrl || null,
-        p_code: product.code?.trim() || null, // Se vazio, o banco gera SKU automático
+        p_code: product.code?.trim() || null,
         p_category_id: product.categoryId || null,
         p_description: product.description?.trim() || null
       };
@@ -1362,27 +1355,27 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) {
         console.error('[POS] Erro Supabase RPC:', error);
         console.groupEnd();
-        toast.error(`Erro ao criar produto: ${error.message}`);
-        return;
+        throw new Error(error.message);
       }
 
       const result = data as any;
       if (result && result.success === false) {
         console.error('[POS] Erro de negócio SQL:', result.error, result.detail);
         console.groupEnd();
-        toast.error(`Falha: ${result.error}`);
-        return;
+        throw new Error(result.error);
       }
 
       console.log('[POS] Resposta Sucesso:', result);
       console.groupEnd();
       
-      // 3. Sincronizar estado local
-      await loadData(true); // Forçar refresh para garantir que o novo produto apareça
-      toast.success('Produto criado com sucesso!');
+      // 3. Sincronizar estado local de forma estável
+      await loadData(true);
+      toast.success(result.message || 'Produto criado com sucesso!');
+      return true;
     } catch (error: any) {
       console.error('[POS] Exceção crítica ao criar produto:', error);
       toast.error(`Falha crítica: ${error.message || 'Erro desconhecido'}`);
+      return false;
     }
   }, [state.currentStore.id, authStore?.id, company?.id, loadData]);
 
