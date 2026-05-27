@@ -1332,7 +1332,13 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const storeIdToUse = sanitizeId(state.currentStore.id) || sanitizeId(authStore?.id);
       const finalStoreId = isValidId(storeIdToUse) ? storeIdToUse : null;
       
-      const rpcPayload = {
+      if (!finalStoreId && Number(product.stock) > 0) {
+        console.warn('[POS] Criando produto com stock solicitado mas sem loja válida identificada.', { 
+          requestedStock: product.stock, 
+          storeId: storeIdToUse 
+        });
+        toast.warning('Stock inicial ignorado: Nenhuma loja ativa selecionada.');
+      }
         p_name: product.name.trim(),
         p_cost_price: Number(product.costPrice) || 0,
         p_sale_price: Number(product.salePrice) || 0,
