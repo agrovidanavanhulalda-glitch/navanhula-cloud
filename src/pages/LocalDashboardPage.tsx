@@ -148,7 +148,7 @@ const LocalDashboardPage: React.FC = () => {
   }, [posLoading, statsLoading, company?.id, store]);
 
 
-  if (!loading && !isValidId(company?.id)) {
+  if (!posLoading && !isValidId(company?.id)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-8 text-center bg-background/50 animate-in fade-in duration-700">
         <Card className="max-w-md p-10 border-none shadow-2xl bg-white/80 backdrop-blur-md">
@@ -268,7 +268,8 @@ const LocalDashboardPage: React.FC = () => {
       alerts.push({ icon: ShoppingCart, type: 'warning', message: 'Ainda sem vendas hoje. Que tal iniciar uma promoção?', actionLabel: 'Nova Venda', onAction: () => { startNewSale(); navigate('/app/pdv'); } });
     }
     return alerts;
-  }, [cashRegisterOpen, lowStockProducts, todaySales, navigate, startNewSale]);
+  }, [cashRegisterOpen, lowStockCount, todaySales, navigate, startNewSale]);
+
 
   /* ── AI Insights (action-driven) ── */
   const aiInsights = useMemo(() => {
@@ -412,10 +413,11 @@ const LocalDashboardPage: React.FC = () => {
         />
         <KPICard
           index={3} icon={AlertTriangle} label="Stock Crítico"
-          value={lowStockProducts.length || 0}
-          trend={lowStockProducts.length > 0 ? 'Produtos precisam reposição' : 'Tudo em ordem'}
-          trendUp={lowStockProducts.length === 0 ? true : false}
+          value={lowStockCount || 0}
+          trend={lowStockCount > 0 ? 'Produtos precisam reposição' : 'Tudo em ordem'}
+          trendUp={lowStockCount === 0 ? true : false}
         />
+
       </div>
 
       {/* Main Content Grid */}
@@ -553,19 +555,19 @@ const LocalDashboardPage: React.FC = () => {
       </div>
 
       {/* Low Stock Alert — actionable */}
-      {lowStockProducts.length > 0 && (
+      {lowStockCount > 0 && products.length > 0 && (
         <Card className="p-5 border-warning/30">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-warning uppercase tracking-wider flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
-              Estoque Baixo ({lowStockProducts.length})
+              Estoque Baixo ({lowStockCount})
             </h2>
             <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => navigate('/app/estoque')}>
               <RefreshCw className="w-3 h-3" /> Repor Tudo
             </Button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {lowStockProducts.slice(0, 8).map(p => (
+            {products.filter(p => p.stock <= 10 && p.isActive).slice(0, 8).map(p => (
               <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 text-sm">
                 <span className="truncate mr-2 text-foreground text-xs">{p.name}</span>
                 <Badge variant={p.stock <= 3 ? 'destructive' : 'secondary'} className="text-[10px] flex-shrink-0">{p.stock}</Badge>
@@ -574,6 +576,7 @@ const LocalDashboardPage: React.FC = () => {
           </div>
         </Card>
       )}
+
       </div>
     </PageTransition>
   );
