@@ -25,7 +25,7 @@ export function useDashboardStats(storeId?: string) {
       });
 
       if (error) throw error;
-      return data as DashboardStats;
+      return data as unknown as DashboardStats;
     },
     enabled: isValidId(company?.id),
     staleTime: 1000 * 60 * 2, // 2 minutes
