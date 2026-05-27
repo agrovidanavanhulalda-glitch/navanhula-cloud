@@ -7996,22 +7996,39 @@ export type Database = {
         }
         Returns: Json
       }
-      create_product_with_stock: {
-        Args: {
-          p_category_id?: string
-          p_code?: string
-          p_company_id: string
-          p_cost_price: number
-          p_description?: string
-          p_image_url?: string
-          p_initial_stock: number
-          p_is_active?: boolean
-          p_name: string
-          p_sale_price: number
-          p_store_id: string
-        }
-        Returns: Json
-      }
+      create_product_with_stock:
+        | {
+            Args: {
+              p_category_id?: string
+              p_code?: string
+              p_company_id: string
+              p_cost_price: number
+              p_description?: string
+              p_image_url?: string
+              p_initial_stock: number
+              p_is_active?: boolean
+              p_name: string
+              p_sale_price: number
+              p_store_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_category_id?: string
+              p_code?: string
+              p_company_id: string
+              p_cost_price: number
+              p_description?: string
+              p_image_url?: string
+              p_initial_stock: number
+              p_is_active?: boolean
+              p_name: string
+              p_sale_price: number
+              p_store_id: string
+            }
+            Returns: Json
+          }
       credit_wallet_from_sale: {
         Args: {
           p_amount: number
