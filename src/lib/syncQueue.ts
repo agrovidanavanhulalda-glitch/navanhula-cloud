@@ -140,14 +140,20 @@ class SyncManager {
   }
 
   private async syncStockAdjustment(payload: any) {
-    const { error } = await supabase.rpc('add_inventory_adjustment', payload);
+    const { data, error } = await supabase.rpc('add_inventory_adjustment', payload);
     if (error) {
-      // If error is business logic (e.g. Insufficient stock), don't retry forever
       if (error.message?.includes('Insufficient') || error.message?.includes('Estoque insuficiente')) {
         console.warn('[Sync] Business logic error, task marked as failed', error.message);
       }
       throw error;
     }
+    
+    const result = data as any;
+    if (result && result.success === false) {
+      throw new Error(result.error || 'Erro no ajuste de estoque');
+    }
+    
+    console.log('[Sync] Stock adjustment result:', result);
   }
 
   private async syncOnboarding(payload: any) {
