@@ -1339,6 +1339,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
         toast.warning('Stock inicial ignorado: Nenhuma loja ativa selecionada.');
       }
+      
+      const rpcPayload = {
         p_name: product.name.trim(),
         p_cost_price: Number(product.costPrice) || 0,
         p_sale_price: Number(product.salePrice) || 0,
