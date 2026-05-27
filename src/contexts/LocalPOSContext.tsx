@@ -160,7 +160,7 @@ interface LocalPOSContextType extends LocalPOSState {
   updateSeller: (id: string, seller: Partial<LocalSeller>) => Promise<void>;
   deleteSeller: (id: string) => Promise<void>;
   getSellersByStore: (storeId: string) => LocalSeller[];
-  addProduct: (product: Omit<LocalProduct, 'id'>) => Promise<void>;
+  addProduct: (product: Omit<LocalProduct, 'id'>) => Promise<boolean>;
   updateProduct: (id: string, product: Partial<LocalProduct>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   getSubtotal: () => number;
