@@ -1393,7 +1393,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [state.currentStore.id, authStore?.id, company?.id, loadData]);
 
   const updateProduct = useCallback(async (id: string, updates: Partial<LocalProduct>) => {
-    
     try {
       const dbUpdates: any = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name.trim();
@@ -1404,58 +1403,56 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (Object.keys(dbUpdates).length > 0) {
         const { error: updateError } = await supabase.from('products').update(dbUpdates).eq('id', id);
-        
         if (updateError) {
-          console.error('[POS] Erro ao atualizar produto no Supabase:', updateError);
+          console.error('[POS] Erro ao atualizar produto:', updateError);
           toast.error('Erro ao atualizar produto: ' + updateError.message);
-          return;
+          return false;
         }
       }
 
       const storeIdToUse = sanitizeId(state.currentStore.id) || sanitizeId(authStore?.id);
-
       if (updates.stock !== undefined && storeIdToUse) {
-        // Calculate difference for adjustment
         const currentProduct = state.products.find(p => p.id === id);
-        const diff = updates.stock - (currentProduct?.stock || 0);
-        
+        const diff = Number(updates.stock) - (currentProduct?.stock || 0);
         if (diff !== 0) {
-          await supabase.rpc('add_inventory_adjustment', {
-            p_product_id: id,
-            p_store_id: storeIdToUse,
-            p_quantity: diff,
-            p_type: 'ADJUSTMENT',
-            p_reason: 'Ajuste manual via edição de produto'
+          await supabase.from('inventory_movements').insert({
+            product_id: id,
+            branch_id: storeIdToUse,
+            company_id: company?.id,
+            movement_type: diff > 0 ? 'ADJUSTMENT' : 'LOSS',
+            quantity: diff,
+            reference_type: 'manual_adjustment',
+            notes: 'Ajuste manual via edição de produto'
           });
         }
       }
-
-      // Atualizar dados do servidor para garantir sincronia total
-      await loadData();
-
+      await loadData(true);
+      toast.success('Produto atualizado com sucesso!');
+      return true;
     } catch (error: any) {
       console.error('[POS] Exceção ao atualizar produto:', error);
       toast.error('Falha crítica ao atualizar produto');
+      return false;
     }
-  }, [state.currentStore.id]);
+  }, [state.currentStore.id, authStore?.id, state.products, company?.id, loadData]);
 
   const deleteProduct = useCallback(async (id: string) => {
     try {
       const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id);
-      
       if (error) {
-        console.error('[POS] Erro ao remover produto no Supabase:', error);
-        toast.error('Erro ao remover produto');
-        return;
+        console.error('[POS] Erro ao desativar produto:', error);
+        toast.error('Erro ao excluir produto');
+        return false;
       }
-
-      setState(prev => ({ ...prev, products: prev.products.filter(p => p.id !== id) }));
-      toast.success('Produto removido com sucesso');
-    } catch (error: any) {
-      console.error('[POS] Exceção ao remover produto:', error);
-      toast.error('Falha crítica ao remover produto');
+      await loadData(true);
+      toast.success('Produto desativado com sucesso');
+      return true;
+    } catch (error) {
+      console.error('[POS] Exceção ao excluir produto:', error);
+      toast.error('Falha ao processar exclusão');
+      return false;
     }
-  }, []);
+  }, [loadData]);
 
   // ============ GETTERS ============
 
