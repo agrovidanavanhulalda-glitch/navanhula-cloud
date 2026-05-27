@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
+import { useProducts } from '@/hooks/useProducts';
+import { useDebounce } from '@/hooks/useDebounce';
 import { usePermissions } from '@/hooks/usePermissions';
+
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,16 +40,29 @@ import PageTransition from '@/components/layout/PageTransition';
 // HYBRID: Local POS data + Sistema Auth
 
 const LocalProductsPage: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct, loading, currentStore } = useLocalPOS();
+  const { addProduct, updateProduct, deleteProduct, currentStore } = useLocalPOS();
   const { updateStep } = useOnboarding();
   const { isAdmin } = usePermissions();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 400);
+  const [page, setPage] = useState(0);
+  const pageSize = 12;
+
+  const { data: productsData, isLoading: productsLoading } = useProducts({
+    searchTerm: debouncedSearch,
+    page,
+    pageSize,
+    storeId: currentStore?.id
+  });
+
+  const products = productsData?.data || [];
+  const totalCount = productsData?.count || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LocalProduct | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
 
   // Form state
   const [formData, setFormData] = useState({
@@ -62,10 +78,21 @@ const LocalProductsPage: React.FC = () => {
 
   
 
-  // Filter products
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Mapping from DB products to LocalProduct for the table
+  const mappedProducts = useMemo(() => {
+    return products.map(p => ({
+      id: p.id,
+      name: p.name,
+      code: p.code,
+      salePrice: p.sale_price,
+      costPrice: p.cost_price,
+      isActive: p.is_active,
+      stock: p.product_stock.find(s => s.store_id === currentStore?.id)?.quantity || 0,
+      imageUrl: p.image_url,
+      description: p.description
+    }));
+  }, [products, currentStore?.id]);
+
 
   // Reset form
   const resetForm = () => {
