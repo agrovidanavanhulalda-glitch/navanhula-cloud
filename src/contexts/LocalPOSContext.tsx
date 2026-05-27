@@ -34,6 +34,13 @@ export interface PaymentDetails {
     electronicAmount: number;
     electronicMethod: 'mpesa' | 'emola' | 'card';
   };
+  voucherDetails?: {
+    code: string;
+    voucherId: string;
+    originalMethod: string;
+    customerName?: string;
+    phoneNumber?: string;
+  };
 }
 
 export interface LocalSale {
@@ -47,6 +54,8 @@ export interface LocalSale {
   status: 'open' | 'completed' | 'cancelled';
   paymentMethod?: string;
   paymentDetails?: PaymentDetails;
+  amountReceived?: number;
+  changeGiven?: number;
   createdAt: Date;
   storeId: string;
   sellerId?: string;
@@ -61,6 +70,15 @@ export interface LocalStore {
   isActive: boolean;
 }
 
+export interface LocalSeller {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'vendedor';
+  storeId: string;
+  isActive: boolean;
+}
+
 export interface LocalCashRegister {
   id: string;
   storeId: string;
@@ -68,14 +86,17 @@ export interface LocalCashRegister {
   sellerName: string;
   openingAmount: number;
   closingAmount?: number;
+  expectedAmount?: number;
   status: 'open' | 'closed';
   openedAt: Date;
+  salesTotal?: number;
+  salesCount?: number;
 }
 
 interface LocalPOSState {
   stores: LocalStore[];
   currentStore: LocalStore | null;
-  sellers: any[];
+  sellers: LocalSeller[];
   cashRegisters: LocalCashRegister[];
   currentCashRegister: LocalCashRegister | null;
   currentSale: LocalSale | null;
@@ -101,6 +122,7 @@ interface LocalPOSContextType extends LocalPOSState {
   store: LocalStore | null;
   cashRegisterOpen: boolean;
   refreshData: () => Promise<void>;
+  setCurrentStore: (storeId: string) => void;
 }
 
 const LocalPOSContext = createContext<LocalPOSContextType | undefined>(undefined);
@@ -160,7 +182,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }));
 
       const cashRegisters = (cashRegistersRes.data || []).map(cr => ({
-        id: cr.id, storeId: cr.store_id, sellerId: cr.user_id, sellerName: '', openingAmount: cr.opening_amount, status: cr.status, openedAt: new Date(cr.opened_at)
+        id: cr.id, storeId: cr.store_id, sellerId: cr.user_id, sellerName: '', openingAmount: cr.opening_amount, expectedAmount: cr.expected_amount, status: cr.status as 'open' | 'closed', openedAt: new Date(cr.opened_at), salesTotal: 0, salesCount: 0
       }));
 
       setState(prev => ({ ...prev, stores, currentStore, products, cashRegisters, currentCashRegister: cashRegisters.find(cr => cr.status === 'open' && cr.sellerId === user?.id) || null, loading: false }));
@@ -206,7 +228,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const openCashRegister = async (sid: string, sn: string, amt: number) => {
     const { data, error } = await supabase.from('cash_registers').insert({ store_id: state.currentStore?.id, user_id: sid, opening_amount: amt, status: 'open', company_id: company?.id }).select().single();
     if (error) throw error;
-    const cr = { id: data.id, storeId: data.store_id, sellerId: data.user_id, sellerName: sn, openingAmount: data.opening_amount, status: 'open', openedAt: new Date(data.opened_at) };
+    const cr: LocalCashRegister = { id: data.id, storeId: data.store_id, sellerId: data.user_id, sellerName: sn, openingAmount: data.opening_amount, status: 'open', openedAt: new Date(data.opened_at) };
     setState(prev => ({ ...prev, currentCashRegister: cr }));
     return cr;
   };
@@ -238,8 +260,13 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return true;
   };
 
+  const setCurrentStore = (storeId: string) => {
+    const store = state.stores.find(s => s.id === storeId);
+    if (store) setState(prev => ({ ...prev, currentStore: store }));
+  };
+
   return (
-    <LocalPOSContext.Provider value={{ ...state, store: state.currentStore, cashRegisterOpen: !!state.currentCashRegister, addToCart, removeFromCart, updateQuantity, clearCart, startNewSale, completeSale, openCashRegister, closeCashRegister, addProduct, updateProduct, deleteProduct, getTotal, refreshData: () => loadData(true) }}>
+    <LocalPOSContext.Provider value={{ ...state, store: state.currentStore, cashRegisterOpen: !!state.currentCashRegister, addToCart, removeFromCart, updateQuantity, clearCart, startNewSale, completeSale, openCashRegister, closeCashRegister, addProduct, updateProduct, deleteProduct, getTotal, refreshData: () => loadData(true), setCurrentStore }}>
       {children}
     </LocalPOSContext.Provider>
   );
