@@ -1419,7 +1419,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             product_id: id,
             branch_id: storeIdToUse,
             company_id: company?.id,
-            movement_type: diff > 0 ? 'ADJUSTMENT' : 'LOSS',
+            movement_type: 'ADJUSTMENT',
             quantity: diff,
             reference_type: 'manual_adjustment',
             notes: 'Ajuste manual via edição de produto'
