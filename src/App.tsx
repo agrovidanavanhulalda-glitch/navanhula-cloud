@@ -93,14 +93,8 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const VersionUpdateAlert = React.lazy(() => import("@/components/common/VersionUpdateAlert"));
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 30000,
-    },
-  },
-});
+import { queryClient } from "@/lib/react-query";
+
 
 const legacyRoutes = [
   { from: "/pdv", to: "/app/pdv" },
