@@ -90,6 +90,13 @@ const LocalSalesHistoryPage: React.FC = () => {
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [sales, statusFilter, dateFilter, searchTerm]);
 
+  const rowVirtualizer = useVirtualizer({
+    count: filteredSales.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 120, // Estimated height of a card
+    overscan: 5,
+  });
+
   // Handle cancellation
   const handleCancelSale = (reason: string) => {
     if (!selectedSale) return;
