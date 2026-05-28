@@ -207,10 +207,9 @@ const IAMPage = () => {
       const email = inviteForm.email?.trim().toLowerCase();
       if (!email) throw new Error('Email é obrigatório');
       
-      const selectedRole = inviteForm.role?.toLowerCase() || 'seller';
-      if (!VALID_TECHNICAL_ROLES.includes(selectedRole)) {
-        console.warn('Papel técnico inválido no convite:', selectedRole);
-        // Fallback seguro
+      const selectedRole = inviteForm.role?.toLowerCase();
+      if (!selectedRole || !VALID_TECHNICAL_ROLES.includes(selectedRole)) {
+        throw new Error(`Cargo técnico "${selectedRole}" é inválido. Selecione um cargo permitido.`);
       }
 
       const token = crypto.randomUUID();
@@ -351,10 +350,9 @@ const IAMPage = () => {
       if (!password || password.length < 6) throw new Error('Senha deve ter pelo menos 6 caracteres');
 
       // FORÇAR USO DA ROLE KEY TÉCNICA (seller/manager/admin)
-      let roleKey = userForm.role?.toLowerCase() || 'seller';
-      if (!VALID_TECHNICAL_ROLES.includes(roleKey)) {
-        console.warn('Papel técnico inválido ao criar utilizador:', roleKey);
-        roleKey = 'seller'; // Fallback seguro
+      const roleKey = userForm.role?.toLowerCase();
+      if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
+        throw new Error(`Cargo técnico "${roleKey}" é inválido. Selecione um cargo permitido.`);
       }
       
       // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser

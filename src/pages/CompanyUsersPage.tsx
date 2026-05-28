@@ -101,8 +101,7 @@ const CompanyUsersPage = () => {
 
       // Client-side validation for technical role key
       if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
-        console.warn('Papel técnico inválido ou ausente:', roleKey);
-        // We still use role_id for the database table, but we validate that the associated key is correct
+        throw new Error(`Cargo técnico inválido: "${roleKey || 'não definido'}". Selecione um cargo válido (admin, manager, seller, etc).`);
       }
       
       const { data, error } = await supabase
@@ -147,12 +146,10 @@ const CompanyUsersPage = () => {
       const selectedRole = roles.find(r => r.id === createUserForm.role_id);
       
       // FORÇAR USO DA ROLE KEY TÉCNICA (seller/manager/admin)
-      // Fallback seguro: 'seller'
-      let roleKey = selectedRole?.key?.toLowerCase();
+      const roleKey = selectedRole?.key?.toLowerCase();
       
       if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
-        console.warn('Aviso: Role key técnica não encontrada ou inválida. Usando fallback "seller".');
-        roleKey = 'seller'; 
+        throw new Error(`Cargo técnico inválido: "${roleKey || 'não definido'}". Selecione um cargo válido.`);
       }
       
       // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser automaticamente
