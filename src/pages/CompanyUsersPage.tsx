@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 import { Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck, Trash2, UserPlus, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 
+const VALID_TECHNICAL_ROLES = ['ceo', 'admin', 'manager', 'seller', 'driver', 'reseller'];
+
 const CompanyUsersPage = () => {
   const { company, user } = useAuth();
   const queryClient = useQueryClient();
@@ -74,7 +76,7 @@ const CompanyUsersPage = () => {
         .from('invites')
         .select(`
           *,
-          roles(name)
+          roles(name, key)
         `)
         .eq('company_id', companyId!)
         .order('created_at', { ascending: false });
@@ -90,6 +92,18 @@ const CompanyUsersPage = () => {
       const email = inviteForm.email.trim().toLowerCase();
       const roleId = inviteForm.role_id;
       const branchId = inviteForm.branch_id || null;
+
+      if (!email) throw new Error('O email é obrigatório');
+      if (!roleId) throw new Error('O cargo é obrigatório');
+
+      const selectedRole = roles.find(r => r.id === roleId);
+      const roleKey = selectedRole?.key?.toLowerCase();
+
+      // Client-side validation for technical role key
+      if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
+        console.warn('Papel técnico inválido ou ausente:', roleKey);
+        // We still use role_id for the database table, but we validate that the associated key is correct
+      }
       
       const { data, error } = await supabase
         .from('invites')
@@ -124,8 +138,22 @@ const CompanyUsersPage = () => {
       const password = createUserForm.password;
       const name = createUserForm.full_name;
       const branchId = createUserForm.branch_id || null;
+      
+      if (!email) throw new Error('O email é obrigatório');
+      if (!password || password.length < 6) throw new Error('Senha deve ter pelo menos 6 caracteres');
+      if (!name) throw new Error('O nome é obrigatório');
+      if (!createUserForm.role_id) throw new Error('O cargo é obrigatório');
+
       const selectedRole = roles.find(r => r.id === createUserForm.role_id);
-      const roleToSave = selectedRole?.key || selectedRole?.name || 'seller';
+      
+      // FORÇAR USO DA ROLE KEY TÉCNICA (seller/manager/admin)
+      // Fallback seguro: 'seller'
+      let roleKey = selectedRole?.key?.toLowerCase();
+      
+      if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
+        console.warn('Aviso: Role key técnica não encontrada ou inválida. Usando fallback "seller".');
+        roleKey = 'seller'; 
+      }
       
       // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser automaticamente
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -136,7 +164,7 @@ const CompanyUsersPage = () => {
             full_name: name,
             company_id: companyId,
             branch_id: branchId,
-            role: roleToSave
+            role: roleKey // Envia sempre a key técnica
           }
         }
       });

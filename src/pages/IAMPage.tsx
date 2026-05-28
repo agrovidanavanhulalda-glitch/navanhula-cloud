@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 
+const VALID_TECHNICAL_ROLES = ['ceo', 'admin', 'manager', 'seller', 'cashier', 'viewer', 'driver', 'reseller'];
+
 const ROLES = [
   { value: 'ceo', label: 'CEO' },
   { value: 'admin', label: 'Administrador' },
@@ -204,7 +206,12 @@ const IAMPage = () => {
       
       const email = inviteForm.email?.trim().toLowerCase();
       if (!email) throw new Error('Email é obrigatório');
-
+      
+      const selectedRole = inviteForm.role?.toLowerCase() || 'seller';
+      if (!VALID_TECHNICAL_ROLES.includes(selectedRole)) {
+        console.warn('Papel técnico inválido no convite:', selectedRole);
+        // Fallback seguro
+      }
 
       const token = crypto.randomUUID();
       const expiresAt = new Date();
@@ -215,7 +222,7 @@ const IAMPage = () => {
 
       const { error } = await supabase.from('company_invitations').insert({
         company_id: companyId,
-        role: inviteForm.role,
+        role: selectedRole, // Sempre enviar a key técnica
         token: token,
         expires_at: expiresAt.toISOString(),
         created_by: currentUser?.id,
@@ -337,8 +344,18 @@ const IAMPage = () => {
       const email = userForm.email.trim().toLowerCase();
       const password = userForm.password || "12345678";
       const name = userForm.name;
-      const role = userForm.role;
       const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
+      
+      if (!email) throw new Error('Email é obrigatório');
+      if (!name) throw new Error('Nome é obrigatório');
+      if (!password || password.length < 6) throw new Error('Senha deve ter pelo menos 6 caracteres');
+
+      // FORÇAR USO DA ROLE KEY TÉCNICA (seller/manager/admin)
+      let roleKey = userForm.role?.toLowerCase() || 'seller';
+      if (!VALID_TECHNICAL_ROLES.includes(roleKey)) {
+        console.warn('Papel técnico inválido ao criar utilizador:', roleKey);
+        roleKey = 'seller'; // Fallback seguro
+      }
       
       // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -348,7 +365,7 @@ const IAMPage = () => {
           data: {
             full_name: name,
             company_id: companyId,
-            role: role,
+            role: roleKey, // Envia sempre a key técnica
             branch_id: branchId
           }
         }
