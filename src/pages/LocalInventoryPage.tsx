@@ -62,6 +62,15 @@ const LocalInventoryPage: React.FC = () => {
   const [historyProductId, setHistoryProductId] = useState('');
   const [historyProductName, setHistoryProductName] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredProducts.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 72,
+    overscan: 10,
+  });
 
   useEffect(() => {
     loadProducts();
