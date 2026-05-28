@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { syncManager } from '@/lib/syncQueue';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -23,6 +23,7 @@ import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import StockMovementHistory from '@/components/inventory/StockMovementHistory';
 import StockAlertsPanel from '@/components/inventory/StockAlertsPanel';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface InventoryProduct {
   id: string;
