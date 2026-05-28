@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useLocalPOS, LocalSale } from '@/contexts/LocalPOSContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +30,7 @@ import CancelSaleDialog from '@/components/pos/CancelSaleDialog';
 import { toast } from 'sonner';
 import { SkeletonList } from '@/components/ui/skeleton-card';
 import PageTransition from '@/components/layout/PageTransition';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 /**
  * Sales History Page with Admin Cancellation
@@ -46,6 +47,8 @@ const LocalSalesHistoryPage: React.FC = () => {
   const [selectedSale, setSelectedSale] = useState<LocalSale | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  
+  const parentRef = useRef<HTMLDivElement>(null);
 
   // Filter sales
   const filteredSales = useMemo(() => {
@@ -86,6 +89,13 @@ const LocalSalesHistoryPage: React.FC = () => {
       return true;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [sales, statusFilter, dateFilter, searchTerm]);
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredSales.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 120, // Estimated height of a card
+    overscan: 5,
+  });
 
   // Handle cancellation
   const handleCancelSale = (reason: string) => {
@@ -253,104 +263,111 @@ const LocalSalesHistoryPage: React.FC = () => {
             </p>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {filteredSales.map((sale) => (
-              <Card 
-                key={sale.id} 
-                className={`p-4 ${sale.status === 'cancelled' ? 'opacity-70 bg-destructive/5' : ''}`}
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  {/* Left: Sale Info */}
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Receipt className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono font-bold">
-                          #{sale.id.slice(-6).toUpperCase()}
-                        </span>
-                        {getStatusBadge(sale.status)}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(sale.createdAt).toLocaleString('pt-MZ')}
-                      </p>
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">Vendedor:</span>{' '}
-                        <span className="font-medium">{sale.sellerName || 'N/A'}</span>
-                      </p>
-                      {sale.status === 'cancelled' && sale.cancellationReason && (
-                        <p className="text-sm text-destructive mt-1">
-                          <AlertTriangle className="w-3 h-3 inline mr-1" />
-                          {sale.cancellationReason}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+          <div 
+            ref={parentRef}
+            className="max-h-[800px] overflow-y-auto pr-2"
+          >
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const sale = filteredSales[virtualRow.index];
+                return (
+                  <div
+                    key={sale.id}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    className="py-1.5"
+                  >
+                    <Card 
+                      className={`p-4 h-full ${sale.status === 'cancelled' ? 'opacity-70 bg-destructive/5' : ''}`}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 h-full">
+                        {/* Left: Sale Info */}
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Receipt className="w-6 h-6 text-primary" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-mono font-bold">
+                                #{sale.id.slice(-6).toUpperCase()}
+                              </span>
+                              {getStatusBadge(sale.status)}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(sale.createdAt).toLocaleString('pt-MZ')}
+                            </p>
+                            <p className="text-sm">
+                              <span className="text-muted-foreground">Vendedor:</span>{' '}
+                              <span className="font-medium">{sale.sellerName || 'N/A'}</span>
+                            </p>
+                          </div>
+                        </div>
 
-                  {/* Center: Items Summary */}
-                  <div className="flex-1 px-4">
-                    <p className="text-sm text-muted-foreground mb-1">
-                      {sale.items.length > 0 
-                        ? `${sale.items.reduce((acc, i) => acc + i.quantity, 0)} itens` 
-                        : `${formatCurrency(sale.total)}`}
-                    </p>
-                    <p className="text-sm truncate">
-                      {sale.items.length > 0 
-                        ? sale.items.slice(0, 3).map(i => i.product.name).join(', ') + (sale.items.length > 3 ? '...' : '')
-                        : 'Venda registada'}
-                    </p>
-                  </div>
-
-                  {/* Right: Total and Actions */}
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className={`text-xl font-bold ${sale.status === 'cancelled' ? 'line-through text-muted-foreground' : 'text-primary'}`}>
-                        {formatCurrency(sale.total)}
-                      </p>
-                      {sale.status === 'completed' && (
-                        <div className="space-y-0.5">
-                          <p className="text-xs text-muted-foreground">
-                            Custo: {formatCurrency(getSaleCost(sale))}
+                        {/* Center: Items Summary */}
+                        <div className="flex-1 px-4 overflow-hidden">
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {sale.items.length > 0 
+                              ? `${sale.items.reduce((acc, i) => acc + i.quantity, 0)} itens` 
+                              : `${formatCurrency(sale.total)}`}
                           </p>
-                          <p className={`text-xs font-medium ${getSaleProfit(sale) >= 0 ? 'text-profit' : 'text-loss'}`}>
-                            Lucro: {formatCurrency(getSaleProfit(sale))}
-                          </p>
-                          <p className={`text-xs font-medium ${getSaleMargin(sale) >= 0 ? 'text-profit' : 'text-loss'}`}>
-                            Margem: {getSaleMargin(sale).toFixed(1)}%
+                          <p className="text-sm truncate">
+                            {sale.items.length > 0 
+                              ? sale.items.slice(0, 3).map(i => i.product.name).join(', ') + (sale.items.length > 3 ? '...' : '')
+                              : 'Venda registada'}
                           </p>
                         </div>
-                      )}
-                      <Badge variant="outline" className="text-xs mt-1">
-                        {getPaymentLabel(sale.paymentMethod)}
-                      </Badge>
-                    </div>
 
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewReceipt(sale)}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Ver
-                      </Button>
-                      
-                      {isAdmin && sale.status === 'completed' && (
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleOpenCancelDialog(sale)}
-                        >
-                          <XCircle className="w-4 h-4 mr-1" />
-                          Cancelar
-                        </Button>
-                      )}
-                    </div>
+                        {/* Right: Total and Actions */}
+                        <div className="flex items-center gap-4">
+                          <div className="text-right min-w-[120px]">
+                            <p className={`text-xl font-bold ${sale.status === 'cancelled' ? 'line-through text-muted-foreground' : 'text-primary'}`}>
+                              {formatCurrency(sale.total)}
+                            </p>
+                            <Badge variant="outline" className="text-xs mt-1">
+                              {getPaymentLabel(sale.paymentMethod)}
+                            </Badge>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewReceipt(sale)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              Ver
+                            </Button>
+                            
+                            {isAdmin && sale.status === 'completed' && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleOpenCancelDialog(sale)}
+                              >
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Cancelar
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
                   </div>
-                </div>
-              </Card>
-            ))}
+                );
+              })}
+            </div>
           </div>
         )}
 

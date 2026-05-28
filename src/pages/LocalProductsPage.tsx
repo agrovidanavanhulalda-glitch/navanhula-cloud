@@ -33,6 +33,7 @@ import * as XLSX from 'xlsx';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { SkeletonTable } from '@/components/ui/skeleton-card';
 import PageTransition from '@/components/layout/PageTransition';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 const LocalProductsPage: React.FC = () => {
   const { addProduct, updateProduct, deleteProduct, currentStore } = useLocalPOS();
@@ -42,7 +43,9 @@ const LocalProductsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 400);
   const [page, setPage] = useState(0);
-  const pageSize = 12;
+  const pageSize = 100; // Increased for better virtualization benefit
+  
+  const parentRef = useRef<HTMLDivElement>(null);
 
   const { data: productsData, isLoading: productsLoading } = useProducts({
     searchTerm: debouncedSearch,
@@ -87,6 +90,13 @@ const LocalProductsPage: React.FC = () => {
       description: p.description
     }));
   }, [products, currentStore?.id]);
+
+  const rowVirtualizer = useVirtualizer({
+    count: mappedProducts.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 72,
+    overscan: 10,
+  });
 
   // Reset form
   const resetForm = () => {
@@ -279,40 +289,53 @@ const LocalProductsPage: React.FC = () => {
           <SkeletonTable rows={pageSize} cols={6} />
         ) : (
           <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted/50">
+            <div 
+              ref={parentRef}
+              className="overflow-x-auto max-h-[600px] overflow-y-auto"
+            >
+              <table className="w-full relative border-collapse">
+                <thead className="bg-muted/50 sticky top-0 z-10">
                   <tr>
-                    <th className="text-left p-4 font-medium w-16">SKU</th>
-                    <th className="text-left p-4 font-medium">Produto</th>
-                    <th className="text-right p-4 font-medium">Preço Compra</th>
-                    <th className="text-right p-4 font-medium">Preço Venda</th>
-                    <th className="text-right p-4 font-medium">Margem</th>
-                    <th className="text-right p-4 font-medium">Estoque</th>
-                    <th className="text-center p-4 font-medium">Status</th>
-                    <th className="text-center p-4 font-medium">Ações</th>
+                    <th className="text-left p-4 font-medium w-24 bg-muted/50">SKU</th>
+                    <th className="text-left p-4 font-medium bg-muted/50">Produto</th>
+                    <th className="text-right p-4 font-medium w-32 bg-muted/50">Compra</th>
+                    <th className="text-right p-4 font-medium w-32 bg-muted/50">Venda</th>
+                    <th className="text-right p-4 font-medium w-24 bg-muted/50">Margem</th>
+                    <th className="text-right p-4 font-medium w-24 bg-muted/50">Estoque</th>
+                    <th className="text-center p-4 font-medium w-28 bg-muted/50">Status</th>
+                    <th className="text-center p-4 font-medium w-28 bg-muted/50">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
-                  {mappedProducts.map((product) => (
-                    <tr key={product.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="p-4"><code className="text-xs bg-muted px-1.5 py-0.5 rounded">{product.code || '---'}</code></td>
-                      <td className="p-4"><div className="font-medium">{product.name}</div></td>
-                      <td className="p-4 text-right text-muted-foreground">{formatCurrency(product.costPrice)}</td>
-                      <td className="p-4 text-right font-medium">{formatCurrency(product.salePrice)}</td>
-                      <td className="p-4 text-right"><Badge variant="secondary">{calculateMargin(product.costPrice, product.salePrice)}%</Badge></td>
-                      <td className="p-4 text-right">
-                        <span className={product.stock <= 10 ? 'text-destructive font-medium' : ''}>{product.stock}</span>
-                      </td>
-                      <td className="p-4 text-center"><Badge variant={product.isActive ? 'default' : 'secondary'}>{product.isActive ? 'Ativo' : 'Inativo'}</Badge></td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(product)}><Pencil className="w-4 h-4" /></Button>
-                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteConfirm(product.id)}><Trash2 className="w-4 h-4" /></Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const product = mappedProducts[virtualRow.index];
+                    return (
+                      <tr 
+                        key={product.id} 
+                        className="hover:bg-muted/30 absolute left-0 w-full flex items-center divide-x border-b"
+                        style={{ 
+                          height: `${virtualRow.size}px`, 
+                          transform: `translateY(${virtualRow.start}px)` 
+                        }}
+                      >
+                        <td className="p-4 w-24"><code className="text-xs bg-muted px-1.5 py-0.5 rounded truncate block">{product.code || '---'}</code></td>
+                        <td className="p-4 flex-1 min-w-0"><div className="font-medium truncate">{product.name}</div></td>
+                        <td className="p-4 w-32 text-right text-muted-foreground">{formatCurrency(product.costPrice)}</td>
+                        <td className="p-4 w-32 text-right font-medium">{formatCurrency(product.salePrice)}</td>
+                        <td className="p-4 w-24 text-right"><Badge variant="secondary">{calculateMargin(product.costPrice, product.salePrice)}%</Badge></td>
+                        <td className="p-4 w-24 text-right">
+                          <span className={product.stock <= 10 ? 'text-destructive font-medium' : ''}>{product.stock}</span>
+                        </td>
+                        <td className="p-4 w-28 text-center"><Badge variant={product.isActive ? 'default' : 'secondary'}>{product.isActive ? 'Ativo' : 'Inativo'}</Badge></td>
+                        <td className="p-4 w-28">
+                          <div className="flex items-center justify-center gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleEdit(product)}><Pencil className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteConfirm(product.id)}><Trash2 className="w-4 h-4" /></Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
