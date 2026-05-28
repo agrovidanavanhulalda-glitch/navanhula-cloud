@@ -33,6 +33,7 @@ import * as XLSX from 'xlsx';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { SkeletonTable } from '@/components/ui/skeleton-card';
 import PageTransition from '@/components/layout/PageTransition';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 const LocalProductsPage: React.FC = () => {
   const { addProduct, updateProduct, deleteProduct, currentStore } = useLocalPOS();
