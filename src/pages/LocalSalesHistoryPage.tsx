@@ -47,6 +47,8 @@ const LocalSalesHistoryPage: React.FC = () => {
   const [selectedSale, setSelectedSale] = useState<LocalSale | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  
+  const parentRef = useRef<HTMLDivElement>(null);
 
   // Filter sales
   const filteredSales = useMemo(() => {
