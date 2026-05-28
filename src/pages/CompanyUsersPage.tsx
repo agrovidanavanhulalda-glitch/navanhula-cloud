@@ -422,7 +422,12 @@ const CompanyUsersPage = () => {
                   <Button 
                     className="w-full"
                     onClick={() => inviteUser.mutate()} 
-                    disabled={inviteUser.isPending || !inviteForm.email || !inviteForm.role_id}
+                    disabled={
+                      inviteUser.isPending || 
+                      !inviteForm.email || 
+                      !inviteForm.role_id || 
+                      !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === inviteForm.role_id)?.key?.toLowerCase() || '')
+                    }
                   >
                     {inviteUser.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Gerar Convite'}
                   </Button>
@@ -503,7 +508,12 @@ const CompanyUsersPage = () => {
             <DialogFooter>
               <Button 
                 onClick={() => createUser.mutate()} 
-                disabled={createUser.isPending || !createUserForm.email || !createUserForm.role_id}
+                disabled={
+                  createUser.isPending || 
+                  !createUserForm.email || 
+                  !createUserForm.role_id ||
+                  !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '')
+                }
               >
                 {createUser.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar Utilizador'}
               </Button>

@@ -476,7 +476,12 @@ const IAMPage = () => {
                   <Button variant="outline" onClick={() => setShowCreateUser(false)}>Cancelar</Button>
                   <Button 
                     onClick={() => createUserMutation.mutate()} 
-                    disabled={!userForm.name || !userForm.email || createUserMutation.isPending}
+                    disabled={
+                      !userForm.name || 
+                      !userForm.email || 
+                      createUserMutation.isPending ||
+                      !VALID_TECHNICAL_ROLES.includes(userForm.role.toLowerCase())
+                    }
                   >
                     {createUserMutation.isPending ? 'Criando...' : 'Criar Utilizador'}
                   </Button>
@@ -591,7 +596,10 @@ const IAMPage = () => {
                       <Button 
                         className="w-full" 
                         onClick={() => createInvite.mutate()} 
-                        disabled={createInvite.isPending}
+                        disabled={
+                          createInvite.isPending || 
+                          !VALID_TECHNICAL_ROLES.includes(inviteForm.role.toLowerCase())
+                        }
                       >
                         {createInvite.isPending ? 'Gerando...' : 'Gerar Link de Convite'}
                       </Button>
