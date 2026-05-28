@@ -817,6 +817,42 @@ export type Database = {
           },
         ]
       }
+      auth_flow_logs: {
+        Row: {
+          created_at: string
+          email: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          status: string
+          step: string
+          transaction_id: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          status: string
+          step: string
+          transaction_id?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+          step?: string
+          transaction_id?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       automation_rules: {
         Row: {
           action_type: string
@@ -8156,6 +8192,7 @@ export type Database = {
       get_invite_details: {
         Args: { p_token: string }
         Returns: {
+          branch_name: string
           company_name: string
           email: string
           expires_at: string
@@ -8246,6 +8283,17 @@ export type Database = {
       link_referral_company: {
         Args: { _company_id: string; _user_id: string }
         Returns: undefined
+      }
+      log_auth_event: {
+        Args: {
+          p_email: string
+          p_error_message?: string
+          p_metadata?: Json
+          p_status: string
+          p_step: string
+          p_user_id: string
+        }
+        Returns: string
       }
       map_role_name: { Args: { p_role: string }; Returns: string }
       notify_company_admins: {
