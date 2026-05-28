@@ -71,7 +71,9 @@ describe('Role Enforcement E2E Tests', () => {
           }));
           if (table === 'branches') return Promise.resolve(cb({ data: [{ id: TEST_BRANCH_ID, name: 'Sede' }], error: null }));
           if (table === 'companies') return Promise.resolve(cb({ data: [{ id: TEST_COMPANY_ID, name: 'Empresa Teste' }], error: null }));
-          if (table === 'profiles') return Promise.resolve(cb({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID }, error: null }));
+          if (table === 'profiles') return Promise.resolve(cb({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, branch_id: TEST_BRANCH_ID }, error: null }));
+          if (table === 'company_users') return Promise.resolve(cb({ data: [], error: null }));
+          if (table === 'invitations') return Promise.resolve(cb({ data: [], error: null }));
           return Promise.resolve(cb({ data: [], error: null }));
         }),
       };
@@ -92,6 +94,12 @@ describe('Role Enforcement E2E Tests', () => {
     });
 
     (supabase.from as any).mockInsert = mockInsert;
+    
+    // Fix for the destructuring error in AuthContext
+    (supabase.rpc as any).mockImplementation((method: string) => {
+       if (method === 'bootstrap_current_user') return Promise.resolve({ data: { success: true }, error: null });
+       return Promise.resolve({ data: null, error: null });
+    });
   });
 
   it('Create User Flow: must send TECHNICAL role key (admin/manager/seller) to Auth metadata', async () => {
@@ -158,7 +166,6 @@ describe('Role Enforcement E2E Tests', () => {
     fireEvent.click(screen.getByRole('button', { name: /Gerar Convite/i }));
 
     await waitFor(() => {
-      // Check if role_id is correct and if the code is sending the correct key to any relevant mapping
       expect((supabase.from as any).mockInsert).toHaveBeenCalledWith(expect.objectContaining({
         email: 'invite_admin@test.com',
         role_id: TEST_ROLE_ID_ADMIN,
