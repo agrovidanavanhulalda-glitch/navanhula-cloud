@@ -74,9 +74,9 @@ export const LocalSellerAuthProvider: React.FC<{ children: React.ReactNode }> = 
       return true;
     }
 
-    // Vendedor has limited access
-    const vendedorFeatures: POSFeature[] = ['pdv', 'caixa'];
-    return vendedorFeatures.includes(feature);
+    // Seller has limited access
+    const sellerFeatures: POSFeature[] = ['pdv', 'caixa'];
+    return sellerFeatures.includes(feature);
   }, [currentSeller]);
 
   return (
