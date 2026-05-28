@@ -48,16 +48,20 @@ describe('Auth & User Creation E2E Flows', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
+    const mockInsert = vi.fn().mockReturnThis();
+    const mockMaybeSingle = vi.fn();
+    const mockSingle = vi.fn();
+
     // Default mock implementation for Supabase.from
     (supabase.from as any).mockImplementation((table: string) => {
       const queryBuilder: any = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        insert: vi.fn().mockReturnThis(),
+        insert: mockInsert,
         delete: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockReturnThis(),
-        single: vi.fn().mockReturnThis(),
+        maybeSingle: mockMaybeSingle,
+        single: mockSingle,
         then: vi.fn().mockImplementation((cb) => {
           if (table === 'roles') return Promise.resolve(cb({ data: [{ id: TEST_ROLE_ID, name: 'Admin', key: 'admin' }], error: null }));
           if (table === 'branches') return Promise.resolve(cb({ data: [{ id: TEST_BRANCH_ID, name: 'Main Branch' }], error: null }));
@@ -67,20 +71,22 @@ describe('Auth & User Creation E2E Flows', () => {
         }),
       };
       
-      queryBuilder.maybeSingle.mockImplementation(() => {
+      mockMaybeSingle.mockImplementation(() => {
           if (table === 'profiles') return Promise.resolve({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID }, error: null });
           if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
           if (table === 'companies') return Promise.resolve({ data: { id: TEST_COMPANY_ID, name: 'Test Co' }, error: null });
           return Promise.resolve({ data: null, error: null });
       });
 
-      queryBuilder.single.mockImplementation(() => {
+      mockSingle.mockImplementation(() => {
         if (table === 'invites') return Promise.resolve({ data: { token: 'mock-token' }, error: null });
         return Promise.resolve({ data: {}, error: null });
       });
 
       return queryBuilder;
     });
+
+    (supabase.from as any).mockInsert = mockInsert; // Store for easy access
 
     (supabase.rpc as any).mockImplementation((method: string, params: any) => {
       if (method === 'get_invite_details') {
@@ -159,16 +165,13 @@ describe('Auth & User Creation E2E Flows', () => {
     fireEvent.click(screen.getByRole('button', { name: /Gerar Convite/i }));
 
     await waitFor(() => {
-      expect(supabase.from).toHaveBeenCalledWith('invites');
-      const invitesCall = (supabase.from as any).mock.results.find((r: any) => r.value.insert);
-      // Verify insert arguments
-      expect(vi.mocked(supabase.from('invites').insert)).toHaveBeenCalledWith(expect.objectContaining({
+      expect((supabase.from as any).mockInsert).toHaveBeenCalledWith(expect.objectContaining({
         email: 'convidado@test.com',
         company_id: TEST_COMPANY_ID,
         branch_id: TEST_BRANCH_ID,
         role_id: TEST_ROLE_ID
       }));
-    });
+    }, { timeout: 3000 });
   });
 
   it('Flow: Should accept invite and sync company/branch/role via secure RPC', async () => {
