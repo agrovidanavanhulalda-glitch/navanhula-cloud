@@ -28,6 +28,14 @@ interface Props {
 const StockMovementHistory: React.FC<Props> = ({ productId, productName, open, onOpenChange }) => {
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(false);
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: movements.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 74,
+    overscan: 5,
+  });
 
   useEffect(() => {
     if (open && productId) {
