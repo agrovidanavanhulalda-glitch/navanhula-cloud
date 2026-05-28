@@ -90,7 +90,6 @@ const LocalSellersPage: React.FC = () => {
       case 'manager': return 'Gestor';
       case 'seller': return 'Vendedor';
       case 'viewer': return 'Visualizador';
-      case 'vendedor': return 'Vendedor';
       default: return role;
     }
   };
