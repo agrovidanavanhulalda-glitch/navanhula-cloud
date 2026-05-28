@@ -3250,6 +3250,7 @@ export type Database = {
       }
       invites: {
         Row: {
+          branch_id: string | null
           company_id: string | null
           created_at: string | null
           created_by: string | null
@@ -3261,6 +3262,7 @@ export type Database = {
           token: string
         }
         Insert: {
+          branch_id?: string | null
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -3272,6 +3274,7 @@ export type Database = {
           token: string
         }
         Update: {
+          branch_id?: string | null
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -3283,6 +3286,13 @@ export type Database = {
           token?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "invites_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invites_company_id_fkey"
             columns: ["company_id"]
