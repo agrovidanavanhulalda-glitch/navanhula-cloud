@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 
+const VALID_TECHNICAL_ROLES = ['ceo', 'admin', 'manager', 'seller', 'cashier', 'viewer', 'driver', 'reseller'];
+
 const ROLES = [
   { value: 'ceo', label: 'CEO' },
   { value: 'admin', label: 'Administrador' },
