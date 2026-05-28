@@ -373,50 +373,63 @@ const LocalInventoryPage: React.FC = () => {
 
       {/* Products Table */}
       <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50">
+        <div 
+          ref={parentRef}
+          className="overflow-x-auto max-h-[600px] overflow-y-auto"
+        >
+          <table className="w-full relative border-collapse">
+            <thead className="bg-muted/50 sticky top-0 z-10">
               <tr>
-                <th className="text-left p-4 font-medium">Produto</th>
-                <th className="text-right p-4 font-medium">Estoque</th>
-                <th className="text-right p-4 font-medium">Custo Médio</th>
-                <th className="text-right p-4 font-medium">Valor Estoque</th>
-                <th className="text-center p-4 font-medium">Status</th>
-                <th className="text-center p-4 font-medium">Ações</th>
+                <th className="text-left p-4 font-medium bg-muted/50">Produto</th>
+                <th className="text-right p-4 font-medium bg-muted/50">Estoque</th>
+                <th className="text-right p-4 font-medium bg-muted/50">Custo Médio</th>
+                <th className="text-right p-4 font-medium bg-muted/50">Valor Estoque</th>
+                <th className="text-center p-4 font-medium bg-muted/50">Status</th>
+                <th className="text-center p-4 font-medium bg-muted/50">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
-              {filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-muted/30">
-                  <td className="p-4">
-                    <div className="font-medium">{product.name}</div>
-                    <div className="text-xs text-muted-foreground">{product.code}</div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <span className={`font-bold ${product.stock_qty <= product.low_stock_threshold ? 'text-destructive' : ''}`}>
-                      {product.stock_qty}
-                    </span>
-                    <span className="text-xs text-muted-foreground ml-1">/ mín {product.low_stock_threshold}</span>
-                  </td>
-                  <td className="p-4 text-right text-muted-foreground">
-                    {formatCurrency(product.cost_price)}
-                  </td>
-                  <td className="p-4 text-right font-medium">
-                    {formatCurrency(product.cost_price * product.stock_qty)}
-                  </td>
-                  <td className="p-4 text-center">{getStockBadge(product)}</td>
-                  <td className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button variant="outline" size="sm" onClick={() => handleOpenAdjust(product)}>
-                        <RefreshCw className="w-3 h-3 mr-1" /> Ajustar
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenHistory(product)}>
-                        <History className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+            <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const product = filteredProducts[virtualRow.index];
+                return (
+                  <tr 
+                    key={product.id} 
+                    className="hover:bg-muted/30 absolute left-0 w-full flex items-center divide-x border-b"
+                    style={{ 
+                      height: `${virtualRow.size}px`, 
+                      transform: `translateY(${virtualRow.start}px)` 
+                    }}
+                  >
+                    <td className="p-4 flex-1 min-w-0">
+                      <div className="font-medium truncate">{product.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{product.code}</div>
+                    </td>
+                    <td className="p-4 w-40 text-right">
+                      <span className={`font-bold ${product.stock_qty <= product.low_stock_threshold ? 'text-destructive' : ''}`}>
+                        {product.stock_qty}
+                      </span>
+                      <span className="text-xs text-muted-foreground ml-1">/ mín {product.low_stock_threshold}</span>
+                    </td>
+                    <td className="p-4 w-40 text-right text-muted-foreground">
+                      {formatCurrency(product.cost_price)}
+                    </td>
+                    <td className="p-4 w-40 text-right font-medium">
+                      {formatCurrency(product.cost_price * product.stock_qty)}
+                    </td>
+                    <td className="p-4 w-32 text-center">{getStockBadge(product)}</td>
+                    <td className="p-4 w-48 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Button variant="outline" size="sm" onClick={() => handleOpenAdjust(product)}>
+                          <RefreshCw className="w-3 h-3 mr-1" /> Ajustar
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenHistory(product)}>
+                          <History className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
