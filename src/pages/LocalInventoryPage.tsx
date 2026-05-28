@@ -65,6 +65,14 @@ const LocalInventoryPage: React.FC = () => {
   
   const parentRef = useRef<HTMLDivElement>(null);
 
+  // Computed
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || (p.code || '').toLowerCase().includes(searchTerm.toLowerCase()))
+      .filter(p => !filterLowStock || p.stock_qty <= p.low_stock_threshold)
+      .sort((a, b) => a.stock_qty - b.stock_qty);
+  }, [products, searchTerm, filterLowStock]);
+
   const rowVirtualizer = useVirtualizer({
     count: filteredProducts.length,
     getScrollElement: () => parentRef.current,
