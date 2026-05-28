@@ -455,6 +455,9 @@ const IAMPage = () => {
                         {ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    {userForm.role && !VALID_TECHNICAL_ROLES.includes(userForm.role.toLowerCase()) && (
+                      <p className="text-xs text-destructive mt-1">Cargo técnico inválido.</p>
+                    )}
                   </div>
                   {branches.length > 0 && (
                     <div>
@@ -558,6 +561,9 @@ const IAMPage = () => {
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>{ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
                       </Select>
+                      {inviteForm.role && !VALID_TECHNICAL_ROLES.includes(inviteForm.role.toLowerCase()) && (
+                        <p className="text-xs text-destructive mt-1">Cargo técnico inválido.</p>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">

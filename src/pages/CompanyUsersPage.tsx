@@ -398,6 +398,9 @@ const CompanyUsersPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {inviteForm.role_id && !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === inviteForm.role_id)?.key?.toLowerCase() || '') && (
+                    <p className="text-xs text-destructive mt-1">Este cargo não possui uma chave técnica válida.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Branch / Loja (Opcional)</Label>
@@ -476,6 +479,9 @@ const CompanyUsersPage = () => {
                     ))}
                     </SelectContent>
                 </Select>
+                {createUserForm.role_id && !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') && (
+                  <p className="text-xs text-destructive mt-1">Este cargo não possui uma chave técnica válida e não pode ser usado.</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Branch / Loja (Opcional)</Label>
