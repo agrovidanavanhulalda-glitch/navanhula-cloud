@@ -110,7 +110,8 @@ const CompanyUsersPage = () => {
       const email = createUserForm.email.trim().toLowerCase();
       const password = createUserForm.password;
       const name = createUserForm.full_name;
-      const roleName = roles.find(r => r.id === createUserForm.role_id)?.name || 'Vendedor';
+      const selectedRole = roles.find(r => r.id === createUserForm.role_id);
+      const roleToSave = selectedRole?.key || selectedRole?.name || 'seller';
       
       // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser automaticamente
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -120,7 +121,7 @@ const CompanyUsersPage = () => {
           data: {
             full_name: name,
             company_id: companyId,
-            role: roleName
+            role: roleToSave
           }
         }
       });
