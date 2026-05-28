@@ -8234,6 +8234,7 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: undefined
       }
+      map_role_name: { Args: { p_role: string }; Returns: string }
       notify_company_admins: {
         Args: {
           p_category?: string
