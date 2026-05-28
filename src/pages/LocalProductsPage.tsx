@@ -91,6 +91,13 @@ const LocalProductsPage: React.FC = () => {
     }));
   }, [products, currentStore?.id]);
 
+  const rowVirtualizer = useVirtualizer({
+    count: mappedProducts.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 72,
+    overscan: 10,
+  });
+
   // Reset form
   const resetForm = () => {
     setFormData({
