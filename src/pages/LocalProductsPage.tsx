@@ -43,7 +43,9 @@ const LocalProductsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 400);
   const [page, setPage] = useState(0);
-  const pageSize = 12;
+  const pageSize = 100; // Increased for better virtualization benefit
+  
+  const parentRef = useRef<HTMLDivElement>(null);
 
   const { data: productsData, isLoading: productsLoading } = useProducts({
     searchTerm: debouncedSearch,
