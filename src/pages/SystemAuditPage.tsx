@@ -32,7 +32,7 @@ interface AuditLog {
 
 interface AuthFlowLog {
   id: string;
-  transaction_id: string;
+  transaction_id: number;
   user_id: string | null;
   email: string | null;
   step: string;
@@ -41,6 +41,7 @@ interface AuthFlowLog {
   error_message: string | null;
   created_at: string;
 }
+
 
 
 const SystemAuditPage: React.FC = () => {
@@ -339,5 +340,3 @@ const SystemAuditPage: React.FC = () => {
 
 export default SystemAuditPage;
 
-
-export default SystemAuditPage;
