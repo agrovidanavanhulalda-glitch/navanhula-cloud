@@ -186,13 +186,6 @@ const LocalInventoryPage: React.FC = () => {
     }
   };
 
-  // Computed
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase()))
-      .filter(p => !filterLowStock || p.stock_qty <= p.low_stock_threshold)
-      .sort((a, b) => a.stock_qty - b.stock_qty);
-  }, [products, searchTerm, filterLowStock]);
 
   const lowStockCount = products.filter(p => p.stock_qty > 0 && p.stock_qty <= p.low_stock_threshold).length;
   const outOfStockCount = products.filter(p => p.stock_qty <= 0).length;
