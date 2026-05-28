@@ -106,7 +106,10 @@ const StockMovementHistory: React.FC<Props> = ({ productId, productName, open, o
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] mt-4">
+        <div 
+          ref={parentRef}
+          className="max-h-[60vh] overflow-y-auto mt-4 pr-2"
+        >
           {loading ? (
             <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-2">
               <RefreshCw className="w-6 h-6 animate-spin" />
@@ -118,39 +121,61 @@ const StockMovementHistory: React.FC<Props> = ({ productId, productName, open, o
               <p>Nenhuma movimentação registrada para este produto.</p>
             </div>
           ) : (
-            <div className="space-y-3 pr-4">
-              {movements.map((m) => (
-                <div key={m.id} className="flex items-center gap-4 p-4 rounded-xl border bg-card hover:bg-muted/50 transition-all shadow-sm">
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                    {getTypeIcon(m.movement_type, m.quantity)}
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const m = movements[virtualRow.index];
+                return (
+                  <div 
+                    key={m.id}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    className="py-1"
+                  >
+                    <div className="flex items-center gap-4 p-4 rounded-xl border bg-card hover:bg-muted/50 transition-all shadow-sm h-full">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                        {getTypeIcon(m.movement_type, m.quantity)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          {getTypeBadge(m.movement_type, m.quantity)}
+                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            {getRefLabel(m.reference_type)}
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className={`text-lg font-black ${m.quantity > 0 ? 'text-green-600' : 'text-destructive'}`}>
+                            {m.quantity > 0 ? '+' : ''}{m.quantity}
+                          </span>
+                          <span className="text-xs text-muted-foreground">unidades</span>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-sm font-bold text-[#0B1F3A]">
+                          {format(new Date(m.created_at), 'dd/MM/yyyy')}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {format(new Date(m.created_at), 'HH:mm')}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {getTypeBadge(m.movement_type, m.quantity)}
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        {getRefLabel(m.reference_type)}
-                      </span>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className={`text-lg font-black ${m.quantity > 0 ? 'text-green-600' : 'text-destructive'}`}>
-                        {m.quantity > 0 ? '+' : ''}{m.quantity}
-                      </span>
-                      <span className="text-xs text-muted-foreground">unidades</span>
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <div className="text-sm font-bold text-[#0B1F3A]">
-                      {format(new Date(m.created_at), 'dd/MM/yyyy')}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {format(new Date(m.created_at), 'HH:mm')}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
