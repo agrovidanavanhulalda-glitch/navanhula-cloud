@@ -7,8 +7,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ShieldCheck, Activity, Clock, User, ArrowRight, Shield, 
-  Key, AlertCircle, CheckCircle2, Database, Hash
+  Key, AlertCircle, CheckCircle2, Database, Hash, Search
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 
@@ -45,6 +47,8 @@ interface AuthFlowLog {
 
 
 const SystemAuditPage: React.FC = () => {
+  const [authSearch, setAuthSearch] = useState("");
+
   const { data: logs, isLoading } = useQuery({
     queryKey: ["audit-logs"],
     queryFn: async () => {
@@ -89,6 +93,15 @@ const SystemAuditPage: React.FC = () => {
       return data as AuthFlowLog[];
     },
   });
+
+  const filteredAuthLogs = authFlowLogs?.filter(log => 
+    !authSearch || 
+    log.email?.toLowerCase().includes(authSearch.toLowerCase()) ||
+    log.user_id?.toLowerCase().includes(authSearch.toLowerCase()) ||
+    log.step.toLowerCase().includes(authSearch.toLowerCase()) ||
+    log.transaction_id.toString().includes(authSearch)
+  );
+
 
   const getStepLabel = (step: string) => {
     const labels: Record<string, string> = {
@@ -255,21 +268,31 @@ const SystemAuditPage: React.FC = () => {
 
         <TabsContent value="auth">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
               <CardTitle className="flex items-center gap-2">
                 <Key className="w-5 h-5" />
                 Auditoria de Criação de Utilizadores
               </CardTitle>
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Pesquisar por email, ID ou transação..." 
+                  className="pl-9 h-8 text-xs"
+                  value={authSearch}
+                  onChange={(e) => setAuthSearch(e.target.value)}
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[600px] pr-4">
                 {isAuthLoading ? (
                   <div className="text-center py-10">Carregando logs de autenticação...</div>
-                ) : authFlowLogs?.length === 0 ? (
-                  <div className="text-center py-10 text-muted-foreground">Nenhum evento de autenticação registrado.</div>
+                ) : filteredAuthLogs?.length === 0 ? (
+                  <div className="text-center py-10 text-muted-foreground">Nenhum evento de autenticação encontrado.</div>
                 ) : (
                   <div className="space-y-4">
-                    {authFlowLogs?.map((log) => (
+                    {filteredAuthLogs?.map((log) => (
+
                       <div key={log.id} className={`flex flex-col p-4 rounded-lg border bg-card hover:shadow-sm transition-all ${log.status === 'failure' ? 'border-red-200 bg-red-50/10' : ''}`}>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
