@@ -27,6 +27,9 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+// Mock scrollIntoView for Radix Select
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
 });
