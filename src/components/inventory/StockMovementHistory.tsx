@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatCurrency } from '@/lib/formatters';
 import { format } from 'date-fns';
 import { ArrowDown, ArrowUp, RefreshCw, Package, ArrowRightLeft, CornerDownLeft } from 'lucide-react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface StockMovement {
   id: string;
