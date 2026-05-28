@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useLocalPOS, LocalSale } from '@/contexts/LocalPOSContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +30,7 @@ import CancelSaleDialog from '@/components/pos/CancelSaleDialog';
 import { toast } from 'sonner';
 import { SkeletonList } from '@/components/ui/skeleton-card';
 import PageTransition from '@/components/layout/PageTransition';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 /**
  * Sales History Page with Admin Cancellation
