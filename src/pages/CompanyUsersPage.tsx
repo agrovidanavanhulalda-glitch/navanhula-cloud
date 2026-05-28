@@ -21,9 +21,9 @@ const CompanyUsersPage = () => {
   const companyId = company?.id;
   const [showInvite, setShowInvite] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ role_id: '', email: '' });
+  const [inviteForm, setInviteForm] = useState({ role_id: '', email: '', branch_id: '' });
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
-  const [createUserForm, setCreateUserForm] = useState({ full_name: '', email: '', role_id: '', password: '' });
+  const [createUserForm, setCreateUserForm] = useState({ full_name: '', email: '', role_id: '', password: '', branch_id: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
 
@@ -35,6 +35,17 @@ const CompanyUsersPage = () => {
       if (error) throw error;
       return data;
     },
+  });
+
+  // Fetch Branches
+  const { data: branches = [] } = useQuery({
+    queryKey: ['branches', companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('branches').select('*').eq('company_id', companyId!);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!companyId,
   });
 
   // Fetch members
@@ -78,6 +89,7 @@ const CompanyUsersPage = () => {
     mutationFn: async () => {
       const email = inviteForm.email.trim().toLowerCase();
       const roleId = inviteForm.role_id;
+      const branchId = inviteForm.branch_id || null;
       
       const { data, error } = await supabase
         .from('invites')
@@ -85,6 +97,7 @@ const CompanyUsersPage = () => {
           company_id: companyId,
           email: email,
           role_id: roleId,
+          branch_id: branchId,
           invited_by: user?.id,
           status: 'pending'
         } as any)
@@ -110,6 +123,7 @@ const CompanyUsersPage = () => {
       const email = createUserForm.email.trim().toLowerCase();
       const password = createUserForm.password;
       const name = createUserForm.full_name;
+      const branchId = createUserForm.branch_id || null;
       const selectedRole = roles.find(r => r.id === createUserForm.role_id);
       const roleToSave = selectedRole?.key || selectedRole?.name || 'seller';
       
@@ -121,6 +135,7 @@ const CompanyUsersPage = () => {
           data: {
             full_name: name,
             company_id: companyId,
+            branch_id: branchId,
             role: roleToSave
           }
         }
@@ -133,7 +148,7 @@ const CompanyUsersPage = () => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
       toast.success('Utilizador criado. Ele deve verificar o email para activar a conta.');
       setShowCreateUser(false);
-      setCreateUserForm({ full_name: '', email: '', role_id: '', password: '' });
+      setCreateUserForm({ full_name: '', email: '', role_id: '', password: '', branch_id: '' });
     },
     onError: (e: any) => toast.error('Erro ao criar utilizador: ' + e.message),
   });
@@ -289,7 +304,7 @@ const CompanyUsersPage = () => {
           setShowInvite(open);
           if (!open) {
             setGeneratedInviteLink(null);
-            setInviteForm({ role_id: '', email: '' });
+            setInviteForm({ role_id: '', email: '', branch_id: '' });
           }
         }}>
           <DialogContent className="sm:max-w-md">
@@ -359,6 +374,22 @@ const CompanyUsersPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label>Branch / Loja (Opcional)</Label>
+                  <Select 
+                    value={inviteForm.branch_id}
+                    onValueChange={v => setInviteForm({ ...inviteForm, branch_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map((b: any) => (
+                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <DialogFooter>
                   <Button 
                     className="w-full"
@@ -417,6 +448,22 @@ const CompanyUsersPage = () => {
                   <SelectContent>
                     {roles.map((r: any) => (
                       <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Branch / Loja (Opcional)</Label>
+                <Select 
+                  value={createUserForm.branch_id}
+                  onValueChange={v => setCreateUserForm({ ...createUserForm, branch_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((b: any) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

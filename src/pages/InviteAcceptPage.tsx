@@ -122,9 +122,16 @@ const InviteAcceptPage: React.FC = () => {
             <h2 className="text-xl font-bold text-gray-900">{company?.name || 'Empresa'}</h2>
             <p className="text-gray-500 mt-1">Convidou você para fazer parte da equipa</p>
           </div>
-          <Badge className="bg-[#1E5A8A] text-white px-4 py-1">
-            Cargo: {invite?.role_name || 'Membro'}
-          </Badge>
+          <div className="flex flex-col gap-2 items-center">
+            <Badge className="bg-[#1E5A8A] text-white px-4 py-1">
+              Cargo: {invite?.role_name || 'Membro'}
+            </Badge>
+            {invite?.branch_name && (
+              <Badge variant="outline" className="border-[#0B3C5D] text-[#0B3C5D]">
+                Unidade: {invite.branch_name}
+              </Badge>
+            )}
+          </div>
         </div>
 
         {isAuthenticated ? (
