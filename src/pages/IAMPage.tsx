@@ -206,7 +206,12 @@ const IAMPage = () => {
       
       const email = inviteForm.email?.trim().toLowerCase();
       if (!email) throw new Error('Email é obrigatório');
-
+      
+      const selectedRole = inviteForm.role?.toLowerCase() || 'seller';
+      if (!VALID_TECHNICAL_ROLES.includes(selectedRole)) {
+        console.warn('Papel técnico inválido no convite:', selectedRole);
+        // Fallback seguro
+      }
 
       const token = crypto.randomUUID();
       const expiresAt = new Date();
@@ -217,7 +222,7 @@ const IAMPage = () => {
 
       const { error } = await supabase.from('company_invitations').insert({
         company_id: companyId,
-        role: inviteForm.role,
+        role: selectedRole, // Sempre enviar a key técnica
         token: token,
         expires_at: expiresAt.toISOString(),
         created_by: currentUser?.id,
