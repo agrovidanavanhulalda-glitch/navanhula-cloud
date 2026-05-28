@@ -80,7 +80,7 @@ export interface LocalSeller {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'vendedor';
+  role: 'admin' | 'seller';
   storeId: string;
   isActive: boolean;
   password?: string;

@@ -207,10 +207,9 @@ const IAMPage = () => {
       const email = inviteForm.email?.trim().toLowerCase();
       if (!email) throw new Error('Email é obrigatório');
       
-      const selectedRole = inviteForm.role?.toLowerCase() || 'seller';
-      if (!VALID_TECHNICAL_ROLES.includes(selectedRole)) {
-        console.warn('Papel técnico inválido no convite:', selectedRole);
-        // Fallback seguro
+      const selectedRole = inviteForm.role?.toLowerCase();
+      if (!selectedRole || !VALID_TECHNICAL_ROLES.includes(selectedRole)) {
+        throw new Error(`Cargo técnico "${selectedRole}" é inválido. Selecione um cargo permitido.`);
       }
 
       const token = crypto.randomUUID();
@@ -351,10 +350,9 @@ const IAMPage = () => {
       if (!password || password.length < 6) throw new Error('Senha deve ter pelo menos 6 caracteres');
 
       // FORÇAR USO DA ROLE KEY TÉCNICA (seller/manager/admin)
-      let roleKey = userForm.role?.toLowerCase() || 'seller';
-      if (!VALID_TECHNICAL_ROLES.includes(roleKey)) {
-        console.warn('Papel técnico inválido ao criar utilizador:', roleKey);
-        roleKey = 'seller'; // Fallback seguro
+      const roleKey = userForm.role?.toLowerCase();
+      if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
+        throw new Error(`Cargo técnico "${roleKey}" é inválido. Selecione um cargo permitido.`);
       }
       
       // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser
@@ -457,6 +455,9 @@ const IAMPage = () => {
                         {ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    {userForm.role && !VALID_TECHNICAL_ROLES.includes(userForm.role.toLowerCase()) && (
+                      <p className="text-xs text-destructive mt-1">Cargo técnico inválido.</p>
+                    )}
                   </div>
                   {branches.length > 0 && (
                     <div>
@@ -475,7 +476,12 @@ const IAMPage = () => {
                   <Button variant="outline" onClick={() => setShowCreateUser(false)}>Cancelar</Button>
                   <Button 
                     onClick={() => createUserMutation.mutate()} 
-                    disabled={!userForm.name || !userForm.email || createUserMutation.isPending}
+                    disabled={
+                      !userForm.name || 
+                      !userForm.email || 
+                      createUserMutation.isPending ||
+                      !VALID_TECHNICAL_ROLES.includes(userForm.role.toLowerCase())
+                    }
                   >
                     {createUserMutation.isPending ? 'Criando...' : 'Criar Utilizador'}
                   </Button>
@@ -560,6 +566,9 @@ const IAMPage = () => {
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>{ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
                       </Select>
+                      {inviteForm.role && !VALID_TECHNICAL_ROLES.includes(inviteForm.role.toLowerCase()) && (
+                        <p className="text-xs text-destructive mt-1">Cargo técnico inválido.</p>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -587,7 +596,10 @@ const IAMPage = () => {
                       <Button 
                         className="w-full" 
                         onClick={() => createInvite.mutate()} 
-                        disabled={createInvite.isPending}
+                        disabled={
+                          createInvite.isPending || 
+                          !VALID_TECHNICAL_ROLES.includes(inviteForm.role.toLowerCase())
+                        }
                       >
                         {createInvite.isPending ? 'Gerando...' : 'Gerar Link de Convite'}
                       </Button>

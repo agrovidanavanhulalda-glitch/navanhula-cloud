@@ -101,8 +101,7 @@ const CompanyUsersPage = () => {
 
       // Client-side validation for technical role key
       if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
-        console.warn('Papel técnico inválido ou ausente:', roleKey);
-        // We still use role_id for the database table, but we validate that the associated key is correct
+        throw new Error(`Cargo técnico inválido: "${roleKey || 'não definido'}". Selecione um cargo válido (admin, manager, seller, etc).`);
       }
       
       const { data, error } = await supabase
@@ -147,12 +146,10 @@ const CompanyUsersPage = () => {
       const selectedRole = roles.find(r => r.id === createUserForm.role_id);
       
       // FORÇAR USO DA ROLE KEY TÉCNICA (seller/manager/admin)
-      // Fallback seguro: 'seller'
-      let roleKey = selectedRole?.key?.toLowerCase();
+      const roleKey = selectedRole?.key?.toLowerCase();
       
       if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
-        console.warn('Aviso: Role key técnica não encontrada ou inválida. Usando fallback "seller".');
-        roleKey = 'seller'; 
+        throw new Error(`Cargo técnico inválido: "${roleKey || 'não definido'}". Selecione um cargo válido.`);
       }
       
       // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser automaticamente
@@ -401,6 +398,9 @@ const CompanyUsersPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {inviteForm.role_id && !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === inviteForm.role_id)?.key?.toLowerCase() || '') && (
+                    <p className="text-xs text-destructive mt-1">Este cargo não possui uma chave técnica válida.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Branch / Loja (Opcional)</Label>
@@ -422,7 +422,12 @@ const CompanyUsersPage = () => {
                   <Button 
                     className="w-full"
                     onClick={() => inviteUser.mutate()} 
-                    disabled={inviteUser.isPending || !inviteForm.email || !inviteForm.role_id}
+                    disabled={
+                      inviteUser.isPending || 
+                      !inviteForm.email || 
+                      !inviteForm.role_id || 
+                      !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === inviteForm.role_id)?.key?.toLowerCase() || '')
+                    }
                   >
                     {inviteUser.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Gerar Convite'}
                   </Button>
@@ -479,6 +484,9 @@ const CompanyUsersPage = () => {
                     ))}
                     </SelectContent>
                 </Select>
+                {createUserForm.role_id && !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') && (
+                  <p className="text-xs text-destructive mt-1">Este cargo não possui uma chave técnica válida e não pode ser usado.</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Branch / Loja (Opcional)</Label>
@@ -500,7 +508,12 @@ const CompanyUsersPage = () => {
             <DialogFooter>
               <Button 
                 onClick={() => createUser.mutate()} 
-                disabled={createUser.isPending || !createUserForm.email || !createUserForm.role_id}
+                disabled={
+                  createUser.isPending || 
+                  !createUserForm.email || 
+                  !createUserForm.role_id ||
+                  !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '')
+                }
               >
                 {createUser.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar Utilizador'}
               </Button>

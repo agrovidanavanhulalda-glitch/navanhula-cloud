@@ -63,7 +63,7 @@ const LocalSellersPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'vendedor' as 'admin' | 'vendedor',
+    role: 'seller' as 'admin' | 'seller',
     storeId: currentStore.id,
     password: '123456',
     isActive: true,
@@ -90,7 +90,6 @@ const LocalSellersPage: React.FC = () => {
       case 'manager': return 'Gestor';
       case 'seller': return 'Vendedor';
       case 'viewer': return 'Visualizador';
-      case 'vendedor': return 'Vendedor';
       default: return role;
     }
   };
@@ -101,7 +100,7 @@ const LocalSellersPage: React.FC = () => {
     setFormData({
       name: '',
       email: '',
-      role: 'vendedor',
+      role: 'seller',
       storeId: currentStore.id,
       password: '123456',
       isActive: true,
@@ -374,14 +373,14 @@ const LocalSellersPage: React.FC = () => {
               <Label>Função</Label>
               <Select 
                 value={formData.role} 
-                onValueChange={(value: 'admin' | 'vendedor') => setFormData({ ...formData, role: value })}
+                onValueChange={(value: 'admin' | 'seller') => setFormData({ ...formData, role: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="vendedor">Vendedor</SelectItem>
+                  <SelectItem value="seller">Vendedor</SelectItem>
                 </SelectContent>
               </Select>
             </div>
