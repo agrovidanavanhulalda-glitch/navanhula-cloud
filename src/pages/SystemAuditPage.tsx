@@ -199,7 +199,27 @@ const SystemAuditPage: React.FC = () => {
     doc.save(`${fileName}_${format(new Date(), "dd-MM-yyyy")}.pdf`);
   };
 
+  const setQuickRange = (range: 'today' | 'yesterday' | '7days' | 'month') => {
+    const now = new Date();
+    switch (range) {
+      case 'today':
+        setDateRange({ from: now, to: now });
+        break;
+      case 'yesterday':
+        const yesterday = subDays(now, 1);
+        setDateRange({ from: yesterday, to: yesterday });
+        break;
+      case '7days':
+        setDateRange({ from: subDays(now, 7), to: now });
+        break;
+      case 'month':
+        setDateRange({ from: startOfMonth(now), to: endOfMonth(now) });
+        break;
+    }
+  };
+
   const getStepLabel = (step: string) => {
+
     const labels: Record<string, string> = {
       'trigger_started': 'Início do Fluxo',
       'profile_created': 'Criação de Perfil',
