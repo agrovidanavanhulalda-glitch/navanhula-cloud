@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import SystemAuditPage from '@/pages/SystemAuditPage';
 import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 
