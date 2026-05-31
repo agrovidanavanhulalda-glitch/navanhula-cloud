@@ -83,7 +83,9 @@ const LocalReportsPage: React.FC = () => {
     error?: string;
     attempts?: { id: string; timestamp: Date; status: string; error_message?: string; retry_count: number }[];
   }[]>([]);
+  const [selectedSyncFilter, setSelectedSyncFilter] = useState<'all' | 'pending' | 'syncing' | 'completed'>('all');
   const isInitialMount = useRef(true);
+
 
 
   // Fetch history on mount
@@ -968,7 +970,10 @@ const LocalReportsPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {exportHistory.map((item) => (
+                    {exportHistory
+                      .filter(item => selectedSyncFilter === 'all' || item.syncStatus === selectedSyncFilter)
+                      .map((item) => (
+
                       <tr key={item.id} className="hover:bg-muted/30">
                         <td className="p-3 text-sm">{item.timestamp.toLocaleString('pt-MZ')}</td>
                         <td className="p-3">
