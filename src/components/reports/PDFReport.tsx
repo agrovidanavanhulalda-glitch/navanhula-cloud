@@ -174,8 +174,11 @@ ${filteredSales.length > 50 ? `\n  ... e mais ${filteredSales.length - 50} venda
 };
 
 // Export as real PDF using jsPDF
-export const exportPDFReport = (props: PDFReportProps) => {
-  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all', companyName = 'NAVANHULA CLOUD' } = props;
+export const exportPDFReport = async (props: PDFReportProps & { onProgress?: (p: number) => void }) => {
+  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all', companyName = 'NAVANHULA CLOUD', onProgress } = props;
+  
+  if (onProgress) onProgress(10);
+
 
   const filteredSales = sales.filter(sale => {
     const saleDate = new Date(sale.createdAt);
@@ -188,6 +191,7 @@ export const exportPDFReport = (props: PDFReportProps) => {
     return sale.status === 'completed';
   });
 
+  if (onProgress) onProgress(20);
   const totalRevenue = filteredSales.reduce((acc, s) => acc + s.total, 0);
   const totalProfit = filteredSales.reduce((acc, sale) => {
     if (sale.profit != null) return acc + sale.profit;
@@ -195,6 +199,8 @@ export const exportPDFReport = (props: PDFReportProps) => {
   }, 0);
   const totalDiscount = filteredSales.reduce((acc, s) => acc + s.discount, 0);
   const averageTicket = filteredSales.length > 0 ? totalRevenue / filteredSales.length : 0;
+  if (onProgress) onProgress(35);
+
 
   const storeName = selectedStore === 'all'
     ? 'Todas as Lojas'
@@ -262,6 +268,8 @@ export const exportPDFReport = (props: PDFReportProps) => {
     });
   });
   const topProducts = Object.values(productSales).sort((a, b) => b.total - a.total).slice(0, 15);
+  if (onProgress) onProgress(60);
+
 
   if (topProducts.length > 0) {
     doc.setFont('times', 'bold');
@@ -296,12 +304,16 @@ export const exportPDFReport = (props: PDFReportProps) => {
   doc.setFontSize(8);
   doc.text('Documento gerado pelo NAVANHULA CLOUD', pageWidth / 2, footerY, { align: 'center' });
 
+  if (onProgress) onProgress(100);
   doc.save(`relatorio_vendas_${startDate}_${endDate}.pdf`);
 };
 
+
 // Export as real Excel .xlsx
-export const exportExcelReport = (props: PDFReportProps) => {
-  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all' } = props;
+export const exportExcelReport = async (props: PDFReportProps & { onProgress?: (p: number) => void }) => {
+  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all', onProgress } = props;
+  if (onProgress) onProgress(10);
+
 
   // Filter sales
   const filteredSales = sales.filter(sale => {
@@ -321,7 +333,9 @@ export const exportExcelReport = (props: PDFReportProps) => {
     const date = new Date(sale.createdAt);
     const store = stores.find(s => s.id === sale.storeId);
     const itemsCount = sale.items.reduce((acc, item) => acc + item.quantity, 0);
+    if (onProgress) onProgress(30);
     const profit = sale.items.reduce((acc, item) => {
+
       return acc + (item.product.salePrice - item.product.costPrice) * item.quantity;
     }, 0);
     const revenue = sale.total;
@@ -348,7 +362,9 @@ export const exportExcelReport = (props: PDFReportProps) => {
   XLSX.utils.book_append_sheet(workbook, worksheet, "Vendas");
 
   // Add summary sheet
+  if (onProgress) onProgress(60);
   const totalRevenue = filteredSales.reduce((acc, s) => acc + s.total, 0);
+
   const totalProfit = filteredSales.reduce((acc, sale) => {
     return acc + sale.items.reduce((a, i) => a + (i.product.salePrice - i.product.costPrice) * i.quantity, 0);
   }, 0);
@@ -403,8 +419,10 @@ export const exportExcelReport = (props: PDFReportProps) => {
   XLSX.utils.book_append_sheet(workbook, marginWorksheet, "Margens de Produtos");
 
   // Export
+  if (onProgress) onProgress(100);
   XLSX.writeFile(workbook, `relatorio_vendas_margens_${startDate}_${endDate}.xlsx`);
 };
+
 
 // Component for preview/print
 const PDFReportPreview: React.FC<PDFReportProps & { onClose: () => void }> = (props) => {

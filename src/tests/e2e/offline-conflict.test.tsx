@@ -173,8 +173,9 @@ describe('Offline Conflict & Reconciliation E2E', () => {
     } as any);
 
     // Spy on exports
-    const excelSpy = vi.spyOn(PDFReportExports, 'exportExcelReport').mockImplementation(() => {});
-    const pdfSpy = vi.spyOn(PDFReportExports, 'exportPDFReport').mockImplementation(() => {});
+    const excelSpy = vi.spyOn(PDFReportExports, 'exportExcelReport').mockImplementation(async () => {});
+    const pdfSpy = vi.spyOn(PDFReportExports, 'exportPDFReport').mockImplementation(async () => {});
+
 
     render(
       <BrowserRouter>

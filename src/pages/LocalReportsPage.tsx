@@ -60,9 +60,13 @@ const LocalReportsPage: React.FC = () => {
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [autoExport, setAutoExport] = useState(false);
   const [exportStatus, setExportStatus] = useState<{
-    pdf: 'idle' | 'generating' | 'downloading' | 'completed';
-    xlsx: 'idle' | 'generating' | 'downloading' | 'completed';
-  }>({ pdf: 'idle', xlsx: 'idle' });
+    pdf: { status: 'idle' | 'generating' | 'downloading' | 'completed'; progress: number };
+    xlsx: { status: 'idle' | 'generating' | 'downloading' | 'completed'; progress: number };
+  }>({ 
+    pdf: { status: 'idle', progress: 0 }, 
+    xlsx: { status: 'idle', progress: 0 } 
+  });
+
   const isInitialMount = useRef(true);
 
   // Filtered sales (completed only)
@@ -204,12 +208,9 @@ const LocalReportsPage: React.FC = () => {
 
   // Export handlers
   const handleExportExcel = async () => {
-    setExportStatus(prev => ({ ...prev, xlsx: 'generating' }));
-    // Small delay to simulate generation and show status
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setExportStatus(prev => ({ ...prev, xlsx: 'downloading' }));
+    setExportStatus(prev => ({ ...prev, xlsx: { status: 'generating', progress: 0 } }));
     
-    exportExcelReport({
+    await exportExcelReport({
       sales,
       stores,
       startDate,
@@ -217,20 +218,27 @@ const LocalReportsPage: React.FC = () => {
       selectedStore,
       selectedSeller,
       companyName: 'NAVANHULA CLOUD',
+      onProgress: (progress) => {
+        setExportStatus(prev => ({ 
+          ...prev, 
+          xlsx: { 
+            status: progress < 100 ? 'generating' : 'downloading', 
+            progress 
+          } 
+        }));
+      }
     });
 
+    setExportStatus(prev => ({ ...prev, xlsx: { status: 'completed', progress: 100 } }));
     setTimeout(() => {
-      setExportStatus(prev => ({ ...prev, xlsx: 'completed' }));
-      setTimeout(() => setExportStatus(prev => ({ ...prev, xlsx: 'idle' })), 2000);
-    }, 500);
+      setExportStatus(prev => ({ ...prev, xlsx: { ...prev.xlsx, status: 'idle' } }));
+    }, 2000);
   };
 
   const handleExportPDF = async () => {
-    setExportStatus(prev => ({ ...prev, pdf: 'generating' }));
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setExportStatus(prev => ({ ...prev, pdf: 'downloading' }));
+    setExportStatus(prev => ({ ...prev, pdf: { status: 'generating', progress: 0 } }));
 
-    exportPDFReport({
+    await exportPDFReport({
       sales,
       stores,
       startDate,
@@ -238,13 +246,23 @@ const LocalReportsPage: React.FC = () => {
       selectedStore,
       selectedSeller,
       companyName: 'NAVANHULA CLOUD',
+      onProgress: (progress) => {
+        setExportStatus(prev => ({ 
+          ...prev, 
+          pdf: { 
+            status: progress < 100 ? 'generating' : 'downloading', 
+            progress 
+          } 
+        }));
+      }
     });
 
+    setExportStatus(prev => ({ ...prev, pdf: { status: 'completed', progress: 100 } }));
     setTimeout(() => {
-      setExportStatus(prev => ({ ...prev, pdf: 'completed' }));
-      setTimeout(() => setExportStatus(prev => ({ ...prev, pdf: 'idle' })), 2000);
-    }, 500);
+      setExportStatus(prev => ({ ...prev, pdf: { ...prev.pdf, status: 'idle' } }));
+    }, 2000);
   };
+
 
   // Auto-export logic
   useEffect(() => {
@@ -299,41 +317,58 @@ const LocalReportsPage: React.FC = () => {
             <Button 
               variant="outline" 
               onClick={handleExportExcel}
-              disabled={exportStatus.xlsx !== 'idle'}
+              disabled={exportStatus.xlsx.status !== 'idle'}
             >
               <FileSpreadsheet className="w-4 h-4 mr-2" />
-              {exportStatus.xlsx === 'idle' ? 'Excel' : 
-               exportStatus.xlsx === 'generating' ? 'Gerando...' :
-               exportStatus.xlsx === 'downloading' ? 'Baixando...' : 'Concluído'}
+              {exportStatus.xlsx.status === 'idle' ? 'Excel' : 
+               exportStatus.xlsx.status === 'generating' ? `Gerando ${exportStatus.xlsx.progress}%` :
+               exportStatus.xlsx.status === 'downloading' ? 'Baixando...' : 'Concluído'}
             </Button>
             <Button 
               onClick={handleExportPDF}
-              disabled={exportStatus.pdf !== 'idle'}
+              disabled={exportStatus.pdf.status !== 'idle'}
             >
               <FileText className="w-4 h-4 mr-2" />
-              {exportStatus.pdf === 'idle' ? 'Relatório' : 
-               exportStatus.pdf === 'generating' ? 'Gerando...' :
-               exportStatus.pdf === 'downloading' ? 'Baixando...' : 'Concluído'}
+              {exportStatus.pdf.status === 'idle' ? 'Relatório' : 
+               exportStatus.pdf.status === 'generating' ? `Gerando ${exportStatus.pdf.progress}%` :
+               exportStatus.pdf.status === 'downloading' ? 'Baixando...' : 'Concluído'}
             </Button>
           </div>
-          {(exportStatus.pdf !== 'idle' || exportStatus.xlsx !== 'idle') && (
-            <div className="text-[10px] text-muted-foreground flex gap-4 animate-pulse">
-              {exportStatus.pdf !== 'idle' && (
-                <span className="flex items-center gap-1">
-                  PDF: {exportStatus.pdf === 'generating' ? 'Preparando arquivo' : 
-                        exportStatus.pdf === 'downloading' ? 'Iniciando download' : 'Finalizado'}
-                </span>
+          {(exportStatus.pdf.status !== 'idle' || exportStatus.xlsx.status !== 'idle') && (
+            <div className="text-[10px] text-muted-foreground flex flex-col items-end gap-1">
+              {exportStatus.pdf.status !== 'idle' && (
+                <div className="flex flex-col items-end">
+                  <span className="flex items-center gap-1">
+                    PDF: {exportStatus.pdf.status === 'generating' ? 'Preparando arquivo' : 
+                          exportStatus.pdf.status === 'downloading' ? 'Iniciando download' : 'Finalizado'}
+                  </span>
+                  <div className="w-24 h-1 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-300" 
+                      style={{ width: `${exportStatus.pdf.progress}%` }}
+                    />
+                  </div>
+                </div>
               )}
-              {exportStatus.xlsx !== 'idle' && (
-                <span className="flex items-center gap-1">
-                  XLSX: {exportStatus.xlsx === 'generating' ? 'Processando dados' : 
-                         exportStatus.xlsx === 'downloading' ? 'Iniciando download' : 'Finalizado'}
-                </span>
+              {exportStatus.xlsx.status !== 'idle' && (
+                <div className="flex flex-col items-end">
+                  <span className="flex items-center gap-1">
+                    XLSX: {exportStatus.xlsx.status === 'generating' ? 'Processando dados' : 
+                           exportStatus.xlsx.status === 'downloading' ? 'Iniciando download' : 'Finalizado'}
+                  </span>
+                  <div className="w-24 h-1 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-300" 
+                      style={{ width: `${exportStatus.xlsx.progress}%` }}
+                    />
+                  </div>
+                </div>
               )}
             </div>
           )}
         </div>
       </div>
+
 
       {/* Filters */}
       <Card className="p-4 mb-6">
