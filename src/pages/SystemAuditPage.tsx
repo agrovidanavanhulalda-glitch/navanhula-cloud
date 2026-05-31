@@ -20,6 +20,7 @@ import {
   format, startOfDay, endOfDay, isWithinInterval, parseISO, 
   subDays, startOfMonth, endOfMonth 
 } from "date-fns";
+import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { pt } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
