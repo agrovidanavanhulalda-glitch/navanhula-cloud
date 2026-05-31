@@ -268,6 +268,8 @@ export const exportPDFReport = async (props: PDFReportProps & { onProgress?: (p:
     });
   });
   const topProducts = Object.values(productSales).sort((a, b) => b.total - a.total).slice(0, 15);
+  if (onProgress) onProgress(60);
+
 
   if (topProducts.length > 0) {
     doc.setFont('times', 'bold');
