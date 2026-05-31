@@ -308,6 +308,87 @@ export const exportPDFReport = async (props: PDFReportProps & { onProgress?: (p:
   doc.save(`relatorio_vendas_${startDate}_${endDate}.pdf`);
 };
 
+// New tool for Export Logs PDF
+export const exportLogsPDF = async (historyItem: any, companyName: string = 'NAVANHULA CLOUD') => {
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = 210;
+  const margin = 20;
+  const contentWidth = pageWidth - margin * 2;
+  let y = margin;
+
+  // Header
+  doc.setFont('times', 'bold');
+  doc.setFontSize(16);
+  doc.text(companyName, pageWidth / 2, y, { align: 'center' });
+  y += 8;
+  doc.setFontSize(14);
+  doc.text('LOG DETALHADO DE REPROCESSAMENTO', pageWidth / 2, y, { align: 'center' });
+  y += 10;
+
+  // History Info
+  doc.setFontSize(10);
+  doc.setFont('times', 'bold');
+  doc.text(`ID da Exportação: ${historyItem.id}`, margin, y);
+  y += 5;
+  doc.setFont('times', 'normal');
+  doc.text(`Tipo: ${historyItem.type}`, margin, y);
+  y += 5;
+  doc.text(`Data Inicial: ${new Date(historyItem.timestamp).toLocaleString('pt-MZ')}`, margin, y);
+  y += 5;
+  doc.text(`Filtros: Loja ${historyItem.filters.store}, Vendedor ${historyItem.filters.seller}, Período ${historyItem.filters.start} a ${historyItem.filters.end}`, margin, y);
+  y += 10;
+
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 10;
+
+  // Attempts List
+  doc.setFont('times', 'bold');
+  doc.text('Histórico de Tentativas:', margin, y);
+  y += 8;
+
+  if (!historyItem.attempts || historyItem.attempts.length === 0) {
+    doc.setFont('times', 'italic');
+    doc.text('Nenhuma tentativa registrada.', margin, y);
+  } else {
+    historyItem.attempts.forEach((attempt: any, index: number) => {
+      if (y > 260) {
+        doc.addPage();
+        y = margin;
+      }
+
+      doc.setFont('times', 'bold');
+      doc.text(`Tentativa #${historyItem.attempts.length - index} - ${new Date(attempt.timestamp).toLocaleString('pt-MZ')}`, margin, y);
+      y += 5;
+      
+      doc.setFont('times', 'normal');
+      doc.text(`Status: ${attempt.status === 'success' ? 'Sucesso' : 'Falha'}`, margin + 5, y);
+      y += 5;
+      
+      if (attempt.error_message) {
+        doc.setFont('times', 'normal');
+        doc.text('Erro:', margin + 5, y);
+        const errorLines = doc.splitTextToSize(attempt.error_message, contentWidth - 15);
+        doc.text(errorLines, margin + 15, y);
+        y += (errorLines.length * 5);
+      }
+      
+      y += 5;
+      doc.setDrawColor(200);
+      doc.line(margin + 5, y, pageWidth - margin - 5, y);
+      y += 8;
+    });
+  }
+
+  // Footer
+  const footerY = 285;
+  doc.setFont('times', 'italic');
+  doc.setFontSize(8);
+  doc.text('Documento de auditoria gerado pelo NAVANHULA CLOUD', pageWidth / 2, footerY, { align: 'center' });
+
+  doc.save(`log_exportacao_${historyItem.id.slice(0, 8)}.pdf`);
+};
+
 
 // Export as real Excel .xlsx
 export const exportExcelReport = async (props: PDFReportProps & { onProgress?: (p: number) => void }) => {
