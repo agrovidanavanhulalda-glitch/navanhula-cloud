@@ -60,9 +60,13 @@ const LocalReportsPage: React.FC = () => {
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [autoExport, setAutoExport] = useState(false);
   const [exportStatus, setExportStatus] = useState<{
-    pdf: 'idle' | 'generating' | 'downloading' | 'completed';
-    xlsx: 'idle' | 'generating' | 'downloading' | 'completed';
-  }>({ pdf: 'idle', xlsx: 'idle' });
+    pdf: { status: 'idle' | 'generating' | 'downloading' | 'completed'; progress: number };
+    xlsx: { status: 'idle' | 'generating' | 'downloading' | 'completed'; progress: number };
+  }>({ 
+    pdf: { status: 'idle', progress: 0 }, 
+    xlsx: { status: 'idle', progress: 0 } 
+  });
+
   const isInitialMount = useRef(true);
 
   // Filtered sales (completed only)
