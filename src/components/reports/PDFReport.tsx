@@ -304,8 +304,10 @@ export const exportPDFReport = async (props: PDFReportProps & { onProgress?: (p:
   doc.setFontSize(8);
   doc.text('Documento gerado pelo NAVANHULA CLOUD', pageWidth / 2, footerY, { align: 'center' });
 
+  if (onProgress) onProgress(100);
   doc.save(`relatorio_vendas_${startDate}_${endDate}.pdf`);
 };
+
 
 // Export as real Excel .xlsx
 export const exportExcelReport = async (props: PDFReportProps & { onProgress?: (p: number) => void }) => {
