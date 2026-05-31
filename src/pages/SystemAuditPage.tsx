@@ -14,11 +14,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, startOfDay, endOfDay, isWithinInterval, parseISO } from "date-fns";
 import { pt } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { cn } from "@/lib/utils";
 
 interface AuditLog {
   id: string;
@@ -65,11 +68,17 @@ interface AuthEventLog {
   created_at: string;
 }
 
+
 const SystemAuditPage: React.FC = () => {
   const [authSearch, setAuthSearch] = useState("");
   const [eventSearch, setEventSearch] = useState("");
   const [eventRoleFilter, setEventRoleFilter] = useState("all");
   const [eventStatusFilter, setEventStatusFilter] = useState("all");
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+
 
   const { data: logs, isLoading } = useQuery({
     queryKey: ["audit-logs"],
@@ -117,12 +126,29 @@ const SystemAuditPage: React.FC = () => {
     },
   });
 
+  const isWithinDateRange = (dateString: string) => {
+    if (!dateRange.from && !dateRange.to) return true;
+    const date = parseISO(dateString);
+    const from = dateRange.from ? startOfDay(dateRange.from) : undefined;
+    const to = dateRange.to ? endOfDay(dateRange.to) : undefined;
+
+    if (from && to) {
+      return isWithinInterval(date, { start: from, end: to });
+    } else if (from) {
+      return date >= from;
+    } else if (to) {
+      return date <= to;
+    }
+    return true;
+  };
+
   const filteredAuthLogs = authFlowLogs?.filter(log => 
     (!authSearch || 
     log.email?.toLowerCase().includes(authSearch.toLowerCase()) ||
     log.user_id?.toLowerCase().includes(authSearch.toLowerCase()) ||
     log.step.toLowerCase().includes(authSearch.toLowerCase()) ||
-    log.transaction_id?.toString().includes(authSearch))
+    log.transaction_id?.toString().includes(authSearch)) &&
+    isWithinDateRange(log.created_at)
   );
 
   const filteredEventLogs = authEventLogs?.filter(log => {
@@ -134,9 +160,13 @@ const SystemAuditPage: React.FC = () => {
     
     const matchesRole = eventRoleFilter === "all" || log.role_key === eventRoleFilter;
     const matchesStatus = eventStatusFilter === "all" || log.status === eventStatusFilter;
+    const matchesDate = isWithinDateRange(log.created_at);
 
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesRole && matchesStatus && matchesDate;
   });
+
+  const filteredGeneralLogs = logs?.filter(log => isWithinDateRange(log.created_at));
+
 
   const exportToExcel = (data: any[], fileName: string) => {
     const ws = XLSX.utils.json_to_sheet(data);
@@ -202,7 +232,55 @@ const SystemAuditPage: React.FC = () => {
             Auditoria Enterprise
           </h1>
           <p className="text-muted-foreground">Rastreabilidade total de ações críticas no sistema</p>
+        <div className="flex items-center gap-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[240px] justify-start text-left font-normal",
+                  !dateRange.from && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "dd/MM/yy")} - {format(dateRange.to, "dd/MM/yy")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "dd/MM/yy")
+                  )
+                ) : (
+                  <span>Filtrar por data</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange.from}
+                selected={{ from: dateRange.from, to: dateRange.to }}
+                onSelect={(range: any) => setDateRange({ from: range?.from, to: range?.to })}
+                numberOfMonths={2}
+                locale={pt}
+              />
+            </PopoverContent>
+          </Popover>
+          {(dateRange.from || dateRange.to) && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setDateRange({ from: undefined, to: undefined })}
+              className="h-10 px-2 text-muted-foreground"
+            >
+              <X className="w-4 h-4 mr-2" /> Limpar
+            </Button>
+          )}
         </div>
+      </div>
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -485,7 +563,7 @@ const SystemAuditPage: React.FC = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => exportToExcel(logs || [], "auditoria_db")}
+                onClick={() => exportToExcel(filteredGeneralLogs || [], "auditoria_db")}
               >
                 <Download className="w-4 h-4 mr-2" /> Exportar
               </Button>
@@ -496,7 +574,8 @@ const SystemAuditPage: React.FC = () => {
                   <div className="text-center py-10">Carregando auditoria...</div>
                 ) : (
                   <div className="space-y-4">
-                    {logs?.map((log) => (
+                    {filteredGeneralLogs?.map((log) => (
+
                       <div key={log.id} className="p-4 rounded-lg border bg-card hover:shadow-sm transition-all text-xs">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
