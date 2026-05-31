@@ -81,7 +81,66 @@ const LocalReportsPage: React.FC = () => {
   const isInitialMount = useRef(true);
 
 
+  // Fetch history on mount
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const { data, error } = await supabase
+        .from('export_history')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(20);
+
+      if (!error && data) {
+        setExportHistory(data.map(item => ({
+          id: item.id,
+          timestamp: new Date(item.timestamp),
+          type: item.type as 'PDF' | 'XLSX',
+          filters: item.filters as any,
+          status: item.status as 'success' | 'error',
+          error: item.error_message || undefined
+        })));
+      }
+    };
+
+    if (isAdmin) {
+      fetchHistory();
+    }
+  }, [isAdmin]);
+
+  const saveToHistory = async (type: 'PDF' | 'XLSX', status: 'success' | 'error', filters: any, errorMsg?: string) => {
+    const { user } = (await supabase.auth.getSession()).data.session || {};
+    if (!user || !targetCompanyId) return;
+
+    const entry = {
+      user_id: user.id,
+      company_id: targetCompanyId,
+      type,
+      status,
+      filters,
+      error_message: errorMsg,
+      timestamp: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('export_history')
+      .insert(entry)
+      .select()
+      .single();
+
+    if (!error && data) {
+      setExportHistory(prev => [{
+        id: data.id,
+        timestamp: new Date(data.timestamp),
+        type: data.type as 'PDF' | 'XLSX',
+        filters: data.filters as any,
+        status: data.status as 'success' | 'error',
+        error: data.error_message || undefined
+      }, ...prev].slice(0, 20));
+    }
+  };
+
   // Filtered sales (completed only)
+
   const filteredSales = useMemo(() => {
     return sales.filter(sale => {
       const saleDate = new Date(sale.createdAt);
