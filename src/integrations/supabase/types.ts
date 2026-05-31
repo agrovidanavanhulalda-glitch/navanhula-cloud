@@ -817,6 +817,51 @@ export type Database = {
           },
         ]
       }
+      auth_event_logs: {
+        Row: {
+          actor_id: string | null
+          branch_id: string | null
+          company_id: string | null
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          role_key: string
+          status: string | null
+          target_user_id: string
+          transaction_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          branch_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          role_key: string
+          status?: string | null
+          target_user_id: string
+          transaction_id?: string
+        }
+        Update: {
+          actor_id?: string | null
+          branch_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          role_key?: string
+          status?: string | null
+          target_user_id?: string
+          transaction_id?: string
+        }
+        Relationships: []
+      }
       auth_flow_logs: {
         Row: {
           created_at: string
@@ -7119,6 +7164,8 @@ export type Database = {
           module: string
           severity: string
           status: string
+          transaction_id: string | null
+          user_id: string | null
         }
         Insert: {
           action_taken?: string | null
@@ -7132,6 +7179,8 @@ export type Database = {
           module: string
           severity?: string
           status?: string
+          transaction_id?: string | null
+          user_id?: string | null
         }
         Update: {
           action_taken?: string | null
@@ -7145,6 +7194,8 @@ export type Database = {
           module?: string
           severity?: string
           status?: string
+          transaction_id?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
