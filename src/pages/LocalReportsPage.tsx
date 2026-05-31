@@ -208,12 +208,9 @@ const LocalReportsPage: React.FC = () => {
 
   // Export handlers
   const handleExportExcel = async () => {
-    setExportStatus(prev => ({ ...prev, xlsx: 'generating' }));
-    // Small delay to simulate generation and show status
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setExportStatus(prev => ({ ...prev, xlsx: 'downloading' }));
+    setExportStatus(prev => ({ ...prev, xlsx: { status: 'generating', progress: 0 } }));
     
-    exportExcelReport({
+    await exportExcelReport({
       sales,
       stores,
       startDate,
@@ -221,20 +218,27 @@ const LocalReportsPage: React.FC = () => {
       selectedStore,
       selectedSeller,
       companyName: 'NAVANHULA CLOUD',
+      onProgress: (progress) => {
+        setExportStatus(prev => ({ 
+          ...prev, 
+          xlsx: { 
+            status: progress < 100 ? 'generating' : 'downloading', 
+            progress 
+          } 
+        }));
+      }
     });
 
+    setExportStatus(prev => ({ ...prev, xlsx: { status: 'completed', progress: 100 } }));
     setTimeout(() => {
-      setExportStatus(prev => ({ ...prev, xlsx: 'completed' }));
-      setTimeout(() => setExportStatus(prev => ({ ...prev, xlsx: 'idle' })), 2000);
-    }, 500);
+      setExportStatus(prev => ({ ...prev, xlsx: { ...prev.xlsx, status: 'idle' } }));
+    }, 2000);
   };
 
   const handleExportPDF = async () => {
-    setExportStatus(prev => ({ ...prev, pdf: 'generating' }));
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setExportStatus(prev => ({ ...prev, pdf: 'downloading' }));
+    setExportStatus(prev => ({ ...prev, pdf: { status: 'generating', progress: 0 } }));
 
-    exportPDFReport({
+    await exportPDFReport({
       sales,
       stores,
       startDate,
@@ -242,13 +246,23 @@ const LocalReportsPage: React.FC = () => {
       selectedStore,
       selectedSeller,
       companyName: 'NAVANHULA CLOUD',
+      onProgress: (progress) => {
+        setExportStatus(prev => ({ 
+          ...prev, 
+          pdf: { 
+            status: progress < 100 ? 'generating' : 'downloading', 
+            progress 
+          } 
+        }));
+      }
     });
 
+    setExportStatus(prev => ({ ...prev, pdf: { status: 'completed', progress: 100 } }));
     setTimeout(() => {
-      setExportStatus(prev => ({ ...prev, pdf: 'completed' }));
-      setTimeout(() => setExportStatus(prev => ({ ...prev, pdf: 'idle' })), 2000);
-    }, 500);
+      setExportStatus(prev => ({ ...prev, pdf: { ...prev.pdf, status: 'idle' } }));
+    }, 2000);
   };
+
 
   // Auto-export logic
   useEffect(() => {
