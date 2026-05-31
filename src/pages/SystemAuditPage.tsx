@@ -16,12 +16,16 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, startOfDay, endOfDay, isWithinInterval, parseISO } from "date-fns";
+import { 
+  format, startOfDay, endOfDay, isWithinInterval, parseISO, 
+  subDays, startOfMonth, endOfMonth 
+} from "date-fns";
 import { pt } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { cn } from "@/lib/utils";
+
 
 interface AuditLog {
   id: string;
