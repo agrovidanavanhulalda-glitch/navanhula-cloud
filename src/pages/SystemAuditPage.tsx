@@ -549,7 +549,7 @@ const SystemAuditPage: React.FC = () => {
                               <Fingerprint className="w-3 h-3" /> {log.transaction_id.substring(0, 8)}...
                             </span>
                             <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" /> {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss")}
+                              <Clock className="w-3 h-3" /> {formatInTimeZone(new Date(log.created_at), timezone, "dd/MM/yyyy HH:mm:ss")}
                             </span>
                           </div>
                         </div>
