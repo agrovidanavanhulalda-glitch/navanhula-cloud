@@ -78,10 +78,13 @@ const SystemAuditPage: React.FC = () => {
   const [eventSearch, setEventSearch] = useState("");
   const [eventRoleFilter, setEventRoleFilter] = useState("all");
   const [eventStatusFilter, setEventStatusFilter] = useState("all");
+  const [startTime, setStartTime] = useState("00:00");
+  const [endTime, setEndTime] = useState("23:59");
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
   });
+
 
 
   const { data: logs, isLoading } = useQuery({
@@ -131,20 +134,35 @@ const SystemAuditPage: React.FC = () => {
   });
 
   const isWithinDateRange = (dateString: string) => {
-    if (!dateRange.from && !dateRange.to) return true;
     const date = parseISO(dateString);
-    const from = dateRange.from ? startOfDay(dateRange.from) : undefined;
-    const to = dateRange.to ? endOfDay(dateRange.to) : undefined;
+    
+    // Check Date Range
+    if (dateRange.from || dateRange.to) {
+      const from = dateRange.from ? startOfDay(dateRange.from) : undefined;
+      const to = dateRange.to ? endOfDay(dateRange.to) : undefined;
 
-    if (from && to) {
-      return isWithinInterval(date, { start: from, end: to });
-    } else if (from) {
-      return date >= from;
-    } else if (to) {
-      return date <= to;
+      if (from && to) {
+        if (!isWithinInterval(date, { start: from, end: to })) return false;
+      } else if (from && date < from) {
+        return false;
+      } else if (to && date > to) {
+        return false;
+      }
     }
-    return true;
+
+    // Check Time Range
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const timeValue = hours * 60 + minutes;
+
+    const [startH, startM] = startTime.split(':').map(Number);
+    const [endH, endM] = endTime.split(':').map(Number);
+    const startValue = startH * 60 + startM;
+    const endValue = endH * 60 + endM;
+
+    return timeValue >= startValue && timeValue <= endValue;
   };
+
 
   const filteredAuthLogs = authFlowLogs?.filter(log => 
     (!authSearch || 
@@ -302,16 +320,39 @@ const SystemAuditPage: React.FC = () => {
               />
             </PopoverContent>
           </Popover>
-          {(dateRange.from || dateRange.to) && (
+          <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-md border border-border/50">
+            <div className="flex items-center gap-2 px-2">
+              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+              <Input 
+                type="time" 
+                value={startTime} 
+                onChange={(e) => setStartTime(e.target.value)}
+                className="w-[90px] h-8 text-xs border-none bg-transparent focus-visible:ring-0 px-1"
+              />
+              <span className="text-muted-foreground">-</span>
+              <Input 
+                type="time" 
+                value={endTime} 
+                onChange={(e) => setEndTime(e.target.value)}
+                className="w-[90px] h-8 text-xs border-none bg-transparent focus-visible:ring-0 px-1"
+              />
+            </div>
+          </div>
+          {(dateRange.from || dateRange.to || startTime !== "00:00" || endTime !== "23:59") && (
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => setDateRange({ from: undefined, to: undefined })}
+              onClick={() => {
+                setDateRange({ from: undefined, to: undefined });
+                setStartTime("00:00");
+                setEndTime("23:59");
+              }}
               className="h-10 px-2 text-muted-foreground"
             >
               <X className="w-4 h-4 mr-2" /> Limpar
             </Button>
           )}
+
       </div>
 
 
