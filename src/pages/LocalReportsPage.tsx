@@ -80,6 +80,7 @@ const LocalReportsPage: React.FC = () => {
     status: 'success' | 'error';
     syncStatus: 'pending' | 'syncing' | 'completed';
     error?: string;
+    attempts?: { id: string; timestamp: Date; status: string; error_message?: string; retry_count: number }[];
   }[]>([]);
   const isInitialMount = useRef(true);
 
@@ -89,7 +90,7 @@ const LocalReportsPage: React.FC = () => {
     const fetchHistory = async () => {
       const { data, error } = await supabase
         .from('export_history')
-        .select('*')
+        .select('*, export_attempts_logs(*)')
         .order('timestamp', { ascending: false })
         .limit(20);
       
@@ -112,7 +113,14 @@ const LocalReportsPage: React.FC = () => {
           filters: item.filters as any,
           status: item.status as 'success' | 'error',
           syncStatus: 'completed' as const,
-          error: item.error_message || undefined
+          error: item.error_message || undefined,
+          attempts: (item.export_attempts_logs || []).map((log: any) => ({
+            id: log.id,
+            timestamp: new Date(log.timestamp),
+            status: log.status,
+            error_message: log.error_message,
+            retry_count: log.retry_count
+          })).sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime())
         }));
 
         // Merge and avoid duplicates
@@ -991,23 +999,35 @@ const LocalReportsPage: React.FC = () => {
                         </td>
                         <td className="p-3 text-right">
                           {item.status === 'error' && item.error && (
-                            <div className="flex items-center gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-8 text-xs text-destructive hover:text-destructive"
-                                onClick={() => alert(`Erro: ${item.error}`)}
-                              >
-                                Ver Erro
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 text-xs"
-                                onClick={() => syncManager.retryTask(item.id)}
-                              >
-                                Reprocessar
-                              </Button>
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 text-xs text-destructive hover:text-destructive"
+                                  onClick={() => {
+                                    const logs = item.attempts?.map(a => 
+                                      `[${a.timestamp.toLocaleString('pt-MZ')}] Status: ${a.status}${a.error_message ? ` - Erro: ${a.error_message}` : ''}`
+                                    ).join('\n') || 'Sem logs adicionais.';
+                                    alert(`Detalhes do Histórico:\nErro principal: ${item.error}\n\nTentativas:\n${logs}`);
+                                  }}
+                                >
+                                  Ver Log Detalhado
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-8 text-xs"
+                                  onClick={() => syncManager.retryTask(item.id)}
+                                >
+                                  Reprocessar
+                                </Button>
+                              </div>
+                              {item.attempts && item.attempts.length > 0 && (
+                                <div className="text-[9px] text-muted-foreground italic">
+                                  {item.attempts.length} tentativa{item.attempts.length > 1 ? 's' : ''} registrada{item.attempts.length > 1 ? 's' : ''}
+                                </div>
+                              )}
                             </div>
                           )}
                         </td>
