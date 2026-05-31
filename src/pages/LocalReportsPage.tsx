@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -57,6 +58,8 @@ const LocalReportsPage: React.FC = () => {
   });
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [autoExport, setAutoExport] = useState(false);
+  const isInitialMount = useRef(true);
 
   // Filtered sales (completed only)
   const filteredSales = useMemo(() => {
@@ -220,6 +223,23 @@ const LocalReportsPage: React.FC = () => {
     });
   };
 
+  // Auto-export logic
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (autoExport) {
+      const timer = setTimeout(() => {
+        handleExportExcel();
+        handleExportPDF();
+      }, 1000); // 1 second debounce to allow multiple filter changes
+
+      return () => clearTimeout(timer);
+    }
+  }, [selectedStore, selectedSeller, startDate, endDate, autoExport]);
+
   if (!isAdmin) {
     return (
       <div className="p-6">
@@ -317,6 +337,15 @@ const LocalReportsPage: React.FC = () => {
               onChange={(e) => setEndDate(e.target.value)}
               className="w-40"
             />
+          </div>
+
+          <div className="flex items-center space-x-2 pb-2">
+            <Switch
+              id="auto-export"
+              checked={autoExport}
+              onCheckedChange={setAutoExport}
+            />
+            <Label htmlFor="auto-export" className="cursor-pointer">Exportação Automática</Label>
           </div>
         </div>
       </Card>
