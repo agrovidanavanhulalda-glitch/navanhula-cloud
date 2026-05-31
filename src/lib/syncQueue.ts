@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 export interface SyncTask {
   id: string;
-  type: 'SALE' | 'STOCK_ADJUSTMENT' | 'STORE_UPDATE' | 'PRODUCT_UPDATE' | 'ONBOARDING';
+  type: 'SALE' | 'STOCK_ADJUSTMENT' | 'STORE_UPDATE' | 'PRODUCT_UPDATE' | 'ONBOARDING' | 'EXPORT_HISTORY';
   payload: any;
   retryCount: number;
   lastAttempt?: number;
