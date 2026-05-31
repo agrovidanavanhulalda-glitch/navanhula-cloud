@@ -184,6 +184,7 @@ describe('E2E Test Execution Report with Evidence', () => {
         stores: [{ id: TEST_STORE_ID, name: 'Test Store', isActive: true, address: 'Test Addr', phone: '123' }],
         currentStore: { id: TEST_STORE_ID, name: 'Test Store', isActive: true, address: 'Test Addr', phone: '123' },
         products: [{ id: TEST_PRODUCT_ID, name: 'Product A', costPrice: 80, salePrice: 150, stock: 9 }],
+        sellers: [{ id: TEST_USER_ID, name: 'Test User', email: 'test@test.com', role: 'admin', storeId: TEST_STORE_ID, isActive: true }],
         loading: false,
         getCancelledSales: () => [],
         getCancellationHistory: () => [],
@@ -214,6 +215,26 @@ describe('E2E Test Execution Report with Evidence', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Relatório/i }));
     expect(pdfSpy).toHaveBeenCalled();
+
+    // 5. Test Auto-Export
+    collectEvidence('AUTO_EXPORT_TEST', 'Testing automatic export on filter change');
+    const autoExportSwitch = screen.getByLabelText(/Exportação Automática/i);
+    fireEvent.click(autoExportSwitch);
+    
+    // Reset spies to check auto-trigger
+    excelSpy.mockClear();
+    pdfSpy.mockClear();
+
+    // Change a filter (e.g., end date)
+    const endDateInput = screen.getByLabelText(/Data Fim/i);
+    fireEvent.change(endDateInput, { target: { value: '2026-12-31' } });
+
+    // Wait for debounce (1s)
+    await waitFor(() => {
+        expect(excelSpy).toHaveBeenCalled();
+        expect(pdfSpy).toHaveBeenCalled();
+    }, { timeout: 3000 });
+    collectEvidence('AUTO_EXPORT_SUCCESS', 'Reports exported automatically after filter change');
 
     collectEvidence('FINISH', 'Full E2E automation cycle complete with data consistency');
   });
