@@ -360,11 +360,46 @@ export const exportExcelReport = (props: PDFReportProps) => {
     { 'Métrica': 'Margem Média (%)', 'Valor': totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) + '%' : '0.00%' },
     { 'Métrica': 'Período', 'Valor': `${startDate} a ${endDate}` }
   ];
-  const summaryWorksheet = XLSX.utils.json_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(workbook, summaryWorksheet, "Resumo");
+  // Add product margins sheet
+  const productMargins = props.sales.reduce((acc: any[], sale) => {
+    sale.items.forEach(item => {
+      const existing = acc.find(i => i.id === item.product.id);
+      if (existing) {
+        existing.qty += item.quantity;
+        existing.total += item.total;
+        existing.profit += (item.product.salePrice - item.product.costPrice) * item.quantity;
+      } else {
+        const profit = (item.product.salePrice - item.product.costPrice) * item.quantity;
+        acc.push({
+          id: item.product.id,
+          'Produto': item.product.name,
+          'Preço Custo': item.product.costPrice,
+          'Preço Venda': item.product.salePrice,
+          'Margem Unitária': item.product.salePrice - item.product.costPrice,
+          'Margem (%)': item.product.costPrice > 0 ? ((item.product.salePrice - item.product.costPrice) / item.product.costPrice * 100).toFixed(2) + '%' : '0%',
+          qty: item.quantity,
+          total: item.total,
+          profit: profit
+        });
+      }
+    });
+    return acc;
+  }, []).map(p => ({
+    'Produto': p.Produto,
+    'Preço Custo': p['Preço Custo'],
+    'Preço Venda': p['Preço Venda'],
+    'Margem Unitária': p['Margem Unitária'],
+    'Margem (%)': p['Margem (%)'],
+    'Qtd Vendida': p.qty,
+    'Total Receita': p.total,
+    'Lucro Total': p.profit
+  }));
+
+  const marginWorksheet = XLSX.utils.json_to_sheet(productMargins);
+  XLSX.utils.book_append_sheet(workbook, marginWorksheet, "Margens de Produtos");
 
   // Export
-  XLSX.writeFile(workbook, `relatorio_vendas_${startDate}_${endDate}.xlsx`);
+  XLSX.writeFile(workbook, `relatorio_vendas_margens_${startDate}_${endDate}.xlsx`);
 };
 
 // Component for preview/print
