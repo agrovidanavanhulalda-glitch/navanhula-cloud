@@ -333,10 +333,11 @@ const LocalReportsPage: React.FC = () => {
               Visualizar
             </Button>
             <Button 
-              variant="outline" 
+              variant={exportStatus.xlsx.status === 'error' ? 'destructive' : 'outline'} 
               onClick={handleExportExcel}
-              disabled={exportStatus.xlsx.status !== 'idle'}
+              disabled={exportStatus.xlsx.status !== 'idle' && exportStatus.xlsx.status !== 'error'}
             >
+
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               {exportStatus.xlsx.status === 'idle' ? 'Excel' : 
                exportStatus.xlsx.status === 'generating' ? `Gerando ${exportStatus.xlsx.progress}%` :
