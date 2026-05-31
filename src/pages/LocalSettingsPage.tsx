@@ -149,6 +149,42 @@ const LocalSettingsPage: React.FC = () => {
     }
   };
 
+  const handleSaveSystem = async () => {
+    setSaving(true);
+    try {
+      // Update company global settings
+      const { error: companyError } = await supabase
+        .from('companies')
+        .update({
+          currency: systemForm.currency,
+          timezone: systemForm.timezone,
+        })
+        .eq('id', company!.id);
+
+      if (companyError) throw companyError;
+
+      // Update store settings if we are in a store context
+      if (store?.id) {
+        const { error: storeError } = await supabase
+          .from('stores')
+          .update({
+            timezone: systemForm.timezone,
+            default_min_stock: systemForm.default_min_stock,
+          })
+          .eq('id', store.id);
+        
+        if (storeError) throw storeError;
+      }
+
+      toast.success('Configurações de sistema salvas');
+      refreshUserData();
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleResetPassword = async () => {
     if (!user?.email) return;
     try {
@@ -387,6 +423,11 @@ const LocalSettingsPage: React.FC = () => {
                   <Switch checked={systemForm.community_enabled} onCheckedChange={v => setSystemForm(p => ({ ...p, community_enabled: v }))} />
                 </div>
               </div>
+              <Separator />
+              <Button onClick={handleSaveSystem} disabled={saving}>
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                Salvar Sistema
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
