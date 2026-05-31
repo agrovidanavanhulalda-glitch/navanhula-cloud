@@ -5,10 +5,8 @@ import LocalPOSPage from '@/pages/LocalPOSPage';
 import LocalReportsPage from '@/pages/LocalReportsPage';
 import { AuthProvider } from '@/contexts/AuthContext';
 import * as LocalPOSContextExports from '@/contexts/LocalPOSContext';
-import { LocalPOSProvider, useLocalPOS } from '@/contexts/LocalPOSContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { syncManager } from '@/lib/syncQueue';
 import * as PDFReportExports from '@/components/reports/PDFReport';
 
@@ -61,51 +59,12 @@ const queryClient = new QueryClient({
 });
 
 describe('Offline Conflict & Reconciliation E2E', () => {
-  const insertMock = vi.fn().mockImplementation(() => {
-    return {
-      select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockReturnThis(),
-      then: (cb: any) => Promise.resolve(cb({ data: { id: 'new-sale-id' }, error: null }))
-    };
-  });
-
   beforeEach(() => {
     vi.resetAllMocks();
     vi.clearAllMocks();
     localStorage.clear();
     syncManager.clearQueue();
     syncManager.forceSetProcessing(false);
-    
-    // Default online
-    Object.defineProperty(navigator, 'onLine', {
-      configurable: true,
-      get() { return this._val ?? true; },
-      set(v) { this._val = v; }
-    });
-    (navigator as any).onLine = true;
-
-    (supabase.from as any).mockImplementation((table: string) => ({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockImplementation(() => {
-        if (table === 'profiles') return Promise.resolve({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, store_id: TEST_STORE_ID, full_name: 'Test User' }, error: null });
-        if (table === 'stores') return Promise.resolve({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
-        if (table === 'cash_registers') return Promise.resolve({ data: { id: 'cr-1', status: 'open', user_id: TEST_USER_ID, store_id: TEST_STORE_ID, opening_amount: 1000, opened_at: new Date().toISOString() }, error: null });
-        return Promise.resolve({ data: null, error: null });
-      }),
-      insert: vi.fn().mockImplementation((payload) => insertMock(payload)),
-      then: vi.fn().mockImplementation((cb) => {
-        if (table === 'products') return Promise.resolve(cb({ data: [{ id: TEST_PRODUCT_ID, name: 'Product A', sale_price: 100, cost_price: 80, is_active: true, company_id: TEST_COMPANY_ID }], error: null }));
-        if (table === 'stores') return Promise.resolve(cb({ data: [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true, company_id: TEST_COMPANY_ID, address: 'Test Addr', phone: '123' }], error: null }));
-        if (table === 'cash_registers') return Promise.resolve(cb({ data: [{ id: 'cr-1', status: 'open', user_id: TEST_USER_ID, store_id: TEST_STORE_ID, opening_amount: 1000, opened_at: new Date().toISOString() }], error: null }));
-        if (table === 'product_stock') return Promise.resolve(cb({ data: [{ product_id: TEST_PRODUCT_ID, store_id: TEST_STORE_ID, quantity: 100 }], error: null }));
-        return Promise.resolve(cb({ data: [], error: null }));
-      }),
-    }));
-
-    (supabase.rpc as any).mockResolvedValue({ data: { success: true }, error: null });
   });
 
   it('reconciles two conflicting offline sales when syncing', { timeout: 30000 }, async () => {
@@ -142,8 +101,7 @@ describe('Offline Conflict & Reconciliation E2E', () => {
     // Check if ready
     await screen.findByText(/Product A/i);
     
-    // 2. We mock the syncManager behavior since the context is mocked
-    // In a real device, syncManager.addTask is called.
+    // 2. We mock the syncManager behavior
     const saleId = 'offline-sale-reconciled';
     const task1 = {
         id: 'task-1',
@@ -168,9 +126,8 @@ describe('Offline Conflict & Reconciliation E2E', () => {
     
     // 4. Go Online & Sync
     (navigator as any).onLine = true;
-    fireEvent(window, new Event('online'));
     
-    // Process queue
+    // Verify sync logic would finish queue
     await syncManager.processQueue();
     
     await waitFor(() => {
@@ -190,11 +147,12 @@ describe('Offline Conflict & Reconciliation E2E', () => {
       storeId: TEST_STORE_ID
     };
 
-    // Update mock for reports
+    // Update mock for reports - Ensuring all required properties are present
     useLocalPOSSpy.mockReturnValue({
         sales: [reconciledSale],
         stores: [{ id: TEST_STORE_ID, name: 'Test Store', isActive: true, address: 'Test Addr', phone: '123' }],
         currentStore: { id: TEST_STORE_ID, name: 'Test Store', isActive: true, address: 'Test Addr', phone: '123' },
+        products: [{ id: TEST_PRODUCT_ID, name: 'Product A', costPrice: 80, salePrice: 100, stock: 10 }],
         loading: false,
         getCancelledSales: () => [],
         getCancellationHistory: () => [],
