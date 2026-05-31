@@ -16,12 +16,16 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, startOfDay, endOfDay, isWithinInterval, parseISO } from "date-fns";
+import { 
+  format, startOfDay, endOfDay, isWithinInterval, parseISO, 
+  subDays, startOfMonth, endOfMonth 
+} from "date-fns";
 import { pt } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { cn } from "@/lib/utils";
+
 
 interface AuditLog {
   id: string;
@@ -195,7 +199,27 @@ const SystemAuditPage: React.FC = () => {
     doc.save(`${fileName}_${format(new Date(), "dd-MM-yyyy")}.pdf`);
   };
 
+  const setQuickRange = (range: 'today' | 'yesterday' | '7days' | 'month') => {
+    const now = new Date();
+    switch (range) {
+      case 'today':
+        setDateRange({ from: now, to: now });
+        break;
+      case 'yesterday':
+        const yesterday = subDays(now, 1);
+        setDateRange({ from: yesterday, to: yesterday });
+        break;
+      case '7days':
+        setDateRange({ from: subDays(now, 7), to: now });
+        break;
+      case 'month':
+        setDateRange({ from: startOfMonth(now), to: endOfMonth(now) });
+        break;
+    }
+  };
+
   const getStepLabel = (step: string) => {
+
     const labels: Record<string, string> = {
       'trigger_started': 'Início do Fluxo',
       'profile_created': 'Criação de Perfil',
@@ -225,15 +249,25 @@ const SystemAuditPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2 text-primary">
             <Shield className="w-7 h-7" />
             Auditoria Enterprise
           </h1>
           <p className="text-muted-foreground">Rastreabilidade total de ações críticas no sistema</p>
-        <div className="flex items-center gap-3">
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setQuickRange('today')} className="h-9">Hoje</Button>
+            <Button variant="outline" size="sm" onClick={() => setQuickRange('yesterday')} className="h-9">Ontem</Button>
+            <Button variant="outline" size="sm" onClick={() => setQuickRange('7days')} className="h-9">7 Dias</Button>
+            <Button variant="outline" size="sm" onClick={() => setQuickRange('month')} className="h-9">Mês Atual</Button>
+            <div className="w-px h-6 bg-border mx-2" />
+          </div>
           <Popover>
+
+
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
@@ -278,8 +312,8 @@ const SystemAuditPage: React.FC = () => {
               <X className="w-4 h-4 mr-2" /> Limpar
             </Button>
           )}
-        </div>
       </div>
+
 
       </div>
 
