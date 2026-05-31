@@ -83,7 +83,9 @@ const LocalReportsPage: React.FC = () => {
     error?: string;
     attempts?: { id: string; timestamp: Date; status: string; error_message?: string; retry_count: number }[];
   }[]>([]);
+  const [selectedSyncFilter, setSelectedSyncFilter] = useState<'all' | 'pending' | 'syncing' | 'completed'>('all');
   const isInitialMount = useRef(true);
+
 
 
   // Fetch history on mount
@@ -923,36 +925,65 @@ const LocalReportsPage: React.FC = () => {
         {/* Export History Tab */}
         <TabsContent value="history">
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Histórico de Exportações
-              </h3>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs h-8 flex items-center gap-1"
-                  onClick={() => exportLogsPDF({ 
-                    history: exportHistory, 
-                    stores, 
-                    filters: { store: selectedStore, seller: selectedSeller, start: startDate, end: endDate },
-                    companyName: 'NAVANHULA CLOUD'
-                  })}
-                >
-                  <Download className="w-3 h-3" />
-                  Auditoria PDF
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs h-8"
-                  onClick={() => syncManager.retryAllFailed()}
-                >
-                  Reprocessar Falhas
-                </Button>
+            <div className="flex flex-col gap-4 mb-6">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Histórico de Exportações
+                </h3>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-xs h-8 flex items-center gap-1"
+                    onClick={() => exportLogsPDF({ 
+                      history: exportHistory, 
+                      stores, 
+                      filters: { 
+                        store: selectedStore, 
+                        seller: selectedSeller, 
+                        start: startDate, 
+                        end: endDate,
+                        syncStatus: selectedSyncFilter
+                      },
+                      companyName: 'NAVANHULA CLOUD'
+                    })}
+                  >
+                    <Download className="w-3 h-3" />
+                    Auditoria PDF
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-xs h-8"
+                    onClick={() => syncManager.retryAllFailed()}
+                  >
+                    Reprocessar Falhas
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="sync-filter" className="text-xs whitespace-nowrap">Filtrar Status:</Label>
+                  <Select value={selectedSyncFilter} onValueChange={(v: any) => setSelectedSyncFilter(v)}>
+                    <SelectTrigger id="sync-filter" className="h-8 w-[140px] text-xs">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Status</SelectItem>
+                      <SelectItem value="completed">Sincronizado</SelectItem>
+                      <SelectItem value="syncing">Sincronizando</SelectItem>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="text-[10px] text-muted-foreground">
+                  * Este filtro também será aplicado na exportação do relatório de auditoria PDF.
+                </div>
               </div>
             </div>
+
             {exportHistory.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">Nenhuma exportação realizada nesta sessão</p>
             ) : (
@@ -968,7 +999,10 @@ const LocalReportsPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {exportHistory.map((item) => (
+                    {exportHistory
+                      .filter(item => selectedSyncFilter === 'all' || item.syncStatus === selectedSyncFilter)
+                      .map((item) => (
+
                       <tr key={item.id} className="hover:bg-muted/30">
                         <td className="p-3 text-sm">{item.timestamp.toLocaleString('pt-MZ')}</td>
                         <td className="p-3">
