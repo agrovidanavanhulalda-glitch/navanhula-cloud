@@ -360,7 +360,11 @@ export const exportExcelReport = (props: PDFReportProps) => {
     { 'Métrica': 'Margem Média (%)', 'Valor': totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) + '%' : '0.00%' },
     { 'Métrica': 'Período', 'Valor': `${startDate} a ${endDate}` }
   ];
+  const summaryWorksheet = XLSX.utils.json_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(workbook, summaryWorksheet, "Resumo");
+
   // Add product margins sheet
+
   const productMargins = props.sales.reduce((acc: any[], sale) => {
     sale.items.forEach(item => {
       const existing = acc.find(i => i.id === item.product.id);
