@@ -207,7 +207,7 @@ const SystemAuditPage: React.FC = () => {
     doc.text(title, 14, 15);
     
     const tableData = data.map(item => columns.map(col => {
-      if (col === 'created_at') return format(new Date(item[col]), "dd/MM/yyyy HH:mm");
+      if (col === 'created_at') return formatInTimeZone(new Date(item[col]), timezone, "dd/MM/yyyy HH:mm");
       if (typeof item[col] === 'object') return JSON.stringify(item[col]).substring(0, 50);
       return String(item[col] || "");
     }));
