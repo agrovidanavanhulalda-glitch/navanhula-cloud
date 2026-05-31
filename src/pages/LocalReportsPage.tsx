@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -79,7 +81,66 @@ const LocalReportsPage: React.FC = () => {
   const isInitialMount = useRef(true);
 
 
+  // Fetch history on mount
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const { data, error } = await supabase
+        .from('export_history')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(20);
+
+      if (!error && data) {
+        setExportHistory(data.map(item => ({
+          id: item.id,
+          timestamp: new Date(item.timestamp),
+          type: item.type as 'PDF' | 'XLSX',
+          filters: item.filters as any,
+          status: item.status as 'success' | 'error',
+          error: item.error_message || undefined
+        })));
+      }
+    };
+
+    if (isAdmin) {
+      fetchHistory();
+    }
+  }, [isAdmin]);
+
+  const saveToHistory = async (type: 'PDF' | 'XLSX', status: 'success' | 'error', filters: any, errorMsg?: string) => {
+    const { user } = (await supabase.auth.getSession()).data.session || {};
+    if (!user || !targetCompanyId) return;
+
+    const entry = {
+      user_id: user.id,
+      company_id: targetCompanyId,
+      type,
+      status,
+      filters,
+      error_message: errorMsg,
+      timestamp: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('export_history')
+      .insert(entry)
+      .select()
+      .single();
+
+    if (!error && data) {
+      setExportHistory(prev => [{
+        id: data.id,
+        timestamp: new Date(data.timestamp),
+        type: data.type as 'PDF' | 'XLSX',
+        filters: data.filters as any,
+        status: data.status as 'success' | 'error',
+        error: data.error_message || undefined
+      }, ...prev].slice(0, 20));
+    }
+  };
+
   // Filtered sales (completed only)
+
   const filteredSales = useMemo(() => {
     return sales.filter(sale => {
       const saleDate = new Date(sale.createdAt);
@@ -219,7 +280,6 @@ const LocalReportsPage: React.FC = () => {
   // Export handlers
   const handleExportExcel = async () => {
     const filterSnapshot = { store: selectedStore, seller: selectedSeller, start: startDate, end: endDate };
-    const historyId = Math.random().toString(36).substring(7);
     
     try {
       setExportStatus(prev => ({ ...prev, xlsx: { status: 'generating', progress: 0 } }));
@@ -244,13 +304,7 @@ const LocalReportsPage: React.FC = () => {
       });
 
       setExportStatus(prev => ({ ...prev, xlsx: { status: 'completed', progress: 100 } }));
-      setExportHistory(prev => [{
-        id: historyId,
-        timestamp: new Date(),
-        type: 'XLSX' as const,
-        filters: filterSnapshot,
-        status: 'success' as const
-      }, ...prev].slice(0, 10));
+      await saveToHistory('XLSX', 'success', filterSnapshot);
 
       setTimeout(() => {
         setExportStatus(prev => ({ ...prev, xlsx: { ...prev.xlsx, status: 'idle' } }));
@@ -262,23 +316,16 @@ const LocalReportsPage: React.FC = () => {
         ...prev, 
         xlsx: { status: 'error', progress: 0, error: errorMessage } 
       }));
-      setExportHistory(prev => [{
-        id: historyId,
-        timestamp: new Date(),
-        type: 'XLSX' as const,
-        filters: filterSnapshot,
-        status: 'error' as const,
-        error: error.message || errorMessage
-      }, ...prev].slice(0, 10));
+      await saveToHistory('XLSX', 'error', filterSnapshot, error.message || errorMessage);
     }
   };
 
   const handleExportPDF = async () => {
     const filterSnapshot = { store: selectedStore, seller: selectedSeller, start: startDate, end: endDate };
-    const historyId = Math.random().toString(36).substring(7);
 
     try {
       setExportStatus(prev => ({ ...prev, pdf: { status: 'generating', progress: 0 } }));
+
 
       await exportPDFReport({
         sales,
@@ -300,13 +347,7 @@ const LocalReportsPage: React.FC = () => {
       });
 
       setExportStatus(prev => ({ ...prev, pdf: { status: 'completed', progress: 100 } }));
-      setExportHistory(prev => [{
-        id: historyId,
-        timestamp: new Date(),
-        type: 'PDF' as const,
-        filters: filterSnapshot,
-        status: 'success' as const
-      }, ...prev].slice(0, 10));
+      await saveToHistory('PDF', 'success', filterSnapshot);
 
       setTimeout(() => {
         setExportStatus(prev => ({ ...prev, pdf: { ...prev.pdf, status: 'idle' } }));
@@ -318,16 +359,10 @@ const LocalReportsPage: React.FC = () => {
         ...prev, 
         pdf: { status: 'error', progress: 0, error: errorMessage } 
       }));
-      setExportHistory(prev => [{
-        id: historyId,
-        timestamp: new Date(),
-        type: 'PDF' as const,
-        filters: filterSnapshot,
-        status: 'error' as const,
-        error: error.message || errorMessage
-      }, ...prev].slice(0, 10));
+      await saveToHistory('PDF', 'error', filterSnapshot, error.message || errorMessage);
     }
   };
+
 
 
 

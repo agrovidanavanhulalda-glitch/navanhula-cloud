@@ -2773,6 +2773,42 @@ export type Database = {
           },
         ]
       }
+      export_history: {
+        Row: {
+          company_id: string
+          created_at: string
+          error_message: string | null
+          filters: Json
+          id: string
+          status: string
+          timestamp: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          error_message?: string | null
+          filters: Json
+          id?: string
+          status: string
+          timestamp?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          error_message?: string | null
+          filters?: Json
+          id?: string
+          status?: string
+          timestamp?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       financial_scores: {
         Row: {
           company_id: string
