@@ -420,6 +420,54 @@ export const exportLogsPDF = async (options: {
   doc.save(`auditoria_exportacoes_${new Date().getTime()}.pdf`);
 };
 
+export const exportLogsExcel = async (options: { 
+  history: any[], 
+  stores: LocalStore[],
+  filters: { store: string, seller: string, start: string, end: string, syncStatus?: string }
+}) => {
+  const { history, stores, filters } = options;
+  
+  const filteredHistory = history.filter(item => {
+    const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
+    if (itemDate < filters.start || itemDate > filters.end) return false;
+    if (filters.store !== 'all' && item.filters.store !== filters.store) return false;
+    if (filters.seller !== 'all' && item.filters.seller !== filters.seller) return false;
+    if (filters.syncStatus && filters.syncStatus !== 'all' && item.syncStatus !== filters.syncStatus) return false;
+    return true;
+  });
+
+  const data = filteredHistory.flatMap(item => {
+    const baseInfo = {
+      'ID': item.id,
+      'Data/Hora': new Date(item.timestamp).toLocaleString('pt-MZ'),
+      'Tipo': item.type,
+      'Status Final': item.status === 'success' ? 'Sucesso' : 'Falha',
+      'Sincronização': item.syncStatus,
+      'Filtro Loja': item.filters.store,
+      'Filtro Vendedor': item.filters.seller,
+      'Filtro Início': item.filters.start,
+      'Filtro Fim': item.filters.end
+    };
+
+    if (!item.attempts || item.attempts.length === 0) {
+      return [{ ...baseInfo, 'Tentativa Status': 'N/A', 'Tentativa Erro': 'N/A', 'Tentativa Data': 'N/A' }];
+    }
+
+    return item.attempts.map((attempt: any) => ({
+      ...baseInfo,
+      'Tentativa Status': attempt.status,
+      'Tentativa Erro': attempt.error_message || '',
+      'Tentativa Data': new Date(attempt.timestamp).toLocaleString('pt-MZ')
+    }));
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Logs de Auditoria");
+  
+  XLSX.writeFile(workbook, `auditoria_exportacoes_${new Date().getTime()}.xlsx`);
+};
+
 
 // Export as real Excel .xlsx
 export const exportExcelReport = async (props: PDFReportProps & { onProgress?: (p: number) => void }) => {

@@ -41,7 +41,7 @@ import {
   Download
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
-import PDFReportPreview, { exportPDFReport, exportExcelReport, exportLogsPDF } from '@/components/reports/PDFReport';
+import PDFReportPreview, { exportPDFReport, exportExcelReport, exportLogsPDF, exportLogsExcel } from '@/components/reports/PDFReport';
 
 // Relatórios profissionais com templates separados
 
@@ -955,6 +955,25 @@ const LocalReportsPage: React.FC = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
+                    className="text-xs h-8 flex items-center gap-1"
+                    onClick={() => exportLogsExcel({ 
+                      history: exportHistory, 
+                      stores, 
+                      filters: { 
+                        store: selectedStore, 
+                        seller: selectedSeller, 
+                        start: startDate, 
+                        end: endDate,
+                        syncStatus: selectedSyncFilter
+                      }
+                    })}
+                  >
+                    <FileSpreadsheet className="w-3 h-3" />
+                    Auditoria XLSX
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
                     className="text-xs h-8"
                     onClick={() => syncManager.retryAllFailed()}
                   >
@@ -1078,6 +1097,19 @@ const LocalReportsPage: React.FC = () => {
                                 >
                                   <Download className="w-3 h-3" />
                                   Log PDF
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-8 text-xs flex items-center gap-1"
+                                  onClick={() => exportLogsExcel({ 
+                                    history: [item], 
+                                    stores, 
+                                    filters: { store: item.filters.store, seller: item.filters.seller, start: item.filters.start, end: item.filters.end }
+                                  })}
+                                >
+                                  <FileSpreadsheet className="w-3 h-3" />
+                                  Log XLSX
                                 </Button>
                                 <Button 
                                   variant="outline" 
