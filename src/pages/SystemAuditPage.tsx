@@ -9,7 +9,7 @@ import {
   ShieldCheck, Activity, Clock, User, ArrowRight, Shield, 
   Key, AlertCircle, CheckCircle2, Database, Hash, Search,
   History, UserPlus, Fingerprint, Download, FileJson, FileText,
-  Filter, Calendar as CalendarIcon, X
+  Filter, Calendar as CalendarIcon, X, Globe
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   format, startOfDay, endOfDay, isWithinInterval, parseISO, 
   subDays, startOfMonth, endOfMonth 
 } from "date-fns";
+import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { pt } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -80,6 +81,7 @@ const SystemAuditPage: React.FC = () => {
   const [eventStatusFilter, setEventStatusFilter] = useState("all");
   const [startTime, setStartTime] = useState("00:00");
   const [endTime, setEndTime] = useState("23:59");
+  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
@@ -134,18 +136,21 @@ const SystemAuditPage: React.FC = () => {
   });
 
   const isWithinDateRange = (dateString: string) => {
-    const date = parseISO(dateString);
+    const utcDate = parseISO(dateString);
+    const date = toZonedTime(utcDate, timezone);
     
     // Check Date Range
     if (dateRange.from || dateRange.to) {
       const from = dateRange.from ? startOfDay(dateRange.from) : undefined;
       const to = dateRange.to ? endOfDay(dateRange.to) : undefined;
 
+      const zonedStartOfDay = startOfDay(date);
+
       if (from && to) {
-        if (!isWithinInterval(date, { start: from, end: to })) return false;
-      } else if (from && date < from) {
+        if (!isWithinInterval(zonedStartOfDay, { start: from, end: to })) return false;
+      } else if (from && zonedStartOfDay < from) {
         return false;
-      } else if (to && date > to) {
+      } else if (to && zonedStartOfDay > to) {
         return false;
       }
     }
@@ -191,7 +196,17 @@ const SystemAuditPage: React.FC = () => {
 
 
   const exportToExcel = (data: any[], fileName: string) => {
-    const ws = XLSX.utils.json_to_sheet(data);
+    const formattedData = data.map(item => ({
+      ...item,
+      created_at: formatInTimeZone(new Date(item.created_at), timezone, "dd/MM/yyyy HH:mm:ss"),
+      profiles: item.profiles ? `${item.profiles.full_name} (${item.profiles.email})` : item.profiles,
+      details: typeof item.details === 'object' ? JSON.stringify(item.details) : item.details,
+      metadata: typeof item.metadata === 'object' ? JSON.stringify(item.metadata) : item.metadata,
+      new_data: typeof item.new_data === 'object' ? JSON.stringify(item.new_data) : item.new_data,
+      old_data: typeof item.old_data === 'object' ? JSON.stringify(item.old_data) : item.old_data,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(formattedData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Logs");
     XLSX.writeFile(wb, `${fileName}_${format(new Date(), "dd-MM-yyyy")}.xlsx`);
@@ -202,7 +217,7 @@ const SystemAuditPage: React.FC = () => {
     doc.text(title, 14, 15);
     
     const tableData = data.map(item => columns.map(col => {
-      if (col === 'created_at') return format(new Date(item[col]), "dd/MM/yyyy HH:mm");
+      if (col === 'created_at') return formatInTimeZone(new Date(item[col]), timezone, "dd/MM/yyyy HH:mm");
       if (typeof item[col] === 'object') return JSON.stringify(item[col]).substring(0, 50);
       return String(item[col] || "");
     }));
@@ -321,6 +336,26 @@ const SystemAuditPage: React.FC = () => {
             </PopoverContent>
           </Popover>
           <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-md border border-border/50">
+            <div className="flex items-center gap-2 px-2">
+              <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger className="w-[180px] h-8 text-xs border-none bg-transparent focus-visible:ring-0 px-1">
+                  <SelectValue placeholder="Timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UTC">UTC (GMT)</SelectItem>
+                  <SelectItem value="Europe/Lisbon">Lisboa (WET/WEST)</SelectItem>
+                  <SelectItem value="Europe/London">Londres (GMT/BST)</SelectItem>
+                  <SelectItem value="America/Sao_Paulo">São Paulo (BRT)</SelectItem>
+                  <SelectItem value="America/New_York">New York (EST/EDT)</SelectItem>
+                  <SelectItem value="Asia/Dubai">Dubai (GST)</SelectItem>
+                  <SelectItem value={Intl.DateTimeFormat().resolvedOptions().timeZone}>
+                    Local ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-px h-6 bg-border/50 mx-1" />
             <div className="flex items-center gap-2 px-2">
               <Clock className="w-3.5 h-3.5 text-muted-foreground" />
               <Input 
@@ -524,7 +559,7 @@ const SystemAuditPage: React.FC = () => {
                               <Fingerprint className="w-3 h-3" /> {log.transaction_id.substring(0, 8)}...
                             </span>
                             <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" /> {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss")}
+                              <Clock className="w-3 h-3" /> {formatInTimeZone(new Date(log.created_at), timezone, "dd/MM/yyyy HH:mm:ss")}
                             </span>
                           </div>
                         </div>
@@ -615,7 +650,7 @@ const SystemAuditPage: React.FC = () => {
                             </Badge>
                             <span className="font-semibold">{getStepLabel(log.step)}</span>
                           </div>
-                          <span className="text-[10px] text-muted-foreground">{format(new Date(log.created_at), "HH:mm:ss")}</span>
+                          <span className="text-[10px] text-muted-foreground">{formatInTimeZone(new Date(log.created_at), timezone, "HH:mm:ss")}</span>
                         </div>
                         <p className="text-muted-foreground truncate">{log.email}</p>
                         {log.error_message && <p className="text-red-600 mt-1 font-medium">{log.error_message}</p>}
@@ -661,7 +696,7 @@ const SystemAuditPage: React.FC = () => {
                             <span className="font-bold text-primary">{log.table_name}</span>
                           </div>
                           <span className="text-[10px] text-muted-foreground">
-                            {format(new Date(log.created_at), "dd MMM, HH:mm", { locale: pt })}
+                            {formatInTimeZone(new Date(log.created_at), timezone, "dd MMM, HH:mm")}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mb-2">
