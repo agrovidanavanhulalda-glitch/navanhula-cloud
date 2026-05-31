@@ -37,10 +37,11 @@ import {
   Eye,
   XCircle,
   AlertTriangle,
-  Package
+  Package,
+  Download
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
-import PDFReportPreview, { exportPDFReport, exportExcelReport } from '@/components/reports/PDFReport';
+import PDFReportPreview, { exportPDFReport, exportExcelReport, exportLogsPDF } from '@/components/reports/PDFReport';
 
 // Relatórios profissionais com templates separados
 
@@ -1012,7 +1013,16 @@ const LocalReportsPage: React.FC = () => {
                                     alert(`Detalhes do Histórico:\nErro principal: ${item.error}\n\nTentativas:\n${logs}`);
                                   }}
                                 >
-                                  Ver Log Detalhado
+                                  Ver Log
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-8 text-xs flex items-center gap-1"
+                                  onClick={() => exportLogsPDF(item, 'NAVANHULA CLOUD')}
+                                >
+                                  <Download className="w-3 h-3" />
+                                  Log PDF
                                 </Button>
                                 <Button 
                                   variant="outline" 
