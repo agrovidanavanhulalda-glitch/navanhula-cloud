@@ -174,8 +174,11 @@ ${filteredSales.length > 50 ? `\n  ... e mais ${filteredSales.length - 50} venda
 };
 
 // Export as real PDF using jsPDF
-export const exportPDFReport = (props: PDFReportProps) => {
-  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all', companyName = 'NAVANHULA CLOUD' } = props;
+export const exportPDFReport = async (props: PDFReportProps & { onProgress?: (p: number) => void }) => {
+  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all', companyName = 'NAVANHULA CLOUD', onProgress } = props;
+  
+  if (onProgress) onProgress(10);
+
 
   const filteredSales = sales.filter(sale => {
     const saleDate = new Date(sale.createdAt);
