@@ -136,18 +136,21 @@ const SystemAuditPage: React.FC = () => {
   });
 
   const isWithinDateRange = (dateString: string) => {
-    const date = parseISO(dateString);
+    const utcDate = parseISO(dateString);
+    const date = toZonedTime(utcDate, timezone);
     
     // Check Date Range
     if (dateRange.from || dateRange.to) {
       const from = dateRange.from ? startOfDay(dateRange.from) : undefined;
       const to = dateRange.to ? endOfDay(dateRange.to) : undefined;
 
+      const zonedStartOfDay = startOfDay(date);
+
       if (from && to) {
-        if (!isWithinInterval(date, { start: from, end: to })) return false;
-      } else if (from && date < from) {
+        if (!isWithinInterval(zonedStartOfDay, { start: from, end: to })) return false;
+      } else if (from && zonedStartOfDay < from) {
         return false;
-      } else if (to && date > to) {
+      } else if (to && zonedStartOfDay > to) {
         return false;
       }
     }
