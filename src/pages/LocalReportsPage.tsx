@@ -78,6 +78,7 @@ const LocalReportsPage: React.FC = () => {
     type: 'PDF' | 'XLSX';
     filters: { store: string; seller: string; start: string; end: string };
     status: 'success' | 'error';
+    syncStatus: 'pending' | 'syncing' | 'completed';
     error?: string;
   }[]>([]);
   const isInitialMount = useRef(true);
@@ -91,16 +92,40 @@ const LocalReportsPage: React.FC = () => {
         .select('*')
         .order('timestamp', { ascending: false })
         .limit(20);
+      
+      const pendingTasks = syncManager.getTasksByType('EXPORT_HISTORY');
+      const pendingHistory = pendingTasks.map(task => ({
+        id: task.payload.id || task.id,
+        timestamp: new Date(task.payload.timestamp),
+        type: task.payload.type as 'PDF' | 'XLSX',
+        filters: task.payload.filters as any,
+        status: task.payload.status as 'success' | 'error',
+        syncStatus: (syncManager.getQueueStatus().isProcessing ? 'syncing' : 'pending') as 'syncing' | 'pending',
+        error: task.payload.error_message || undefined
+      }));
 
       if (!error && data) {
-        setExportHistory(data.map(item => ({
+        const remoteHistory = data.map(item => ({
           id: item.id,
           timestamp: new Date(item.timestamp),
           type: item.type as 'PDF' | 'XLSX',
           filters: item.filters as any,
           status: item.status as 'success' | 'error',
+          syncStatus: 'completed' as const,
           error: item.error_message || undefined
-        })));
+        }));
+
+        // Merge and avoid duplicates
+        const combined: typeof exportHistory = [...pendingHistory];
+        remoteHistory.forEach(remote => {
+          if (!combined.find(p => p.id === remote.id)) {
+            combined.push(remote);
+          }
+        });
+
+        setExportHistory(combined.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 20));
+      } else if (pendingHistory.length > 0) {
+        setExportHistory(pendingHistory);
       }
     };
 
@@ -109,11 +134,36 @@ const LocalReportsPage: React.FC = () => {
     }
   }, [isAdmin]);
 
+  // Sync Status Listener
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const unsubscribe = syncManager.subscribe((event, task) => {
+      if (task.type !== 'EXPORT_HISTORY') return;
+
+      const taskId = task.payload.id || task.id;
+
+      setExportHistory(prev => prev.map(item => {
+        if (item.id === taskId) {
+          if (event === 'started') return { ...item, syncStatus: 'syncing' as const };
+          if (event === 'completed') return { ...item, syncStatus: 'completed' as const };
+          if (event === 'failed') return { ...item, syncStatus: 'pending' as const };
+        }
+        return item;
+      }));
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isAdmin]);
+
   const saveToHistory = async (type: 'PDF' | 'XLSX', status: 'success' | 'error', filters: any, errorMsg?: string) => {
     const { user } = (await supabase.auth.getSession()).data.session || {};
     if (!user || !targetCompanyId) return;
 
     const entry = {
+      id: crypto.randomUUID(), // Local ID
       user_id: user.id,
       company_id: targetCompanyId,
       type,
@@ -125,11 +175,12 @@ const LocalReportsPage: React.FC = () => {
 
     // Optimistic UI update
     setExportHistory(prev => [{
-      id: crypto.randomUUID(),
+      id: entry.id,
       timestamp: new Date(entry.timestamp),
       type: entry.type as 'PDF' | 'XLSX',
       filters: entry.filters as any,
       status: entry.status as 'success' | 'error',
+      syncStatus: (navigator.onLine ? 'syncing' : 'pending') as 'syncing' | 'pending',
       error: entry.error_message || undefined
     }, ...prev].slice(0, 20));
 
@@ -140,15 +191,19 @@ const LocalReportsPage: React.FC = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('export_history')
-        .insert(entry)
-        .select()
-        .single();
+        .insert(entry);
 
       if (error) throw error;
+      
+      // Update status to completed on success
+      setExportHistory(prev => prev.map(item => 
+        item.id === entry.id ? { ...item, syncStatus: 'completed' } : item
+      ));
     } catch (err) {
       console.error('[Reports] Error saving to history, queueing task', err);
+      // Item already in list as 'pending' or 'syncing' from optimistic update
       await syncManager.addTask('EXPORT_HISTORY', entry);
     }
   };
@@ -885,16 +940,37 @@ const LocalReportsPage: React.FC = () => {
                           <Badge variant="outline">{item.type}</Badge>
                         </td>
                         <td className="p-3">
-                          <Badge variant={item.status === 'success' ? 'default' : 'destructive'} className="gap-1">
-                            {item.status === 'success' ? (
-                              'Sucesso'
-                            ) : (
-                              <>
-                                <AlertTriangle className="w-3 h-3" />
-                                Falha
-                              </>
-                            )}
-                          </Badge>
+                          <div className="flex flex-col gap-1">
+                            <Badge variant={item.status === 'success' ? 'default' : 'destructive'} className="gap-1 w-fit">
+                              {item.status === 'success' ? (
+                                'Sucesso'
+                              ) : (
+                                <>
+                                  <AlertTriangle className="w-3 h-3" />
+                                  Falha
+                                </>
+                              )}
+                            </Badge>
+                            
+                            <div className="flex items-center gap-1.5 px-1">
+                              {item.syncStatus === 'completed' ? (
+                                <div className="flex items-center gap-1 text-[10px] text-green-600 font-medium">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                  Sincronizado
+                                </div>
+                              ) : item.syncStatus === 'syncing' ? (
+                                <div className="flex items-center gap-1 text-[10px] text-blue-600 font-medium animate-pulse">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                  Sincronizando...
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-[10px] text-amber-600 font-medium">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                  Pendente
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </td>
                         <td className="p-3">
                           <div className="text-[10px] text-muted-foreground leading-tight">
