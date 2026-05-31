@@ -340,50 +340,62 @@ const LocalReportsPage: React.FC = () => {
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               {exportStatus.xlsx.status === 'idle' ? 'Excel' : 
                exportStatus.xlsx.status === 'generating' ? `Gerando ${exportStatus.xlsx.progress}%` :
-               exportStatus.xlsx.status === 'downloading' ? 'Baixando...' : 'Concluído'}
+               exportStatus.xlsx.status === 'downloading' ? 'Baixando...' : 
+               exportStatus.xlsx.status === 'error' ? 'Tentar novamente' : 'Concluído'}
             </Button>
             <Button 
               onClick={handleExportPDF}
-              disabled={exportStatus.pdf.status !== 'idle'}
+              disabled={exportStatus.pdf.status !== 'idle' && exportStatus.pdf.status !== 'error'}
+              variant={exportStatus.pdf.status === 'error' ? 'destructive' : 'default'}
             >
               <FileText className="w-4 h-4 mr-2" />
               {exportStatus.pdf.status === 'idle' ? 'Relatório' : 
                exportStatus.pdf.status === 'generating' ? `Gerando ${exportStatus.pdf.progress}%` :
-               exportStatus.pdf.status === 'downloading' ? 'Baixando...' : 'Concluído'}
+               exportStatus.pdf.status === 'downloading' ? 'Baixando...' : 
+               exportStatus.pdf.status === 'error' ? 'Tentar novamente' : 'Concluído'}
             </Button>
           </div>
           {(exportStatus.pdf.status !== 'idle' || exportStatus.xlsx.status !== 'idle') && (
             <div className="text-[10px] text-muted-foreground flex flex-col items-end gap-1">
               {exportStatus.pdf.status !== 'idle' && (
                 <div className="flex flex-col items-end">
-                  <span className="flex items-center gap-1">
+                  <span className={`flex items-center gap-1 ${exportStatus.pdf.status === 'error' ? 'text-destructive font-bold' : ''}`}>
+                    {exportStatus.pdf.status === 'error' && <AlertTriangle className="w-3 h-3" />}
                     PDF: {exportStatus.pdf.status === 'generating' ? 'Preparando arquivo' : 
-                          exportStatus.pdf.status === 'downloading' ? 'Iniciando download' : 'Finalizado'}
+                          exportStatus.pdf.status === 'downloading' ? 'Iniciando download' : 
+                          exportStatus.pdf.status === 'error' ? exportStatus.pdf.error : 'Finalizado'}
                   </span>
-                  <div className="w-24 h-1 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary transition-all duration-300" 
-                      style={{ width: `${exportStatus.pdf.progress}%` }}
-                    />
-                  </div>
+                  {exportStatus.pdf.status !== 'error' && (
+                    <div className="w-24 h-1 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all duration-300" 
+                        style={{ width: `${exportStatus.pdf.progress}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
               {exportStatus.xlsx.status !== 'idle' && (
                 <div className="flex flex-col items-end">
-                  <span className="flex items-center gap-1">
+                  <span className={`flex items-center gap-1 ${exportStatus.xlsx.status === 'error' ? 'text-destructive font-bold' : ''}`}>
+                    {exportStatus.xlsx.status === 'error' && <AlertTriangle className="w-3 h-3" />}
                     XLSX: {exportStatus.xlsx.status === 'generating' ? 'Processando dados' : 
-                           exportStatus.xlsx.status === 'downloading' ? 'Iniciando download' : 'Finalizado'}
+                           exportStatus.xlsx.status === 'downloading' ? 'Iniciando download' : 
+                           exportStatus.xlsx.status === 'error' ? exportStatus.xlsx.error : 'Finalizado'}
                   </span>
-                  <div className="w-24 h-1 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary transition-all duration-300" 
-                      style={{ width: `${exportStatus.xlsx.progress}%` }}
-                    />
-                  </div>
+                  {exportStatus.xlsx.status !== 'error' && (
+                    <div className="w-24 h-1 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all duration-300" 
+                        style={{ width: `${exportStatus.xlsx.progress}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
+
         </div>
       </div>
 
