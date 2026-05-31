@@ -15,9 +15,12 @@ const STORAGE_KEY = 'navanhula_sync_queue';
 const MAX_RETRIES = 5;
 const BACKOFF_FACTOR = 2000; // 2s base
 
+type SyncListener = (event: 'added' | 'started' | 'completed' | 'failed', task: SyncTask) => void;
+
 class SyncManager {
   private queue: SyncTask[] = [];
   private isProcessing = false;
+  private listeners: Set<SyncListener> = new Set();
 
   constructor() {
     this.loadQueue();
@@ -27,6 +30,15 @@ class SyncManager {
       // Initial process
       setTimeout(() => this.processQueue(), 5000);
     }
+  }
+
+  subscribe(listener: SyncListener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private notify(event: 'added' | 'started' | 'completed' | 'failed', task: SyncTask) {
+    this.listeners.forEach(l => l(event, task));
   }
 
   private loadQueue() {
@@ -55,7 +67,12 @@ class SyncManager {
     };
     this.queue.push(task);
     this.saveQueue();
+    this.notify('added', task);
     this.processQueue();
+  }
+
+  getTasksByType(type: SyncTask['type']) {
+    return this.queue.filter(t => t.type === type);
   }
 
   async processQueue() {
