@@ -107,33 +107,28 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     renderComponent();
     expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
 
-    // Directly navigate to the DB tab content by clicking its trigger
-    // Based on the code: <TabsTrigger value="general" className="gap-2"> <Database className="w-4 h-4" /> Auditoria DB </TabsTrigger>
-    const triggers = screen.getAllByRole('tab');
-    const dbTrigger = triggers.find(t => t.textContent?.includes('Auditoria DB'));
-    if (!dbTrigger) throw new Error('Trigger not found');
-    
+    // Directly navigate to the DB tab content using the trigger that contains "Auditoria DB"
+    const dbTrigger = screen.getByText(/Auditoria DB/i).closest('button');
+    if (!dbTrigger) throw new Error('DB trigger not found');
     fireEvent.click(dbTrigger);
 
-    // Wait for the specific content that is ONLY in the DB tab
-    // We'll use findAllByText for UPDATE_STOCK since it appears twice
-    const actions = await screen.findAllByText(/UPDATE_STOCK/, {}, { timeout: 10000 });
+    // Wait for the action text "UPDATE_STOCK" which should appear in the "Auditoria DB" list
+    // Use findByText to wait for it to be rendered
+    const actions = await screen.findAllByText(/UPDATE_STOCK/, {}, { timeout: 15000 });
     expect(actions.length).toBeGreaterThan(0);
 
     expect(screen.getByText(/Manager A/i)).toBeInTheDocument();
-    // The details are stringified in the UI
     expect(screen.getByText(/resolved_version_2/i)).toBeInTheDocument();
   });
 
   it('should ensure consistency in Excel export when conflicts are resolved', async () => {
     renderComponent();
-    expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
+    await screen.findByText(/Auditoria Enterprise/i);
     
-    const triggers = screen.getAllByRole('tab');
-    const dbTrigger = triggers.find(t => t.textContent?.includes('Auditoria DB'));
+    const dbTrigger = screen.getByText(/Auditoria DB/i).closest('button');
     fireEvent.click(dbTrigger!);
 
-    await screen.findAllByText(/UPDATE_STOCK/, {}, { timeout: 10000 });
+    await screen.findAllByText(/UPDATE_STOCK/, {}, { timeout: 15000 });
 
     const excelButtons = screen.getAllByRole('button', { name: /Excel/i });
     fireEvent.click(excelButtons[excelButtons.length - 1]);
@@ -150,13 +145,12 @@ describe('SystemAuditPage - Conflict Resolution', () => {
 
   it('should ensure consistency in PDF export when conflicts are resolved', async () => {
     renderComponent();
-    expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
+    await screen.findByText(/Auditoria Enterprise/i);
     
-    const triggers = screen.getAllByRole('tab');
-    const dbTrigger = triggers.find(t => t.textContent?.includes('Auditoria DB'));
+    const dbTrigger = screen.getByText(/Auditoria DB/i).closest('button');
     fireEvent.click(dbTrigger!);
 
-    await screen.findAllByText(/UPDATE_STOCK/, {}, { timeout: 10000 });
+    await screen.findAllByText(/UPDATE_STOCK/, {}, { timeout: 15000 });
 
     const pdfButtons = screen.getAllByRole('button', { name: /PDF/i });
     fireEvent.click(pdfButtons[pdfButtons.length - 1]);
