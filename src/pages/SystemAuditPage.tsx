@@ -669,8 +669,22 @@ const SystemAuditPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => exportToExcel(filteredAuthLogs || [], "logs_autenticacao")}
+                    className="gap-2"
                   >
-                    <Download className="w-4 h-4 mr-2" /> Exportar
+                    <FileJson className="w-4 h-4" /> Excel
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => exportToPDF(
+                      filteredAuthLogs || [], 
+                      "Relatório Técnico de Autenticação", 
+                      "logs_autenticacao",
+                      ['created_at', 'email', 'step', 'status', 'transaction_id']
+                    )}
+                    className="gap-2"
+                  >
+                    <FileText className="w-4 h-4" /> PDF
                   </Button>
                 </div>
               </div>
