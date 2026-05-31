@@ -119,7 +119,37 @@ class SyncManager {
     
     // If there are still items, schedule next run
     if (this.queue.length > 0) {
-      setTimeout(() => this.processQueue(), 10000);
+      const hasRetryable = this.queue.some(t => t.retryCount < MAX_RETRIES);
+      if (hasRetryable) {
+        setTimeout(() => this.processQueue(), 10000);
+      }
+    }
+  }
+
+  async retryTask(taskId: string) {
+    const task = this.queue.find(t => t.id === taskId || (t.payload && t.payload.id === taskId));
+    if (task) {
+      task.retryCount = 0;
+      task.lastAttempt = undefined;
+      task.error = undefined;
+      this.saveQueue();
+      this.processQueue();
+    }
+  }
+
+  async retryAllFailed() {
+    let changed = false;
+    this.queue.forEach(task => {
+      if (task.retryCount >= MAX_RETRIES) {
+        task.retryCount = 0;
+        task.lastAttempt = undefined;
+        task.error = undefined;
+        changed = true;
+      }
+    });
+    if (changed) {
+      this.saveQueue();
+      this.processQueue();
     }
   }
 

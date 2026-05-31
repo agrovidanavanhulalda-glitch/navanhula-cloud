@@ -914,10 +914,20 @@ const LocalReportsPage: React.FC = () => {
         {/* Export History Tab */}
         <TabsContent value="history">
           <Card className="p-6">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Histórico de Exportações
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Histórico de Exportações
+              </h3>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs h-8"
+                onClick={() => syncManager.retryAllFailed()}
+              >
+                Reprocessar Falhas
+              </Button>
+            </div>
             {exportHistory.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">Nenhuma exportação realizada nesta sessão</p>
             ) : (
@@ -981,14 +991,24 @@ const LocalReportsPage: React.FC = () => {
                         </td>
                         <td className="p-3 text-right">
                           {item.status === 'error' && item.error && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 text-xs text-destructive hover:text-destructive"
-                              onClick={() => alert(`Erro: ${item.error}`)}
-                            >
-                              Ver Erro
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 text-xs text-destructive hover:text-destructive"
+                                onClick={() => alert(`Erro: ${item.error}`)}
+                              >
+                                Ver Erro
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 text-xs"
+                                onClick={() => syncManager.retryTask(item.id)}
+                              >
+                                Reprocessar
+                              </Button>
+                            </div>
                           )}
                         </td>
                       </tr>
