@@ -333,7 +333,9 @@ export const exportExcelReport = async (props: PDFReportProps & { onProgress?: (
     const date = new Date(sale.createdAt);
     const store = stores.find(s => s.id === sale.storeId);
     const itemsCount = sale.items.reduce((acc, item) => acc + item.quantity, 0);
+    if (onProgress) onProgress(30);
     const profit = sale.items.reduce((acc, item) => {
+
       return acc + (item.product.salePrice - item.product.costPrice) * item.quantity;
     }, 0);
     const revenue = sale.total;
