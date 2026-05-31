@@ -191,6 +191,7 @@ export const exportPDFReport = async (props: PDFReportProps & { onProgress?: (p:
     return sale.status === 'completed';
   });
 
+  if (onProgress) onProgress(20);
   const totalRevenue = filteredSales.reduce((acc, s) => acc + s.total, 0);
   const totalProfit = filteredSales.reduce((acc, sale) => {
     if (sale.profit != null) return acc + sale.profit;
@@ -198,6 +199,8 @@ export const exportPDFReport = async (props: PDFReportProps & { onProgress?: (p:
   }, 0);
   const totalDiscount = filteredSales.reduce((acc, s) => acc + s.discount, 0);
   const averageTicket = filteredSales.length > 0 ? totalRevenue / filteredSales.length : 0;
+  if (onProgress) onProgress(35);
+
 
   const storeName = selectedStore === 'all'
     ? 'Todas as Lojas'
