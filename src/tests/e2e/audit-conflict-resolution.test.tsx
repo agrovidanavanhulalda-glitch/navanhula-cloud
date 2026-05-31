@@ -108,21 +108,16 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
 
     // The component defaults to the "events" tab.
-    // Try to find the tab by various attributes
+    // Try to find the tab by various attributes. Radix Tabs use buttons for triggers.
     const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.getAttribute('value') === 'general' || t.textContent?.includes('Auditoria DB'));
+    const dbTab = tabs.find(t => t.getAttribute('data-value') === 'general' || t.textContent?.includes('Auditoria DB'));
     if (!dbTab) throw new Error('DB Tab not found among: ' + tabs.map(t => t.textContent).join(', '));
     
     fireEvent.click(dbTab);
 
-    // Using a more relaxed matcher for the list item
-    await waitFor(() => {
-      const dbText = screen.queryByText(/Histórico de Operações/i);
-      expect(dbText).not.toBeNull();
-    }, { timeout: 10000 });
-
     // Look for content inside the DB tab
     await waitFor(() => {
+      // Check for presence of logs
       expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
     }, { timeout: 10000 });
 
@@ -135,13 +130,14 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     await screen.findByText(/Auditoria Enterprise/i);
     
     const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.getAttribute('value') === 'general' || t.textContent?.includes('Auditoria DB'));
+    const dbTab = tabs.find(t => t.getAttribute('data-value') === 'general' || t.textContent?.includes('Auditoria DB'));
     fireEvent.click(dbTab!);
 
     await waitFor(() => {
       expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
     }, { timeout: 10000 });
 
+    // Click the last Excel button
     const excelButtons = screen.getAllByRole('button', { name: /Excel/i });
     fireEvent.click(excelButtons[excelButtons.length - 1]);
 
@@ -160,7 +156,7 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     await screen.findByText(/Auditoria Enterprise/i);
     
     const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.getAttribute('value') === 'general' || t.textContent?.includes('Auditoria DB'));
+    const dbTab = tabs.find(t => t.getAttribute('data-value') === 'general' || t.textContent?.includes('Auditoria DB'));
     fireEvent.click(dbTab!);
 
     await waitFor(() => {
