@@ -100,7 +100,7 @@ const LocalReportsPage: React.FC = () => {
         type: task.payload.type as 'PDF' | 'XLSX',
         filters: task.payload.filters as any,
         status: task.payload.status as 'success' | 'error',
-        syncStatus: (syncManager.getQueueStatus().isProcessing ? 'syncing' : 'pending') as any,
+        syncStatus: (syncManager.getQueueStatus().isProcessing ? 'syncing' : 'pending') as 'syncing' | 'pending',
         error: task.payload.error_message || undefined
       }));
 
