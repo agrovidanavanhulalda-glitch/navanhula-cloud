@@ -65,6 +65,14 @@ describe('Offline Conflict & Reconciliation E2E', () => {
     localStorage.clear();
     syncManager.clearQueue();
     syncManager.forceSetProcessing(false);
+    
+    // Setup onLine mock correctly
+    let onLine = true;
+    Object.defineProperty(navigator, 'onLine', {
+      configurable: true,
+      get() { return onLine; },
+      set(v) { onLine = v; }
+    });
   });
 
   it('reconciles two conflicting offline sales when syncing', { timeout: 30000 }, async () => {
