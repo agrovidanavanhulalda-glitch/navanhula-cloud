@@ -249,7 +249,7 @@ const SystemAuditPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2 text-primary">
             <Shield className="w-7 h-7" />
@@ -257,8 +257,8 @@ const SystemAuditPage: React.FC = () => {
           </h1>
           <p className="text-muted-foreground">Rastreabilidade total de ações críticas no sistema</p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="hidden md:flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setQuickRange('today')} className="h-9">Hoje</Button>
             <Button variant="outline" size="sm" onClick={() => setQuickRange('yesterday')} className="h-9">Ontem</Button>
             <Button variant="outline" size="sm" onClick={() => setQuickRange('7days')} className="h-9">7 Dias</Button>
@@ -266,6 +266,7 @@ const SystemAuditPage: React.FC = () => {
             <div className="w-px h-6 bg-border mx-2" />
           </div>
           <Popover>
+
 
             <PopoverTrigger asChild>
               <Button
