@@ -245,7 +245,16 @@ const LocalReportsPage: React.FC = () => {
       });
 
       setExportStatus(prev => ({ ...prev, xlsx: { status: 'completed', progress: 100 } }));
+      setExportHistory(prev => [{
+        id: historyId,
+        timestamp: new Date(),
+        type: 'XLSX',
+        filters: filterSnapshot,
+        status: 'success'
+      }, ...prev].slice(0, 10));
+
       setTimeout(() => {
+
         setExportStatus(prev => ({ ...prev, xlsx: { ...prev.xlsx, status: 'idle' } }));
       }, 2000);
     } catch (error: any) {
