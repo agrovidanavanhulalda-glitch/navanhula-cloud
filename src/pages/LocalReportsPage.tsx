@@ -347,13 +347,7 @@ const LocalReportsPage: React.FC = () => {
       });
 
       setExportStatus(prev => ({ ...prev, pdf: { status: 'completed', progress: 100 } }));
-      setExportHistory(prev => [{
-        id: historyId,
-        timestamp: new Date(),
-        type: 'PDF' as const,
-        filters: filterSnapshot,
-        status: 'success' as const
-      }, ...prev].slice(0, 10));
+      await saveToHistory('PDF', 'success', filterSnapshot);
 
       setTimeout(() => {
         setExportStatus(prev => ({ ...prev, pdf: { ...prev.pdf, status: 'idle' } }));
@@ -365,16 +359,10 @@ const LocalReportsPage: React.FC = () => {
         ...prev, 
         pdf: { status: 'error', progress: 0, error: errorMessage } 
       }));
-      setExportHistory(prev => [{
-        id: historyId,
-        timestamp: new Date(),
-        type: 'PDF' as const,
-        filters: filterSnapshot,
-        status: 'error' as const,
-        error: error.message || errorMessage
-      }, ...prev].slice(0, 10));
+      await saveToHistory('PDF', 'error', filterSnapshot, error.message || errorMessage);
     }
   };
+
 
 
 
