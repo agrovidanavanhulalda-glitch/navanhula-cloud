@@ -68,7 +68,16 @@ const LocalReportsPage: React.FC = () => {
   });
 
 
+  const [exportHistory, setExportHistory] = useState<{
+    id: string;
+    timestamp: Date;
+    type: 'PDF' | 'XLSX';
+    filters: { store: string; seller: string; start: string; end: string };
+    status: 'success' | 'error';
+    error?: string;
+  }[]>([]);
   const isInitialMount = useRef(true);
+
 
   // Filtered sales (completed only)
   const filteredSales = useMemo(() => {
@@ -209,6 +218,9 @@ const LocalReportsPage: React.FC = () => {
 
   // Export handlers
   const handleExportExcel = async () => {
+    const filterSnapshot = { store: selectedStore, seller: selectedSeller, start: startDate, end: endDate };
+    const historyId = Math.random().toString(36).substring(7);
+    
     try {
       setExportStatus(prev => ({ ...prev, xlsx: { status: 'generating', progress: 0 } }));
       
@@ -232,19 +244,39 @@ const LocalReportsPage: React.FC = () => {
       });
 
       setExportStatus(prev => ({ ...prev, xlsx: { status: 'completed', progress: 100 } }));
+      setExportHistory(prev => [{
+        id: historyId,
+        timestamp: new Date(),
+        type: 'XLSX' as const,
+        filters: filterSnapshot,
+        status: 'success' as const
+      }, ...prev].slice(0, 10));
+
       setTimeout(() => {
         setExportStatus(prev => ({ ...prev, xlsx: { ...prev.xlsx, status: 'idle' } }));
       }, 2000);
     } catch (error: any) {
       console.error('Excel Export Error:', error);
+      const errorMessage = 'Falha ao gerar arquivo Excel';
       setExportStatus(prev => ({ 
         ...prev, 
-        xlsx: { status: 'error', progress: 0, error: 'Falha ao gerar arquivo Excel' } 
+        xlsx: { status: 'error', progress: 0, error: errorMessage } 
       }));
+      setExportHistory(prev => [{
+        id: historyId,
+        timestamp: new Date(),
+        type: 'XLSX' as const,
+        filters: filterSnapshot,
+        status: 'error' as const,
+        error: error.message || errorMessage
+      }, ...prev].slice(0, 10));
     }
   };
 
   const handleExportPDF = async () => {
+    const filterSnapshot = { store: selectedStore, seller: selectedSeller, start: startDate, end: endDate };
+    const historyId = Math.random().toString(36).substring(7);
+
     try {
       setExportStatus(prev => ({ ...prev, pdf: { status: 'generating', progress: 0 } }));
 
@@ -268,17 +300,35 @@ const LocalReportsPage: React.FC = () => {
       });
 
       setExportStatus(prev => ({ ...prev, pdf: { status: 'completed', progress: 100 } }));
+      setExportHistory(prev => [{
+        id: historyId,
+        timestamp: new Date(),
+        type: 'PDF' as const,
+        filters: filterSnapshot,
+        status: 'success' as const
+      }, ...prev].slice(0, 10));
+
       setTimeout(() => {
         setExportStatus(prev => ({ ...prev, pdf: { ...prev.pdf, status: 'idle' } }));
       }, 2000);
     } catch (error: any) {
       console.error('PDF Export Error:', error);
+      const errorMessage = 'Falha ao gerar relatório PDF';
       setExportStatus(prev => ({ 
         ...prev, 
-        pdf: { status: 'error', progress: 0, error: 'Falha ao gerar relatório PDF' } 
+        pdf: { status: 'error', progress: 0, error: errorMessage } 
       }));
+      setExportHistory(prev => [{
+        id: historyId,
+        timestamp: new Date(),
+        type: 'PDF' as const,
+        filters: filterSnapshot,
+        status: 'error' as const,
+        error: error.message || errorMessage
+      }, ...prev].slice(0, 10));
     }
   };
+
 
 
 
@@ -500,7 +550,9 @@ const LocalReportsPage: React.FC = () => {
           <TabsTrigger value="products">Produtos</TabsTrigger>
           <TabsTrigger value="margins">Margens</TabsTrigger>
           <TabsTrigger value="cancellations">Cancelamentos</TabsTrigger>
+          <TabsTrigger value="history">Histórico Export</TabsTrigger>
         </TabsList>
+
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
@@ -753,7 +805,76 @@ const LocalReportsPage: React.FC = () => {
             )}
           </Card>
         </TabsContent>
+
+        {/* Export History Tab */}
+        <TabsContent value="history">
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Histórico de Exportações
+            </h3>
+            {exportHistory.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">Nenhuma exportação realizada nesta sessão</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-3 font-medium">Data/Hora</th>
+                      <th className="text-left p-3 font-medium">Tipo</th>
+                      <th className="text-left p-3 font-medium">Status</th>
+                      <th className="text-left p-3 font-medium">Filtros</th>
+                      <th className="text-right p-3 font-medium">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {exportHistory.map((item) => (
+                      <tr key={item.id} className="hover:bg-muted/30">
+                        <td className="p-3 text-sm">{item.timestamp.toLocaleString('pt-MZ')}</td>
+                        <td className="p-3">
+                          <Badge variant="outline">{item.type}</Badge>
+                        </td>
+                        <td className="p-3">
+                          <Badge variant={item.status === 'success' ? 'default' : 'destructive'} className="gap-1">
+                            {item.status === 'success' ? (
+                              'Sucesso'
+                            ) : (
+                              <>
+                                <AlertTriangle className="w-3 h-3" />
+                                Falha
+                              </>
+                            )}
+                          </Badge>
+                        </td>
+                        <td className="p-3">
+                          <div className="text-[10px] text-muted-foreground leading-tight">
+                            Loja: {item.filters.store === 'all' ? 'Todas' : stores.find(s => s.id === item.filters.store)?.name}<br/>
+                            Vendedor: {item.filters.seller === 'all' ? 'Todos' : sellers.find(s => s.id === item.filters.seller)?.name}<br/>
+                            Período: {item.filters.start} a {item.filters.end}
+                          </div>
+                        </td>
+                        <td className="p-3 text-right">
+                          {item.status === 'error' && item.error && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 text-xs text-destructive hover:text-destructive"
+                              onClick={() => alert(`Erro: ${item.error}`)}
+                            >
+                              Ver Erro
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
       </Tabs>
+
 
       {/* PDF Preview Modal */}
       {showPDFPreview && (
