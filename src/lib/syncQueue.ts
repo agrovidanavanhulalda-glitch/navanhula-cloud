@@ -111,8 +111,11 @@ class SyncManager {
         return this.syncStockAdjustment(task.payload);
       case 'ONBOARDING':
         return this.syncOnboarding(task.payload);
+      case 'EXPORT_HISTORY':
+        return this.syncExportHistory(task.payload);
       default:
         throw new Error(`Unknown task type: ${task.type}`);
+
     }
   }
 
