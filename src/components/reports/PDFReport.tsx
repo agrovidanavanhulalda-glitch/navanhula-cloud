@@ -308,8 +308,10 @@ export const exportPDFReport = async (props: PDFReportProps & { onProgress?: (p:
 };
 
 // Export as real Excel .xlsx
-export const exportExcelReport = (props: PDFReportProps) => {
-  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all' } = props;
+export const exportExcelReport = async (props: PDFReportProps & { onProgress?: (p: number) => void }) => {
+  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all', onProgress } = props;
+  if (onProgress) onProgress(10);
+
 
   // Filter sales
   const filteredSales = sales.filter(sale => {
