@@ -124,6 +124,11 @@ describe('Offline Conflict & Reconciliation E2E', () => {
     (navigator as any).onLine = false;
     const { unmount } = render(<AllProviders><LocalPOSPage /></AllProviders>);
     
+    // Wait for the store and products to load
+    await waitFor(() => {
+        expect(screen.queryByText(/O Caixa está fechado/i)).toBeNull();
+    }, { timeout: 5000 });
+
     await screen.findByText(/Product A/i);
     fireEvent.click(screen.getByText(/Product A/i));
     fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
@@ -156,18 +161,14 @@ describe('Offline Conflict & Reconciliation E2E', () => {
     // Process queue
     await syncManager.processQueue();
     
-    // Verify Supabase was called for both, or reconciliation logic handled it
-    // In this app, it just inserts them. If Sale ID is same, second insert would fail or overwrite.
-    // Our syncManager just calls .insert().
     await waitFor(() => {
       expect(syncManager.getQueueStatus().pending).toBe(0);
     }, { timeout: 10000 });
 
     // 4. Verify Reports Consistency
-    // Mock the sales data that the Reports page would fetch
     const reconciledSale = {
       id: saleId,
-      total: 200, // Device 2 version won
+      total: 200, 
       subtotal: 200,
       discount: 0,
       items: [{ product: { id: TEST_PRODUCT_ID, name: 'Product A', salePrice: 100, costPrice: 80 }, quantity: 2, total: 200 }],
@@ -183,7 +184,6 @@ describe('Offline Conflict & Reconciliation E2E', () => {
     const excelSpy = vi.spyOn(PDFReportExports, 'exportExcelReport');
     const pdfSpy = vi.spyOn(PDFReportExports, 'exportPDFReport');
 
-    // Manually set sales in LocalPOSContext mock-like behavior for reports
     render(
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
@@ -212,10 +212,8 @@ describe('Offline Conflict & Reconciliation E2E', () => {
   });
 });
 
-// Helper to inject the reconciled sale into the Reports page
 const ReconciledReportsWrapper = ({ reconciledSale }: any) => {
   const context = useLocalPOS();
-  // We need to override the sales in context
   React.useEffect(() => {
     (context as any).sales = [reconciledSale];
   }, [context, reconciledSale]);
