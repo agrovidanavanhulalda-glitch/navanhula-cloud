@@ -550,7 +550,9 @@ const LocalReportsPage: React.FC = () => {
           <TabsTrigger value="products">Produtos</TabsTrigger>
           <TabsTrigger value="margins">Margens</TabsTrigger>
           <TabsTrigger value="cancellations">Cancelamentos</TabsTrigger>
+          <TabsTrigger value="history">Histórico Export</TabsTrigger>
         </TabsList>
+
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
