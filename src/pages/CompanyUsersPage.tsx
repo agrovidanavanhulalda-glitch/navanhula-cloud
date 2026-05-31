@@ -161,7 +161,8 @@ const CompanyUsersPage = () => {
             full_name: name,
             company_id: companyId,
             branch_id: branchId,
-            role: roleKey // Envia sempre a key técnica
+            role: roleKey, // Envia sempre a key técnica
+            actor_id: user?.id // Para auditoria detalhada
           }
         }
       });

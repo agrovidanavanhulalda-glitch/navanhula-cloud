@@ -364,7 +364,8 @@ const IAMPage = () => {
             full_name: name,
             company_id: companyId,
             role: roleKey, // Envia sempre a key técnica
-            branch_id: branchId
+            branch_id: branchId,
+            actor_id: user?.id // Para auditoria detalhada
           }
         }
       });
