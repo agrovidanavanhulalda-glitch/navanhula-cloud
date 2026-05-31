@@ -41,7 +41,7 @@ import {
   Download
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
-import PDFReportPreview, { exportPDFReport, exportExcelReport, exportLogsPDF } from '@/components/reports/PDFReport';
+import PDFReportPreview, { exportPDFReport, exportExcelReport, exportLogsPDF, exportLogsExcel } from '@/components/reports/PDFReport';
 
 // Relatórios profissionais com templates separados
 
