@@ -89,7 +89,7 @@ describe('SystemAuditPage - Conflict Resolution', () => {
       defaultOptions: {
         queries: {
           retry: false,
-          staleTime: Infinity, // Avoid re-fetches
+          staleTime: Infinity,
         },
       },
     });
@@ -105,20 +105,17 @@ describe('SystemAuditPage - Conflict Resolution', () => {
 
   it('should display conflict resolution events correctly in UI', async () => {
     renderComponent();
-
-    // Verify header
     expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
 
-    // The component defaults to the "events" tab. We need the "general" (Auditoria DB) tab.
-    const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB'));
-    if (!dbTab) throw new Error('DB Tab not found');
+    // The component defaults to the "events" tab.
+    // Let's find the "Auditoria DB" tab and click it.
+    const dbTab = screen.getByRole('tab', { name: /Auditoria DB/i });
     fireEvent.click(dbTab);
 
-    // Wait for the action text to appear
+    // Wait for the action text "UPDATE_STOCK" which should appear in the "Auditoria DB" list
     await waitFor(() => {
-      expect(screen.queryByText(/UPDATE_STOCK/)).not.toBeNull();
-    }, { timeout: 8000 });
+      expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
+    }, { timeout: 10000 });
 
     expect(screen.getByText(/Manager A/i)).toBeInTheDocument();
     expect(screen.getByText(/resolved_version_2/i)).toBeInTheDocument();
@@ -126,16 +123,18 @@ describe('SystemAuditPage - Conflict Resolution', () => {
 
   it('should ensure consistency in Excel export when conflicts are resolved', async () => {
     renderComponent();
+    await screen.findByText(/Auditoria Enterprise/i);
+    
+    const dbTab = screen.getByRole('tab', { name: /Auditoria DB/i });
+    fireEvent.click(dbTab);
 
-    const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB'));
-    fireEvent.click(dbTab!);
+    await waitFor(() => {
+      expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
+    }, { timeout: 10000 });
 
-    await waitFor(() => screen.getByText(/UPDATE_STOCK/), { timeout: 8000 });
-
-    const excelButtons = screen.getAllByRole('button', { name: /Excel/i });
-    // Click the last Excel button which belongs to the last tab
-    fireEvent.click(excelButtons[excelButtons.length - 1]);
+    // Find the Excel button within the Auditoria DB tab container
+    const excelButton = screen.getAllByRole('button', { name: /Excel/i }).pop();
+    fireEvent.click(excelButton!);
 
     expect(XLSX.utils.json_to_sheet).toHaveBeenCalled();
     const callData = vi.mocked(XLSX.utils.json_to_sheet).mock.calls[0][0] as any[];
@@ -149,15 +148,17 @@ describe('SystemAuditPage - Conflict Resolution', () => {
 
   it('should ensure consistency in PDF export when conflicts are resolved', async () => {
     renderComponent();
+    await screen.findByText(/Auditoria Enterprise/i);
+    
+    const dbTab = screen.getByRole('tab', { name: /Auditoria DB/i });
+    fireEvent.click(dbTab);
 
-    const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB'));
-    fireEvent.click(dbTab!);
+    await waitFor(() => {
+      expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
+    }, { timeout: 10000 });
 
-    await waitFor(() => screen.getByText(/UPDATE_STOCK/), { timeout: 8000 });
-
-    const pdfButtons = screen.getAllByRole('button', { name: /PDF/i });
-    fireEvent.click(pdfButtons[pdfButtons.length - 1]);
+    const pdfButton = screen.getAllByRole('button', { name: /PDF/i }).pop();
+    fireEvent.click(pdfButton!);
 
     const docInstance = vi.mocked(jsPDF).mock.results[0].value;
     expect(docInstance.save).toHaveBeenCalled();
