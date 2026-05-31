@@ -7,10 +7,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ShieldCheck, Activity, Clock, User, ArrowRight, Shield, 
-  Key, AlertCircle, CheckCircle2, Database, Hash, Search
+  Key, AlertCircle, CheckCircle2, Database, Hash, Search,
+  History, UserPlus, Fingerprint
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 
@@ -34,7 +34,7 @@ interface AuditLog {
 
 interface AuthFlowLog {
   id: string;
-  transaction_id: number;
+  transaction_id: string;
   user_id: string | null;
   email: string | null;
   step: string;
@@ -44,10 +44,24 @@ interface AuthFlowLog {
   created_at: string;
 }
 
-
+interface AuthEventLog {
+  id: string;
+  transaction_id: string;
+  event_type: string;
+  actor_id: string | null;
+  target_user_id: string;
+  company_id: string | null;
+  branch_id: string | null;
+  role_key: string;
+  metadata: any;
+  status: string;
+  error_message: string | null;
+  created_at: string;
+}
 
 const SystemAuditPage: React.FC = () => {
   const [authSearch, setAuthSearch] = useState("");
+  const [eventSearch, setEventSearch] = useState("");
 
   const { data: logs, isLoading } = useQuery({
     queryKey: ["audit-logs"],
@@ -55,21 +69,9 @@ const SystemAuditPage: React.FC = () => {
       const { data, error } = await supabase
         .from("audit_logs")
         .select(`
-          id,
-          user_id,
-          company_id,
-          store_id,
-          action,
-          table_name,
-          details,
-          new_data,
-          old_data,
-          created_at,
-          query_text,
-          profiles (
-            full_name,
-            email
-          )
+          id, user_id, company_id, store_id, action, table_name,
+          details, new_data, old_data, created_at, query_text,
+          profiles (full_name, email)
         `)
         .order("created_at", { ascending: false })
         .limit(100);
@@ -94,6 +96,19 @@ const SystemAuditPage: React.FC = () => {
     },
   });
 
+  const { data: authEventLogs, isLoading: isEventsLoading } = useQuery({
+    queryKey: ["auth-event-logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("auth_event_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data as AuthEventLog[];
+    },
+  });
+
   const filteredAuthLogs = authFlowLogs?.filter(log => 
     !authSearch || 
     log.email?.toLowerCase().includes(authSearch.toLowerCase()) ||
@@ -102,6 +117,13 @@ const SystemAuditPage: React.FC = () => {
     log.transaction_id.toString().includes(authSearch)
   );
 
+  const filteredEventLogs = authEventLogs?.filter(log =>
+    !eventSearch ||
+    log.role_key?.toLowerCase().includes(eventSearch.toLowerCase()) ||
+    log.event_type.toLowerCase().includes(eventSearch.toLowerCase()) ||
+    log.transaction_id.includes(eventSearch) ||
+    log.target_user_id.includes(eventSearch)
+  );
 
   const getStepLabel = (step: string) => {
     const labels: Record<string, string> = {
@@ -116,6 +138,19 @@ const SystemAuditPage: React.FC = () => {
       'trigger_failed': 'Falha Crítica'
     };
     return labels[step] || step;
+  };
+
+  const getEventTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      'user_creation_start': 'Início de Criação',
+      'user_creation_complete': 'Criação Concluída',
+      'invite_accept_attempt': 'Tentativa de Convite',
+      'invite_accept_success': 'Convite Aceite',
+      'profile_creation_failed': 'Erro no Perfil',
+      'company_user_creation_failed': 'Erro no Vínculo',
+      'user_role_creation_failed': 'Erro no Cargo'
+    };
+    return labels[type] || type;
   };
 
   return (
@@ -135,7 +170,7 @@ const SystemAuditPage: React.FC = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Activity className="w-4 h-4 text-primary" />
-              Ações (24h)
+              Ações Gerais
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -151,7 +186,7 @@ const SystemAuditPage: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-700">{authFlowLogs?.length || 0}</div>
+            <div className="text-2xl font-bold text-emerald-700">{authEventLogs?.length || 0}</div>
           </CardContent>
         </Card>
 
@@ -159,102 +194,119 @@ const SystemAuditPage: React.FC = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2 text-red-700">
               <AlertCircle className="w-4 h-4" />
-              Falhas Auth
+              Falhas Críticas
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-700">
-              {authFlowLogs?.filter(l => l.status === 'failure').length || 0}
+              {(authEventLogs?.filter(l => l.status === 'failure').length || 0) + (authFlowLogs?.filter(l => l.status === 'failure').length || 0)}
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-green-50 border-green-200">
+        <Card className="bg-blue-50 border-blue-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-green-700">
-              <ShieldCheck className="w-4 h-4" />
-              Segurança
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-blue-700">
+              <Fingerprint className="w-4 h-4" />
+              Transações
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-700">Ativa</div>
+            <div className="text-2xl font-bold text-blue-700">Auditadas</div>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="general" className="w-full">
+      <Tabs defaultValue="events" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="general" className="gap-2">
-            <Database className="w-4 h-4" /> Auditoria Geral
+          <TabsTrigger value="events" className="gap-2">
+            <History className="w-4 h-4" /> Ciclo de Vida (Roles)
           </TabsTrigger>
           <TabsTrigger value="auth" className="gap-2">
-            <Key className="w-4 h-4" /> Fluxo de Autenticação
+            <Key className="w-4 h-4" /> Fluxo Técnico
+          </TabsTrigger>
+          <TabsTrigger value="general" className="gap-2">
+            <Database className="w-4 h-4" /> Auditoria DB
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general">
+        <TabsContent value="events">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                Histórico Recente (Geral)
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <UserPlus className="w-5 h-5 text-primary" />
+                Auditoria de Criação e Cargos (Role Keys)
               </CardTitle>
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="TX ID, Role, User ID..." 
+                  className="pl-9 h-9"
+                  value={eventSearch}
+                  onChange={(e) => setEventSearch(e.target.value)}
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[600px] pr-4">
-                {isLoading ? (
-                  <div className="text-center py-10">Carregando logs...</div>
-                ) : logs?.length === 0 ? (
-                  <div className="text-center py-10 text-muted-foreground">Nenhuma ação registrada ainda.</div>
+                {isEventsLoading ? (
+                  <div className="text-center py-10">Carregando eventos...</div>
+                ) : filteredEventLogs?.length === 0 ? (
+                  <div className="text-center py-10 text-muted-foreground">Nenhum evento detalhado encontrado.</div>
                 ) : (
                   <div className="space-y-4">
-                    {logs?.map((log) => (
-                      <div key={log.id} className="flex flex-col p-4 rounded-lg border bg-card hover:shadow-sm transition-all">
-                        <div className="flex items-center justify-between mb-2">
+                    {filteredEventLogs?.map((log) => (
+                      <div key={log.id} className={`p-4 rounded-lg border bg-card hover:shadow-sm transition-all ${log.status === 'failure' ? 'border-red-200 bg-red-50/20' : ''}`}>
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                           <div className="flex items-center gap-2">
-                            <Badge variant={log.action === 'DELETE' ? 'destructive' : log.action === 'INSERT' ? 'default' : 'outline'} className="capitalize px-2 py-0.5 text-[10px] font-bold">
-                              {log.action}
+                            <Badge variant={log.status === 'success' ? 'default' : log.status === 'failure' ? 'destructive' : 'secondary'}>
+                              {log.status.toUpperCase()}
                             </Badge>
-                            <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-xs font-mono font-bold text-primary">{log.table_name || 'Geral'}</span>
+                            <span className="font-bold text-sm">{getEventTypeLabel(log.event_type)}</span>
+                            <Badge variant="outline" className="font-mono text-primary border-primary/30">
+                              {log.role_key}
+                            </Badge>
                           </div>
-                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {format(new Date(log.created_at), "dd MMM, HH:mm:ss", { locale: pt })}
-                          </span>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              <User className="w-4 h-4 text-primary" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold leading-none">{log.profiles?.full_name || 'Sistema'}</p>
-                              <p className="text-[10px] text-muted-foreground mt-1">{log.profiles?.email || 'Ação Automatizada'}</p>
-                            </div>
-                          </div>
-                          <div className="flex flex-col justify-center text-[10px] text-muted-foreground space-y-1 md:text-right">
-                            {log.company_id && <p>Empresa: <span className="font-mono">{log.company_id}</span></p>}
-                            {log.store_id && <p>Loja/Ref: <span className="font-mono">{log.store_id}</span></p>}
+                          <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                            <span className="flex items-center gap-1 font-mono">
+                              <Fingerprint className="w-3 h-3" /> {log.transaction_id.substring(0, 8)}...
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" /> {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss")}
+                            </span>
                           </div>
                         </div>
 
-                        {log.query_text && (
-                          <div className="mb-2 p-2 rounded bg-slate-900 text-slate-100 text-[10px] font-mono">
-                            <p className="text-[8px] uppercase text-slate-500 mb-1">Query Original</p>
-                            {log.query_text}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs mb-3">
+                          <div className="space-y-1">
+                            <p className="text-muted-foreground uppercase text-[9px] font-bold">Target User</p>
+                            <p className="font-mono truncate">{log.target_user_id}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-muted-foreground uppercase text-[9px] font-bold">Actor (Admin)</p>
+                            <p className="font-mono truncate">{log.actor_id || 'Self/System'}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-muted-foreground uppercase text-[9px] font-bold">Company / Branch</p>
+                            <p className="truncate">{log.company_id ? `Co: ${log.company_id.substring(0,8)}...` : '-'} / {log.branch_id ? `Br: ${log.branch_id.substring(0,8)}...` : '-'}</p>
+                          </div>
+                        </div>
+
+                        {log.error_message && (
+                          <div className="mb-3 p-2 rounded bg-red-50 border border-red-100 flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                            <p className="text-xs text-red-700 font-medium">{log.error_message}</p>
                           </div>
                         )}
 
-                        {(log.new_data || log.old_data || log.details) && (
-                          <div className="mt-1">
-                            <p className="text-[8px] uppercase text-muted-foreground mb-1">Payload / Mudanças</p>
-                            <div className="p-2 rounded bg-muted/50 text-[11px] font-mono overflow-hidden max-h-40 overflow-y-auto">
-                              <pre className="whitespace-pre-wrap break-all">
-                                {JSON.stringify(log.new_data || log.details || log.old_data, null, 2)}
+                        {log.metadata && Object.keys(log.metadata).length > 0 && (
+                          <div className="mt-2">
+                            <details className="cursor-pointer group">
+                              <summary className="text-[10px] text-muted-foreground uppercase font-bold group-open:mb-2">Ver Metadados Técnicos</summary>
+                              <pre className="p-3 rounded bg-muted/50 text-[10px] font-mono overflow-auto max-h-40">
+                                {JSON.stringify(log.metadata, null, 2)}
                               </pre>
-                            </div>
+                            </details>
                           </div>
                         )}
                       </div>
@@ -271,12 +323,12 @@ const SystemAuditPage: React.FC = () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
               <CardTitle className="flex items-center gap-2">
                 <Key className="w-5 h-5" />
-                Auditoria de Criação de Utilizadores
+                Logs Técnicos de Autenticação
               </CardTitle>
               <div className="relative w-full max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Pesquisar por email, ID ou transação..." 
+                  placeholder="Pesquisar por email ou TX..." 
                   className="pl-9 h-8 text-xs"
                   value={authSearch}
                   onChange={(e) => setAuthSearch(e.target.value)}
@@ -286,68 +338,68 @@ const SystemAuditPage: React.FC = () => {
             <CardContent>
               <ScrollArea className="h-[600px] pr-4">
                 {isAuthLoading ? (
-                  <div className="text-center py-10">Carregando logs de autenticação...</div>
+                  <div className="text-center py-10">Carregando logs técnicos...</div>
                 ) : filteredAuthLogs?.length === 0 ? (
-                  <div className="text-center py-10 text-muted-foreground">Nenhum evento de autenticação encontrado.</div>
+                  <div className="text-center py-10 text-muted-foreground">Nenhum log encontrado.</div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {filteredAuthLogs?.map((log) => (
-
-                      <div key={log.id} className={`flex flex-col p-4 rounded-lg border bg-card hover:shadow-sm transition-all ${log.status === 'failure' ? 'border-red-200 bg-red-50/10' : ''}`}>
-                        <div className="flex items-center justify-between mb-3">
+                      <div key={log.id} className={`p-3 rounded-lg border text-xs ${log.status === 'failure' ? 'border-red-200 bg-red-50/10' : ''}`}>
+                        <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <Badge variant={log.status === 'failure' ? 'destructive' : log.status === 'success' ? 'default' : 'outline'} className="px-2 py-0.5 text-[10px] font-bold">
+                            <Badge variant={log.status === 'failure' ? 'destructive' : 'outline'} className="text-[9px]">
                               {log.status.toUpperCase()}
                             </Badge>
-                            <span className="text-sm font-semibold text-foreground">{getStepLabel(log.step)}</span>
+                            <span className="font-semibold">{getStepLabel(log.step)}</span>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                              <Hash className="w-3 h-3" />
-                              TX: {log.transaction_id}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {format(new Date(log.created_at), "dd MMM, HH:mm:ss", { locale: pt })}
-                            </span>
-                          </div>
+                          <span className="text-[10px] text-muted-foreground">{format(new Date(log.created_at), "HH:mm:ss")}</span>
                         </div>
+                        <p className="text-muted-foreground truncate">{log.email}</p>
+                        {log.error_message && <p className="text-red-600 mt-1 font-medium">{log.error_message}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${log.status === 'failure' ? 'bg-red-100 text-red-600' : 'bg-primary/10 text-primary'}`}>
-                              {log.status === 'failure' ? <AlertCircle className="w-4 h-4" /> : <User className="w-4 h-4" />}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium leading-none">{log.email || 'Utilizador Desconhecido'}</p>
-                              <p className="text-[10px] text-muted-foreground mt-1 font-mono">{log.user_id || '—'}</p>
-                            </div>
+        <TabsContent value="general">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Histórico de Operações na Base de Dados
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px] pr-4">
+                {isLoading ? (
+                  <div className="text-center py-10">Carregando auditoria...</div>
+                ) : (
+                  <div className="space-y-4">
+                    {logs?.map((log) => (
+                      <div key={log.id} className="p-4 rounded-lg border bg-card hover:shadow-sm transition-all text-xs">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={log.action === 'DELETE' ? 'destructive' : log.action === 'INSERT' ? 'default' : 'outline'} className="text-[10px]">
+                              {log.action}
+                            </Badge>
+                            <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                            <span className="font-bold text-primary">{log.table_name}</span>
                           </div>
-                          {log.status === 'failure' && (
-                            <div className="flex items-start gap-2 p-2 rounded bg-red-100/50 border border-red-200">
-                              <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-                              <p className="text-xs text-red-700 font-medium">{log.error_message}</p>
-                            </div>
-                          )}
+                          <span className="text-[10px] text-muted-foreground">
+                            {format(new Date(log.created_at), "dd MMM, HH:mm", { locale: pt })}
+                          </span>
                         </div>
-
-                        {log.metadata && Object.keys(log.metadata).length > 0 && (
-                          <div className="mt-1">
-                            <p className="text-[8px] uppercase text-muted-foreground mb-1">Metadados / Contexto</p>
-                            <div className="p-2 rounded bg-muted/30 text-[10px] font-mono overflow-hidden">
-                              <pre className="whitespace-pre-wrap break-all">
-                                {JSON.stringify(log.metadata, null, 2)}
-                              </pre>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {log.status === 'success' && log.step === 'trigger_completed' && (
-                          <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-600 font-medium">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Usuário sincronizado com sucesso em todos os sistemas (Profiles, Equipa, Cargos)
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2 mb-2">
+                          <User className="w-3 h-3" />
+                          <span>{log.profiles?.full_name || 'Sistema'}</span>
+                        </div>
+                        <div className="p-2 rounded bg-muted/50 font-mono text-[10px] max-h-24 overflow-auto">
+                          {JSON.stringify(log.new_data || log.details || log.old_data)}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -362,4 +414,3 @@ const SystemAuditPage: React.FC = () => {
 };
 
 export default SystemAuditPage;
-
