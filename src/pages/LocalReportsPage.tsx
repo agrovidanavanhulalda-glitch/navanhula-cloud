@@ -805,7 +805,76 @@ const LocalReportsPage: React.FC = () => {
             )}
           </Card>
         </TabsContent>
+
+        {/* Export History Tab */}
+        <TabsContent value="history">
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Histórico de Exportações
+            </h3>
+            {exportHistory.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">Nenhuma exportação realizada nesta sessão</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-3 font-medium">Data/Hora</th>
+                      <th className="text-left p-3 font-medium">Tipo</th>
+                      <th className="text-left p-3 font-medium">Status</th>
+                      <th className="text-left p-3 font-medium">Filtros</th>
+                      <th className="text-right p-3 font-medium">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {exportHistory.map((item) => (
+                      <tr key={item.id} className="hover:bg-muted/30">
+                        <td className="p-3 text-sm">{item.timestamp.toLocaleString('pt-MZ')}</td>
+                        <td className="p-3">
+                          <Badge variant="outline">{item.type}</Badge>
+                        </td>
+                        <td className="p-3">
+                          <Badge variant={item.status === 'success' ? 'default' : 'destructive'} className="gap-1">
+                            {item.status === 'success' ? (
+                              'Sucesso'
+                            ) : (
+                              <>
+                                <AlertTriangle className="w-3 h-3" />
+                                Falha
+                              </>
+                            )}
+                          </Badge>
+                        </td>
+                        <td className="p-3">
+                          <div className="text-[10px] text-muted-foreground leading-tight">
+                            Loja: {item.filters.store === 'all' ? 'Todas' : stores.find(s => s.id === item.filters.store)?.name}<br/>
+                            Vendedor: {item.filters.seller === 'all' ? 'Todos' : sellers.find(s => s.id === item.filters.seller)?.name}<br/>
+                            Período: {item.filters.start} a {item.filters.end}
+                          </div>
+                        </td>
+                        <td className="p-3 text-right">
+                          {item.status === 'error' && item.error && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 text-xs text-destructive hover:text-destructive"
+                              onClick={() => alert(`Erro: ${item.error}`)}
+                            >
+                              Ver Erro
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
       </Tabs>
+
 
       {/* PDF Preview Modal */}
       {showPDFPreview && (
