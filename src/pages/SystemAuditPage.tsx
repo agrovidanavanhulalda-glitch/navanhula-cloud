@@ -256,8 +256,17 @@ const SystemAuditPage: React.FC = () => {
             Auditoria Enterprise
           </h1>
           <p className="text-muted-foreground">Rastreabilidade total de ações críticas no sistema</p>
-        <div className="flex items-center gap-3">
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setQuickRange('today')} className="h-9">Hoje</Button>
+            <Button variant="outline" size="sm" onClick={() => setQuickRange('yesterday')} className="h-9">Ontem</Button>
+            <Button variant="outline" size="sm" onClick={() => setQuickRange('7days')} className="h-9">7 Dias</Button>
+            <Button variant="outline" size="sm" onClick={() => setQuickRange('month')} className="h-9">Mês Atual</Button>
+            <div className="w-px h-6 bg-border mx-2" />
+          </div>
           <Popover>
+
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
