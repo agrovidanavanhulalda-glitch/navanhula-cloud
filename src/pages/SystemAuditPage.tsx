@@ -223,15 +223,24 @@ const SystemAuditPage: React.FC = () => {
 
 
   const exportToExcel = (data: any[], fileName: string) => {
-    const formattedData = data.map(item => ({
-      ...item,
-      created_at: formatInTimeZone(new Date(item.created_at), timezone, "dd/MM/yyyy HH:mm:ss"),
-      profiles: item.profiles ? `${item.profiles.full_name} (${item.profiles.email})` : item.profiles,
-      details: typeof item.details === 'object' ? JSON.stringify(item.details) : item.details,
-      metadata: typeof item.metadata === 'object' ? JSON.stringify(item.metadata) : item.metadata,
-      new_data: typeof item.new_data === 'object' ? JSON.stringify(item.new_data) : item.new_data,
-      old_data: typeof item.old_data === 'object' ? JSON.stringify(item.old_data) : item.old_data,
-    }));
+    const formattedData = data.map(item => {
+      const formattedItem: any = {
+        ...item,
+        created_at: formatInTimeZone(new Date(item.created_at), timezone, "dd/MM/yyyy HH:mm:ss"),
+        profiles: item.profiles ? `${item.profiles.full_name} (${item.profiles.email})` : item.profiles,
+        details: typeof item.details === 'object' ? JSON.stringify(item.details) : item.details,
+        metadata: typeof item.metadata === 'object' ? JSON.stringify(item.metadata) : item.metadata,
+        new_data: typeof item.new_data === 'object' ? JSON.stringify(item.new_data) : item.new_data,
+        old_data: typeof item.old_data === 'object' ? JSON.stringify(item.old_data) : item.old_data,
+      };
+      
+      // For technical logs, ensure step label is used
+      if (item.step) formattedItem.step = getStepLabel(item.step);
+      // For event logs, ensure type label is used
+      if (item.event_type) formattedItem.event_type = getEventTypeLabel(item.event_type);
+      
+      return formattedItem;
+    });
 
     const ws = XLSX.utils.json_to_sheet(formattedData);
     const wb = XLSX.utils.book_new();
@@ -245,6 +254,8 @@ const SystemAuditPage: React.FC = () => {
     
     const tableData = data.map(item => columns.map(col => {
       if (col === 'created_at') return formatInTimeZone(new Date(item[col]), timezone, "dd/MM/yyyy HH:mm");
+      if (col === 'step') return getStepLabel(item[col]);
+      if (col === 'event_type') return getEventTypeLabel(item[col]);
       if (typeof item[col] === 'object') return JSON.stringify(item[col]).substring(0, 50);
       return String(item[col] || "");
     }));
@@ -658,8 +669,22 @@ const SystemAuditPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => exportToExcel(filteredAuthLogs || [], "logs_autenticacao")}
+                    className="gap-2"
                   >
-                    <Download className="w-4 h-4 mr-2" /> Exportar
+                    <FileJson className="w-4 h-4" /> Excel
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => exportToPDF(
+                      filteredAuthLogs || [], 
+                      "Relatório Técnico de Autenticação", 
+                      "logs_autenticacao",
+                      ['created_at', 'email', 'step', 'status', 'transaction_id']
+                    )}
+                    className="gap-2"
+                  >
+                    <FileText className="w-4 h-4" /> PDF
                   </Button>
                 </div>
               </div>
@@ -710,13 +735,29 @@ const SystemAuditPage: React.FC = () => {
                 <Clock className="w-5 h-5" />
                 Histórico de Operações na Base de Dados
               </CardTitle>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => exportToExcel(filteredGeneralLogs || [], "auditoria_db")}
-              >
-                <Download className="w-4 h-4 mr-2" /> Exportar
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => exportToExcel(filteredGeneralLogs || [], "auditoria_db")}
+                  className="gap-2"
+                >
+                  <FileJson className="w-4 h-4" /> Excel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => exportToPDF(
+                    filteredGeneralLogs || [], 
+                    "Relatório de Auditoria de Base de Dados", 
+                    "auditoria_db",
+                    ['created_at', 'action', 'table_name', 'user_id']
+                  )}
+                  className="gap-2"
+                >
+                  <FileText className="w-4 h-4" /> PDF
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[600px] pr-4">
