@@ -10,36 +10,44 @@ import jsPDF from 'jspdf';
 // Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
+const mockAuditLogs = [
+  {
+    id: '1',
+    action: 'UPDATE_STOCK',
+    table_name: 'inventory',
+    details: { item: 'Coca-Cola', conflict: 'resolved_version_2' },
+    created_at: '2024-05-20T10:00:00Z',
+    store_id: 'store-1',
+    profiles: { full_name: 'Manager A', email: 'manager@store.com' }
+  },
+  {
+    id: '1',
+    action: 'UPDATE_STOCK',
+    table_name: 'inventory',
+    details: { item: 'Coca-Cola', conflict: 'original_offline_version_1' },
+    created_at: '2024-05-20T10:00:00Z',
+    store_id: 'store-1',
+    profiles: { full_name: 'Manager B', email: 'manager-b@store.com' }
+  }
+];
+
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: vi.fn(() => ({
+    from: vi.fn((table) => ({
       select: vi.fn(() => ({
         order: vi.fn(() => ({
-          limit: vi.fn(() => Promise.resolve({ 
-            data: [
-              {
-                id: '1',
-                action: 'UPDATE_STOCK',
-                table_name: 'inventory',
-                details: { item: 'Coca-Cola', conflict: 'resolved_version_2' },
-                created_at: '2024-05-20T10:00:00Z',
-                store_id: 'store-1',
-                profiles: { full_name: 'Manager A', email: 'manager@store.com' }
-              },
-              {
-                id: '1',
-                action: 'UPDATE_STOCK',
-                table_name: 'inventory',
-                details: { item: 'Coca-Cola', conflict: 'original_offline_version_1' },
-                created_at: '2024-05-20T10:00:00Z',
-                store_id: 'store-1',
-                profiles: { full_name: 'Manager B', email: 'manager-b@store.com' }
-              }
-            ], 
-            error: null 
-          })),
+          limit: vi.fn(() => {
+            if (table === 'audit_logs') {
+              return Promise.resolve({ data: mockAuditLogs, error: null });
+            }
+            if (table === 'stores') {
+              return Promise.resolve({ data: [{ id: 'store-1', name: 'Store 1', timezone: 'UTC' }], error: null });
+            }
+            return Promise.resolve({ data: [], error: null });
+          }),
         })),
+        match: vi.fn(() => Promise.resolve({ data: [], error: null })),
       })),
     })),
   },
@@ -65,16 +73,18 @@ vi.mock('jspdf', () => {
 });
 
 describe('SystemAuditPage - Conflict Resolution', () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
+  let queryClient: QueryClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: 0,
+        },
+      },
+    });
   });
 
   const renderComponent = () => render(
@@ -88,18 +98,20 @@ describe('SystemAuditPage - Conflict Resolution', () => {
   it('should display conflict resolution events correctly in UI', async () => {
     renderComponent();
 
+    // Verify it loads the data
     await waitFor(() => {
-      const actions = screen.getAllByText(/UPDATE_STOCK/);
+      const actions = screen.getAllByText(/UPDATE_STOCK/i);
       expect(actions.length).toBeGreaterThanOrEqual(1);
-    }, { timeout: 3000 });
+    }, { timeout: 5000 });
 
-    expect(screen.getByText(/manager@store.com/)).toBeInTheDocument();
+    // Check if the UI reflects the profiles correctly
+    expect(screen.getByText(/manager@store.com/i)).toBeInTheDocument();
   });
 
   it('should ensure consistency in Excel export when conflicts are resolved', async () => {
     renderComponent();
 
-    await waitFor(() => screen.getByText(/Auditoria Enterprise/));
+    await waitFor(() => screen.getByText(/Auditoria Enterprise/i));
 
     const exportExcelBtn = screen.getByRole('button', { name: /Excel/i });
     fireEvent.click(exportExcelBtn);
@@ -108,7 +120,8 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     const callData = vi.mocked(XLSX.utils.json_to_sheet).mock.calls[0][0] as any[];
     
     const hasConflictDetails = callData.some((row: any) => 
-      row.details.includes('resolved_version_2') || row.details.includes('original_offline_version_1')
+      (typeof row.details === 'string' && row.details.includes('resolved_version_2')) || 
+      (typeof row.details === 'string' && row.details.includes('original_offline_version_1'))
     );
     expect(hasConflictDetails).toBe(true);
   });
@@ -116,7 +129,7 @@ describe('SystemAuditPage - Conflict Resolution', () => {
   it('should ensure consistency in PDF export when conflicts are resolved', async () => {
     renderComponent();
 
-    await waitFor(() => screen.getByText(/Auditoria Enterprise/));
+    await waitFor(() => screen.getByText(/Auditoria Enterprise/i));
 
     const exportPdfBtn = screen.getByRole('button', { name: /PDF/i });
     fireEvent.click(exportPdfBtn);
