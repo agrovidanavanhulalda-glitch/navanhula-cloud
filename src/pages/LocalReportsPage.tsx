@@ -123,23 +123,36 @@ const LocalReportsPage: React.FC = () => {
       timestamp: new Date().toISOString()
     };
 
-    const { data, error } = await supabase
-      .from('export_history')
-      .insert(entry)
-      .select()
-      .single();
+    // Optimistic UI update
+    setExportHistory(prev => [{
+      id: crypto.randomUUID(),
+      timestamp: new Date(entry.timestamp),
+      type: entry.type as 'PDF' | 'XLSX',
+      filters: entry.filters as any,
+      status: entry.status as 'success' | 'error',
+      error: entry.error_message || undefined
+    }, ...prev].slice(0, 20));
 
-    if (!error && data) {
-      setExportHistory(prev => [{
-        id: data.id,
-        timestamp: new Date(data.timestamp),
-        type: data.type as 'PDF' | 'XLSX',
-        filters: data.filters as any,
-        status: data.status as 'success' | 'error',
-        error: data.error_message || undefined
-      }, ...prev].slice(0, 20));
+    if (!navigator.onLine) {
+      console.log('[Reports] Offline: Queueing export history task');
+      await syncManager.addTask('EXPORT_HISTORY', entry);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('export_history')
+        .insert(entry)
+        .select()
+        .single();
+
+      if (error) throw error;
+    } catch (err) {
+      console.error('[Reports] Error saving to history, queueing task', err);
+      await syncManager.addTask('EXPORT_HISTORY', entry);
     }
   };
+
 
   // Filtered sales (completed only)
 
