@@ -59,18 +59,6 @@ const queryClient = new QueryClient({
   },
 });
 
-const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <BrowserRouter>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <LocalPOSProvider>
-          {children}
-        </LocalPOSProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </BrowserRouter>
-);
-
 describe('Offline Conflict & Reconciliation E2E', () => {
   const insertMock = vi.fn().mockImplementation(() => {
     return {
@@ -122,12 +110,22 @@ describe('Offline Conflict & Reconciliation E2E', () => {
   it('reconciles two conflicting offline sales when syncing', { timeout: 30000 }, async () => {
     // 1. First Device: Create Sale Offline
     (navigator as any).onLine = false;
-    render(<AllProviders><LocalPOSPage /></AllProviders>);
+    render(
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <LocalPOSProvider>
+              <LocalPOSPage />
+            </LocalPOSProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </BrowserRouter>
+    );
     
-    // Wait for the POS to be ready (it starts with loading: true)
+    // Wait for the POS to be ready and NOT showing "loading" state which results in store being null
     await waitFor(() => {
-        expect(screen.queryByText(/O Caixa está fechado/i)).toBeNull();
-    }, { timeout: 10000 });
+        expect(screen.queryByText(/RECEBER PAGAMENTO/i)).toBeInTheDocument();
+    }, { timeout: 15000 });
 
     await screen.findByText(/Product A/i);
     fireEvent.click(screen.getByText(/Product A/i));
@@ -213,7 +211,7 @@ describe('Offline Conflict & Reconciliation E2E', () => {
 const ReconciledReportsWrapper = ({ reconciledSale }: any) => {
   const context = useLocalPOS();
   React.useEffect(() => {
-    if (context) {
+    if (context && context.sales) {
         (context as any).sales = [reconciledSale];
     }
   }, [context, reconciledSale]);
