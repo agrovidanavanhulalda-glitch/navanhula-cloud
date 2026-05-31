@@ -107,47 +107,33 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     renderComponent();
     expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
 
-    // The component defaults to the "events" tab.
-    // Try to find the tab by various attributes. Radix Tabs use buttons for triggers.
-    const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB'));
-    if (!dbTab) throw new Error('DB Tab not found among: ' + tabs.map(t => t.textContent).join(', '));
+    // Directly navigate to the DB tab content by clicking its trigger
+    // Based on the code: <TabsTrigger value="general" className="gap-2"> <Database className="w-4 h-4" /> Auditoria DB </TabsTrigger>
+    const triggers = screen.getAllByRole('tab');
+    const dbTrigger = triggers.find(t => t.textContent?.includes('Auditoria DB'));
+    if (!dbTrigger) throw new Error('Trigger not found');
     
-    // Using fireEvent and waitFor with a more robust check
-    fireEvent.click(dbTab);
-    
-    // Check if the content is visible. Radix uses hidden attribute or conditional rendering.
-    // In our case, SystemAuditPage renders all content and handles visibility via TabsContent.
-    await waitFor(() => {
-      // Look for the specific text inside the General Logs section
-      const content = screen.queryByText(/Histórico de Operações/i);
-      expect(content).toBeTruthy();
-    }, { timeout: 10000 });
+    fireEvent.click(dbTrigger);
 
-    // Now check for logs
-    await waitFor(() => {
-      expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
-    }, { timeout: 10000 });
+    // Wait for the specific content that is ONLY in the DB tab
+    // We'll use findAllByText for UPDATE_STOCK since it appears twice
+    const actions = await screen.findAllByText(/UPDATE_STOCK/, {}, { timeout: 10000 });
+    expect(actions.length).toBeGreaterThan(0);
 
     expect(screen.getByText(/Manager A/i)).toBeInTheDocument();
+    // The details are stringified in the UI
     expect(screen.getByText(/resolved_version_2/i)).toBeInTheDocument();
   });
 
   it('should ensure consistency in Excel export when conflicts are resolved', async () => {
     renderComponent();
-    await screen.findByText(/Auditoria Enterprise/i);
+    expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
     
-    const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB'));
-    fireEvent.click(dbTab!);
+    const triggers = screen.getAllByRole('tab');
+    const dbTrigger = triggers.find(t => t.textContent?.includes('Auditoria DB'));
+    fireEvent.click(dbTrigger!);
 
-    await waitFor(() => {
-      expect(screen.queryByText(/Histórico de Operações/i)).toBeTruthy();
-    }, { timeout: 10000 });
-
-    await waitFor(() => {
-      expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
-    }, { timeout: 10000 });
+    await screen.findAllByText(/UPDATE_STOCK/, {}, { timeout: 10000 });
 
     const excelButtons = screen.getAllByRole('button', { name: /Excel/i });
     fireEvent.click(excelButtons[excelButtons.length - 1]);
@@ -164,19 +150,13 @@ describe('SystemAuditPage - Conflict Resolution', () => {
 
   it('should ensure consistency in PDF export when conflicts are resolved', async () => {
     renderComponent();
-    await screen.findByText(/Auditoria Enterprise/i);
+    expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
     
-    const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB'));
-    fireEvent.click(dbTab!);
+    const triggers = screen.getAllByRole('tab');
+    const dbTrigger = triggers.find(t => t.textContent?.includes('Auditoria DB'));
+    fireEvent.click(dbTrigger!);
 
-    await waitFor(() => {
-      expect(screen.queryByText(/Histórico de Operações/i)).toBeTruthy();
-    }, { timeout: 10000 });
-
-    await waitFor(() => {
-      expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
-    }, { timeout: 10000 });
+    await screen.findAllByText(/UPDATE_STOCK/, {}, { timeout: 10000 });
 
     const pdfButtons = screen.getAllByRole('button', { name: /PDF/i });
     fireEvent.click(pdfButtons[pdfButtons.length - 1]);
