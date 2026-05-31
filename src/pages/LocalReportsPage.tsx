@@ -116,7 +116,7 @@ const LocalReportsPage: React.FC = () => {
         }));
 
         // Merge and avoid duplicates
-        const combined = [...pendingHistory];
+        const combined: typeof exportHistory = [...pendingHistory];
         remoteHistory.forEach(remote => {
           if (!combined.find(p => p.id === remote.id)) {
             combined.push(remote);
