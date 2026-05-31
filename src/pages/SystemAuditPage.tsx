@@ -196,7 +196,17 @@ const SystemAuditPage: React.FC = () => {
 
 
   const exportToExcel = (data: any[], fileName: string) => {
-    const ws = XLSX.utils.json_to_sheet(data);
+    const formattedData = data.map(item => ({
+      ...item,
+      created_at: formatInTimeZone(new Date(item.created_at), timezone, "dd/MM/yyyy HH:mm:ss"),
+      profiles: item.profiles ? `${item.profiles.full_name} (${item.profiles.email})` : item.profiles,
+      details: typeof item.details === 'object' ? JSON.stringify(item.details) : item.details,
+      metadata: typeof item.metadata === 'object' ? JSON.stringify(item.metadata) : item.metadata,
+      new_data: typeof item.new_data === 'object' ? JSON.stringify(item.new_data) : item.new_data,
+      old_data: typeof item.old_data === 'object' ? JSON.stringify(item.old_data) : item.old_data,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(formattedData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Logs");
     XLSX.writeFile(wb, `${fileName}_${format(new Date(), "dd-MM-yyyy")}.xlsx`);
