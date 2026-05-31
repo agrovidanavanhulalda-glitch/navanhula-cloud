@@ -419,8 +419,10 @@ export const exportExcelReport = async (props: PDFReportProps & { onProgress?: (
   XLSX.utils.book_append_sheet(workbook, marginWorksheet, "Margens de Produtos");
 
   // Export
+  if (onProgress) onProgress(100);
   XLSX.writeFile(workbook, `relatorio_vendas_margens_${startDate}_${endDate}.xlsx`);
 };
+
 
 // Component for preview/print
 const PDFReportPreview: React.FC<PDFReportProps & { onClose: () => void }> = (props) => {
