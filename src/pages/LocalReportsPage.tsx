@@ -282,6 +282,20 @@ const LocalReportsPage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="seller-filter">Vendedor</Label>
+            <Select value={selectedSeller} onValueChange={setSelectedSeller}>
+              <SelectTrigger id="seller-filter" className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Vendedores</SelectItem>
+                {sellers.map(seller => (
+                  <SelectItem key={seller.id} value={seller.id}>{seller.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
             <Label htmlFor="start-date">Data Início</Label>
             <Input
               id="start-date"
