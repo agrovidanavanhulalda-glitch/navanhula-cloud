@@ -8,11 +8,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ShieldCheck, Activity, Clock, User, ArrowRight, Shield, 
   Key, AlertCircle, CheckCircle2, Database, Hash, Search,
-  History, UserPlus, Fingerprint
+  History, UserPlus, Fingerprint, Download, FileJson, FileText,
+  Filter, Calendar as CalendarIcon, X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 interface AuditLog {
   id: string;
@@ -34,7 +40,7 @@ interface AuditLog {
 
 interface AuthFlowLog {
   id: string;
-  transaction_id: string | number; // Accept both for transition
+  transaction_id: string | number;
   user_id: string | null;
   email: string | null;
   step: string;
@@ -62,6 +68,8 @@ interface AuthEventLog {
 const SystemAuditPage: React.FC = () => {
   const [authSearch, setAuthSearch] = useState("");
   const [eventSearch, setEventSearch] = useState("");
+  const [eventRoleFilter, setEventRoleFilter] = useState("all");
+  const [eventStatusFilter, setEventStatusFilter] = useState("all");
 
   const { data: logs, isLoading } = useQuery({
     queryKey: ["audit-logs"],
@@ -74,7 +82,7 @@ const SystemAuditPage: React.FC = () => {
           profiles (full_name, email)
         `)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(500);
       if (error) throw error;
       return (data as any[]).map(log => ({
         ...log,
@@ -90,7 +98,7 @@ const SystemAuditPage: React.FC = () => {
         .from("auth_flow_logs")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(200);
+        .limit(500);
       if (error) throw error;
       return data as AuthFlowLog[];
     },
@@ -103,27 +111,59 @@ const SystemAuditPage: React.FC = () => {
         .from("auth_event_logs")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(200);
+        .limit(500);
       if (error) throw error;
       return data as AuthEventLog[];
     },
   });
 
   const filteredAuthLogs = authFlowLogs?.filter(log => 
-    !authSearch || 
+    (!authSearch || 
     log.email?.toLowerCase().includes(authSearch.toLowerCase()) ||
     log.user_id?.toLowerCase().includes(authSearch.toLowerCase()) ||
     log.step.toLowerCase().includes(authSearch.toLowerCase()) ||
-    log.transaction_id?.toString().includes(authSearch)
+    log.transaction_id?.toString().includes(authSearch))
   );
 
-  const filteredEventLogs = authEventLogs?.filter(log =>
-    !eventSearch ||
-    log.role_key?.toLowerCase().includes(eventSearch.toLowerCase()) ||
-    log.event_type.toLowerCase().includes(eventSearch.toLowerCase()) ||
-    log.transaction_id.includes(eventSearch) ||
-    log.target_user_id.includes(eventSearch)
-  );
+  const filteredEventLogs = authEventLogs?.filter(log => {
+    const matchesSearch = !eventSearch ||
+      log.role_key?.toLowerCase().includes(eventSearch.toLowerCase()) ||
+      log.event_type.toLowerCase().includes(eventSearch.toLowerCase()) ||
+      log.transaction_id.includes(eventSearch) ||
+      log.target_user_id.includes(eventSearch);
+    
+    const matchesRole = eventRoleFilter === "all" || log.role_key === eventRoleFilter;
+    const matchesStatus = eventStatusFilter === "all" || log.status === eventStatusFilter;
+
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  const exportToExcel = (data: any[], fileName: string) => {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Logs");
+    XLSX.writeFile(wb, `${fileName}_${format(new Date(), "dd-MM-yyyy")}.xlsx`);
+  };
+
+  const exportToPDF = (data: any[], title: string, fileName: string, columns: string[]) => {
+    const doc = new jsPDF();
+    doc.text(title, 14, 15);
+    
+    const tableData = data.map(item => columns.map(col => {
+      if (col === 'created_at') return format(new Date(item[col]), "dd/MM/yyyy HH:mm");
+      if (typeof item[col] === 'object') return JSON.stringify(item[col]).substring(0, 50);
+      return String(item[col] || "");
+    }));
+
+    (doc as any).autoTable({
+      head: [columns.map(c => c.replace('_', ' ').toUpperCase())],
+      body: tableData,
+      startY: 20,
+      styles: { fontSize: 8 },
+    });
+
+    doc.save(`${fileName}_${format(new Date(), "dd-MM-yyyy")}.pdf`);
+  };
 
   const getStepLabel = (step: string) => {
     const labels: Record<string, string> = {
@@ -232,19 +272,78 @@ const SystemAuditPage: React.FC = () => {
 
         <TabsContent value="events">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <UserPlus className="w-5 h-5 text-primary" />
-                Auditoria de Criação e Cargos (Role Keys)
-              </CardTitle>
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  placeholder="TX ID, Role, User ID..." 
-                  className="pl-9 h-9"
-                  value={eventSearch}
-                  onChange={(e) => setEventSearch(e.target.value)}
-                />
+            <CardHeader className="flex flex-col space-y-4 pb-4">
+              <div className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                  <UserPlus className="w-5 h-5 text-primary" />
+                  Auditoria de Criação e Cargos
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => exportToExcel(filteredEventLogs || [], "auditoria_eventos")}
+                    className="gap-2"
+                  >
+                    <FileJson className="w-4 h-4" /> Excel
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => exportToPDF(
+                      filteredEventLogs || [], 
+                      "Relatório de Auditoria de Criação e Cargos", 
+                      "auditoria_eventos",
+                      ['created_at', 'event_type', 'role_key', 'status', 'target_user_id', 'transaction_id']
+                    )}
+                    className="gap-2"
+                  >
+                    <FileText className="w-4 h-4" /> PDF
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="relative md:col-span-2">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Pesquisar utilizador, ID de transação..." 
+                    className="pl-9"
+                    value={eventSearch}
+                    onChange={(e) => setEventSearch(e.target.value)}
+                  />
+                  {eventSearch && (
+                    <button 
+                      onClick={() => setEventSearch("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  )}
+                </div>
+                
+                <Select value={eventRoleFilter} onValueChange={setEventRoleFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Cargo (Role)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Cargos</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="seller">Seller</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={eventStatusFilter} onValueChange={setEventStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Status</SelectItem>
+                    <SelectItem value="success">Sucesso</SelectItem>
+                    <SelectItem value="failure">Falha</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardHeader>
             <CardContent>
@@ -320,16 +419,27 @@ const SystemAuditPage: React.FC = () => {
 
         <TabsContent value="auth">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="flex items-center gap-2">
-                <Key className="w-5 h-5" />
-                Logs Técnicos de Autenticação
-              </CardTitle>
-              <div className="relative w-full max-w-sm">
+            <CardHeader className="flex flex-col space-y-4 pb-4">
+              <div className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Key className="w-5 h-5" />
+                  Logs Técnicos de Autenticação
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => exportToExcel(filteredAuthLogs || [], "logs_autenticacao")}
+                  >
+                    <Download className="w-4 h-4 mr-2" /> Exportar
+                  </Button>
+                </div>
+              </div>
+              <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Pesquisar por email ou TX..." 
-                  className="pl-9 h-8 text-xs"
+                  placeholder="Pesquisar por email, ID de transação ou passo..." 
+                  className="pl-9"
                   value={authSearch}
                   onChange={(e) => setAuthSearch(e.target.value)}
                 />
@@ -367,11 +477,18 @@ const SystemAuditPage: React.FC = () => {
 
         <TabsContent value="general">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
               <CardTitle className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
                 Histórico de Operações na Base de Dados
               </CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => exportToExcel(logs || [], "auditoria_db")}
+              >
+                <Download className="w-4 h-4 mr-2" /> Exportar
+              </Button>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[600px] pr-4">
