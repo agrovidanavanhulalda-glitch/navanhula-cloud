@@ -4,6 +4,7 @@ import { FileText, Download } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { LocalSale, LocalStore } from '@/contexts/LocalPOSContext';
 import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
 
 // RELATÓRIO PDF/A4 - Layout profissional para impressão em papel A4
 
@@ -13,6 +14,7 @@ interface PDFReportProps {
   startDate: string;
   endDate: string;
   selectedStore: string;
+  selectedSeller?: string;
   companyName?: string;
 }
 
@@ -29,7 +31,7 @@ const getPaymentLabel = (method: string) => {
 
 // Generate PDF content
 export const generatePDFContent = (props: PDFReportProps): string => {
-  const { sales, stores, startDate, endDate, selectedStore, companyName = 'NAVANHULA CLOUD' } = props;
+  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all', companyName = 'NAVANHULA CLOUD' } = props;
 
   // Filter sales
   const filteredSales = sales.filter(sale => {
@@ -40,6 +42,7 @@ export const generatePDFContent = (props: PDFReportProps): string => {
 
     if (saleDate < start || saleDate > end) return false;
     if (selectedStore !== 'all' && sale.storeId !== selectedStore) return false;
+    if (selectedSeller !== 'all' && sale.sellerId !== selectedSeller) return false;
     return sale.status === 'completed';
   });
 
@@ -172,7 +175,7 @@ ${filteredSales.length > 50 ? `\n  ... e mais ${filteredSales.length - 50} venda
 
 // Export as real PDF using jsPDF
 export const exportPDFReport = (props: PDFReportProps) => {
-  const { sales, stores, startDate, endDate, selectedStore, companyName = 'NAVANHULA CLOUD' } = props;
+  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all', companyName = 'NAVANHULA CLOUD' } = props;
 
   const filteredSales = sales.filter(sale => {
     const saleDate = new Date(sale.createdAt);
@@ -181,6 +184,7 @@ export const exportPDFReport = (props: PDFReportProps) => {
     end.setHours(23, 59, 59, 999);
     if (saleDate < start || saleDate > end) return false;
     if (selectedStore !== 'all' && sale.storeId !== selectedStore) return false;
+    if (selectedSeller !== 'all' && sale.sellerId !== selectedSeller) return false;
     return sale.status === 'completed';
   });
 
@@ -295,9 +299,9 @@ export const exportPDFReport = (props: PDFReportProps) => {
   doc.save(`relatorio_vendas_${startDate}_${endDate}.pdf`);
 };
 
-// Export as Excel CSV
+// Export as real Excel .xlsx
 export const exportExcelReport = (props: PDFReportProps) => {
-  const { sales, stores, startDate, endDate, selectedStore } = props;
+  const { sales, stores, startDate, endDate, selectedStore, selectedSeller = 'all' } = props;
 
   // Filter sales
   const filteredSales = sales.filter(sale => {
@@ -308,61 +312,59 @@ export const exportExcelReport = (props: PDFReportProps) => {
 
     if (saleDate < start || saleDate > end) return false;
     if (selectedStore !== 'all' && sale.storeId !== selectedStore) return false;
+    if (selectedSeller !== 'all' && sale.sellerId !== selectedSeller) return false;
     return sale.status === 'completed';
   });
 
-  // Headers
-  const headers = [
-    'Data',
-    'Hora',
-    'Loja',
-    'Vendedor',
-    'Pagamento',
-    'Itens',
-    'Subtotal',
-    'Desconto',
-    'Total',
-    'Lucro'
-  ];
-
-  // Rows
-  const rows = filteredSales.map(sale => {
+  // Prepare data for Excel
+  const data = filteredSales.map(sale => {
     const date = new Date(sale.createdAt);
     const store = stores.find(s => s.id === sale.storeId);
     const itemsCount = sale.items.reduce((acc, item) => acc + item.quantity, 0);
     const profit = sale.items.reduce((acc, item) => {
       return acc + (item.product.salePrice - item.product.costPrice) * item.quantity;
     }, 0);
+    const revenue = sale.total;
+    const marginPercent = revenue > 0 ? (profit / revenue) * 100 : 0;
 
-    return [
-      date.toLocaleDateString('pt-MZ'),
-      date.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' }),
-      store?.name || 'Loja Principal',
-      sale.sellerName || 'Operador',
-      getPaymentLabel(sale.paymentMethod || 'cash'),
-      itemsCount.toString(),
-      sale.subtotal.toFixed(2),
-      sale.discount.toFixed(2),
-      sale.total.toFixed(2),
-      profit.toFixed(2),
-    ];
+    return {
+      'Data': date.toLocaleDateString('pt-MZ'),
+      'Hora': date.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' }),
+      'Loja': store?.name || 'Loja Principal',
+      'Vendedor': sale.sellerName || 'Operador',
+      'Pagamento': getPaymentLabel(sale.paymentMethod || 'cash'),
+      'Qtd Itens': itemsCount,
+      'Subtotal': sale.subtotal,
+      'Desconto': sale.discount,
+      'Total': revenue,
+      'Lucro': profit,
+      'Margem (%)': marginPercent.toFixed(2) + '%'
+    };
   });
 
-  // Build CSV
-  const csv = [
-    headers.join(';'),
-    ...rows.map(r => r.join(';'))
-  ].join('\n');
+  // Create worksheet
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Vendas");
 
-  // Add BOM for Excel to recognize UTF-8
-  const BOM = '\uFEFF';
-  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `vendas_${startDate}_${endDate}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+  // Add summary sheet
+  const totalRevenue = filteredSales.reduce((acc, s) => acc + s.total, 0);
+  const totalProfit = filteredSales.reduce((acc, sale) => {
+    return acc + sale.items.reduce((a, i) => a + (i.product.salePrice - i.product.costPrice) * i.quantity, 0);
+  }, 0);
+
+  const summaryData = [
+    { 'Métrica': 'Total de Vendas', 'Valor': filteredSales.length },
+    { 'Métrica': 'Receita Total', 'Valor': totalRevenue },
+    { 'Métrica': 'Lucro Total', 'Valor': totalProfit },
+    { 'Métrica': 'Margem Média (%)', 'Valor': totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) + '%' : '0.00%' },
+    { 'Métrica': 'Período', 'Valor': `${startDate} a ${endDate}` }
+  ];
+  const summaryWorksheet = XLSX.utils.json_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(workbook, summaryWorksheet, "Resumo");
+
+  // Export
+  XLSX.writeFile(workbook, `relatorio_vendas_${startDate}_${endDate}.xlsx`);
 };
 
 // Component for preview/print
