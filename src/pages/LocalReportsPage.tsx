@@ -37,7 +37,8 @@ import {
   Eye,
   XCircle,
   AlertTriangle,
-  Package
+  Package,
+  Download
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import PDFReportPreview, { exportPDFReport, exportExcelReport, exportLogsPDF } from '@/components/reports/PDFReport';
