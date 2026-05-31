@@ -108,11 +108,20 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
 
     // The component defaults to the "events" tab.
-    // Let's find the "Auditoria DB" tab and click it.
-    const dbTab = screen.getByRole('tab', { name: /Auditoria DB/i });
+    // Try to find the tab by various attributes
+    const tabs = screen.getAllByRole('tab');
+    const dbTab = tabs.find(t => t.getAttribute('value') === 'general' || t.textContent?.includes('Auditoria DB'));
+    if (!dbTab) throw new Error('DB Tab not found among: ' + tabs.map(t => t.textContent).join(', '));
+    
     fireEvent.click(dbTab);
 
-    // Wait for the action text "UPDATE_STOCK" which should appear in the "Auditoria DB" list
+    // Using a more relaxed matcher for the list item
+    await waitFor(() => {
+      const dbText = screen.queryByText(/Histórico de Operações/i);
+      expect(dbText).not.toBeNull();
+    }, { timeout: 10000 });
+
+    // Look for content inside the DB tab
     await waitFor(() => {
       expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
     }, { timeout: 10000 });
@@ -125,16 +134,16 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     renderComponent();
     await screen.findByText(/Auditoria Enterprise/i);
     
-    const dbTab = screen.getByRole('tab', { name: /Auditoria DB/i });
-    fireEvent.click(dbTab);
+    const tabs = screen.getAllByRole('tab');
+    const dbTab = tabs.find(t => t.getAttribute('value') === 'general' || t.textContent?.includes('Auditoria DB'));
+    fireEvent.click(dbTab!);
 
     await waitFor(() => {
       expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
     }, { timeout: 10000 });
 
-    // Find the Excel button within the Auditoria DB tab container
-    const excelButton = screen.getAllByRole('button', { name: /Excel/i }).pop();
-    fireEvent.click(excelButton!);
+    const excelButtons = screen.getAllByRole('button', { name: /Excel/i });
+    fireEvent.click(excelButtons[excelButtons.length - 1]);
 
     expect(XLSX.utils.json_to_sheet).toHaveBeenCalled();
     const callData = vi.mocked(XLSX.utils.json_to_sheet).mock.calls[0][0] as any[];
@@ -150,15 +159,16 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     renderComponent();
     await screen.findByText(/Auditoria Enterprise/i);
     
-    const dbTab = screen.getByRole('tab', { name: /Auditoria DB/i });
-    fireEvent.click(dbTab);
+    const tabs = screen.getAllByRole('tab');
+    const dbTab = tabs.find(t => t.getAttribute('value') === 'general' || t.textContent?.includes('Auditoria DB'));
+    fireEvent.click(dbTab!);
 
     await waitFor(() => {
       expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
     }, { timeout: 10000 });
 
-    const pdfButton = screen.getAllByRole('button', { name: /PDF/i }).pop();
-    fireEvent.click(pdfButton!);
+    const pdfButtons = screen.getAllByRole('button', { name: /PDF/i });
+    fireEvent.click(pdfButtons[pdfButtons.length - 1]);
 
     const docInstance = vi.mocked(jsPDF).mock.results[0].value;
     expect(docInstance.save).toHaveBeenCalled();
