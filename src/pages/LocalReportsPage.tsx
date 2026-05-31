@@ -59,6 +59,10 @@ const LocalReportsPage: React.FC = () => {
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [autoExport, setAutoExport] = useState(false);
+  const [exportStatus, setExportStatus] = useState<{
+    pdf: 'idle' | 'generating' | 'downloading' | 'completed';
+    xlsx: 'idle' | 'generating' | 'downloading' | 'completed';
+  }>({ pdf: 'idle', xlsx: 'idle' });
   const isInitialMount = useRef(true);
 
   // Filtered sales (completed only)
@@ -199,7 +203,12 @@ const LocalReportsPage: React.FC = () => {
   };
 
   // Export handlers
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
+    setExportStatus(prev => ({ ...prev, xlsx: 'generating' }));
+    // Small delay to simulate generation and show status
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setExportStatus(prev => ({ ...prev, xlsx: 'downloading' }));
+    
     exportExcelReport({
       sales,
       stores,
@@ -209,9 +218,18 @@ const LocalReportsPage: React.FC = () => {
       selectedSeller,
       companyName: 'NAVANHULA CLOUD',
     });
+
+    setTimeout(() => {
+      setExportStatus(prev => ({ ...prev, xlsx: 'completed' }));
+      setTimeout(() => setExportStatus(prev => ({ ...prev, xlsx: 'idle' })), 2000);
+    }, 500);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    setExportStatus(prev => ({ ...prev, pdf: 'generating' }));
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setExportStatus(prev => ({ ...prev, pdf: 'downloading' }));
+
     exportPDFReport({
       sales,
       stores,
@@ -221,6 +239,11 @@ const LocalReportsPage: React.FC = () => {
       selectedSeller,
       companyName: 'NAVANHULA CLOUD',
     });
+
+    setTimeout(() => {
+      setExportStatus(prev => ({ ...prev, pdf: 'completed' }));
+      setTimeout(() => setExportStatus(prev => ({ ...prev, pdf: 'idle' })), 2000);
+    }, 500);
   };
 
   // Auto-export logic
@@ -267,19 +290,48 @@ const LocalReportsPage: React.FC = () => {
             Dados filtrados por período
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowPDFPreview(true)}>
-            <Eye className="w-4 h-4 mr-2" />
-            Visualizar
-          </Button>
-          <Button variant="outline" onClick={handleExportExcel}>
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
-            Excel
-          </Button>
-          <Button onClick={handleExportPDF}>
-            <FileText className="w-4 h-4 mr-2" />
-            Relatório
-          </Button>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowPDFPreview(true)}>
+              <Eye className="w-4 h-4 mr-2" />
+              Visualizar
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleExportExcel}
+              disabled={exportStatus.xlsx !== 'idle'}
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              {exportStatus.xlsx === 'idle' ? 'Excel' : 
+               exportStatus.xlsx === 'generating' ? 'Gerando...' :
+               exportStatus.xlsx === 'downloading' ? 'Baixando...' : 'Concluído'}
+            </Button>
+            <Button 
+              onClick={handleExportPDF}
+              disabled={exportStatus.pdf !== 'idle'}
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              {exportStatus.pdf === 'idle' ? 'Relatório' : 
+               exportStatus.pdf === 'generating' ? 'Gerando...' :
+               exportStatus.pdf === 'downloading' ? 'Baixando...' : 'Concluído'}
+            </Button>
+          </div>
+          {(exportStatus.pdf !== 'idle' || exportStatus.xlsx !== 'idle') && (
+            <div className="text-[10px] text-muted-foreground flex gap-4 animate-pulse">
+              {exportStatus.pdf !== 'idle' && (
+                <span className="flex items-center gap-1">
+                  PDF: {exportStatus.pdf === 'generating' ? 'Preparando arquivo' : 
+                        exportStatus.pdf === 'downloading' ? 'Iniciando download' : 'Finalizado'}
+                </span>
+              )}
+              {exportStatus.xlsx !== 'idle' && (
+                <span className="flex items-center gap-1">
+                  XLSX: {exportStatus.xlsx === 'generating' ? 'Processando dados' : 
+                         exportStatus.xlsx === 'downloading' ? 'Iniciando download' : 'Finalizado'}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
