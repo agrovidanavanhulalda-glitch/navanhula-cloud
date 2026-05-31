@@ -154,18 +154,46 @@ class SyncManager {
   }
 
   private async executeTask(task: SyncTask) {
-    switch (task.type) {
-      case 'SALE':
-        return this.syncSale(task.payload);
-      case 'STOCK_ADJUSTMENT':
-        return this.syncStockAdjustment(task.payload);
-      case 'ONBOARDING':
-        return this.syncOnboarding(task.payload);
-      case 'EXPORT_HISTORY':
-        return this.syncExportHistory(task.payload);
-      default:
-        throw new Error(`Unknown task type: ${task.type}`);
+    try {
+      switch (task.type) {
+        case 'SALE':
+          await this.syncSale(task.payload);
+          break;
+        case 'STOCK_ADJUSTMENT':
+          await this.syncStockAdjustment(task.payload);
+          break;
+        case 'ONBOARDING':
+          await this.syncOnboarding(task.payload);
+          break;
+        case 'EXPORT_HISTORY':
+          await this.syncExportHistory(task.payload);
+          break;
+        default:
+          throw new Error(`Unknown task type: ${task.type}`);
+      }
+      
+      // Log successful attempt for export history
+      if (task.type === 'EXPORT_HISTORY' && task.payload?.id) {
+        await this.logExportAttempt(task.payload.id, 'success', undefined, task.retryCount);
+      }
+    } catch (error: any) {
+      if (task.type === 'EXPORT_HISTORY' && task.payload?.id) {
+        await this.logExportAttempt(task.payload.id, 'error', error.message, task.retryCount);
+      }
+      throw error;
+    }
+  }
 
+  private async logExportAttempt(historyId: string, status: string, error?: string, retryCount: number = 0) {
+    try {
+      await supabase.from('export_attempts_logs').insert({
+        export_history_id: historyId,
+        status,
+        error_message: error,
+        retry_count: retryCount
+      });
+    } catch (e) {
+      console.error('[Sync] Failed to log export attempt', e);
     }
   }
 
