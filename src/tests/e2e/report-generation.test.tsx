@@ -190,12 +190,13 @@ describe('E2E Test Execution Report with Evidence', () => {
         getCancellationHistory: () => [],
     } as any);
 
-    const excelSpy = vi.spyOn(PDFReportExports, 'exportExcelReport').mockImplementation(() => {
+    const excelSpy = vi.spyOn(PDFReportExports, 'exportExcelReport').mockImplementation(async () => {
         collectEvidence('EXCEL_EXPORT', 'Excel report triggered with reconciled data (150 MT)');
     });
-    const pdfSpy = vi.spyOn(PDFReportExports, 'exportPDFReport').mockImplementation(() => {
+    const pdfSpy = vi.spyOn(PDFReportExports, 'exportPDFReport').mockImplementation(async () => {
         collectEvidence('PDF_EXPORT', 'PDF report triggered with reconciled data (150 MT)');
     });
+
 
     render(
       <BrowserRouter>
