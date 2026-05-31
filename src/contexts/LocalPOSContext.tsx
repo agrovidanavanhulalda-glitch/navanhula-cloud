@@ -208,11 +208,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const sellers = (profilesRes.data || []).map(p => ({
         id: p.id,
-        name: p.full_name || p.username || 'Vendedor',
-        email: p.username || '',
-        role: p.role as 'admin' | 'seller',
+        name: p.full_name || p.email || 'Vendedor',
+        email: p.email || '',
+        role: (p.is_super_admin ? 'admin' : 'seller') as 'admin' | 'seller',
         storeId: p.store_id || '',
-        isActive: true
+        isActive: p.is_active
       }));
 
       const cashRegisters = (cashRegistersRes.data || []).map(cr => ({
