@@ -110,17 +110,18 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     // The component defaults to the "events" tab.
     // Try to find the tab by various attributes. Radix Tabs use buttons for triggers.
     const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB') || t.getAttribute('value') === 'general' || t.getAttribute('data-value') === 'general');
+    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB'));
     if (!dbTab) throw new Error('DB Tab not found among: ' + tabs.map(t => t.textContent).join(', '));
     
-    // Simulate clicking the trigger
+    // Using fireEvent and waitFor with a more robust check
     fireEvent.click(dbTab);
     
-    // Sometimes fireEvent.click on Radix triggers doesn't update the UI immediately in tests
-    // so we might need to wait for the content of the tab to be rendered
+    // Check if the content is visible. Radix uses hidden attribute or conditional rendering.
+    // In our case, SystemAuditPage renders all content and handles visibility via TabsContent.
     await waitFor(() => {
-      // Check for the heading that is inside the "Auditoria DB" tab content
-      expect(screen.queryByText(/Histórico de Operações/i)).toBeInTheDocument();
+      // Look for the specific text inside the General Logs section
+      const content = screen.queryByText(/Histórico de Operações/i);
+      expect(content).toBeTruthy();
     }, { timeout: 10000 });
 
     // Now check for logs
@@ -141,7 +142,7 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     fireEvent.click(dbTab!);
 
     await waitFor(() => {
-      expect(screen.queryByText(/Histórico de Operações/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Histórico de Operações/i)).toBeTruthy();
     }, { timeout: 10000 });
 
     await waitFor(() => {
@@ -170,7 +171,7 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     fireEvent.click(dbTab!);
 
     await waitFor(() => {
-      expect(screen.queryByText(/Histórico de Operações/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Histórico de Operações/i)).toBeTruthy();
     }, { timeout: 10000 });
 
     await waitFor(() => {
