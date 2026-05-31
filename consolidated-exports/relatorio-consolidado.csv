@@ -1,0 +1,7 @@
+Categoria,Informação,Valor
+Execução,Data,Sun May 31 07:46:49 UTC 2026
+Execução,Status,Sucesso
+Arquivo,audit-report.txt,119B
+Arquivo,test-execution-log.txt,5.7K
+Arquivo,ui-console-logs.log,119B
+Log UI,Status,Sincronização iniciada e conflitos resolvidos
