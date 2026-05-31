@@ -10,46 +10,58 @@ import jsPDF from 'jspdf';
 // Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
+const TEST_STORE_ID = 'store-1';
+
 const mockAuditLogs = [
   {
     id: '1',
     action: 'UPDATE_STOCK',
     table_name: 'inventory',
-    details: { item: 'Coca-Cola', conflict: 'resolved_version_2' },
+    details: { item: 'Coca-Cola', conflict: 'resolved_version_2', resolved: true },
     created_at: '2024-05-20T10:00:00Z',
-    store_id: 'store-1',
+    store_id: TEST_STORE_ID,
     profiles: { full_name: 'Manager A', email: 'manager@store.com' }
   },
   {
     id: '1',
     action: 'UPDATE_STOCK',
     table_name: 'inventory',
-    details: { item: 'Coca-Cola', conflict: 'original_offline_version_1' },
+    details: { item: 'Coca-Cola', conflict: 'original_offline_version_1', resolved: false },
     created_at: '2024-05-20T10:00:00Z',
-    store_id: 'store-1',
+    store_id: TEST_STORE_ID,
     profiles: { full_name: 'Manager B', email: 'manager-b@store.com' }
   }
+];
+
+const mockStores = [
+  { id: 'all', name: 'Todas as Lojas', timezone: 'UTC' },
+  { id: TEST_STORE_ID, name: 'Store 1', timezone: 'UTC' }
 ];
 
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: vi.fn((table) => ({
-      select: vi.fn(() => ({
-        order: vi.fn(() => ({
-          limit: vi.fn(() => {
-            if (table === 'audit_logs') {
-              return Promise.resolve({ data: mockAuditLogs, error: null });
-            }
-            if (table === 'stores') {
-              return Promise.resolve({ data: [{ id: 'store-1', name: 'Store 1', timezone: 'UTC' }], error: null });
-            }
-            return Promise.resolve({ data: [], error: null });
-          }),
-        })),
-        match: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      })),
-    })),
+    from: vi.fn((table) => {
+      const queryBuilder: any = {
+        select: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
+        then: vi.fn().mockImplementation((cb) => {
+          if (table === 'audit_logs') {
+            return Promise.resolve(cb({ data: mockAuditLogs, error: null }));
+          }
+          if (table === 'stores') {
+            return Promise.resolve(cb({ data: mockStores.slice(1), error: null }));
+          }
+          if (table === 'auth_flow_logs' || table === 'auth_event_logs') {
+            return Promise.resolve(cb({ data: [], error: null }));
+          }
+          return Promise.resolve(cb({ data: [], error: null }));
+        }),
+      };
+      return queryBuilder;
+    }),
   },
 }));
 
@@ -61,6 +73,7 @@ vi.mock('xlsx', () => ({
     book_append_sheet: vi.fn(),
   },
   writeFile: vi.fn(),
+  format: vi.fn(),
 }));
 
 // Mock jsPDF
@@ -98,20 +111,27 @@ describe('SystemAuditPage - Conflict Resolution', () => {
   it('should display conflict resolution events correctly in UI', async () => {
     renderComponent();
 
-    // Verify it loads the data
+    // Verify it loads the data by checking for "Auditoria Enterprise" first
+    expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
+
+    // The component filters logs. Let's wait for them to appear.
+    // We check for the action text which is rendered in the list.
     await waitFor(() => {
       const actions = screen.getAllByText(/UPDATE_STOCK/i);
       expect(actions.length).toBeGreaterThanOrEqual(1);
     }, { timeout: 5000 });
 
-    // Check if the UI reflects the profiles correctly
+    // Check if the UI reflects the email from profiles
     expect(screen.getByText(/manager@store.com/i)).toBeInTheDocument();
   });
 
   it('should ensure consistency in Excel export when conflicts are resolved', async () => {
     renderComponent();
 
-    await waitFor(() => screen.getByText(/Auditoria Enterprise/i));
+    expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
+
+    // Ensure logs are loaded before clicking export
+    await screen.findAllByText(/UPDATE_STOCK/i);
 
     const exportExcelBtn = screen.getByRole('button', { name: /Excel/i });
     fireEvent.click(exportExcelBtn);
@@ -119,6 +139,7 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     expect(XLSX.utils.json_to_sheet).toHaveBeenCalled();
     const callData = vi.mocked(XLSX.utils.json_to_sheet).mock.calls[0][0] as any[];
     
+    // Check if the exported data includes the conflict details stringified
     const hasConflictDetails = callData.some((row: any) => 
       (typeof row.details === 'string' && row.details.includes('resolved_version_2')) || 
       (typeof row.details === 'string' && row.details.includes('original_offline_version_1'))
@@ -129,7 +150,10 @@ describe('SystemAuditPage - Conflict Resolution', () => {
   it('should ensure consistency in PDF export when conflicts are resolved', async () => {
     renderComponent();
 
-    await waitFor(() => screen.getByText(/Auditoria Enterprise/i));
+    expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
+
+    // Ensure logs are loaded
+    await screen.findAllByText(/UPDATE_STOCK/i);
 
     const exportPdfBtn = screen.getByRole('button', { name: /PDF/i });
     fireEvent.click(exportPdfBtn);
@@ -137,6 +161,7 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     const docInstance = vi.mocked(jsPDF).mock.results[0].value;
     expect(docInstance.save).toHaveBeenCalled();
     
+    // Check if autoTable was called with conflict data
     const autoTableCall = (docInstance as any).autoTable.mock.calls[0][0];
     const body = autoTableCall.body;
     
