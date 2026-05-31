@@ -223,7 +223,6 @@ const LocalReportsPage: React.FC = () => {
     
     try {
       setExportStatus(prev => ({ ...prev, xlsx: { status: 'generating', progress: 0 } }));
-
       
       await exportExcelReport({
         sales,
@@ -248,25 +247,36 @@ const LocalReportsPage: React.FC = () => {
       setExportHistory(prev => [{
         id: historyId,
         timestamp: new Date(),
-        type: 'XLSX',
+        type: 'XLSX' as const,
         filters: filterSnapshot,
-        status: 'success'
+        status: 'success' as const
       }, ...prev].slice(0, 10));
 
       setTimeout(() => {
-
         setExportStatus(prev => ({ ...prev, xlsx: { ...prev.xlsx, status: 'idle' } }));
       }, 2000);
     } catch (error: any) {
       console.error('Excel Export Error:', error);
+      const errorMessage = 'Falha ao gerar arquivo Excel';
       setExportStatus(prev => ({ 
         ...prev, 
-        xlsx: { status: 'error', progress: 0, error: 'Falha ao gerar arquivo Excel' } 
+        xlsx: { status: 'error', progress: 0, error: errorMessage } 
       }));
+      setExportHistory(prev => [{
+        id: historyId,
+        timestamp: new Date(),
+        type: 'XLSX' as const,
+        filters: filterSnapshot,
+        status: 'error' as const,
+        error: error.message || errorMessage
+      }, ...prev].slice(0, 10));
     }
   };
 
   const handleExportPDF = async () => {
+    const filterSnapshot = { store: selectedStore, seller: selectedSeller, start: startDate, end: endDate };
+    const historyId = Math.random().toString(36).substring(7);
+
     try {
       setExportStatus(prev => ({ ...prev, pdf: { status: 'generating', progress: 0 } }));
 
@@ -290,17 +300,35 @@ const LocalReportsPage: React.FC = () => {
       });
 
       setExportStatus(prev => ({ ...prev, pdf: { status: 'completed', progress: 100 } }));
+      setExportHistory(prev => [{
+        id: historyId,
+        timestamp: new Date(),
+        type: 'PDF' as const,
+        filters: filterSnapshot,
+        status: 'success' as const
+      }, ...prev].slice(0, 10));
+
       setTimeout(() => {
         setExportStatus(prev => ({ ...prev, pdf: { ...prev.pdf, status: 'idle' } }));
       }, 2000);
     } catch (error: any) {
       console.error('PDF Export Error:', error);
+      const errorMessage = 'Falha ao gerar relatório PDF';
       setExportStatus(prev => ({ 
         ...prev, 
-        pdf: { status: 'error', progress: 0, error: 'Falha ao gerar relatório PDF' } 
+        pdf: { status: 'error', progress: 0, error: errorMessage } 
       }));
+      setExportHistory(prev => [{
+        id: historyId,
+        timestamp: new Date(),
+        type: 'PDF' as const,
+        filters: filterSnapshot,
+        status: 'error' as const,
+        error: error.message || errorMessage
+      }, ...prev].slice(0, 10));
     }
   };
+
 
 
 
