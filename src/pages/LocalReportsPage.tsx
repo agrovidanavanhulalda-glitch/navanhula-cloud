@@ -928,14 +928,30 @@ const LocalReportsPage: React.FC = () => {
                 <Calendar className="w-5 h-5" />
                 Histórico de Exportações
               </h3>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs h-8"
-                onClick={() => syncManager.retryAllFailed()}
-              >
-                Reprocessar Falhas
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs h-8 flex items-center gap-1"
+                  onClick={() => exportLogsPDF({ 
+                    history: exportHistory, 
+                    stores, 
+                    filters: { store: selectedStore, seller: selectedSeller, start: startDate, end: endDate },
+                    companyName: 'NAVANHULA CLOUD'
+                  })}
+                >
+                  <Download className="w-3 h-3" />
+                  Auditoria PDF
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs h-8"
+                  onClick={() => syncManager.retryAllFailed()}
+                >
+                  Reprocessar Falhas
+                </Button>
+              </div>
             </div>
             {exportHistory.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">Nenhuma exportação realizada nesta sessão</p>
@@ -1019,7 +1035,12 @@ const LocalReportsPage: React.FC = () => {
                                   variant="outline" 
                                   size="sm" 
                                   className="h-8 text-xs flex items-center gap-1"
-                                  onClick={() => exportLogsPDF(item, 'NAVANHULA CLOUD')}
+                                  onClick={() => exportLogsPDF({ 
+                                    history: [item], 
+                                    stores, 
+                                    filters: { store: item.filters.store, seller: item.filters.seller, start: item.filters.start, end: item.filters.end },
+                                    companyName: 'NAVANHULA CLOUD'
+                                  })}
                                 >
                                   <Download className="w-3 h-3" />
                                   Log PDF
