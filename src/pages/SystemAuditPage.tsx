@@ -114,7 +114,7 @@ const SystemAuditPage: React.FC = () => {
     log.email?.toLowerCase().includes(authSearch.toLowerCase()) ||
     log.user_id?.toLowerCase().includes(authSearch.toLowerCase()) ||
     log.step.toLowerCase().includes(authSearch.toLowerCase()) ||
-    log.transaction_id.toString().includes(authSearch)
+    log.transaction_id?.toString().includes(authSearch)
   );
 
   const filteredEventLogs = authEventLogs?.filter(log =>
