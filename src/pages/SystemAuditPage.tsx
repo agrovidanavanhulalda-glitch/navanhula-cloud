@@ -735,13 +735,29 @@ const SystemAuditPage: React.FC = () => {
                 <Clock className="w-5 h-5" />
                 Histórico de Operações na Base de Dados
               </CardTitle>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => exportToExcel(filteredGeneralLogs || [], "auditoria_db")}
-              >
-                <Download className="w-4 h-4 mr-2" /> Exportar
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => exportToExcel(filteredGeneralLogs || [], "auditoria_db")}
+                  className="gap-2"
+                >
+                  <FileJson className="w-4 h-4" /> Excel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => exportToPDF(
+                    filteredGeneralLogs || [], 
+                    "Relatório de Auditoria de Base de Dados", 
+                    "auditoria_db",
+                    ['created_at', 'action', 'table_name', 'user_id']
+                  )}
+                  className="gap-2"
+                >
+                  <FileText className="w-4 h-4" /> PDF
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[600px] pr-4">
