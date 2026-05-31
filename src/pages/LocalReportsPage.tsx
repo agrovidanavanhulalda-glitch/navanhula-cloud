@@ -145,15 +145,17 @@ const LocalReportsPage: React.FC = () => {
 
       setExportHistory(prev => prev.map(item => {
         if (item.id === taskId) {
-          if (event === 'started') return { ...item, syncStatus: 'syncing' };
-          if (event === 'completed') return { ...item, syncStatus: 'completed' };
-          if (event === 'failed') return { ...item, syncStatus: 'pending' };
+          if (event === 'started') return { ...item, syncStatus: 'syncing' as const };
+          if (event === 'completed') return { ...item, syncStatus: 'completed' as const };
+          if (event === 'failed') return { ...item, syncStatus: 'pending' as const };
         }
         return item;
       }));
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, [isAdmin]);
 
   const saveToHistory = async (type: 'PDF' | 'XLSX', status: 'success' | 'error', filters: any, errorMsg?: string) => {
@@ -178,7 +180,7 @@ const LocalReportsPage: React.FC = () => {
       type: entry.type as 'PDF' | 'XLSX',
       filters: entry.filters as any,
       status: entry.status as 'success' | 'error',
-      syncStatus: navigator.onLine ? 'syncing' : 'pending',
+      syncStatus: (navigator.onLine ? 'syncing' : 'pending') as 'syncing' | 'pending',
       error: entry.error_message || undefined
     }, ...prev].slice(0, 20));
 
