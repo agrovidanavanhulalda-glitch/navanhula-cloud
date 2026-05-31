@@ -168,7 +168,15 @@ class SyncManager {
     if (error) throw error;
   }
 
+  private async syncExportHistory(payload: any) {
+    const { error } = await supabase
+      .from('export_history')
+      .insert(payload);
+    if (error) throw error;
+  }
+
   getQueueStatus() {
+
     return {
       pending: this.queue.length,
       isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
