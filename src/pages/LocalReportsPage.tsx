@@ -317,41 +317,58 @@ const LocalReportsPage: React.FC = () => {
             <Button 
               variant="outline" 
               onClick={handleExportExcel}
-              disabled={exportStatus.xlsx !== 'idle'}
+              disabled={exportStatus.xlsx.status !== 'idle'}
             >
               <FileSpreadsheet className="w-4 h-4 mr-2" />
-              {exportStatus.xlsx === 'idle' ? 'Excel' : 
-               exportStatus.xlsx === 'generating' ? 'Gerando...' :
-               exportStatus.xlsx === 'downloading' ? 'Baixando...' : 'Concluído'}
+              {exportStatus.xlsx.status === 'idle' ? 'Excel' : 
+               exportStatus.xlsx.status === 'generating' ? `Gerando ${exportStatus.xlsx.progress}%` :
+               exportStatus.xlsx.status === 'downloading' ? 'Baixando...' : 'Concluído'}
             </Button>
             <Button 
               onClick={handleExportPDF}
-              disabled={exportStatus.pdf !== 'idle'}
+              disabled={exportStatus.pdf.status !== 'idle'}
             >
               <FileText className="w-4 h-4 mr-2" />
-              {exportStatus.pdf === 'idle' ? 'Relatório' : 
-               exportStatus.pdf === 'generating' ? 'Gerando...' :
-               exportStatus.pdf === 'downloading' ? 'Baixando...' : 'Concluído'}
+              {exportStatus.pdf.status === 'idle' ? 'Relatório' : 
+               exportStatus.pdf.status === 'generating' ? `Gerando ${exportStatus.pdf.progress}%` :
+               exportStatus.pdf.status === 'downloading' ? 'Baixando...' : 'Concluído'}
             </Button>
           </div>
-          {(exportStatus.pdf !== 'idle' || exportStatus.xlsx !== 'idle') && (
-            <div className="text-[10px] text-muted-foreground flex gap-4 animate-pulse">
-              {exportStatus.pdf !== 'idle' && (
-                <span className="flex items-center gap-1">
-                  PDF: {exportStatus.pdf === 'generating' ? 'Preparando arquivo' : 
-                        exportStatus.pdf === 'downloading' ? 'Iniciando download' : 'Finalizado'}
-                </span>
+          {(exportStatus.pdf.status !== 'idle' || exportStatus.xlsx.status !== 'idle') && (
+            <div className="text-[10px] text-muted-foreground flex flex-col items-end gap-1">
+              {exportStatus.pdf.status !== 'idle' && (
+                <div className="flex flex-col items-end">
+                  <span className="flex items-center gap-1">
+                    PDF: {exportStatus.pdf.status === 'generating' ? 'Preparando arquivo' : 
+                          exportStatus.pdf.status === 'downloading' ? 'Iniciando download' : 'Finalizado'}
+                  </span>
+                  <div className="w-24 h-1 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-300" 
+                      style={{ width: `${exportStatus.pdf.progress}%` }}
+                    />
+                  </div>
+                </div>
               )}
-              {exportStatus.xlsx !== 'idle' && (
-                <span className="flex items-center gap-1">
-                  XLSX: {exportStatus.xlsx === 'generating' ? 'Processando dados' : 
-                         exportStatus.xlsx === 'downloading' ? 'Iniciando download' : 'Finalizado'}
-                </span>
+              {exportStatus.xlsx.status !== 'idle' && (
+                <div className="flex flex-col items-end">
+                  <span className="flex items-center gap-1">
+                    XLSX: {exportStatus.xlsx.status === 'generating' ? 'Processando dados' : 
+                           exportStatus.xlsx.status === 'downloading' ? 'Iniciando download' : 'Finalizado'}
+                  </span>
+                  <div className="w-24 h-1 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-300" 
+                      style={{ width: `${exportStatus.xlsx.progress}%` }}
+                    />
+                  </div>
+                </div>
               )}
             </div>
           )}
         </div>
       </div>
+
 
       {/* Filters */}
       <Card className="p-4 mb-6">
