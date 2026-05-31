@@ -362,7 +362,9 @@ export const exportExcelReport = async (props: PDFReportProps & { onProgress?: (
   XLSX.utils.book_append_sheet(workbook, worksheet, "Vendas");
 
   // Add summary sheet
+  if (onProgress) onProgress(60);
   const totalRevenue = filteredSales.reduce((acc, s) => acc + s.total, 0);
+
   const totalProfit = filteredSales.reduce((acc, sale) => {
     return acc + sale.items.reduce((a, i) => a + (i.product.salePrice - i.product.costPrice) * i.quantity, 0);
   }, 0);
