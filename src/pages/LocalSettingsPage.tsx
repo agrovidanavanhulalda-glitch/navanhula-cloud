@@ -92,7 +92,15 @@ const LocalSettingsPage: React.FC = () => {
         fiscal_rate: (company as any).fiscal_rate || 3,
       });
     }
-  }, [company]);
+
+    if (store) {
+      setSystemForm(prev => ({
+        ...prev,
+        timezone: (store as any).timezone || (company as any).timezone || 'Africa/Maputo',
+        default_min_stock: (store as any).default_min_stock || 10,
+      }));
+    }
+  }, [company, store]);
 
   const handleSaveCompany = async () => {
     if (!companyForm.name.trim()) {
