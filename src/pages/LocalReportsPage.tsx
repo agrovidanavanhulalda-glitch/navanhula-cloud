@@ -40,7 +40,7 @@ import PDFReportPreview, { exportPDFReport, exportExcelReport } from '@/componen
 // Relatórios profissionais com templates separados
 
 const LocalReportsPage: React.FC = () => {
-  const { sales, stores, currentStore, products, getCancelledSales, getCancellationHistory } = useLocalPOS();
+  const { sales, stores, currentStore, products, sellers, getCancelledSales, getCancellationHistory } = useLocalPOS();
   const { role, company } = useAuth();
   const targetCompanyId = (company as any)?.id;
 
@@ -49,6 +49,7 @@ const LocalReportsPage: React.FC = () => {
 
   // Filters
   const [selectedStore, setSelectedStore] = useState<string>('all');
+  const [selectedSeller, setSelectedSeller] = useState<string>('all');
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 30);
@@ -67,9 +68,10 @@ const LocalReportsPage: React.FC = () => {
 
       if (saleDate < start || saleDate > end) return false;
       if (selectedStore !== 'all' && sale.storeId !== selectedStore) return false;
+      if (selectedSeller !== 'all' && sale.sellerId !== selectedSeller) return false;
       return sale.status === 'completed';
     });
-  }, [sales, selectedStore, startDate, endDate]);
+  }, [sales, selectedStore, selectedSeller, startDate, endDate]);
 
   // Cancelled sales
   const cancelledSales = useMemo(() => {
@@ -201,6 +203,7 @@ const LocalReportsPage: React.FC = () => {
       startDate,
       endDate,
       selectedStore,
+      selectedSeller,
       companyName: 'NAVANHULA CLOUD',
     });
   };
@@ -212,6 +215,7 @@ const LocalReportsPage: React.FC = () => {
       startDate,
       endDate,
       selectedStore,
+      selectedSeller,
       companyName: 'NAVANHULA CLOUD',
     });
   };
@@ -278,7 +282,23 @@ const LocalReportsPage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="seller-filter">Vendedor</Label>
+            <Select value={selectedSeller} onValueChange={setSelectedSeller}>
+              <SelectTrigger id="seller-filter" className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Vendedores</SelectItem>
+                {sellers.map(seller => (
+                  <SelectItem key={seller.id} value={seller.id}>{seller.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="start-date">Data Início</Label>
+
             <Input
               id="start-date"
               type="date"

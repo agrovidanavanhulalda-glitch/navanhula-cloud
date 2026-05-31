@@ -178,10 +178,11 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setState(prev => ({ ...prev, loading: true }));
     try {
       const targetCompanyId = company.id;
-      const [productsRes, storesRes, cashRegistersRes] = await Promise.all([
+      const [productsRes, storesRes, cashRegistersRes, profilesRes] = await Promise.all([
         supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true).limit(1000),
         supabase.from('stores').select('*').eq('company_id', targetCompanyId),
-        supabase.from('cash_registers').select('*').eq('company_id', targetCompanyId).order('opened_at', { ascending: false }).limit(20)
+        supabase.from('cash_registers').select('*').eq('company_id', targetCompanyId).order('opened_at', { ascending: false }).limit(20),
+        supabase.from('profiles').select('*').eq('company_id', targetCompanyId)
       ]);
 
       const stores = (storesRes.data || []).map(s => ({ 
@@ -205,11 +206,20 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         imageUrl: p.image_url
       }));
 
-      const cashRegisters = (cashRegistersRes.data || []).map(cr => ({
-        id: cr.id, storeId: cr.store_id, sellerId: cr.user_id, sellerName: '', openingAmount: cr.opening_amount, expectedAmount: cr.expected_amount, status: cr.status as 'open' | 'closed', openedAt: new Date(cr.opened_at), closedAt: cr.closed_at ? new Date(cr.closed_at) : undefined, salesTotal: 0, salesCount: 0
+      const sellers = (profilesRes.data || []).map(p => ({
+        id: p.id,
+        name: p.full_name || p.email || 'Vendedor',
+        email: p.email || '',
+        role: (p.is_super_admin ? 'admin' : 'seller') as 'admin' | 'seller',
+        storeId: p.store_id || '',
+        isActive: p.is_active
       }));
 
-      setState(prev => ({ ...prev, stores, currentStore, products, cashRegisters, currentCashRegister: cashRegisters.find(cr => cr.status === 'open' && cr.sellerId === user?.id) || null, loading: false }));
+      const cashRegisters = (cashRegistersRes.data || []).map(cr => ({
+        id: cr.id, storeId: cr.store_id, sellerId: cr.user_id, sellerName: sellers.find(s => s.id === cr.user_id)?.name || '', openingAmount: cr.opening_amount, expectedAmount: cr.expected_amount, status: cr.status as 'open' | 'closed', openedAt: new Date(cr.opened_at), closedAt: cr.closed_at ? new Date(cr.closed_at) : undefined, salesTotal: 0, salesCount: 0
+      }));
+
+      setState(prev => ({ ...prev, stores, currentStore, products, sellers, cashRegisters, currentCashRegister: cashRegisters.find(cr => cr.status === 'open' && cr.sellerId === user?.id) || null, loading: false }));
     } catch (error) {
       console.error('POS Load Error:', error);
       setState(prev => ({ ...prev, loading: false }));
