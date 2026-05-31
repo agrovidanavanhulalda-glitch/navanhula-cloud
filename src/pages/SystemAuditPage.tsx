@@ -327,6 +327,26 @@ const SystemAuditPage: React.FC = () => {
           </Popover>
           <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-md border border-border/50">
             <div className="flex items-center gap-2 px-2">
+              <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger className="w-[180px] h-8 text-xs border-none bg-transparent focus-visible:ring-0 px-1">
+                  <SelectValue placeholder="Timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UTC">UTC (GMT)</SelectItem>
+                  <SelectItem value="Europe/Lisbon">Lisboa (WET/WEST)</SelectItem>
+                  <SelectItem value="Europe/London">Londres (GMT/BST)</SelectItem>
+                  <SelectItem value="America/Sao_Paulo">São Paulo (BRT)</SelectItem>
+                  <SelectItem value="America/New_York">New York (EST/EDT)</SelectItem>
+                  <SelectItem value="Asia/Dubai">Dubai (GST)</SelectItem>
+                  <SelectItem value={Intl.DateTimeFormat().resolvedOptions().timeZone}>
+                    Local ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-px h-6 bg-border/50 mx-1" />
+            <div className="flex items-center gap-2 px-2">
               <Clock className="w-3.5 h-3.5 text-muted-foreground" />
               <Input 
                 type="time" 
