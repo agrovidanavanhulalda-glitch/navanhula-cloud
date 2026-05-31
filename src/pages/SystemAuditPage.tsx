@@ -9,7 +9,7 @@ import {
   ShieldCheck, Activity, Clock, User, ArrowRight, Shield, 
   Key, AlertCircle, CheckCircle2, Database, Hash, Search,
   History, UserPlus, Fingerprint, Download, FileJson, FileText,
-  Filter, Calendar as CalendarIcon, X
+  Filter, Calendar as CalendarIcon, X, Globe
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
