@@ -2773,6 +2773,44 @@ export type Database = {
           },
         ]
       }
+      export_attempts_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          export_history_id: string | null
+          id: string
+          retry_count: number | null
+          status: string
+          timestamp: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          export_history_id?: string | null
+          id?: string
+          retry_count?: number | null
+          status: string
+          timestamp?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          export_history_id?: string | null
+          id?: string
+          retry_count?: number | null
+          status?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "export_attempts_logs_export_history_id_fkey"
+            columns: ["export_history_id"]
+            isOneToOne: false
+            referencedRelation: "export_history"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       export_history: {
         Row: {
           company_id: string
