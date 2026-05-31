@@ -91,10 +91,12 @@ class SyncManager {
       }
 
       try {
+        this.notify('started', task);
         await this.executeTask(task);
         // Success: remove from queue
         this.queue = this.queue.filter(t => t.id !== task.id);
         this.saveQueue();
+        this.notify('completed', task);
         console.log(`[Sync] Task ${task.type} (${task.id}) synced successfully`);
       } catch (error: any) {
         console.error(`[Sync] Task ${task.type} failed:`, error);
@@ -109,6 +111,7 @@ class SyncManager {
           // We keep it in queue for manual retry or UI intervention
         }
         this.saveQueue();
+        this.notify('failed', task);
       }
     }
 
