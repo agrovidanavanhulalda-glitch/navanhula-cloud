@@ -68,7 +68,16 @@ const LocalReportsPage: React.FC = () => {
   });
 
 
+  const [exportHistory, setExportHistory] = useState<{
+    id: string;
+    timestamp: Date;
+    type: 'PDF' | 'XLSX';
+    filters: { store: string; seller: string; start: string; end: string };
+    status: 'success' | 'error';
+    error?: string;
+  }[]>([]);
   const isInitialMount = useRef(true);
+
 
   // Filtered sales (completed only)
   const filteredSales = useMemo(() => {
