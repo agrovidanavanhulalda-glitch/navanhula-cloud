@@ -60,12 +60,13 @@ const LocalReportsPage: React.FC = () => {
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [autoExport, setAutoExport] = useState(false);
   const [exportStatus, setExportStatus] = useState<{
-    pdf: { status: 'idle' | 'generating' | 'downloading' | 'completed'; progress: number };
-    xlsx: { status: 'idle' | 'generating' | 'downloading' | 'completed'; progress: number };
+    pdf: { status: 'idle' | 'generating' | 'downloading' | 'completed' | 'error'; progress: number; error?: string };
+    xlsx: { status: 'idle' | 'generating' | 'downloading' | 'completed' | 'error'; progress: number; error?: string };
   }>({ 
     pdf: { status: 'idle', progress: 0 }, 
     xlsx: { status: 'idle', progress: 0 } 
   });
+
 
   const isInitialMount = useRef(true);
 
