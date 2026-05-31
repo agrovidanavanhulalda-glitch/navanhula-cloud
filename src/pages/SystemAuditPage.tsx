@@ -254,6 +254,8 @@ const SystemAuditPage: React.FC = () => {
     
     const tableData = data.map(item => columns.map(col => {
       if (col === 'created_at') return formatInTimeZone(new Date(item[col]), timezone, "dd/MM/yyyy HH:mm");
+      if (col === 'step') return getStepLabel(item[col]);
+      if (col === 'event_type') return getEventTypeLabel(item[col]);
       if (typeof item[col] === 'object') return JSON.stringify(item[col]).substring(0, 50);
       return String(item[col] || "");
     }));
