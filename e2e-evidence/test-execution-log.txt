@@ -1,0 +1,51 @@
+
+ RUN  v3.2.4 /dev-server
+
+stdout | src/tests/e2e/report-generation.test.tsx > E2E Test Execution Report with Evidence > runs the full synchronization cycle and generates evidence
+[EVIDENCE] START: Starting E2E Execution Report generation (PASS)
+[EVIDENCE] OFFLINE_SETUP: System set to offline mode (PASS)
+
+stderr | src/tests/e2e/report-generation.test.tsx > E2E Test Execution Report with Evidence > runs the full synchronization cycle and generates evidence
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stdout | src/tests/e2e/report-generation.test.tsx > E2E Test Execution Report with Evidence > runs the full synchronization cycle and generates evidence
+[EVIDENCE] UI_CHECK_OFFLINE: Product A visible in POS grid (Offline) (PASS)
+[EVIDENCE] OFFLINE_DATA: Sale data queued in LocalStorage (PASS)
+[EVIDENCE] RECONNECTION: System back online (PASS)
+
+stdout | src/tests/e2e/report-generation.test.tsx > E2E Test Execution Report with Evidence > runs the full synchronization cycle and generates evidence
+[EVIDENCE] SYNC_COMPLETED: Queue processed successfully by SyncManager (PASS)
+
+stdout | src/tests/e2e/report-generation.test.tsx > E2E Test Execution Report with Evidence > runs the full synchronization cycle and generates evidence
+[EVIDENCE] UI_CHECK_REPORTS: Reports dashboard reflects reconciled sale (150 MT) (PASS)
+[EVIDENCE] EXCEL_EXPORT: Excel report triggered with reconciled data (150 MT) (PASS)
+[EVIDENCE] PDF_EXPORT: PDF report triggered with reconciled data (150 MT) (PASS)
+[EVIDENCE] FINISH: Full E2E automation cycle complete with data consistency (PASS)
+
+stdout | src/tests/e2e/report-generation.test.tsx > E2E Test Execution Report with Evidence
+--- GENERATING FINAL E2E AUTOMATED REPORT ---
+┌─────────┬────────────────────┬────────────────────────────┬────────────────────────────────────────────────────────────┬────────┐
+│ (index) │ step               │ timestamp                  │ details                                                    │ status │
+├─────────┼────────────────────┼────────────────────────────┼────────────────────────────────────────────────────────────┼────────┤
+│ 0       │ [32m'START'[39m            │ [32m'2026-05-31T07:18:40.717Z'[39m │ [32m'Starting E2E Execution Report generation'[39m                 │ [32m'PASS'[39m │
+│ 1       │ [32m'OFFLINE_SETUP'[39m    │ [32m'2026-05-31T07:18:40.719Z'[39m │ [32m'System set to offline mode'[39m                               │ [32m'PASS'[39m │
+│ 2       │ [32m'UI_CHECK_OFFLINE'[39m │ [32m'2026-05-31T07:18:40.843Z'[39m │ [32m'Product A visible in POS grid (Offline)'[39m                  │ [32m'PASS'[39m │
+│ 3       │ [32m'OFFLINE_DATA'[39m     │ [32m'2026-05-31T07:18:40.844Z'[39m │ [32m'Sale data queued in LocalStorage'[39m                         │ [32m'PASS'[39m │
+│ 4       │ [32m'RECONNECTION'[39m     │ [32m'2026-05-31T07:18:40.844Z'[39m │ [32m'System back online'[39m                                       │ [32m'PASS'[39m │
+│ 5       │ [32m'SYNC_COMPLETED'[39m   │ [32m'2026-05-31T07:18:40.852Z'[39m │ [32m'Queue processed successfully by SyncManager'[39m              │ [32m'PASS'[39m │
+│ 6       │ [32m'UI_CHECK_REPORTS'[39m │ [32m'2026-05-31T07:18:40.962Z'[39m │ [32m'Reports dashboard reflects reconciled sale (150 MT)'[39m      │ [32m'PASS'[39m │
+│ 7       │ [32m'EXCEL_EXPORT'[39m     │ [32m'2026-05-31T07:18:41.031Z'[39m │ [32m'Excel report triggered with reconciled data (150 MT)'[39m     │ [32m'PASS'[39m │
+│ 8       │ [32m'PDF_EXPORT'[39m       │ [32m'2026-05-31T07:18:41.080Z'[39m │ [32m'PDF report triggered with reconciled data (150 MT)'[39m       │ [32m'PASS'[39m │
+│ 9       │ [32m'FINISH'[39m           │ [32m'2026-05-31T07:18:41.081Z'[39m │ [32m'Full E2E automation cycle complete with data consistency'[39m │ [32m'PASS'[39m │
+└─────────┴────────────────────┴────────────────────────────┴────────────────────────────────────────────────────────────┴────────┘
+--- END OF REPORT ---
+
+ ✓ src/tests/e2e/report-generation.test.tsx (1 test) 380ms
+   ✓ E2E Test Execution Report with Evidence > runs the full synchronization cycle and generates evidence  375ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  07:18:37
+   Duration  3.44s (transform 447ms, setup 137ms, collect 1.28s, tests 380ms, environment 567ms, prepare 519ms)
+
