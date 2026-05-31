@@ -209,60 +209,77 @@ const LocalReportsPage: React.FC = () => {
 
   // Export handlers
   const handleExportExcel = async () => {
-    setExportStatus(prev => ({ ...prev, xlsx: { status: 'generating', progress: 0 } }));
-    
-    await exportExcelReport({
-      sales,
-      stores,
-      startDate,
-      endDate,
-      selectedStore,
-      selectedSeller,
-      companyName: 'NAVANHULA CLOUD',
-      onProgress: (progress) => {
-        setExportStatus(prev => ({ 
-          ...prev, 
-          xlsx: { 
-            status: progress < 100 ? 'generating' : 'downloading', 
-            progress 
-          } 
-        }));
-      }
-    });
+    try {
+      setExportStatus(prev => ({ ...prev, xlsx: { status: 'generating', progress: 0 } }));
+      
+      await exportExcelReport({
+        sales,
+        stores,
+        startDate,
+        endDate,
+        selectedStore,
+        selectedSeller,
+        companyName: 'NAVANHULA CLOUD',
+        onProgress: (progress) => {
+          setExportStatus(prev => ({ 
+            ...prev, 
+            xlsx: { 
+              status: progress < 100 ? 'generating' : 'downloading', 
+              progress 
+            } 
+          }));
+        }
+      });
 
-    setExportStatus(prev => ({ ...prev, xlsx: { status: 'completed', progress: 100 } }));
-    setTimeout(() => {
-      setExportStatus(prev => ({ ...prev, xlsx: { ...prev.xlsx, status: 'idle' } }));
-    }, 2000);
+      setExportStatus(prev => ({ ...prev, xlsx: { status: 'completed', progress: 100 } }));
+      setTimeout(() => {
+        setExportStatus(prev => ({ ...prev, xlsx: { ...prev.xlsx, status: 'idle' } }));
+      }, 2000);
+    } catch (error: any) {
+      console.error('Excel Export Error:', error);
+      setExportStatus(prev => ({ 
+        ...prev, 
+        xlsx: { status: 'error', progress: 0, error: 'Falha ao gerar arquivo Excel' } 
+      }));
+    }
   };
 
   const handleExportPDF = async () => {
-    setExportStatus(prev => ({ ...prev, pdf: { status: 'generating', progress: 0 } }));
+    try {
+      setExportStatus(prev => ({ ...prev, pdf: { status: 'generating', progress: 0 } }));
 
-    await exportPDFReport({
-      sales,
-      stores,
-      startDate,
-      endDate,
-      selectedStore,
-      selectedSeller,
-      companyName: 'NAVANHULA CLOUD',
-      onProgress: (progress) => {
-        setExportStatus(prev => ({ 
-          ...prev, 
-          pdf: { 
-            status: progress < 100 ? 'generating' : 'downloading', 
-            progress 
-          } 
-        }));
-      }
-    });
+      await exportPDFReport({
+        sales,
+        stores,
+        startDate,
+        endDate,
+        selectedStore,
+        selectedSeller,
+        companyName: 'NAVANHULA CLOUD',
+        onProgress: (progress) => {
+          setExportStatus(prev => ({ 
+            ...prev, 
+            pdf: { 
+              status: progress < 100 ? 'generating' : 'downloading', 
+              progress 
+            } 
+          }));
+        }
+      });
 
-    setExportStatus(prev => ({ ...prev, pdf: { status: 'completed', progress: 100 } }));
-    setTimeout(() => {
-      setExportStatus(prev => ({ ...prev, pdf: { ...prev.pdf, status: 'idle' } }));
-    }, 2000);
+      setExportStatus(prev => ({ ...prev, pdf: { status: 'completed', progress: 100 } }));
+      setTimeout(() => {
+        setExportStatus(prev => ({ ...prev, pdf: { ...prev.pdf, status: 'idle' } }));
+      }, 2000);
+    } catch (error: any) {
+      console.error('PDF Export Error:', error);
+      setExportStatus(prev => ({ 
+        ...prev, 
+        pdf: { status: 'error', progress: 0, error: 'Falha ao gerar relatório PDF' } 
+      }));
+    }
   };
+
 
 
   // Auto-export logic
