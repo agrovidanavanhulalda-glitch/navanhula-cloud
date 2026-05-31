@@ -81,6 +81,7 @@ const SystemAuditPage: React.FC = () => {
   const [eventStatusFilter, setEventStatusFilter] = useState("all");
   const [startTime, setStartTime] = useState("00:00");
   const [endTime, setEndTime] = useState("23:59");
+  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
