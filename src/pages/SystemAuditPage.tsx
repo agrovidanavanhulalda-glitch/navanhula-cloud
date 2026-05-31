@@ -686,7 +686,7 @@ const SystemAuditPage: React.FC = () => {
                             <span className="font-bold text-primary">{log.table_name}</span>
                           </div>
                           <span className="text-[10px] text-muted-foreground">
-                            {format(new Date(log.created_at), "dd MMM, HH:mm", { locale: pt })}
+                            {formatInTimeZone(new Date(log.created_at), timezone, "dd MMM, HH:mm")}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mb-2">
