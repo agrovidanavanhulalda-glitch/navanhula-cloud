@@ -218,8 +218,12 @@ const LocalReportsPage: React.FC = () => {
 
   // Export handlers
   const handleExportExcel = async () => {
+    const filterSnapshot = { store: selectedStore, seller: selectedSeller, start: startDate, end: endDate };
+    const historyId = Math.random().toString(36).substring(7);
+    
     try {
       setExportStatus(prev => ({ ...prev, xlsx: { status: 'generating', progress: 0 } }));
+
       
       await exportExcelReport({
         sales,
