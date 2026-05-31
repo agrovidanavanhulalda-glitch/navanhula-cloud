@@ -9,7 +9,7 @@ import {
   ShieldCheck, Activity, Clock, User, ArrowRight, Shield, 
   Key, AlertCircle, CheckCircle2, Database, Hash, Search,
   History, UserPlus, Fingerprint, Download, FileJson, FileText,
-  Filter, Calendar as CalendarIcon, X, Globe
+  Filter, Calendar as CalendarIcon, X, Globe, Building2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -81,10 +81,22 @@ const SystemAuditPage: React.FC = () => {
   const [eventStatusFilter, setEventStatusFilter] = useState("all");
   const [startTime, setStartTime] = useState("00:00");
   const [endTime, setEndTime] = useState("23:59");
+  const [selectedStoreId, setSelectedStoreId] = useState<string>("all");
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
+  });
+
+  const { data: stores } = useQuery({
+    queryKey: ["stores-for-audit"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stores")
+        .select("id, name, timezone");
+      if (error) throw error;
+      return data;
+    },
   });
 
 
@@ -187,12 +199,27 @@ const SystemAuditPage: React.FC = () => {
     
     const matchesRole = eventRoleFilter === "all" || log.role_key === eventRoleFilter;
     const matchesStatus = eventStatusFilter === "all" || log.status === eventStatusFilter;
+    const matchesStore = selectedStoreId === "all" || log.branch_id === selectedStoreId;
     const matchesDate = isWithinDateRange(log.created_at);
 
-    return matchesSearch && matchesRole && matchesStatus && matchesDate;
+    return matchesSearch && matchesRole && matchesStatus && matchesDate && matchesStore;
   });
 
-  const filteredGeneralLogs = logs?.filter(log => isWithinDateRange(log.created_at));
+  const filteredGeneralLogs = logs?.filter(log => {
+    const matchesDate = isWithinDateRange(log.created_at);
+    const matchesStore = selectedStoreId === "all" || log.store_id === selectedStoreId;
+    return matchesDate && matchesStore;
+  });
+
+  const handleStoreChange = (storeId: string) => {
+    setSelectedStoreId(storeId);
+    if (storeId !== "all") {
+      const selectedStore = stores?.find(s => s.id === storeId);
+      if (selectedStore?.timezone) {
+        setTimezone(selectedStore.timezone);
+      }
+    }
+  };
 
 
   const exportToExcel = (data: any[], fileName: string) => {
@@ -337,6 +364,21 @@ const SystemAuditPage: React.FC = () => {
           </Popover>
           <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-md border border-border/50">
             <div className="flex items-center gap-2 px-2">
+              <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+              <Select value={selectedStoreId} onValueChange={handleStoreChange}>
+                <SelectTrigger className="w-[180px] h-8 text-xs border-none bg-transparent focus-visible:ring-0 px-1">
+                  <SelectValue placeholder="Todas as Lojas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Lojas</SelectItem>
+                  {stores?.map(store => (
+                    <SelectItem key={store.id} value={store.id}>{store.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-px h-6 bg-border/50 mx-1" />
+            <div className="flex items-center gap-2 px-2">
               <Globe className="w-3.5 h-3.5 text-muted-foreground" />
               <Select value={timezone} onValueChange={setTimezone}>
                 <SelectTrigger className="w-[180px] h-8 text-xs border-none bg-transparent focus-visible:ring-0 px-1">
@@ -344,11 +386,9 @@ const SystemAuditPage: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="UTC">UTC (GMT)</SelectItem>
+                  <SelectItem value="Africa/Maputo">Maputo (CAT)</SelectItem>
                   <SelectItem value="Europe/Lisbon">Lisboa (WET/WEST)</SelectItem>
-                  <SelectItem value="Europe/London">Londres (GMT/BST)</SelectItem>
                   <SelectItem value="America/Sao_Paulo">São Paulo (BRT)</SelectItem>
-                  <SelectItem value="America/New_York">New York (EST/EDT)</SelectItem>
-                  <SelectItem value="Asia/Dubai">Dubai (GST)</SelectItem>
                   <SelectItem value={Intl.DateTimeFormat().resolvedOptions().timeZone}>
                     Local ({Intl.DateTimeFormat().resolvedOptions().timeZone})
                   </SelectItem>

@@ -6919,6 +6919,7 @@ export type Database = {
           nuit: string | null
           phone: string | null
           plan: string | null
+          timezone: string | null
           updated_at: string | null
         }
         Insert: {
@@ -6940,6 +6941,7 @@ export type Database = {
           nuit?: string | null
           phone?: string | null
           plan?: string | null
+          timezone?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -6961,6 +6963,7 @@ export type Database = {
           nuit?: string | null
           phone?: string | null
           plan?: string | null
+          timezone?: string | null
           updated_at?: string | null
         }
         Relationships: [
