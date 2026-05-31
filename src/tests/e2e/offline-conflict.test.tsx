@@ -52,6 +52,12 @@ vi.mock('@/contexts/AuthContext', () => ({
   AuthProvider: ({ children }: any) => <>{children}</>,
 }));
 
+// Global URL mock
+if (typeof window !== 'undefined') {
+    (window as any).URL.createObjectURL = vi.fn();
+    (window as any).URL.revokeObjectURL = vi.fn();
+}
+
 const queryClient = new QueryClient({
   defaultOptions: { 
     queries: { retry: false, gcTime: 0 } 
@@ -167,8 +173,8 @@ describe('Offline Conflict & Reconciliation E2E', () => {
     } as any);
 
     // Spy on exports
-    const excelSpy = vi.spyOn(PDFReportExports, 'exportExcelReport');
-    const pdfSpy = vi.spyOn(PDFReportExports, 'exportPDFReport');
+    const excelSpy = vi.spyOn(PDFReportExports, 'exportExcelReport').mockImplementation(() => {});
+    const pdfSpy = vi.spyOn(PDFReportExports, 'exportPDFReport').mockImplementation(() => {});
 
     render(
       <BrowserRouter>
