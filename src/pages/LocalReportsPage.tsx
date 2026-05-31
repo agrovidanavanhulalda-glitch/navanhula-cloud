@@ -296,7 +296,9 @@ const LocalReportsPage: React.FC = () => {
             </Select>
           </div>
 
+          <div className="space-y-2">
             <Label htmlFor="start-date">Data Início</Label>
+
             <Input
               id="start-date"
               type="date"
