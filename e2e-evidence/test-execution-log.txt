@@ -28,24 +28,24 @@ stdout | src/tests/e2e/report-generation.test.tsx > E2E Test Execution Report wi
 ┌─────────┬────────────────────┬────────────────────────────┬────────────────────────────────────────────────────────────┬────────┐
 │ (index) │ step               │ timestamp                  │ details                                                    │ status │
 ├─────────┼────────────────────┼────────────────────────────┼────────────────────────────────────────────────────────────┼────────┤
-│ 0       │ [32m'START'[39m            │ [32m'2026-05-31T07:18:40.717Z'[39m │ [32m'Starting E2E Execution Report generation'[39m                 │ [32m'PASS'[39m │
-│ 1       │ [32m'OFFLINE_SETUP'[39m    │ [32m'2026-05-31T07:18:40.719Z'[39m │ [32m'System set to offline mode'[39m                               │ [32m'PASS'[39m │
-│ 2       │ [32m'UI_CHECK_OFFLINE'[39m │ [32m'2026-05-31T07:18:40.843Z'[39m │ [32m'Product A visible in POS grid (Offline)'[39m                  │ [32m'PASS'[39m │
-│ 3       │ [32m'OFFLINE_DATA'[39m     │ [32m'2026-05-31T07:18:40.844Z'[39m │ [32m'Sale data queued in LocalStorage'[39m                         │ [32m'PASS'[39m │
-│ 4       │ [32m'RECONNECTION'[39m     │ [32m'2026-05-31T07:18:40.844Z'[39m │ [32m'System back online'[39m                                       │ [32m'PASS'[39m │
-│ 5       │ [32m'SYNC_COMPLETED'[39m   │ [32m'2026-05-31T07:18:40.852Z'[39m │ [32m'Queue processed successfully by SyncManager'[39m              │ [32m'PASS'[39m │
-│ 6       │ [32m'UI_CHECK_REPORTS'[39m │ [32m'2026-05-31T07:18:40.962Z'[39m │ [32m'Reports dashboard reflects reconciled sale (150 MT)'[39m      │ [32m'PASS'[39m │
-│ 7       │ [32m'EXCEL_EXPORT'[39m     │ [32m'2026-05-31T07:18:41.031Z'[39m │ [32m'Excel report triggered with reconciled data (150 MT)'[39m     │ [32m'PASS'[39m │
-│ 8       │ [32m'PDF_EXPORT'[39m       │ [32m'2026-05-31T07:18:41.080Z'[39m │ [32m'PDF report triggered with reconciled data (150 MT)'[39m       │ [32m'PASS'[39m │
-│ 9       │ [32m'FINISH'[39m           │ [32m'2026-05-31T07:18:41.081Z'[39m │ [32m'Full E2E automation cycle complete with data consistency'[39m │ [32m'PASS'[39m │
+│ 0       │ [32m'START'[39m            │ [32m'2026-05-31T07:25:43.903Z'[39m │ [32m'Starting E2E Execution Report generation'[39m                 │ [32m'PASS'[39m │
+│ 1       │ [32m'OFFLINE_SETUP'[39m    │ [32m'2026-05-31T07:25:43.904Z'[39m │ [32m'System set to offline mode'[39m                               │ [32m'PASS'[39m │
+│ 2       │ [32m'UI_CHECK_OFFLINE'[39m │ [32m'2026-05-31T07:25:44.032Z'[39m │ [32m'Product A visible in POS grid (Offline)'[39m                  │ [32m'PASS'[39m │
+│ 3       │ [32m'OFFLINE_DATA'[39m     │ [32m'2026-05-31T07:25:44.032Z'[39m │ [32m'Sale data queued in LocalStorage'[39m                         │ [32m'PASS'[39m │
+│ 4       │ [32m'RECONNECTION'[39m     │ [32m'2026-05-31T07:25:44.032Z'[39m │ [32m'System back online'[39m                                       │ [32m'PASS'[39m │
+│ 5       │ [32m'SYNC_COMPLETED'[39m   │ [32m'2026-05-31T07:25:44.040Z'[39m │ [32m'Queue processed successfully by SyncManager'[39m              │ [32m'PASS'[39m │
+│ 6       │ [32m'UI_CHECK_REPORTS'[39m │ [32m'2026-05-31T07:25:44.153Z'[39m │ [32m'Reports dashboard reflects reconciled sale (150 MT)'[39m      │ [32m'PASS'[39m │
+│ 7       │ [32m'EXCEL_EXPORT'[39m     │ [32m'2026-05-31T07:25:44.213Z'[39m │ [32m'Excel report triggered with reconciled data (150 MT)'[39m     │ [32m'PASS'[39m │
+│ 8       │ [32m'PDF_EXPORT'[39m       │ [32m'2026-05-31T07:25:44.246Z'[39m │ [32m'PDF report triggered with reconciled data (150 MT)'[39m       │ [32m'PASS'[39m │
+│ 9       │ [32m'FINISH'[39m           │ [32m'2026-05-31T07:25:44.246Z'[39m │ [32m'Full E2E automation cycle complete with data consistency'[39m │ [32m'PASS'[39m │
 └─────────┴────────────────────┴────────────────────────────┴────────────────────────────────────────────────────────────┴────────┘
 --- END OF REPORT ---
 
- ✓ src/tests/e2e/report-generation.test.tsx (1 test) 380ms
-   ✓ E2E Test Execution Report with Evidence > runs the full synchronization cycle and generates evidence  375ms
+ ✓ src/tests/e2e/report-generation.test.tsx (1 test) 358ms
+   ✓ E2E Test Execution Report with Evidence > runs the full synchronization cycle and generates evidence  354ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  07:18:37
-   Duration  3.44s (transform 447ms, setup 137ms, collect 1.28s, tests 380ms, environment 567ms, prepare 519ms)
+   Start at  07:25:40
+   Duration  3.52s (transform 449ms, setup 109ms, collect 1.34s, tests 358ms, environment 583ms, prepare 525ms)
 
