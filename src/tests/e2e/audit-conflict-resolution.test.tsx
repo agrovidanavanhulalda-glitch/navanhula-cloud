@@ -28,7 +28,7 @@ vi.mock('@/integrations/supabase/client', () => ({
                 profiles: { full_name: 'Manager A', email: 'manager@store.com' }
               },
               {
-                id: '1', // Same ID to simulate conflict resolution record
+                id: '1',
                 action: 'UPDATE_STOCK',
                 table_name: 'inventory',
                 details: { item: 'Coca-Cola', conflict: 'original_offline_version_1' },
@@ -48,7 +48,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 // Mock XLSX
 vi.mock('xlsx', () => ({
   utils: {
-    json_to_sheet: vi.fn(),
+    json_to_sheet: vi.fn((data) => data),
     book_new: vi.fn(() => ({})),
     book_append_sheet: vi.fn(),
   },
@@ -65,45 +65,48 @@ vi.mock('jspdf', () => {
 });
 
 describe('SystemAuditPage - Conflict Resolution', () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should display conflict resolution events correctly in UI', async () => {
-    render(
+  const renderComponent = () => render(
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <SystemAuditPage />
       </BrowserRouter>
-    );
+    </QueryClientProvider>
+  );
 
-    // Wait for the data to load and check if events with same ID (conflict) appear
+  it('should display conflict resolution events correctly in UI', async () => {
+    renderComponent();
+
     await waitFor(() => {
       const actions = screen.getAllByText(/UPDATE_STOCK/);
       expect(actions.length).toBeGreaterThanOrEqual(1);
-    });
+    }, { timeout: 3000 });
 
-    // Check if the UI reflects the resolved data correctly
     expect(screen.getByText(/manager@store.com/)).toBeInTheDocument();
   });
 
   it('should ensure consistency in Excel export when conflicts are resolved', async () => {
-    render(
-      <BrowserRouter>
-        <SystemAuditPage />
-      </BrowserRouter>
-    );
+    renderComponent();
 
     await waitFor(() => screen.getByText(/Auditoria Enterprise/));
 
-    // Trigger Excel export
     const exportExcelBtn = screen.getByRole('button', { name: /Excel/i });
     fireEvent.click(exportExcelBtn);
 
-    // Verify if XLSX tools were called with the correct data
     expect(XLSX.utils.json_to_sheet).toHaveBeenCalled();
-    const callData = vi.mocked(XLSX.utils.json_to_sheet).mock.calls[0][0];
+    const callData = vi.mocked(XLSX.utils.json_to_sheet).mock.calls[0][0] as any[];
     
-    // Check if the exported data includes the conflict details
     const hasConflictDetails = callData.some((row: any) => 
       row.details.includes('resolved_version_2') || row.details.includes('original_offline_version_1')
     );
@@ -111,23 +114,16 @@ describe('SystemAuditPage - Conflict Resolution', () => {
   });
 
   it('should ensure consistency in PDF export when conflicts are resolved', async () => {
-    render(
-      <BrowserRouter>
-        <SystemAuditPage />
-      </BrowserRouter>
-    );
+    renderComponent();
 
     await waitFor(() => screen.getByText(/Auditoria Enterprise/));
 
-    // Trigger PDF export
     const exportPdfBtn = screen.getByRole('button', { name: /PDF/i });
     fireEvent.click(exportPdfBtn);
 
-    // Verify jsPDF mock
     const docInstance = vi.mocked(jsPDF).mock.results[0].value;
     expect(docInstance.save).toHaveBeenCalled();
     
-    // Check if autoTable was called with conflict data
     const autoTableCall = (docInstance as any).autoTable.mock.calls[0][0];
     const body = autoTableCall.body;
     
