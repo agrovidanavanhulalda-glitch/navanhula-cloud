@@ -110,14 +110,21 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     // The component defaults to the "events" tab.
     // Try to find the tab by various attributes. Radix Tabs use buttons for triggers.
     const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.getAttribute('data-value') === 'general' || t.textContent?.includes('Auditoria DB'));
+    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB') || t.getAttribute('value') === 'general' || t.getAttribute('data-value') === 'general');
     if (!dbTab) throw new Error('DB Tab not found among: ' + tabs.map(t => t.textContent).join(', '));
     
+    // Simulate clicking the trigger
     fireEvent.click(dbTab);
-
-    // Look for content inside the DB tab
+    
+    // Sometimes fireEvent.click on Radix triggers doesn't update the UI immediately in tests
+    // so we might need to wait for the content of the tab to be rendered
     await waitFor(() => {
-      // Check for presence of logs
+      // Check for the heading that is inside the "Auditoria DB" tab content
+      expect(screen.queryByText(/Histórico de Operações/i)).toBeInTheDocument();
+    }, { timeout: 10000 });
+
+    // Now check for logs
+    await waitFor(() => {
       expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
     }, { timeout: 10000 });
 
@@ -130,14 +137,17 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     await screen.findByText(/Auditoria Enterprise/i);
     
     const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.getAttribute('data-value') === 'general' || t.textContent?.includes('Auditoria DB'));
+    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB'));
     fireEvent.click(dbTab!);
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Histórico de Operações/i)).toBeInTheDocument();
+    }, { timeout: 10000 });
 
     await waitFor(() => {
       expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
     }, { timeout: 10000 });
 
-    // Click the last Excel button
     const excelButtons = screen.getAllByRole('button', { name: /Excel/i });
     fireEvent.click(excelButtons[excelButtons.length - 1]);
 
@@ -156,8 +166,12 @@ describe('SystemAuditPage - Conflict Resolution', () => {
     await screen.findByText(/Auditoria Enterprise/i);
     
     const tabs = screen.getAllByRole('tab');
-    const dbTab = tabs.find(t => t.getAttribute('data-value') === 'general' || t.textContent?.includes('Auditoria DB'));
+    const dbTab = tabs.find(t => t.textContent?.includes('Auditoria DB'));
     fireEvent.click(dbTab!);
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Histórico de Operações/i)).toBeInTheDocument();
+    }, { timeout: 10000 });
 
     await waitFor(() => {
       expect(screen.queryAllByText(/UPDATE_STOCK/).length).toBeGreaterThan(0);
