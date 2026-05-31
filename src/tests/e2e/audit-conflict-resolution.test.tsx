@@ -14,19 +14,19 @@ const TEST_STORE_ID = 'store-1';
 
 const mockAuditLogs = [
   {
-    id: '1',
+    id: 'conflict-1-resolved',
     action: 'UPDATE_STOCK',
     table_name: 'inventory',
-    details: { item: 'Coca-Cola', conflict: 'resolved_version_2', resolved: true },
+    details: { item: 'Coca-Cola', conflict: 'resolved_version_2', status: 'resolved' },
     created_at: '2024-05-20T10:00:00Z',
     store_id: TEST_STORE_ID,
     profiles: { full_name: 'Manager A', email: 'manager@store.com' }
   },
   {
-    id: '1',
+    id: 'conflict-1-original',
     action: 'UPDATE_STOCK',
     table_name: 'inventory',
-    details: { item: 'Coca-Cola', conflict: 'original_offline_version_1', resolved: false },
+    details: { item: 'Coca-Cola', conflict: 'original_offline_version_1', status: 'overridden' },
     created_at: '2024-05-20T10:00:00Z',
     store_id: TEST_STORE_ID,
     profiles: { full_name: 'Manager B', email: 'manager-b@store.com' }
@@ -34,7 +34,6 @@ const mockAuditLogs = [
 ];
 
 const mockStores = [
-  { id: 'all', name: 'Todas as Lojas', timezone: 'UTC' },
   { id: TEST_STORE_ID, name: 'Store 1', timezone: 'UTC' }
 ];
 
@@ -52,10 +51,7 @@ vi.mock('@/integrations/supabase/client', () => ({
             return Promise.resolve(cb({ data: mockAuditLogs, error: null }));
           }
           if (table === 'stores') {
-            return Promise.resolve(cb({ data: mockStores.slice(1), error: null }));
-          }
-          if (table === 'auth_flow_logs' || table === 'auth_event_logs') {
-            return Promise.resolve(cb({ data: [], error: null }));
+            return Promise.resolve(cb({ data: mockStores, error: null }));
           }
           return Promise.resolve(cb({ data: [], error: null }));
         }),
@@ -73,7 +69,6 @@ vi.mock('xlsx', () => ({
     book_append_sheet: vi.fn(),
   },
   writeFile: vi.fn(),
-  format: vi.fn(),
 }));
 
 // Mock jsPDF
@@ -111,57 +106,61 @@ describe('SystemAuditPage - Conflict Resolution', () => {
   it('should display conflict resolution events correctly in UI', async () => {
     renderComponent();
 
-    // Verify it loads the data by checking for "Auditoria Enterprise" first
-    expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
+    // Go to "Auditoria DB" tab
+    const dbTab = await screen.findByRole('tab', { name: /Auditoria DB/i });
+    fireEvent.click(dbTab);
 
-    // The component filters logs. Let's wait for them to appear.
-    // We check for the action text which is rendered in the list.
+    // Wait for the action text to appear in the list
     await waitFor(() => {
       const actions = screen.getAllByText(/UPDATE_STOCK/i);
       expect(actions.length).toBeGreaterThanOrEqual(1);
     }, { timeout: 5000 });
 
-    // Check if the UI reflects the email from profiles
-    expect(screen.getByText(/manager@store.com/i)).toBeInTheDocument();
+    // Check if the UI reflects the manager info
+    expect(screen.getByText(/Manager A/i)).toBeInTheDocument();
+    
+    // Check if conflict details are rendered (in the JSON preview)
+    expect(screen.getByText(/resolved_version_2/i)).toBeInTheDocument();
   });
 
   it('should ensure consistency in Excel export when conflicts are resolved', async () => {
     renderComponent();
 
-    expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
+    // Wait for component to be ready
+    await screen.findByRole('tab', { name: /Auditoria DB/i });
+    fireEvent.click(screen.getByRole('tab', { name: /Auditoria DB/i }));
 
-    // Ensure logs are loaded before clicking export
+    // Wait for logs
     await screen.findAllByText(/UPDATE_STOCK/i);
 
-    const exportExcelBtn = screen.getByRole('button', { name: /Excel/i });
-    fireEvent.click(exportExcelBtn);
+    // Find and click Excel button in the DB tab section
+    const excelButtons = screen.getAllByRole('button', { name: /Excel/i });
+    // Usually the last one or we can target by container if needed, but let's try to click one that is visible
+    fireEvent.click(excelButtons[excelButtons.length - 1]);
 
     expect(XLSX.utils.json_to_sheet).toHaveBeenCalled();
     const callData = vi.mocked(XLSX.utils.json_to_sheet).mock.calls[0][0] as any[];
     
-    // Check if the exported data includes the conflict details stringified
-    const hasConflictDetails = callData.some((row: any) => 
-      (typeof row.details === 'string' && row.details.includes('resolved_version_2')) || 
-      (typeof row.details === 'string' && row.details.includes('original_offline_version_1'))
+    // Verify conflict details are present in exported data
+    const hasConflict = callData.some(row => 
+      (row.details && row.details.includes('resolved_version_2')) ||
+      (row.details && row.details.includes('original_offline_version_1'))
     );
-    expect(hasConflictDetails).toBe(true);
+    expect(hasConflict).toBe(true);
   });
 
   it('should ensure consistency in PDF export when conflicts are resolved', async () => {
     renderComponent();
 
-    expect(await screen.findByText(/Auditoria Enterprise/i)).toBeInTheDocument();
-
-    // Ensure logs are loaded
+    fireEvent.click(await screen.findByRole('tab', { name: /Auditoria DB/i }));
     await screen.findAllByText(/UPDATE_STOCK/i);
 
-    const exportPdfBtn = screen.getByRole('button', { name: /PDF/i });
-    fireEvent.click(exportPdfBtn);
+    const pdfButtons = screen.getAllByRole('button', { name: /PDF/i });
+    fireEvent.click(pdfButtons[pdfButtons.length - 1]);
 
     const docInstance = vi.mocked(jsPDF).mock.results[0].value;
     expect(docInstance.save).toHaveBeenCalled();
     
-    // Check if autoTable was called with conflict data
     const autoTableCall = (docInstance as any).autoTable.mock.calls[0][0];
     const body = autoTableCall.body;
     
