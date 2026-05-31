@@ -34,7 +34,7 @@ interface AuditLog {
 
 interface AuthFlowLog {
   id: string;
-  transaction_id: string;
+  transaction_id: string | number; // Accept both for transition
   user_id: string | null;
   email: string | null;
   step: string;
