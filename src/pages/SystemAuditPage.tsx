@@ -640,7 +640,7 @@ const SystemAuditPage: React.FC = () => {
                             </Badge>
                             <span className="font-semibold">{getStepLabel(log.step)}</span>
                           </div>
-                          <span className="text-[10px] text-muted-foreground">{format(new Date(log.created_at), "HH:mm:ss")}</span>
+                          <span className="text-[10px] text-muted-foreground">{formatInTimeZone(new Date(log.created_at), timezone, "HH:mm:ss")}</span>
                         </div>
                         <p className="text-muted-foreground truncate">{log.email}</p>
                         {log.error_message && <p className="text-red-600 mt-1 font-medium">{log.error_message}</p>}
