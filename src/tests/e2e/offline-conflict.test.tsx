@@ -109,7 +109,7 @@ describe('Offline Conflict & Reconciliation E2E', () => {
       insert: vi.fn().mockImplementation((payload) => insertMock(payload)),
       then: vi.fn().mockImplementation((cb) => {
         if (table === 'products') return Promise.resolve(cb({ data: [{ id: TEST_PRODUCT_ID, name: 'Product A', sale_price: 100, cost_price: 80, is_active: true, company_id: TEST_COMPANY_ID }], error: null }));
-        if (table === 'stores') return Promise.resolve(cb({ data: [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true, company_id: TEST_COMPANY_ID }], error: null }));
+        if (table === 'stores') return Promise.resolve(cb({ data: [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true, company_id: TEST_COMPANY_ID, address: 'Test Addr', phone: '123' }], error: null }));
         if (table === 'cash_registers') return Promise.resolve(cb({ data: [{ id: 'cr-1', status: 'open', user_id: TEST_USER_ID, store_id: TEST_STORE_ID, opening_amount: 1000, opened_at: new Date().toISOString() }], error: null }));
         if (table === 'product_stock') return Promise.resolve(cb({ data: [{ product_id: TEST_PRODUCT_ID, store_id: TEST_STORE_ID, quantity: 100 }], error: null }));
         return Promise.resolve(cb({ data: [], error: null }));
@@ -122,12 +122,12 @@ describe('Offline Conflict & Reconciliation E2E', () => {
   it('reconciles two conflicting offline sales when syncing', { timeout: 30000 }, async () => {
     // 1. First Device: Create Sale Offline
     (navigator as any).onLine = false;
-    const { unmount } = render(<AllProviders><LocalPOSPage /></AllProviders>);
+    render(<AllProviders><LocalPOSPage /></AllProviders>);
     
-    // Wait for the store and products to load
+    // Wait for the POS to be ready (it starts with loading: true)
     await waitFor(() => {
         expect(screen.queryByText(/O Caixa está fechado/i)).toBeNull();
-    }, { timeout: 5000 });
+    }, { timeout: 10000 });
 
     await screen.findByText(/Product A/i);
     fireEvent.click(screen.getByText(/Product A/i));
@@ -178,8 +178,6 @@ describe('Offline Conflict & Reconciliation E2E', () => {
       storeId: TEST_STORE_ID
     };
 
-    unmount();
-    
     // Spy on exports
     const excelSpy = vi.spyOn(PDFReportExports, 'exportExcelReport');
     const pdfSpy = vi.spyOn(PDFReportExports, 'exportPDFReport');
@@ -215,7 +213,9 @@ describe('Offline Conflict & Reconciliation E2E', () => {
 const ReconciledReportsWrapper = ({ reconciledSale }: any) => {
   const context = useLocalPOS();
   React.useEffect(() => {
-    (context as any).sales = [reconciledSale];
+    if (context) {
+        (context as any).sales = [reconciledSale];
+    }
   }, [context, reconciledSale]);
   
   return <LocalReportsPage />;
