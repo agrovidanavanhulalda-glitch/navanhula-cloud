@@ -308,8 +308,33 @@ export const exportPDFReport = async (props: PDFReportProps & { onProgress?: (p:
   doc.save(`relatorio_vendas_${startDate}_${endDate}.pdf`);
 };
 
-// New tool for Export Logs PDF
-export const exportLogsPDF = async (historyItem: any, companyName: string = 'NAVANHULA CLOUD') => {
+// New tool for Export Logs PDF with filtering
+export const exportLogsPDF = async (options: { 
+  history: any[], 
+  stores: LocalStore[],
+  filters: { store: string, seller: string, start: string, end: string, syncStatus?: string },
+  companyName?: string 
+}) => {
+  const { history, stores, filters, companyName = 'NAVANHULA CLOUD' } = options;
+  
+  // Filter the history list based on provided filters
+  const filteredHistory = history.filter(item => {
+    // Period filter
+    const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
+    if (itemDate < filters.start || itemDate > filters.end) return false;
+    
+    // Store filter
+    if (filters.store !== 'all' && item.filters.store !== filters.store) return false;
+    
+    // Seller filter
+    if (filters.seller !== 'all' && item.filters.seller !== filters.seller) return false;
+    
+    // Sync Status filter
+    if (filters.syncStatus && filters.syncStatus !== 'all' && item.syncStatus !== filters.syncStatus) return false;
+    
+    return true;
+  });
+
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageWidth = 210;
   const margin = 20;
@@ -322,61 +347,67 @@ export const exportLogsPDF = async (historyItem: any, companyName: string = 'NAV
   doc.text(companyName, pageWidth / 2, y, { align: 'center' });
   y += 8;
   doc.setFontSize(14);
-  doc.text('LOG DETALHADO DE REPROCESSAMENTO', pageWidth / 2, y, { align: 'center' });
+  doc.text('RELATÓRIO DE AUDITORIA DE EXPORTAÇÕES', pageWidth / 2, y, { align: 'center' });
   y += 10;
 
-  // History Info
+  // Report Info
   doc.setFontSize(10);
-  doc.setFont('times', 'bold');
-  doc.text(`ID da Exportação: ${historyItem.id}`, margin, y);
-  y += 5;
   doc.setFont('times', 'normal');
-  doc.text(`Tipo: ${historyItem.type}`, margin, y);
+  doc.text(`Período do Relatório: ${filters.start} a ${filters.end}`, margin, y);
   y += 5;
-  doc.text(`Data Inicial: ${new Date(historyItem.timestamp).toLocaleString('pt-MZ')}`, margin, y);
+  const storeName = filters.store === 'all' ? 'Todas' : stores.find(s => s.id === filters.store)?.name || filters.store;
+  doc.text(`Filtro de Loja: ${storeName}`, margin, y);
   y += 5;
-  doc.text(`Filtros: Loja ${historyItem.filters.store}, Vendedor ${historyItem.filters.seller}, Período ${historyItem.filters.start} a ${historyItem.filters.end}`, margin, y);
+  doc.text(`Gerado em: ${new Date().toLocaleString('pt-MZ')}`, margin, y);
   y += 10;
 
   doc.setLineWidth(0.5);
   doc.line(margin, y, pageWidth - margin, y);
   y += 10;
 
-  // Attempts List
-  doc.setFont('times', 'bold');
-  doc.text('Histórico de Tentativas:', margin, y);
-  y += 8;
-
-  if (!historyItem.attempts || historyItem.attempts.length === 0) {
+  if (filteredHistory.length === 0) {
     doc.setFont('times', 'italic');
-    doc.text('Nenhuma tentativa registrada.', margin, y);
+    doc.text('Nenhum registro encontrado para os filtros selecionados.', margin, y);
   } else {
-    historyItem.attempts.forEach((attempt: any, index: number) => {
-      if (y > 260) {
+    filteredHistory.forEach((item, idx) => {
+      if (y > 240) {
         doc.addPage();
         y = margin;
       }
 
       doc.setFont('times', 'bold');
-      doc.text(`Tentativa #${historyItem.attempts.length - index} - ${new Date(attempt.timestamp).toLocaleString('pt-MZ')}`, margin, y);
-      y += 5;
-      
+      doc.setFontSize(11);
+      doc.text(`${idx + 1}. Exportação ${item.type} - ${new Date(item.timestamp).toLocaleString('pt-MZ')}`, margin, y);
+      y += 6;
+
       doc.setFont('times', 'normal');
-      doc.text(`Status: ${attempt.status === 'success' ? 'Sucesso' : 'Falha'}`, margin + 5, y);
+      doc.setFontSize(9);
+      doc.text(`ID: ${item.id}`, margin + 5, y);
       y += 5;
-      
-      if (attempt.error_message) {
-        doc.setFont('times', 'normal');
-        doc.text('Erro:', margin + 5, y);
-        const errorLines = doc.splitTextToSize(attempt.error_message, contentWidth - 15);
-        doc.text(errorLines, margin + 15, y);
-        y += (errorLines.length * 5);
+      doc.text(`Status Final: ${item.status === 'success' ? 'Sucesso' : 'Falha'} | Sincronização: ${item.syncStatus}`, margin + 5, y);
+      y += 5;
+      doc.text(`Filtros Aplicados: Loja ${item.filters.store}, Vendedor ${item.filters.seller}, Datas ${item.filters.start} a ${item.filters.end}`, margin + 5, y);
+      y += 7;
+
+      if (item.attempts && item.attempts.length > 0) {
+        doc.setFont('times', 'bold');
+        doc.text('Tentativas de Sincronização:', margin + 5, y);
+        y += 5;
+        
+        item.attempts.forEach((attempt: any) => {
+          if (y > 270) { doc.addPage(); y = margin; }
+          doc.setFont('times', 'normal');
+          const attemptText = `- [${new Date(attempt.timestamp).toLocaleString('pt-MZ')}] Status: ${attempt.status}${attempt.error_message ? ` | Erro: ${attempt.error_message}` : ''}`;
+          const lines = doc.splitTextToSize(attemptText, contentWidth - 15);
+          doc.text(lines, margin + 10, y);
+          y += (lines.length * 5);
+        });
       }
-      
+
       y += 5;
-      doc.setDrawColor(200);
-      doc.line(margin + 5, y, pageWidth - margin - 5, y);
-      y += 8;
+      doc.setDrawColor(230);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 10;
     });
   }
 
@@ -386,7 +417,7 @@ export const exportLogsPDF = async (historyItem: any, companyName: string = 'NAV
   doc.setFontSize(8);
   doc.text('Documento de auditoria gerado pelo NAVANHULA CLOUD', pageWidth / 2, footerY, { align: 'center' });
 
-  doc.save(`log_exportacao_${historyItem.id.slice(0, 8)}.pdf`);
+  doc.save(`auditoria_exportacoes_${new Date().getTime()}.pdf`);
 };
 
 
