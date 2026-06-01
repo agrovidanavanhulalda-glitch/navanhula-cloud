@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
 import { syncManager } from '@/lib/syncQueue';
@@ -48,6 +49,7 @@ import PDFReportPreview, { exportPDFReport, exportExcelReport, exportLogsPDF, ex
 const LocalReportsPage: React.FC = () => {
   const { sales, stores, currentStore, products, sellers, getCancelledSales, getCancellationHistory } = useLocalPOS();
   const { role, company } = useAuth();
+  const { toast } = useToast();
   const targetCompanyId = (company as any)?.id;
 
   // Check admin access
@@ -956,9 +958,15 @@ const LocalReportsPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className="text-xs h-8 flex items-center gap-1"
-                    disabled={!selectedSyncFilter || !['all', 'pending', 'syncing', 'completed'].includes(selectedSyncFilter)}
                     onClick={() => {
-                      if (!selectedSyncFilter || !['all', 'pending', 'syncing', 'completed'].includes(selectedSyncFilter)) return;
+                      if (!selectedSyncFilter || !['all', 'pending', 'syncing', 'completed'].includes(selectedSyncFilter)) {
+                        toast({
+                          title: "Filtro Inválido",
+                          description: "Selecione um status de reprocessamento válido para exportar o XLSX.",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
                       exportLogsExcel({ 
                         history: exportHistory, 
                         stores, 
