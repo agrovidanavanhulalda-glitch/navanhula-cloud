@@ -92,11 +92,13 @@ const LocalProductsPage: React.FC = () => {
       salePrice: p.sale_price,
       costPrice: p.cost_price,
       isActive: p.is_active,
-      stock: p.product_stock.find(s => s.store_id === currentStore?.id)?.quantity || 0,
+      stock: p.product_stock.reduce((acc, s) => acc + (s.quantity || 0), 0), // Total stock across stores for list
       imageUrl: p.image_url,
-      description: p.description
+      description: p.description,
+      categoryId: p.category_id,
+      categoryName: (p as any).categories?.name || 'Geral'
     }));
-  }, [products, currentStore?.id]);
+  }, [products]);
 
   const rowVirtualizer = useVirtualizer({
     count: mappedProducts.length,
