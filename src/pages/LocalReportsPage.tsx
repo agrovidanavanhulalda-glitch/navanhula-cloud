@@ -956,17 +956,21 @@ const LocalReportsPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className="text-xs h-8 flex items-center gap-1"
-                    onClick={() => exportLogsExcel({ 
-                      history: exportHistory, 
-                      stores, 
-                      filters: { 
-                        store: selectedStore, 
-                        seller: selectedSeller, 
-                        start: startDate, 
-                        end: endDate,
-                        syncStatus: selectedSyncFilter
-                      }
-                    })}
+                    disabled={!selectedSyncFilter || !['all', 'pending', 'syncing', 'completed'].includes(selectedSyncFilter)}
+                    onClick={() => {
+                      if (!selectedSyncFilter || !['all', 'pending', 'syncing', 'completed'].includes(selectedSyncFilter)) return;
+                      exportLogsExcel({ 
+                        history: exportHistory, 
+                        stores, 
+                        filters: { 
+                          store: selectedStore, 
+                          seller: selectedSeller, 
+                          start: startDate, 
+                          end: endDate,
+                          syncStatus: selectedSyncFilter
+                        }
+                      });
+                    }}
                   >
                     <FileSpreadsheet className="w-3 h-3" />
                     Auditoria XLSX
