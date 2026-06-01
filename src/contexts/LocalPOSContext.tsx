@@ -7,16 +7,16 @@ import { isValidId, sanitizeId } from '@/lib/uuid';
 export interface LocalProduct {
   id: string;
   name: string;
-  cost_price: number;
-  sale_price: number;
-  stock?: number;
-  is_active: boolean;
+  costPrice: number;
+  salePrice: number;
+  stock: number;
+  isActive: boolean;
   code?: string;
   barcode?: string;
-  image_url?: string | null;
-  gallery_urls?: string[];
+  imageUrl?: string | null;
+  galleryUrls?: string[];
   description?: string | null;
-  category_id?: string | null;
+  categoryId?: string | null;
 }
 
 export interface LocalCartItem {
