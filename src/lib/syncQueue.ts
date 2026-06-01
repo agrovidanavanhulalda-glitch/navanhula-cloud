@@ -268,7 +268,10 @@ class SyncManager {
       const { error } = await supabase.from('products').update(product).eq('id', id);
       if (error) throw error;
     } else if (action === 'DELETE') {
-      const { error } = await supabase.from('products').delete().eq('id', id);
+      const { error } = await supabase
+        .from('products')
+        .update({ status: 'deleted', deleted_at: new Date().toISOString() })
+        .eq('id', id);
       if (error) throw error;
     }
   }

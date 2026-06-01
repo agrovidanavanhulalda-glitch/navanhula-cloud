@@ -135,7 +135,7 @@ const FiscalDocumentsManager: React.FC = () => {
           .order('issue_date', { ascending: false })
           .limit(12),
         storeId
-          ? db.from('products').select('id, name, code, sale_price, product_stock(quantity)').eq('is_active', true).limit(500)
+          ? db.from('products').select('id, name, code, sale_price, product_stock(quantity)').eq('is_active', true).neq('status', 'deleted').limit(500)
           : Promise.resolve({ data: [], error: null }),
       ]);
 

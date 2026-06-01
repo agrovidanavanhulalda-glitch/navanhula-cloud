@@ -5224,6 +5224,8 @@ export type Database = {
           cost_price: number
           created_at: string | null
           created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           description: string | null
           dimensions: Json | null
           gallery_urls: string[] | null
@@ -5239,6 +5241,7 @@ export type Database = {
           name: string
           reorder_point: number | null
           sale_price: number
+          status: string | null
           tax_rate: number | null
           tax_type: string | null
           unit_type: string | null
@@ -5254,6 +5257,8 @@ export type Database = {
           cost_price?: number
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           dimensions?: Json | null
           gallery_urls?: string[] | null
@@ -5269,6 +5274,7 @@ export type Database = {
           name: string
           reorder_point?: number | null
           sale_price?: number
+          status?: string | null
           tax_rate?: number | null
           tax_type?: string | null
           unit_type?: string | null
@@ -5284,6 +5290,8 @@ export type Database = {
           cost_price?: number
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           dimensions?: Json | null
           gallery_urls?: string[] | null
@@ -5299,6 +5307,7 @@ export type Database = {
           name?: string
           reorder_point?: number | null
           sale_price?: number
+          status?: string | null
           tax_rate?: number | null
           tax_type?: string | null
           unit_type?: string | null

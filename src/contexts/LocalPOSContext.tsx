@@ -181,7 +181,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const targetCompanyId = company.id;
       const [productsRes, storesRes, cashRegistersRes, profilesRes] = await Promise.all([
-        supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true).limit(1000),
+        supabase.from('products').select('*').eq('company_id', targetCompanyId).eq('is_active', true).neq('status', 'deleted').limit(1000),
         supabase.from('stores').select('*').eq('company_id', targetCompanyId),
         supabase.from('cash_registers').select('*').eq('company_id', targetCompanyId).order('opened_at', { ascending: false }).limit(20),
         supabase.from('profiles').select('*').eq('company_id', targetCompanyId)
@@ -406,8 +406,15 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return true;
     }
 
-    // Physical delete
-    const { error } = await supabase.from('products').delete().eq('id', id);
+    // Soft delete
+    const { error } = await supabase
+      .from('products')
+      .update({ 
+        status: 'deleted',
+        deleted_at: new Date().toISOString(),
+        deleted_by: user?.id
+      })
+      .eq('id', id);
     if (error) {
       toast.error('Erro ao eliminar produto: ' + error.message);
       return false;

@@ -122,7 +122,7 @@ const BIDashboardPage: React.FC = () => {
         supabase.from('sales').select('user_id, total, created_at, customer_name, profit, cost_total, payment_method').eq('status', 'completed').eq('company_id', company.id),
         supabase.from('profiles').select('id, full_name, commission_rate').eq('company_id', company.id),
         supabase.from('sale_items').select('sale_id, product_id, product_name, quantity, profit, created_at').eq('company_id', company.id),
-        supabase.from('products').select('id, name, cost_price, sale_price, low_stock_threshold').eq('is_active', true).eq('company_id', company.id),
+        supabase.from('products').select('id, name, cost_price, sale_price, low_stock_threshold').eq('is_active', true).neq('status', 'deleted').eq('company_id', company.id),
         supabase.from('customers').select('full_name, total_spent, total_purchases, vip_level, last_purchase_at').eq('company_id', company.id).order('total_spent', { ascending: false }).limit(20),
         supabase.from('product_stock').select('product_id, quantity').eq('company_id', company.id),
       ]);
