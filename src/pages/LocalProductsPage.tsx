@@ -80,7 +80,9 @@ const LocalProductsPage: React.FC = () => {
     stock: '',
     isActive: true,
     imageUrl: '' as string | null,
+    galleryUrls: [] as string[],
     description: '',
+    categoryId: '',
   });
 
   // Mapping from DB products to LocalProduct for the table
