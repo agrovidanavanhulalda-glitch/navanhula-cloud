@@ -300,6 +300,31 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       company_id: company?.id
     };
 
+    if (!navigator.onLine) {
+      const tempId = crypto.randomUUID();
+      await syncManager.addTask('PRODUCT_UPDATE', { 
+        id: tempId, 
+        product: { ...dbProduct, id: tempId }, 
+        action: 'CREATE' 
+      });
+      toast.info('Produto salvo localmente. Será sincronizado quando estiver online.');
+      // Optimistic update
+      setState(prev => ({
+        ...prev,
+        products: [...prev.products, {
+          id: tempId,
+          name: p.name,
+          costPrice: p.costPrice || 0,
+          salePrice: p.salePrice || 0,
+          stock: p.stock || 0,
+          isActive: p.isActive,
+          code: p.code,
+          imageUrl: p.imageUrl
+        }]
+      }));
+      return true;
+    }
+
     const { data, error } = await supabase.from('products').insert(dbProduct).select().single();
     
     if (error) {
@@ -336,6 +361,17 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       gallery_urls: galleryUrls
     };
 
+    if (!navigator.onLine) {
+      await syncManager.addTask('PRODUCT_UPDATE', { id, product: dbProduct, action: 'UPDATE' });
+      toast.info('Alterações salvas localmente.');
+      // Optimistic update
+      setState(prev => ({
+        ...prev,
+        products: prev.products.map(prod => prod.id === id ? { ...prod, ...p } : prod)
+      }));
+      return true;
+    }
+
     const { error } = await supabase.from('products').update(dbProduct).eq('id', id);
     
     if (error) {
@@ -359,6 +395,17 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const deleteProduct = async (id: string) => {
+    if (!navigator.onLine) {
+      await syncManager.addTask('PRODUCT_UPDATE', { id, action: 'DELETE' });
+      toast.info('Produto será eliminado quando estiver online.');
+      // Optimistic update
+      setState(prev => ({
+        ...prev,
+        products: prev.products.filter(p => p.id !== id)
+      }));
+      return true;
+    }
+
     // Physical delete
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) {
@@ -370,9 +417,37 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return true;
   };
 
-  const addStore = async (s: any) => { await supabase.from('stores').insert({ ...s, company_id: company?.id }); await loadData(true); };
-  const updateStore = async (id: string, s: any) => { await supabase.from('stores').update(s).eq('id', id); await loadData(true); };
-  const deleteStore = async (id: string) => { await supabase.from('stores').delete().eq('id', id); await loadData(true); };
+  const addStore = async (s: any) => { 
+    if (!navigator.onLine) {
+      const tempId = crypto.randomUUID();
+      await syncManager.addTask('STORE_UPDATE', { id: tempId, store: { ...s, id: tempId, company_id: company?.id }, action: 'CREATE' });
+      toast.info('Loja salva localmente.');
+      return;
+    }
+    await supabase.from('stores').insert({ ...s, company_id: company?.id }); 
+    await loadData(true); 
+  };
+
+  const updateStore = async (id: string, s: any) => { 
+    if (!navigator.onLine) {
+      await syncManager.addTask('STORE_UPDATE', { id, store: s, action: 'UPDATE' });
+      toast.info('Alterações da loja salvas localmente.');
+      return;
+    }
+    await supabase.from('stores').update(s).eq('id', id); 
+    await loadData(true); 
+  };
+
+  const deleteStore = async (id: string) => { 
+    if (!navigator.onLine) {
+      await syncManager.addTask('STORE_UPDATE', { id, action: 'DELETE' });
+      toast.info('Loja será eliminada quando estiver online.');
+      return;
+    }
+    await supabase.from('stores').delete().eq('id', id); 
+    await loadData(true); 
+  };
+
   const addSeller = async (s: any) => { await supabase.from('profiles').insert({ ...s, company_id: company?.id }); await loadData(true); return true; };
   const updateSeller = async (id: string, s: any) => { await supabase.from('profiles').update(s).eq('id', id); await loadData(true); };
   const deleteSeller = async (id: string) => { await supabase.from('profiles').delete().eq('id', id); await loadData(true); };
