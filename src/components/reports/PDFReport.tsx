@@ -317,6 +317,14 @@ export const exportLogsPDF = async (options: {
 }) => {
   const { history, stores, filters, companyName = 'NAVANHULA CLOUD' } = options;
   
+  // Validação rigorosa do filtro de status (Backend-ready validation)
+  const syncStatusFilter = filters.syncStatus || 'all';
+  if (syncStatusFilter === 'all' || !['pending', 'syncing', 'completed'].includes(syncStatusFilter)) {
+    const errorMsg = "Selecione um status válido: Pendente, Sincronizando, Sincronizado";
+    console.error(`[Export PDF] Erro de validação: ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+
   // Filter the history list based on provided filters
   const filteredHistory = history.filter(item => {
     // Period filter
@@ -330,7 +338,7 @@ export const exportLogsPDF = async (options: {
     if (filters.seller !== 'all' && item.filters.seller !== filters.seller) return false;
     
     // Sync Status filter
-    if (filters.syncStatus && filters.syncStatus !== 'all' && item.syncStatus !== filters.syncStatus) return false;
+    if (item.syncStatus !== syncStatusFilter) return false;
     
     return true;
   });
@@ -426,22 +434,24 @@ export const exportLogsExcel = async (options: {
   filters: { store: string, seller: string, start: string, end: string, syncStatus?: string }
 }) => {
   const { history, stores, filters } = options;
+
+  // Validação rigorosa do filtro de status (Backend-ready validation)
+  const syncStatusFilter = filters.syncStatus || 'all';
+  if (syncStatusFilter === 'all' || !['pending', 'syncing', 'completed'].includes(syncStatusFilter)) {
+    const errorMsg = "Selecione um status válido para exportação XLSX: Pendente, Sincronizando, Sincronizado";
+    console.error(`[Export XLSX] Erro de validação: ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
   
   const filteredHistory = history.filter(item => {
     // Validação básica de filtros obrigatórios
     if (!filters || !filters.start || !filters.end) return false;
     
-    // Validar status de reprocessamento (obrigatório se não for 'all')
-    const syncStatusFilter = filters.syncStatus || 'all';
-    if (syncStatusFilter !== 'all' && !['pending', 'syncing', 'completed'].includes(syncStatusFilter)) {
-      return false;
-    }
-
     const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
     if (itemDate < filters.start || itemDate > filters.end) return false;
     if (filters.store !== 'all' && item.filters.store !== filters.store) return false;
     if (filters.seller !== 'all' && item.filters.seller !== filters.seller) return false;
-    if (syncStatusFilter !== 'all' && item.syncStatus !== syncStatusFilter) return false;
+    if (item.syncStatus !== syncStatusFilter) return false;
     return true;
   });
 

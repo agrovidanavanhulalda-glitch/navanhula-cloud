@@ -949,7 +949,15 @@ const LocalReportsPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className="text-xs h-8 flex items-center gap-1"
-                    onClick={() => {
+                    onClick={async () => {
+                      const filters = { 
+                        store: selectedStore, 
+                        seller: selectedSeller, 
+                        start: startDate, 
+                        end: endDate,
+                        syncStatus: selectedSyncFilter
+                      };
+
                       if (!selectedSyncFilter || selectedSyncFilter === 'all') {
                         setShowSyncError(true);
                         toast({
@@ -960,18 +968,23 @@ const LocalReportsPage: React.FC = () => {
                         return;
                       }
                       
-                      exportLogsPDF({ 
-                        history: exportHistory, 
-                        stores, 
-                        filters: { 
-                          store: selectedStore, 
-                          seller: selectedSeller, 
-                          start: startDate, 
-                          end: endDate,
-                          syncStatus: selectedSyncFilter
-                        },
-                        companyName: 'NAVANHULA CLOUD'
-                      });
+                      try {
+                        // Backend validation via history insert
+                        await saveToHistory('PDF', 'success', filters);
+
+                        exportLogsPDF({ 
+                          history: exportHistory, 
+                          stores, 
+                          filters,
+                          companyName: 'NAVANHULA CLOUD'
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: "Erro na Exportação",
+                          description: error.message || "Falha na validação do backend.",
+                          variant: "destructive"
+                        });
+                      }
                     }}
                   >
                     <Download className="w-3 h-3" />
@@ -981,7 +994,15 @@ const LocalReportsPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className={`text-xs h-8 flex items-center gap-1 ${(!selectedSyncFilter || selectedSyncFilter === 'all') ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    onClick={() => {
+                    onClick={async () => {
+                      const filters = { 
+                        store: selectedStore, 
+                        seller: selectedSeller, 
+                        start: startDate, 
+                        end: endDate,
+                        syncStatus: selectedSyncFilter
+                      };
+
                       if (!selectedSyncFilter || selectedSyncFilter === 'all') {
                         setShowSyncError(true);
                         toast({
@@ -992,17 +1013,22 @@ const LocalReportsPage: React.FC = () => {
                         return;
                       }
 
-                      exportLogsExcel({ 
-                        history: exportHistory, 
-                        stores, 
-                        filters: { 
-                          store: selectedStore, 
-                          seller: selectedSeller, 
-                          start: startDate, 
-                          end: endDate,
-                          syncStatus: selectedSyncFilter
-                        }
-                      });
+                      try {
+                        // Backend validation via history insert
+                        await saveToHistory('XLSX', 'success', filters);
+
+                        exportLogsExcel({ 
+                          history: exportHistory, 
+                          stores, 
+                          filters
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: "Erro na Exportação",
+                          description: error.message || "Falha na validação do backend.",
+                          variant: "destructive"
+                        });
+                      }
                     }}
                   >
                     <FileSpreadsheet className="w-3 h-3" />
