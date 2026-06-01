@@ -591,7 +591,7 @@ export default function StockTransferPage() {
   const { data: products = [] } = useQuery({
     queryKey: ['products-for-transfer'],
     queryFn: async () => {
-      const { data } = await supabase.from('products').select('id, name, code').eq('is_active', true).order('name');
+      const { data } = await supabase.from('products').select('id, name, code').eq('is_active', true).neq('status', 'deleted').order('name');
       return data || [];
     },
   });
