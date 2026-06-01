@@ -59,6 +59,20 @@ const LocalProductsPage: React.FC = () => {
     storeId: currentStore?.id
   });
 
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories', company?.id],
+    queryFn: async () => {
+      if (!company?.id) return [];
+      const { data } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('company_id', company.id)
+        .order('name');
+      return data || [];
+    },
+    enabled: !!company?.id
+  });
+
   const products = productsData?.data || [];
   const totalCount = productsData?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
