@@ -959,10 +959,10 @@ const LocalReportsPage: React.FC = () => {
                     size="sm" 
                     className="text-xs h-8 flex items-center gap-1"
                     onClick={() => {
-                      if (!selectedSyncFilter || !['all', 'pending', 'syncing', 'completed'].includes(selectedSyncFilter)) {
+                      if (!selectedSyncFilter || !['pending', 'syncing', 'completed'].includes(selectedSyncFilter)) {
                         toast({
                           title: "Filtro Inválido",
-                          description: "Selecione um status de reprocessamento válido para exportar o XLSX.",
+                          description: "Selecione um status válido: Pendente, Sincronizando ou Sincronizado para exportar o XLSX.",
                           variant: "destructive"
                         });
                         return;
