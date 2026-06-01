@@ -227,6 +227,7 @@ const LocalProductsPage: React.FC = () => {
       if (success) {
         setShowForm(false);
         resetForm();
+        refreshData();
       }
     } catch (error) {
       console.error('[ProductsPage] Erro ao salvar:', error);
