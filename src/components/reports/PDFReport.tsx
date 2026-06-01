@@ -317,6 +317,14 @@ export const exportLogsPDF = async (options: {
 }) => {
   const { history, stores, filters, companyName = 'NAVANHULA CLOUD' } = options;
   
+  // Validação rigorosa do filtro de status (Backend-ready validation)
+  const syncStatusFilter = filters.syncStatus || 'all';
+  if (syncStatusFilter === 'all' || !['pending', 'syncing', 'completed'].includes(syncStatusFilter)) {
+    const errorMsg = "Selecione um status válido: Pendente, Sincronizando, Sincronizado";
+    console.error(`[Export PDF] Erro de validação: ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+
   // Filter the history list based on provided filters
   const filteredHistory = history.filter(item => {
     // Period filter
@@ -330,7 +338,7 @@ export const exportLogsPDF = async (options: {
     if (filters.seller !== 'all' && item.filters.seller !== filters.seller) return false;
     
     // Sync Status filter
-    if (filters.syncStatus && filters.syncStatus !== 'all' && item.syncStatus !== filters.syncStatus) return false;
+    if (item.syncStatus !== syncStatusFilter) return false;
     
     return true;
   });
