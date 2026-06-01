@@ -16,6 +16,7 @@ export interface ProductWithStock {
   cost_price: number;
   is_active: boolean;
   image_url: string | null;
+  gallery_urls: string[] | null;
   description: string | null;
   category_id: string | null;
   product_stock: ProductStock[];
