@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
 import { useProducts } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
