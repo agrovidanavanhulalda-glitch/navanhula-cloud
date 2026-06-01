@@ -23,11 +23,8 @@ vi.mock('@/integrations/supabase/client', () => ({
     rpc: vi.fn(),
     removeChannel: vi.fn().mockResolvedValue({}),
     auth: {
-      getSession: vi.fn().mockResolvedValue({ 
-        data: { session: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } } }, 
-        error: null 
-      }),
-      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+      getSession: vi.fn(),
+      onAuthStateChange: vi.fn(),
     },
     channel: vi.fn(() => ({
       on: vi.fn().mockReturnThis(),
@@ -83,6 +80,17 @@ describe('Product & Stock Offline Sync E2E', () => {
     });
     (navigator as any).onLine = true;
 
+    // Explicitly mock getSession and ensure it returns expected structure
+    (supabase.auth.getSession as any).mockResolvedValue({ 
+      data: { session: { user: { id: TEST_USER_ID, user_metadata: { company_id: TEST_COMPANY_ID } } } }, 
+      error: null 
+    });
+    
+    // Add onAuthStateChange mock to avoid destructuring error
+    (supabase.auth.onAuthStateChange as any).mockReturnValue({
+      data: { subscription: { unsubscribe: vi.fn() } }
+    });
+
     (supabase.from as any).mockImplementation((table: string) => {
       const builder: any = {
         select: vi.fn().mockReturnThis(),
@@ -92,9 +100,10 @@ describe('Product & Stock Offline Sync E2E', () => {
         order: vi.fn().mockReturnThis(),
         range: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockImplementation(() => {
-          if (table === 'profiles') return Promise.resolve({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, store_id: TEST_STORE_ID, is_active: true }, error: null });
+          if (table === 'profiles') return Promise.resolve({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, store_id: TEST_STORE_ID, is_active: true, is_super_admin: true }, error: null });
           if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
           if (table === 'stores') return Promise.resolve({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
+          if (table === 'categories') return Promise.resolve({ data: [], error: null });
           return Promise.resolve({ data: null, error: null });
         }),
         insert: insertMock,
@@ -107,6 +116,8 @@ describe('Product & Stock Offline Sync E2E', () => {
           }));
           if (table === 'stores') return Promise.resolve(cb({ data: [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true }], error: null }));
           if (table === 'product_stock') return Promise.resolve(cb({ data: [{ product_id: TEST_PRODUCT_ID, quantity: 50, store_id: TEST_STORE_ID }], error: null }));
+          if (table === 'categories') return Promise.resolve(cb({ data: [], error: null }));
+          if (table === 'inventory_movements') return Promise.resolve(cb({ data: [], error: null }));
           return Promise.resolve(cb({ data: [], error: null }));
         }),
       };
@@ -153,7 +164,6 @@ describe('Product & Stock Offline Sync E2E', () => {
     fireEvent.click(adjustBtn);
     
     fireEvent.change(screen.getByPlaceholderText(/0/i), { target: { value: '10' } });
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ENTRADA_MANUAL' } });
     
     fireEvent.click(screen.getByText(/Confirmar Ajuste/i));
     
@@ -176,9 +186,6 @@ describe('Product & Stock Offline Sync E2E', () => {
     
     const deleteBtn = await screen.findByRole('button', { name: /trash/i });
     fireEvent.click(deleteBtn);
-    
-    // Confirm delete in dialog if exists (based on code, it might show a confirm state)
-    // Actually the code uses setDeleteConfirm(id) which might trigger a dialog
     
     await waitFor(() => {
       expect(syncManager.getTasksByType('PRODUCT_UPDATE').some(t => t.payload.action === 'DELETE')).toBe(true);
