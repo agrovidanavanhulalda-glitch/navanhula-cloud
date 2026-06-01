@@ -9,10 +9,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { syncManager } from '@/lib/syncQueue';
 
-// Test IDs
-const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440001';
-const TEST_COMPANY_ID = '550e8400-e29b-41d4-a716-446655440002';
-const TEST_STORE_ID = '550e8400-e29b-41d4-a716-446655440003';
+// Mock values must be prefixed with "vi" for hoisting
+const vi_TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440001';
+const vi_TEST_COMPANY_ID = '550e8400-e29b-41d4-a716-446655440002';
+const vi_TEST_STORE_ID = '550e8400-e29b-41d4-a716-446655440003';
 
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => {
@@ -35,11 +35,16 @@ vi.mock('@/integrations/supabase/client', () => {
     eq: vi.fn().mockReturnThis(),
     gt: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn().mockImplementation(() => {
-      if (table === 'profiles') return Promise.resolve({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, store_id: TEST_STORE_ID, full_name: 'Test User', is_super_admin: true, is_active: true }, error: null });
-      if (table === 'companies') return Promise.resolve({ data: { id: TEST_COMPANY_ID, name: 'Test Company' }, error: null });
+      // Re-define constants inside or use the prefixed ones
+      const userId = '550e8400-e29b-41d4-a716-446655440001';
+      const companyId = '550e8400-e29b-41d4-a716-446655440002';
+      const storeId = '550e8400-e29b-41d4-a716-446655440003';
+
+      if (table === 'profiles') return Promise.resolve({ data: { id: userId, company_id: companyId, store_id: storeId, full_name: 'Test User', is_super_admin: true, is_active: true }, error: null });
+      if (table === 'companies') return Promise.resolve({ data: { id: companyId, name: 'Test Company' }, error: null });
       if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
-      if (table === 'stores') return Promise.resolve({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
-      if (table === 'onboarding_progress') return Promise.resolve({ data: { user_id: TEST_USER_ID, first_product_added: true }, error: null });
+      if (table === 'stores') return Promise.resolve({ data: { id: storeId, name: 'Test Store' }, error: null });
+      if (table === 'onboarding_progress') return Promise.resolve({ data: { user_id: userId, first_product_added: true }, error: null });
       return Promise.resolve({ data: null, error: null });
     }),
     insert: mockInsert,
@@ -50,13 +55,14 @@ vi.mock('@/integrations/supabase/client', () => {
     range: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     then: vi.fn().mockImplementation((cb) => {
+      const storeId = '550e8400-e29b-41d4-a716-446655440003';
       if (table === 'products') {
         const products = (global as any).mockProducts || [];
         return Promise.resolve(cb({ data: products, count: products.length, error: null }));
       }
       if (table === 'categories') return Promise.resolve(cb({ data: [{ id: 'cat1', name: 'Alimentos' }], error: null }));
-      if (table === 'stores') return Promise.resolve(cb({ data: [{ id: TEST_STORE_ID, name: 'Test Store' }], error: null }));
-      if (table === 'profiles') return Promise.resolve(cb({ data: [{ id: TEST_USER_ID, full_name: 'Test User' }], error: null }));
+      if (table === 'stores') return Promise.resolve(cb({ data: [{ id: storeId, name: 'Test Store' }], error: null }));
+      if (table === 'profiles') return Promise.resolve(cb({ data: [{ id: '550e8400-e29b-41d4-a716-446655440001', full_name: 'Test User' }], error: null }));
       if (table === 'product_stock') return Promise.resolve(cb({ data: [], error: null }));
       return Promise.resolve(cb({ data: [], error: null }));
     }),
@@ -68,8 +74,8 @@ vi.mock('@/integrations/supabase/client', () => {
       rpc: vi.fn().mockResolvedValue({ data: { success: true }, error: null }),
       removeChannel: vi.fn().mockResolvedValue({}),
       auth: {
-        getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: TEST_USER_ID } } }, error: null }),
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: TEST_USER_ID } }, error: null }),
+        getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } } }, error: null }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, error: null }),
         onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
       },
       channel: vi.fn(() => ({
@@ -166,7 +172,7 @@ describe('Products CRUD E2E (Online & Offline)', () => {
   it('edits a product offline and syncs online', async () => {
     (global as any).mockProducts = [{ 
       id: 'p1', name: 'Existente', code: 'SKU123', sale_price: 100, cost_price: 50, is_active: true, 
-      product_stock: [{ quantity: 10, store_id: TEST_STORE_ID }] 
+      product_stock: [{ quantity: 10, store_id: vi_TEST_STORE_ID }] 
     }];
 
     (navigator as any).onLine = false;
@@ -193,7 +199,7 @@ describe('Products CRUD E2E (Online & Offline)', () => {
   it('deletes a product offline and syncs online', async () => {
     (global as any).mockProducts = [{ 
       id: 'p1', name: 'Deletar', code: 'SKU123', sale_price: 100, cost_price: 50, is_active: true, 
-      product_stock: [{ quantity: 10, store_id: TEST_STORE_ID }] 
+      product_stock: [{ quantity: 10, store_id: vi_TEST_STORE_ID }] 
     }];
 
     (navigator as any).onLine = false;
