@@ -164,8 +164,8 @@ describe('Product & Stock Offline Sync E2E', () => {
     const adjustBtn = await screen.findByText(/Ajustar/i);
     fireEvent.click(adjustBtn);
     
-    // Find quantity input
-    const qtyInput = screen.getByPlaceholderText(/0/i);
+    // Find quantity input using standard selector
+    const qtyInput = await screen.findByPlaceholderText(/0/i);
     fireEvent.change(qtyInput, { target: { value: '10' } });
     
     // Find reason select
