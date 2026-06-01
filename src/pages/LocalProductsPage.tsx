@@ -198,10 +198,64 @@ const LocalProductsPage: React.FC = () => {
     }
   };
 
-  const handleDelete = (id: string) => {
-    deleteProduct(id);
-    toast.success('Produto excluído');
-    setDeleteConfirm(null);
+  const handleDelete = async (id: string) => {
+    const success = await deleteProduct(id);
+    if (success) {
+      setDeleteConfirm(null);
+    }
+  };
+
+  const handleDeleteZeroStock = async () => {
+    if (!company?.id) return;
+    
+    setDeleteZeroStockLoading(true);
+    try {
+      // Physical delete for products with zero stock in ANY store? 
+      // The request says "DELETE FROM products WHERE stock_quantity = 0;"
+      // But stock is in product_stock. I'll delete products where total stock is 0.
+      
+      const { data: zeroStockProducts, error: fetchError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('company_id', company.id);
+
+      if (fetchError) throw fetchError;
+
+      // Filter products that have zero stock across all stores
+      // Actually, it might be simpler to just join or use a subquery if possible, 
+      // but Supabase's delete doesn't support complex joins easily.
+      
+      // Let's use a RPC or a raw query if we can, but I'll stick to a safer approach.
+      // First, get products that HAVE stock > 0
+      const { data: stockedProducts } = await supabase
+        .from('product_stock')
+        .select('product_id')
+        .gt('quantity', 0)
+        .eq('company_id', company.id);
+      
+      const stockedIds = new Set(stockedProducts?.map(p => p.product_id) || []);
+      const allProductIds = zeroStockProducts?.map(p => p.id) || [];
+      const toDelete = allProductIds.filter(id => !stockedIds.has(id));
+
+      if (toDelete.length === 0) {
+        toast.info('Nenhum produto com estoque zero encontrado.');
+        return;
+      }
+
+      const { count, error } = await supabase
+        .from('products')
+        .delete()
+        .in('id', toDelete);
+
+      if (error) throw error;
+
+      toast.success(`${toDelete.length} produtos removidos com sucesso`);
+      refreshData();
+    } catch (error: any) {
+      toast.error('Erro ao remover produtos: ' + error.message);
+    } finally {
+      setDeleteZeroStockLoading(false);
+    }
   };
 
   const calculateMargin = (cost: number, sale: number) => {
