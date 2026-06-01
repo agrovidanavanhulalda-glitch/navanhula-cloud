@@ -939,18 +939,29 @@ const LocalReportsPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className="text-xs h-8 flex items-center gap-1"
-                    onClick={() => exportLogsPDF({ 
-                      history: exportHistory, 
-                      stores, 
-                      filters: { 
-                        store: selectedStore, 
-                        seller: selectedSeller, 
-                        start: startDate, 
-                        end: endDate,
-                        syncStatus: selectedSyncFilter
-                      },
-                      companyName: 'NAVANHULA CLOUD'
-                    })}
+                    onClick={() => {
+                      if (!selectedSyncFilter || !['pending', 'syncing', 'completed'].includes(selectedSyncFilter)) {
+                        setSyncFilterError("Selecione um status válido: Pendente, Sincronizando, Sincronizado");
+                        toast({
+                          title: "Filtro Inválido",
+                          description: "Selecione um status válido: Pendente, Sincronizando, Sincronizado para exportar o PDF.",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      exportLogsPDF({ 
+                        history: exportHistory, 
+                        stores, 
+                        filters: { 
+                          store: selectedStore, 
+                          seller: selectedSeller, 
+                          start: startDate, 
+                          end: endDate,
+                          syncStatus: selectedSyncFilter
+                        },
+                        companyName: 'NAVANHULA CLOUD'
+                      });
+                    }}
                   >
                     <Download className="w-3 h-3" />
                     Auditoria PDF
