@@ -154,15 +154,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isInitializing.current = true;
     
     try {
-      const { error: bootstrapError } = await supabase.rpc('bootstrap_current_user');
-      if (bootstrapError) {
-        console.error('[Auth] Bootstrap error:', bootstrapError);
+      // Retry logic for bootstrap to handle transient network issues/timeouts
+      let retries = 3;
+      let lastError = null;
+
+      while (retries > 0) {
+        const { error: bootstrapError } = await supabase.rpc('bootstrap_current_user');
+        if (!bootstrapError) {
+          lastError = null;
+          break;
+        }
+        
+        lastError = bootstrapError;
+        console.warn(`[Auth] Bootstrap retry ${4 - retries}/3...`, bootstrapError);
+        retries--;
+        if (retries > 0) await new Promise(r => setTimeout(r, 1000));
+      }
+
+      if (lastError) {
+        console.error('[Auth] Bootstrap failed after retries:', lastError);
+        toast.error('Erro ao configurar perfil. Algumas funcionalidades podem estar limitadas.');
       }
 
       await fetchUserData(userId);
       setupRan.current = true;
     } catch (error) {
       console.error('[Auth] Critical setup error:', error);
+      toast.error('Erro crítico na inicialização do sistema.');
     } finally {
       isInitializing.current = false;
       forceComplete();
