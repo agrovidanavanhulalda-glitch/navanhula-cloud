@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { exportLogsExcel } from './PDFReport';
+import { exportLogsExcel, exportLogsPDF } from './PDFReport';
 
 // Mocking dependencies to avoid browser/external calls during unit tests
 vi.mock('jspdf', () => ({
@@ -23,7 +23,7 @@ vi.mock('xlsx', () => ({
   writeFile: vi.fn(),
 }));
 
-describe('exportLogsExcel Validation', () => {
+describe('Export Validation (Excel & PDF)', () => {
   const mockHistory = [
     {
       id: '1',
@@ -37,84 +37,104 @@ describe('exportLogsExcel Validation', () => {
 
   const mockStores = [{ id: 'all', name: 'Todas' }] as any;
 
-  it('deve lançar erro quando o syncStatus é "all"', async () => {
-    const filters = {
-      store: 'all',
-      seller: 'all',
-      start: '2023-01-01',
-      end: '2023-12-31',
-      syncStatus: 'all'
-    };
+  describe('exportLogsExcel', () => {
+    it('deve lançar erro quando o syncStatus é "all"', async () => {
+      const filters = {
+        store: 'all',
+        seller: 'all',
+        start: '2023-01-01',
+        end: '2023-12-31',
+        syncStatus: 'all'
+      };
 
-    await expect(exportLogsExcel({ 
-      history: mockHistory, 
-      stores: mockStores, 
-      filters 
-    })).rejects.toThrow("Selecione um status válido para exportação XLSX");
+      await expect(exportLogsExcel({ 
+        history: mockHistory, 
+        stores: mockStores, 
+        filters 
+      })).rejects.toThrow("Selecione um status válido para exportação XLSX");
+    });
+
+    it('deve lançar erro quando o syncStatus é vazio/undefined', async () => {
+      const filters = {
+        store: 'all',
+        seller: 'all',
+        start: '2023-01-01',
+        end: '2023-12-31',
+        syncStatus: undefined as any
+      };
+
+      await expect(exportLogsExcel({ 
+        history: mockHistory, 
+        stores: mockStores, 
+        filters 
+      })).rejects.toThrow("Selecione um status válido para exportação XLSX");
+    });
+
+    it('não deve lançar erro quando o syncStatus é válido (completed)', async () => {
+      const filters = {
+        store: 'all',
+        seller: 'all',
+        start: '2023-01-01',
+        end: '2023-12-31',
+        syncStatus: 'completed'
+      };
+
+      await expect(exportLogsExcel({ 
+        history: mockHistory, 
+        stores: mockStores, 
+        filters 
+      })).resolves.not.toThrow();
+    });
   });
 
-  it('deve lançar erro quando o syncStatus é vazio/undefined', async () => {
-    const filters = {
-      store: 'all',
-      seller: 'all',
-      start: '2023-01-01',
-      end: '2023-12-31',
-      syncStatus: undefined as any
-    };
+  describe('exportLogsPDF', () => {
+    it('deve lançar erro quando o syncStatus é "all"', async () => {
+      const filters = {
+        store: 'all',
+        seller: 'all',
+        start: '2023-01-01',
+        end: '2023-12-31',
+        syncStatus: 'all'
+      };
 
-    await expect(exportLogsExcel({ 
-      history: mockHistory, 
-      stores: mockStores, 
-      filters 
-    })).rejects.toThrow("Selecione um status válido para exportação XLSX");
-  });
+      await expect(exportLogsPDF({ 
+        history: mockHistory, 
+        stores: mockStores, 
+        filters 
+      })).rejects.toThrow("Selecione um status válido: Pendente, Sincronizando, Sincronizado");
+    });
 
-  it('deve lançar erro quando o syncStatus é inválido', async () => {
-    const filters = {
-      store: 'all',
-      seller: 'all',
-      start: '2023-01-01',
-      end: '2023-12-31',
-      syncStatus: 'invalid-status' as any
-    };
+    it('deve lançar erro quando o syncStatus é inválido', async () => {
+      const filters = {
+        store: 'all',
+        seller: 'all',
+        start: '2023-01-01',
+        end: '2023-12-31',
+        syncStatus: 'invalid' as any
+      };
 
-    await expect(exportLogsExcel({ 
-      history: mockHistory, 
-      stores: mockStores, 
-      filters 
-    })).rejects.toThrow("Selecione um status válido para exportação XLSX");
-  });
+      await expect(exportLogsPDF({ 
+        history: mockHistory, 
+        stores: mockStores, 
+        filters 
+      })).rejects.toThrow("Selecione um status válido: Pendente, Sincronizando, Sincronizado");
+    });
 
-  it('não deve lançar erro quando o syncStatus é válido (completed)', async () => {
-    const filters = {
-      store: 'all',
-      seller: 'all',
-      start: '2023-01-01',
-      end: '2023-12-31',
-      syncStatus: 'completed'
-    };
+    it('não deve lançar erro quando o syncStatus é válido (syncing)', async () => {
+      const filters = {
+        store: 'all',
+        seller: 'all',
+        start: '2023-01-01',
+        end: '2023-12-31',
+        syncStatus: 'syncing' as any
+      };
 
-    // Should resolve without error
-    await expect(exportLogsExcel({ 
-      history: mockHistory, 
-      stores: mockStores, 
-      filters 
-    })).resolves.not.toThrow();
-  });
-  
-  it('não deve lançar erro quando o syncStatus é válido (pending)', async () => {
-    const filters = {
-      store: 'all',
-      seller: 'all',
-      start: '2023-01-01',
-      end: '2023-12-31',
-      syncStatus: 'pending'
-    };
-
-    await expect(exportLogsExcel({ 
-      history: mockHistory, 
-      stores: mockStores, 
-      filters 
-    })).resolves.not.toThrow();
+      await expect(exportLogsPDF({ 
+        history: mockHistory, 
+        stores: mockStores, 
+        filters 
+      })).resolves.not.toThrow();
+    });
   });
 });
+
