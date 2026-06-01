@@ -406,8 +406,15 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return true;
     }
 
-    // Physical delete
-    const { error } = await supabase.from('products').delete().eq('id', id);
+    // Soft delete
+    const { error } = await supabase
+      .from('products')
+      .update({ 
+        status: 'deleted',
+        deleted_at: new Date().toISOString(),
+        deleted_by: user?.id
+      })
+      .eq('id', id);
     if (error) {
       toast.error('Erro ao eliminar produto: ' + error.message);
       return false;
