@@ -87,6 +87,7 @@ const LocalReportsPage: React.FC = () => {
   }[]>([]);
   const [selectedSyncFilter, setSelectedSyncFilter] = useState<'all' | 'pending' | 'syncing' | 'completed'>('all');
   const [syncFilterError, setSyncFilterError] = useState<string | null>(null);
+  const [showSyncError, setShowSyncError] = useState(false);
   const isInitialMount = useRef(true);
 
   // Validação em tempo real do filtro de status
@@ -95,6 +96,7 @@ const LocalReportsPage: React.FC = () => {
       setSyncFilterError("Selecione um status válido: Pendente, Sincronizando, Sincronizado");
     } else {
       setSyncFilterError(null);
+      setShowSyncError(false);
     }
   }, [selectedSyncFilter]);
 
@@ -947,8 +949,17 @@ const LocalReportsPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className="text-xs h-8 flex items-center gap-1"
-                    disabled={!selectedSyncFilter || !['pending', 'syncing', 'completed'].includes(selectedSyncFilter)}
                     onClick={() => {
+                      if (!selectedSyncFilter || selectedSyncFilter === 'all') {
+                        setShowSyncError(true);
+                        toast({
+                          title: "Erro de Filtro",
+                          description: "Selecione um status válido para exportar o PDF de auditoria.",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      
                       exportLogsPDF({ 
                         history: exportHistory, 
                         stores, 
@@ -970,8 +981,17 @@ const LocalReportsPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className="text-xs h-8 flex items-center gap-1"
-                    disabled={!selectedSyncFilter || !['pending', 'syncing', 'completed'].includes(selectedSyncFilter)}
                     onClick={() => {
+                      if (!selectedSyncFilter || selectedSyncFilter === 'all') {
+                        setShowSyncError(true);
+                        toast({
+                          title: "Erro de Filtro",
+                          description: "Selecione um status válido para exportar o Excel de auditoria.",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+
                       exportLogsExcel({ 
                         history: exportHistory, 
                         stores, 
@@ -1009,7 +1029,7 @@ const LocalReportsPage: React.FC = () => {
                     >
                       <SelectTrigger 
                         id="sync-filter" 
-                        className={`h-8 w-[140px] text-xs ${syncFilterError ? 'border-destructive ring-destructive' : ''}`}
+                        className={`h-8 w-[140px] text-xs ${(syncFilterError && showSyncError) ? 'border-destructive ring-destructive' : ''}`}
                       >
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
@@ -1021,7 +1041,7 @@ const LocalReportsPage: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  {syncFilterError && (
+                  {syncFilterError && showSyncError && (
                     <span className="text-[10px] text-destructive font-medium animate-in fade-in slide-in-from-top-1">
                       {syncFilterError}
                     </span>
