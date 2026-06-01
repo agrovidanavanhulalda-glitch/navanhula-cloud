@@ -30,7 +30,7 @@ export function useProducts(options: {
   storeId?: string 
 } = {}) {
   const { company } = useAuth();
-  const { searchTerm = '', page = 0, pageSize = 10, storeId } = options;
+  const { searchTerm = '', page = 0, pageSize = 50, storeId } = options;
 
   return useQuery({
     queryKey: ['products', company?.id, storeId, searchTerm, page, pageSize],
