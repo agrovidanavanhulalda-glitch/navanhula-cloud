@@ -262,17 +262,17 @@ class SyncManager {
   private async syncProductUpdate(payload: any) {
     const { id, product, action } = payload;
     if (action === 'CREATE') {
-      const { error } = await supabase.from('products').insert(product);
-      if (error) throw error;
+      const result = await supabase.from('products').insert(product);
+      if (result && (result as any).error) throw (result as any).error;
     } else if (action === 'UPDATE') {
-      const { error } = await supabase.from('products').update(product).eq('id', id);
-      if (error) throw error;
+      const result = await supabase.from('products').update(product).eq('id', id);
+      if (result && (result as any).error) throw (result as any).error;
     } else if (action === 'DELETE') {
-      const { error } = await supabase
+      const result = await supabase
         .from('products')
         .update({ status: 'deleted', deleted_at: new Date().toISOString() })
         .eq('id', id);
-      if (error) throw error;
+      if (result && (result as any).error) throw (result as any).error;
     }
   }
 

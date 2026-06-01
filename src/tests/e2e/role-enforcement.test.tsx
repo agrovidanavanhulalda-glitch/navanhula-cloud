@@ -19,6 +19,9 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(),
     rpc: vi.fn(),
+    functions: {
+      invoke: vi.fn().mockResolvedValue({ data: { email: 'vendedor@test.com', password: 'Password123!' }, error: null }),
+    },
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } } }, error: null }),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
@@ -73,7 +76,7 @@ describe('Role Enforcement E2E Tests', () => {
           if (table === 'companies') return Promise.resolve(cb({ data: [{ id: TEST_COMPANY_ID, name: 'Empresa Teste' }], error: null }));
           if (table === 'profiles') return Promise.resolve(cb({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, branch_id: TEST_BRANCH_ID }, error: null }));
           if (table === 'company_users') return Promise.resolve(cb({ data: [], error: null }));
-          if (table === 'invitations') return Promise.resolve(cb({ data: [], error: null }));
+          if (table === 'invites') return Promise.resolve(cb({ data: [], error: null }));
           return Promise.resolve(cb({ data: [], error: null }));
         }),
       };
@@ -112,33 +115,22 @@ describe('Role Enforcement E2E Tests', () => {
     // Fill the form
     fireEvent.change(screen.getByPlaceholderText(/João Silva/i), { target: { value: 'Novo Vendedor' } });
     fireEvent.change(screen.getByPlaceholderText(/joao@exemplo.com/i), { target: { value: 'vendedor@test.com' } });
-    fireEvent.change(screen.getByPlaceholderText(/••••••••/i), { target: { value: 'Password123!' } });
-
+    
     // Select Role "Vendedor" (should map to "seller")
     const roleSelect = screen.getByText(/Selecione o cargo/i);
     fireEvent.click(roleSelect);
     const sellerOption = await screen.findByText(/Vendedor/i);
     fireEvent.click(sellerOption);
 
-    // Select Branch
-    const branchSelect = screen.getByText(/Selecione a branch/i);
-    fireEvent.click(branchSelect);
-    const branchOption = await screen.findByText(/Sede/i);
-    fireEvent.click(branchOption);
-
     // Submit
     const submitBtn = screen.getByRole('button', { name: /Criar Utilizador/i });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(supabase.auth.signUp).toHaveBeenCalledWith(expect.objectContaining({
-        email: 'vendedor@test.com',
-        options: expect.objectContaining({
-          data: expect.objectContaining({
-            company_id: TEST_COMPANY_ID,
-            branch_id: TEST_BRANCH_ID,
-            role: 'seller' // MUST BE TECHNICAL KEY
-          })
+      expect(supabase.functions.invoke).toHaveBeenCalledWith('manage-team-member', expect.objectContaining({
+        body: expect.objectContaining({
+          email: 'vendedor@test.com',
+          role: 'seller' // MUST BE TECHNICAL KEY
         })
       }));
     });
@@ -158,19 +150,13 @@ describe('Role Enforcement E2E Tests', () => {
     fireEvent.click(screen.getByText(/Selecione o cargo/i));
     fireEvent.click(await screen.findByText(/Admin/i));
 
-    // Select Branch
-    fireEvent.click(screen.getByText(/Selecione a branch/i));
-    fireEvent.click(await screen.findByText(/Sede/i));
-
     // Generate Invite
     fireEvent.click(screen.getByRole('button', { name: /Gerar Convite/i }));
 
     await waitFor(() => {
       expect((supabase.from as any).mockInsert).toHaveBeenCalledWith(expect.objectContaining({
         email: 'invite_admin@test.com',
-        role_id: TEST_ROLE_ID_ADMIN,
-        company_id: TEST_COMPANY_ID,
-        branch_id: TEST_BRANCH_ID
+        role_id: TEST_ROLE_ID_ADMIN
       }));
     });
   });

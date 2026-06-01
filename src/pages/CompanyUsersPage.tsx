@@ -481,8 +481,9 @@ const CompanyUsersPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Senha Temporária (Opcional)</Label>
+                <Label htmlFor="temp-password">Senha Temporária (Opcional)</Label>
                 <Input 
+                  id="temp-password"
                   type="password"
                   placeholder="Deixe vazio para gerar automaticamente" 
                   value={createUserForm.password}
