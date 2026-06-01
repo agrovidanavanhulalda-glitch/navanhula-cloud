@@ -208,7 +208,7 @@ const LocalProductsPage: React.FC = () => {
       imageUrl: formData.imageUrl,
       galleryUrls: formData.galleryUrls,
       description: formData.description.trim() || undefined,
-      categoryId: formData.categoryId || null,
+      categoryId: formData.categoryId === 'none' ? null : (formData.categoryId || null),
     };
 
     try {
