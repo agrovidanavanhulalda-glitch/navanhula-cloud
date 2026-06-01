@@ -510,7 +510,19 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return true;
   };
 
+  const restoreProduct = async (id: string) => {
+    const { data, error } = await supabase.rpc('restore_product', { p_product_id: id });
+    if (error) {
+      toast.error('Erro ao restaurar produto: ' + error.message);
+      return false;
+    }
+    toast.success('Produto restaurado com sucesso');
+    await loadData(true);
+    return true;
+  };
+
   const addStore = async (s: any) => { 
+
     if (!navigator.onLine) {
       const tempId = crypto.randomUUID();
       await syncManager.addTask('STORE_UPDATE', { id: tempId, store: { ...s, id: tempId, company_id: company?.id }, action: 'CREATE' });
@@ -552,7 +564,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <LocalPOSContext.Provider value={{ ...state, store: state.currentStore, cashRegisterOpen: !!state.currentCashRegister, addToCart, addManualItem, removeFromCart, updateQuantity, clearCart, startNewSale, completeSale, openCashRegister, closeCashRegister, addProduct, updateProduct, deleteProduct, addStore, updateStore, deleteStore, addSeller, updateSeller, deleteSeller, getTotal, getSubtotal, getTotalDiscount, getLastSale, getCancelledSales, getCancellationHistory, cancelCompletedSale, refreshData: () => loadData(true), setCurrentStore }}>
+    <LocalPOSContext.Provider value={{ ...state, store: state.currentStore, cashRegisterOpen: !!state.currentCashRegister, addToCart, addManualItem, removeFromCart, updateQuantity, clearCart, startNewSale, completeSale, openCashRegister, closeCashRegister, addProduct, updateProduct, deleteProduct, restoreProduct, addStore, updateStore, deleteStore, addSeller, updateSeller, deleteSeller, getTotal, getSubtotal, getTotalDiscount, getLastSale, getCancelledSales, getCancellationHistory, cancelCompletedSale, refreshData: () => loadData(true), setCurrentStore }}>
       {children}
     </LocalPOSContext.Provider>
   );
