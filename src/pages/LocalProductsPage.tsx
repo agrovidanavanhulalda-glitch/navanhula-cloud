@@ -118,6 +118,7 @@ const LocalProductsPage: React.FC = () => {
       isActive: p.is_active,
       stock: p.product_stock.reduce((acc, s) => acc + (s.quantity || 0), 0), // Total stock across stores for list
       imageUrl: p.image_url,
+      galleryUrls: p.gallery_urls || [],
       description: p.description,
       categoryId: p.category_id,
       categoryName: (p as any).categories?.name || 'Geral'
