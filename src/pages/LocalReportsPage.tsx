@@ -939,16 +939,8 @@ const LocalReportsPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className="text-xs h-8 flex items-center gap-1"
+                    disabled={!selectedSyncFilter || !['pending', 'syncing', 'completed'].includes(selectedSyncFilter)}
                     onClick={() => {
-                      if (!selectedSyncFilter || !['pending', 'syncing', 'completed'].includes(selectedSyncFilter)) {
-                        setSyncFilterError("Selecione um status válido: Pendente, Sincronizando, Sincronizado");
-                        toast({
-                          title: "Filtro Inválido",
-                          description: "Selecione um status válido: Pendente, Sincronizando, Sincronizado para exportar o PDF.",
-                          variant: "destructive"
-                        });
-                        return;
-                      }
                       exportLogsPDF({ 
                         history: exportHistory, 
                         stores, 
@@ -970,16 +962,8 @@ const LocalReportsPage: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     className="text-xs h-8 flex items-center gap-1"
+                    disabled={!selectedSyncFilter || !['pending', 'syncing', 'completed'].includes(selectedSyncFilter)}
                     onClick={() => {
-                      if (!selectedSyncFilter || !['pending', 'syncing', 'completed'].includes(selectedSyncFilter)) {
-                        setSyncFilterError("Selecione um status válido: Pendente, Sincronizando, Sincronizado");
-                        toast({
-                          title: "Filtro Inválido",
-                          description: "Selecione um status válido: Pendente, Sincronizando, Sincronizado para exportar o XLSX.",
-                          variant: "destructive"
-                        });
-                        return;
-                      }
                       exportLogsExcel({ 
                         history: exportHistory, 
                         stores, 
