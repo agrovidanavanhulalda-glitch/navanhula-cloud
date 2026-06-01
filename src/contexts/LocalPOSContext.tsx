@@ -285,29 +285,80 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const addProduct = async (p: any) => {
-    const { data, error } = await supabase.from('products').insert({ ...p, company_id: company?.id }).select().single();
+    const { stock, costPrice, salePrice, isActive, imageUrl, categoryId, galleryUrls, ...rest } = p;
+    
+    // Map to DB fields
+    const dbProduct = {
+      ...rest,
+      cost_price: costPrice,
+      sale_price: salePrice,
+      is_active: isActive,
+      image_url: imageUrl,
+      category_id: categoryId,
+      gallery_urls: galleryUrls,
+      company_id: company?.id
+    };
+
+    const { data, error } = await supabase.from('products').insert(dbProduct).select().single();
+    
     if (error) {
       toast.error('Erro ao adicionar produto: ' + error.message);
       return false;
     }
+
+    // Update stock if provided
+    if (stock !== undefined && state.currentStore?.id) {
+      await supabase.from('product_stock').upsert({
+        product_id: data.id,
+        store_id: state.currentStore.id,
+        quantity: stock,
+        company_id: company?.id
+      });
+    }
+
     toast.success('Produto adicionado com sucesso');
     await loadData(true);
     return true;
   };
 
   const updateProduct = async (id: string, p: any) => {
-    const { error } = await supabase.from('products').update(p).eq('id', id);
+    const { stock, costPrice, salePrice, isActive, imageUrl, categoryId, galleryUrls, ...rest } = p;
+    
+    // Map to DB fields
+    const dbProduct = {
+      ...rest,
+      cost_price: costPrice,
+      sale_price: salePrice,
+      is_active: isActive,
+      image_url: imageUrl,
+      category_id: categoryId,
+      gallery_urls: galleryUrls
+    };
+
+    const { error } = await supabase.from('products').update(dbProduct).eq('id', id);
+    
     if (error) {
       toast.error('Erro ao atualizar produto: ' + error.message);
       return false;
     }
+
+    // Update stock if provided
+    if (stock !== undefined && state.currentStore?.id) {
+      await supabase.from('product_stock').upsert({
+        product_id: id,
+        store_id: state.currentStore.id,
+        quantity: stock,
+        company_id: company?.id
+      }, { onConflict: 'product_id,store_id' });
+    }
+
     toast.success('Produto atualizado com sucesso');
     await loadData(true);
     return true;
   };
 
   const deleteProduct = async (id: string) => {
-    // Physical delete as requested
+    // Physical delete
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) {
       toast.error('Erro ao eliminar produto: ' + error.message);
