@@ -16,8 +16,11 @@ export interface ProductWithStock {
   cost_price: number;
   is_active: boolean;
   image_url: string | null;
+  gallery_urls: string[] | null;
   description: string | null;
+  category_id: string | null;
   product_stock: ProductStock[];
+  categories?: { name: string } | null;
 }
 
 export function useProducts(options: { 
@@ -41,7 +44,8 @@ export function useProducts(options: {
         .from('products')
         .select(`
           *,
-          product_stock(*)
+          product_stock(*),
+          categories(name)
         `, { count: 'exact' })
         .eq('company_id', company.id);
 

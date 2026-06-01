@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useLocalPOS, LocalProduct } from '@/contexts/LocalPOSContext';
 import { useProducts } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -16,6 +17,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Package, 
   Plus, 
@@ -25,10 +33,15 @@ import {
   AlertTriangle,
   Loader2,
   FileSpreadsheet,
+  Image as ImageIcon,
+  History,
+  Trash
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import ProductImageUpload from '@/components/products/ProductImageUpload';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import * as XLSX from 'xlsx';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { SkeletonTable } from '@/components/ui/skeleton-card';
@@ -36,7 +49,8 @@ import PageTransition from '@/components/layout/PageTransition';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 const LocalProductsPage: React.FC = () => {
-  const { addProduct, updateProduct, deleteProduct, currentStore } = useLocalPOS();
+  const { company } = useAuth();
+  const { addProduct, updateProduct, deleteProduct, currentStore, refreshData } = useLocalPOS();
   const { updateStep } = useOnboarding();
   const { isAdmin } = usePermissions();
 
@@ -54,6 +68,20 @@ const LocalProductsPage: React.FC = () => {
     storeId: currentStore?.id
   });
 
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories', company?.id],
+    queryFn: async () => {
+      if (!company?.id) return [];
+      const { data } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('company_id', company.id)
+        .order('name');
+      return data || [];
+    },
+    enabled: !!company?.id
+  });
+
   const products = productsData?.data || [];
   const totalCount = productsData?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -61,6 +89,7 @@ const LocalProductsPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LocalProduct | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleteZeroStockLoading, setDeleteZeroStockLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,7 +102,9 @@ const LocalProductsPage: React.FC = () => {
     stock: '',
     isActive: true,
     imageUrl: '' as string | null,
+    galleryUrls: [] as string[],
     description: '',
+    categoryId: '',
   });
 
   // Mapping from DB products to LocalProduct for the table
@@ -85,11 +116,14 @@ const LocalProductsPage: React.FC = () => {
       salePrice: p.sale_price,
       costPrice: p.cost_price,
       isActive: p.is_active,
-      stock: p.product_stock.find(s => s.store_id === currentStore?.id)?.quantity || 0,
+      stock: p.product_stock.reduce((acc, s) => acc + (s.quantity || 0), 0), // Total stock across stores for list
       imageUrl: p.image_url,
-      description: p.description
+      galleryUrls: p.gallery_urls || [],
+      description: p.description,
+      categoryId: p.category_id,
+      categoryName: (p as any).categories?.name || 'Geral'
     }));
-  }, [products, currentStore?.id]);
+  }, [products]);
 
   const rowVirtualizer = useVirtualizer({
     count: mappedProducts.length,
@@ -108,7 +142,9 @@ const LocalProductsPage: React.FC = () => {
       stock: '',
       isActive: true,
       imageUrl: null,
+      galleryUrls: [],
       description: '',
+      categoryId: '',
     });
     setEditingProduct(null);
   };
@@ -129,7 +165,9 @@ const LocalProductsPage: React.FC = () => {
       stock: product.stock.toString(),
       isActive: product.isActive,
       imageUrl: product.imageUrl || null,
+      galleryUrls: product.galleryUrls || [],
       description: product.description || '',
+      categoryId: product.categoryId || '',
     });
     setEditingProduct(product);
     setShowForm(true);
@@ -168,7 +206,9 @@ const LocalProductsPage: React.FC = () => {
       stock,
       isActive: formData.isActive,
       imageUrl: formData.imageUrl,
-      description: formData.description.trim() || undefined
+      galleryUrls: formData.galleryUrls,
+      description: formData.description.trim() || undefined,
+      categoryId: formData.categoryId === 'none' ? null : (formData.categoryId || null),
     };
 
     try {
@@ -191,10 +231,64 @@ const LocalProductsPage: React.FC = () => {
     }
   };
 
-  const handleDelete = (id: string) => {
-    deleteProduct(id);
-    toast.success('Produto excluído');
-    setDeleteConfirm(null);
+  const handleDelete = async (id: string) => {
+    const success = await deleteProduct(id);
+    if (success) {
+      setDeleteConfirm(null);
+    }
+  };
+
+  const handleDeleteZeroStock = async () => {
+    if (!company?.id) return;
+    
+    setDeleteZeroStockLoading(true);
+    try {
+      // Physical delete for products with zero stock in ANY store? 
+      // The request says "DELETE FROM products WHERE stock_quantity = 0;"
+      // But stock is in product_stock. I'll delete products where total stock is 0.
+      
+      const { data: zeroStockProducts, error: fetchError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('company_id', company.id);
+
+      if (fetchError) throw fetchError;
+
+      // Filter products that have zero stock across all stores
+      // Actually, it might be simpler to just join or use a subquery if possible, 
+      // but Supabase's delete doesn't support complex joins easily.
+      
+      // Let's use a RPC or a raw query if we can, but I'll stick to a safer approach.
+      // First, get products that HAVE stock > 0
+      const { data: stockedProducts } = await supabase
+        .from('product_stock')
+        .select('product_id')
+        .gt('quantity', 0)
+        .eq('company_id', company.id);
+      
+      const stockedIds = new Set(stockedProducts?.map(p => p.product_id) || []);
+      const allProductIds = zeroStockProducts?.map(p => p.id) || [];
+      const toDelete = allProductIds.filter(id => !stockedIds.has(id));
+
+      if (toDelete.length === 0) {
+        toast.info('Nenhum produto com estoque zero encontrado.');
+        return;
+      }
+
+      const { count, error } = await supabase
+        .from('products')
+        .delete()
+        .in('id', toDelete);
+
+      if (error) throw error;
+
+      toast.success(`${toDelete.length} produtos removidos com sucesso`);
+      refreshData();
+    } catch (error: any) {
+      toast.error('Erro ao remover produtos: ' + error.message);
+    } finally {
+      setDeleteZeroStockLoading(false);
+    }
   };
 
   const calculateMargin = (cost: number, sale: number) => {
@@ -265,6 +359,10 @@ const LocalProductsPage: React.FC = () => {
               {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
               Importar Excel
             </Button>
+            <Button variant="destructive" onClick={handleDeleteZeroStock} disabled={deleteZeroStockLoading}>
+              {deleteZeroStockLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash className="w-4 h-4 mr-2" />}
+              Eliminar Estoque Zero
+            </Button>
             <Button onClick={handleNewProduct}>
               <Plus className="w-4 h-4 mr-2" />
               Novo Produto
@@ -296,12 +394,13 @@ const LocalProductsPage: React.FC = () => {
               <table className="w-full relative border-collapse">
                 <thead className="bg-muted/50 sticky top-0 z-10">
                   <tr>
-                    <th className="text-left p-4 font-medium w-24 bg-muted/50">SKU</th>
-                    <th className="text-left p-4 font-medium bg-muted/50">Produto</th>
+                    <th className="text-left p-4 font-medium w-16 bg-muted/50">Img</th>
+                    <th className="text-left p-4 font-medium w-32 bg-muted/50">SKU</th>
+                    <th className="text-left p-4 font-medium bg-muted/50">Nome</th>
+                    <th className="text-right p-4 font-medium w-32 bg-muted/50">Estoque</th>
                     <th className="text-right p-4 font-medium w-32 bg-muted/50">Compra</th>
                     <th className="text-right p-4 font-medium w-32 bg-muted/50">Venda</th>
-                    <th className="text-right p-4 font-medium w-24 bg-muted/50">Margem</th>
-                    <th className="text-right p-4 font-medium w-24 bg-muted/50">Estoque</th>
+                    <th className="text-left p-4 font-medium w-32 bg-muted/50">Categoria</th>
                     <th className="text-center p-4 font-medium w-28 bg-muted/50">Status</th>
                     <th className="text-center p-4 font-medium w-28 bg-muted/50">Ações</th>
                   </tr>
@@ -318,14 +417,25 @@ const LocalProductsPage: React.FC = () => {
                           transform: `translateY(${virtualRow.start}px)` 
                         }}
                       >
-                        <td className="p-4 w-24"><code className="text-xs bg-muted px-1.5 py-0.5 rounded truncate block">{product.code || '---'}</code></td>
+                        <td className="p-4 w-16">
+                          {product.imageUrl ? (
+                            <img src={product.imageUrl} alt={product.name} className="w-10 h-10 object-cover rounded" />
+                          ) : (
+                            <div className="w-10 h-10 bg-muted flex items-center justify-center rounded">
+                              <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-4 w-32"><code className="text-xs bg-muted px-1.5 py-0.5 rounded truncate block">{product.code || '---'}</code></td>
                         <td className="p-4 flex-1 min-w-0"><div className="font-medium truncate">{product.name}</div></td>
+                        <td className="p-4 w-32 text-right">
+                          <Badge variant={product.stock <= 0 ? "destructive" : product.stock <= 10 ? "secondary" : "outline"}>
+                            {product.stock}
+                          </Badge>
+                        </td>
                         <td className="p-4 w-32 text-right text-muted-foreground">{formatCurrency(product.costPrice)}</td>
                         <td className="p-4 w-32 text-right font-medium">{formatCurrency(product.salePrice)}</td>
-                        <td className="p-4 w-24 text-right"><Badge variant="secondary">{calculateMargin(product.costPrice, product.salePrice)}%</Badge></td>
-                        <td className="p-4 w-24 text-right">
-                          <span className={product.stock <= 10 ? 'text-destructive font-medium' : ''}>{product.stock}</span>
-                        </td>
+                        <td className="p-4 w-32 truncate">{product.categoryName}</td>
                         <td className="p-4 w-28 text-center"><Badge variant={product.isActive ? 'default' : 'secondary'}>{product.isActive ? 'Ativo' : 'Inativo'}</Badge></td>
                         <td className="p-4 w-28">
                           <div className="flex items-center justify-center gap-2">
@@ -394,13 +504,51 @@ const LocalProductsPage: React.FC = () => {
                   <Input id="salePrice" type="number" step="0.01" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="stock">Estoque Inicial {currentStore?.name ? `(${currentStore.name})` : ''} *</Label>
-                <Input id="stock" type="number" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="stock">Estoque Inicial *</Label>
+                  <Input id="stock" type="number" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Categoria</Label>
+                  <Select value={formData.categoryId} onValueChange={(value) => setFormData({ ...formData, categoryId: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem categoria</SelectItem>
+                      {categories.map((cat: any) => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
                 <Input id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Galeria de Fotos</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {formData.galleryUrls.map((url, idx) => (
+                    <div key={idx} className="relative group">
+                      <img src={url} alt={`Gallery ${idx}`} className="w-full h-20 object-cover rounded" />
+                      <button 
+                        onClick={() => setFormData({ ...formData, galleryUrls: formData.galleryUrls.filter((_, i) => i !== idx) })}
+                        className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <ProductImageUpload 
+                    currentUrl={null} 
+                    onUploaded={(url) => setFormData({ ...formData, galleryUrls: [...formData.galleryUrls, url] })} 
+                    label="+"
+                    compact
+                  />
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="isActive">Produto Ativo</Label>
@@ -418,9 +566,9 @@ const LocalProductsPage: React.FC = () => {
 
         <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
           <DialogContent>
-            <DialogHeader><DialogTitle>Confirmar Exclusão</DialogTitle></DialogHeader>
-            <p className="text-muted-foreground">Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.</p>
-            <DialogFooter><Button variant="outline" onClick={() => setDeleteConfirm(null)}>Cancelar</Button><Button variant="destructive" onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>Excluir</Button></DialogFooter>
+            <DialogHeader><DialogTitle>Deseja eliminar este produto?</DialogTitle></DialogHeader>
+            <p className="text-muted-foreground">Esta ação removerá permanentemente o produto do catálogo e do estoque.</p>
+            <DialogFooter><Button variant="outline" onClick={() => setDeleteConfirm(null)}>Cancelar</Button><Button variant="destructive" onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>Eliminar</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
