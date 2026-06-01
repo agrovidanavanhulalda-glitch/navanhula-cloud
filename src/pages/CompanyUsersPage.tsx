@@ -481,10 +481,10 @@ const CompanyUsersPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Senha Temporária</Label>
+                <Label>Senha Temporária (Opcional)</Label>
                 <Input 
                   type="password"
-                  placeholder="••••••••" 
+                  placeholder="Deixe vazio para gerar automaticamente" 
                   value={createUserForm.password}
                   onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
                 />
@@ -508,26 +508,34 @@ const CompanyUsersPage = () => {
                   <p className="text-xs text-destructive mt-1">Este cargo não possui uma chave técnica válida e não pode ser usado.</p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label>Branch / Loja (Opcional)</Label>
-                <Select 
-                  value={createUserForm.branch_id}
-                  onValueChange={v => setCreateUserForm({ ...createUserForm, branch_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branches.map((b: any) => (
-                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="send_email" 
+                    checked={createUserForm.send_email}
+                    onCheckedChange={(checked) => setCreateUserForm({ ...createUserForm, send_email: !!checked })}
+                  />
+                  <Label htmlFor="send_email" className="text-sm font-normal cursor-pointer">
+                    Enviar credenciais por email (Opção A)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="show_credentials" 
+                    checked={createUserForm.show_credentials}
+                    onCheckedChange={(checked) => setCreateUserForm({ ...createUserForm, show_credentials: !!checked })}
+                  />
+                  <Label htmlFor="show_credentials" className="text-sm font-normal cursor-pointer">
+                    Mostrar credenciais agora (Opção B)
+                  </Label>
+                </div>
               </div>
             </div>
             <DialogFooter>
               <Button 
                 onClick={() => createUser.mutate()} 
+                className="w-full"
                 disabled={
                   createUser.isPending || 
                   !createUserForm.email || 
@@ -535,7 +543,63 @@ const CompanyUsersPage = () => {
                   !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '')
                 }
               >
-                {createUser.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar Utilizador'}
+                {createUser.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {createUser.isPending ? 'Criando...' : 'Criar Utilizador'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Credentials Result Dialog */}
+        <Dialog open={showResult} onOpenChange={setShowResult}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-emerald-500" />
+                Utilizador Criado com Sucesso
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-muted-foreground">
+                As credenciais abaixo podem ser usadas para acesso imediato ao sistema.
+              </p>
+              
+              <div className="space-y-3 bg-muted p-4 rounded-lg border">
+                <div className="space-y-1">
+                  <Label className="text-xs uppercase text-muted-foreground">Email</Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <code className="text-sm font-mono">{createdUserResult?.email}</code>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => {
+                      navigator.clipboard.writeText(createdUserResult?.email || '');
+                      toast.success('Email copiado');
+                    }}>
+                      <Copy className="h-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <Label className="text-xs uppercase text-muted-foreground">Senha Temporária</Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <code className="text-sm font-mono font-bold text-primary">{createdUserResult?.password}</code>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => {
+                      navigator.clipboard.writeText(createdUserResult?.password || '');
+                      toast.success('Senha copiada');
+                    }}>
+                      <Copy className="h-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2 text-xs text-amber-600 bg-amber-50 p-3 rounded border border-amber-100">
+                <Shield className="w-4 h-4 mt-0.5 shrink-0" />
+                <p>O utilizador não precisa de confirmação manual e pode fazer login imediatamente.</p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button className="w-full" onClick={() => setShowResult(false)}>
+                Concluído
               </Button>
             </DialogFooter>
           </DialogContent>
