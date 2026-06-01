@@ -162,6 +162,12 @@ class SyncManager {
         case 'STOCK_ADJUSTMENT':
           await this.syncStockAdjustment(task.payload);
           break;
+        case 'PRODUCT_UPDATE':
+          await this.syncProductUpdate(task.payload);
+          break;
+        case 'STORE_UPDATE':
+          await this.syncStoreUpdate(task.payload);
+          break;
         case 'ONBOARDING':
           await this.syncOnboarding(task.payload);
           break;
@@ -251,6 +257,34 @@ class SyncManager {
       .from('export_history')
       .insert(payload);
     if (error) throw error;
+  }
+
+  private async syncProductUpdate(payload: any) {
+    const { id, product, action } = payload;
+    if (action === 'CREATE') {
+      const { error } = await supabase.from('products').insert(product);
+      if (error) throw error;
+    } else if (action === 'UPDATE') {
+      const { error } = await supabase.from('products').update(product).eq('id', id);
+      if (error) throw error;
+    } else if (action === 'DELETE') {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
+    }
+  }
+
+  private async syncStoreUpdate(payload: any) {
+    const { id, store, action } = payload;
+    if (action === 'CREATE') {
+      const { error } = await supabase.from('stores').insert(store);
+      if (error) throw error;
+    } else if (action === 'UPDATE') {
+      const { error } = await supabase.from('stores').update(store).eq('id', id);
+      if (error) throw error;
+    } else if (action === 'DELETE') {
+      const { error } = await supabase.from('stores').delete().eq('id', id);
+      if (error) throw error;
+    }
   }
 
   getQueueStatus() {
