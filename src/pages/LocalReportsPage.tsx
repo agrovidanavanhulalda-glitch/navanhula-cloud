@@ -89,6 +89,14 @@ const LocalReportsPage: React.FC = () => {
   const [syncFilterError, setSyncFilterError] = useState<string | null>(null);
   const isInitialMount = useRef(true);
 
+  // Validação em tempo real do filtro de status
+  useEffect(() => {
+    if (!selectedSyncFilter || selectedSyncFilter === 'all') {
+      setSyncFilterError("Selecione um status válido: Pendente, Sincronizando, Sincronizado");
+    } else {
+      setSyncFilterError(null);
+    }
+  }, [selectedSyncFilter]);
 
 
   // Fetch history on mount
@@ -997,14 +1005,7 @@ const LocalReportsPage: React.FC = () => {
                     <Label htmlFor="sync-filter" className="text-xs whitespace-nowrap">Filtrar Status:</Label>
                     <Select 
                       value={selectedSyncFilter} 
-                      onValueChange={(v: any) => {
-                        setSelectedSyncFilter(v);
-                        if (!v || v === 'all') {
-                          setSyncFilterError("Selecione um status válido: Pendente, Sincronizando, Sincronizado");
-                        } else {
-                          setSyncFilterError(null);
-                        }
-                      }}
+                      onValueChange={(v: any) => setSelectedSyncFilter(v)}
                     >
                       <SelectTrigger 
                         id="sync-filter" 
