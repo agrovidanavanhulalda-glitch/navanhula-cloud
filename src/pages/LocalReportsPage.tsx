@@ -86,11 +86,17 @@ const LocalReportsPage: React.FC = () => {
     attempts?: { id: string; timestamp: Date; status: string; error_message?: string; retry_count: number }[];
   }[]>([]);
   const [selectedSyncFilter, setSelectedSyncFilter] = useState<'all' | 'pending' | 'syncing' | 'completed'>('all');
-  const [syncFilterError, setSyncFilterError] = useState<string | null>(
-    "Selecione um status válido: Pendente, Sincronizando, Sincronizado"
-  );
+  const [syncFilterError, setSyncFilterError] = useState<string | null>(null);
   const isInitialMount = useRef(true);
 
+  // Validação em tempo real do filtro de status
+  useEffect(() => {
+    if (!selectedSyncFilter || selectedSyncFilter === 'all') {
+      setSyncFilterError("Selecione um status válido: Pendente, Sincronizando, Sincronizado");
+    } else {
+      setSyncFilterError(null);
+    }
+  }, [selectedSyncFilter]);
 
 
   // Fetch history on mount
