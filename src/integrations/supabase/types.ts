@@ -957,6 +957,65 @@ export type Database = {
           },
         ]
       }
+      background_tasks: {
+        Row: {
+          attempts: number
+          company_id: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          last_error: string | null
+          max_attempts: number
+          next_retry_at: string | null
+          payload: Json
+          started_at: string | null
+          status: Database["public"]["Enums"]["task_status"]
+          task_type: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          company_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          next_retry_at?: string | null
+          payload?: Json
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          task_type: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          company_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          next_retry_at?: string | null
+          payload?: Json
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          task_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "background_tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_accounts: {
         Row: {
           account_holder: string | null
@@ -8683,6 +8742,7 @@ export type Database = {
         | "admin_adjustment"
         | "inventory_correction"
       subscription_status: "active" | "warning" | "blocked" | "cancelled"
+      task_status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "RETRY"
       voucher_status: "pending" | "redeemed" | "expired" | "cancelled"
     }
     CompositeTypes: {
@@ -8863,6 +8923,7 @@ export const Constants = {
         "inventory_correction",
       ],
       subscription_status: ["active", "warning", "blocked", "cancelled"],
+      task_status: ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "RETRY"],
       voucher_status: ["pending", "redeemed", "expired", "cancelled"],
     },
   },
