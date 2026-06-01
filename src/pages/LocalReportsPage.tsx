@@ -996,21 +996,41 @@ const LocalReportsPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="sync-filter" className="text-xs whitespace-nowrap">Filtrar Status:</Label>
-                  <Select value={selectedSyncFilter} onValueChange={(v: any) => setSelectedSyncFilter(v)}>
-                    <SelectTrigger id="sync-filter" className="h-8 w-[140px] text-xs">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os Status</SelectItem>
-                      <SelectItem value="completed">Sincronizado</SelectItem>
-                      <SelectItem value="syncing">Sincronizando</SelectItem>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="sync-filter" className="text-xs whitespace-nowrap">Filtrar Status:</Label>
+                    <Select 
+                      value={selectedSyncFilter} 
+                      onValueChange={(v: any) => {
+                        setSelectedSyncFilter(v);
+                        if (!v || v === 'all') {
+                          setSyncFilterError("Selecione um status válido: Pendente, Sincronizando, Sincronizado");
+                        } else {
+                          setSyncFilterError(null);
+                        }
+                      }}
+                    >
+                      <SelectTrigger 
+                        id="sync-filter" 
+                        className={`h-8 w-[140px] text-xs ${syncFilterError ? 'border-destructive ring-destructive' : ''}`}
+                      >
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os Status</SelectItem>
+                        <SelectItem value="completed">Sincronizado</SelectItem>
+                        <SelectItem value="syncing">Sincronizando</SelectItem>
+                        <SelectItem value="pending">Pendente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {syncFilterError && (
+                    <span className="text-[10px] text-destructive font-medium animate-in fade-in slide-in-from-top-1">
+                      {syncFilterError}
+                    </span>
+                  )}
                 </div>
-                <div className="text-[10px] text-muted-foreground">
+                <div className="text-[10px] text-muted-foreground self-center">
                   * Este filtro também será aplicado na exportação do relatório de auditoria PDF.
                 </div>
               </div>
