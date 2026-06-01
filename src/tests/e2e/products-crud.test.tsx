@@ -25,6 +25,10 @@ vi.mock('@/integrations/supabase/client', () => ({
         data: { session: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } } }, 
         error: null 
       }),
+      getUser: vi.fn().mockResolvedValue({ 
+        data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, 
+        error: null 
+      }),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
     },
     channel: vi.fn(() => ({
@@ -117,8 +121,14 @@ describe('Products CRUD E2E (Online & Offline)', () => {
       }),
     }));
 
+    (supabase.rpc as any).mockResolvedValue({ data: { success: true }, error: null });
+    
     (supabase.auth.getSession as any).mockResolvedValue({ 
       data: { session: { user: { id: TEST_USER_ID } } }, 
+      error: null 
+    });
+    (supabase.auth.getUser as any).mockResolvedValue({ 
+      data: { user: { id: TEST_USER_ID } }, 
       error: null 
     });
   });
