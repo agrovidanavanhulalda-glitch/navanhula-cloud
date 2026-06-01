@@ -8466,6 +8466,10 @@ export type Database = {
       }
       get_my_company: { Args: never; Returns: string }
       get_my_company_id: { Args: never; Returns: string }
+      get_my_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       get_my_store_id: { Args: never; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
       get_reseller_id: { Args: { _user_id: string }; Returns: string }
@@ -8514,6 +8518,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_admin_or_manager: { Args: never; Returns: boolean }
       is_ceo: { Args: never; Returns: boolean }
       is_global_ceo: { Args: never; Returns: boolean }
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
