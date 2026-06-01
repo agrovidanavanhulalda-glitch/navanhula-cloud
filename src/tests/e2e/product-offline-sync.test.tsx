@@ -118,6 +118,7 @@ describe('Product & Stock Offline Sync E2E', () => {
           if (table === 'product_stock') return Promise.resolve(cb({ data: [{ product_id: TEST_PRODUCT_ID, quantity: 50, store_id: TEST_STORE_ID }], error: null }));
           if (table === 'categories') return Promise.resolve(cb({ data: [], error: null }));
           if (table === 'inventory_movements') return Promise.resolve(cb({ data: [], error: null }));
+          if (table === 'onboarding_progress') return Promise.resolve(cb({ data: [], error: null }));
           return Promise.resolve(cb({ data: [], error: null }));
         }),
       };
@@ -135,11 +136,11 @@ describe('Product & Stock Offline Sync E2E', () => {
     const newBtn = await screen.findByText(/Novo Produto/i);
     fireEvent.click(newBtn);
     
-    // Fill form
-    fireEvent.change(screen.getByLabelText(/Nome/i), { target: { value: 'Novo Offline' } });
-    fireEvent.change(screen.getByLabelText(/Preço de Venda/i), { target: { value: '150' } });
-    fireEvent.change(screen.getByLabelText(/Preço de Custo/i), { target: { value: '100' } });
-    fireEvent.change(screen.getByLabelText(/Estoque Inicial/i), { target: { value: '10' } });
+    // Fill form by ID (more robust given complex layout)
+    fireEvent.change(document.getElementById('name')!, { target: { value: 'Novo Offline' } });
+    fireEvent.change(document.getElementById('salePrice')!, { target: { value: '150' } });
+    fireEvent.change(document.getElementById('costPrice')!, { target: { value: '100' } });
+    fireEvent.change(document.getElementById('stock')!, { target: { value: '10' } });
     
     fireEvent.click(screen.getByText(/Salvar Produto/i));
     
@@ -163,7 +164,17 @@ describe('Product & Stock Offline Sync E2E', () => {
     const adjustBtn = await screen.findByText(/Ajustar/i);
     fireEvent.click(adjustBtn);
     
-    fireEvent.change(screen.getByPlaceholderText(/0/i), { target: { value: '10' } });
+    // Find quantity input
+    const qtyInput = screen.getByPlaceholderText(/0/i);
+    fireEvent.change(qtyInput, { target: { value: '10' } });
+    
+    // Find reason select
+    const reasonSelectTrigger = screen.getByText(/Selecione o motivo/i);
+    fireEvent.click(reasonSelectTrigger);
+    
+    // Wait for the reason and select it
+    const option = await screen.findByText(/Reposição de Estoque/i);
+    fireEvent.click(option);
     
     fireEvent.click(screen.getByText(/Confirmar Ajuste/i));
     
@@ -184,8 +195,16 @@ describe('Product & Stock Offline Sync E2E', () => {
     (navigator as any).onLine = false;
     render(<AllProviders><LocalProductsPage /></AllProviders>);
     
-    const deleteBtn = await screen.findByRole('button', { name: /trash/i });
-    fireEvent.click(deleteBtn);
+    // Find the trash button within the table
+    const deleteBtns = await screen.findAllByRole('button');
+    const deleteBtn = deleteBtns.find(btn => btn.innerHTML.includes('lucide-trash'));
+    
+    if (deleteBtn) {
+      fireEvent.click(deleteBtn);
+    } else {
+      // Fallback if icon isn't found
+      fireEvent.click(screen.getAllByRole('button').find(b => b.className.includes('text-destructive'))!);
+    }
     
     await waitFor(() => {
       expect(syncManager.getTasksByType('PRODUCT_UPDATE').some(t => t.payload.action === 'DELETE')).toBe(true);
