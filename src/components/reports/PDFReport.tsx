@@ -428,13 +428,27 @@ export const exportLogsExcel = async (options: {
   const { history, stores, filters } = options;
   
   const filteredHistory = history.filter(item => {
+    // Validação básica de filtros obrigatórios
+    if (!filters || !filters.start || !filters.end) return false;
+    
+    // Validar status de reprocessamento (obrigatório se não for 'all')
+    const syncStatusFilter = filters.syncStatus || 'all';
+    if (syncStatusFilter !== 'all' && !['pending', 'syncing', 'completed'].includes(syncStatusFilter)) {
+      return false;
+    }
+
     const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
     if (itemDate < filters.start || itemDate > filters.end) return false;
     if (filters.store !== 'all' && item.filters.store !== filters.store) return false;
     if (filters.seller !== 'all' && item.filters.seller !== filters.seller) return false;
-    if (filters.syncStatus && filters.syncStatus !== 'all' && item.syncStatus !== filters.syncStatus) return false;
+    if (syncStatusFilter !== 'all' && item.syncStatus !== syncStatusFilter) return false;
     return true;
   });
+
+  if (filteredHistory.length === 0) {
+    console.warn('[Export XLSX] Nenhum registro encontrado com os filtros selecionados');
+    return;
+  }
 
   const data = filteredHistory.flatMap(item => {
     const baseInfo = {
