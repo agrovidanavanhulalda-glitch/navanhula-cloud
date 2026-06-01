@@ -80,7 +80,7 @@ const PurchaseOrderDetail: React.FC<PurchaseOrderDetailProps> = ({ orderId, open
   }, [open, orderId]);
 
   const loadProducts = async () => {
-    const { data } = await supabase.from('products').select('id, name, cost_price, sale_price').eq('is_active', true).order('name');
+    const { data } = await supabase.from('products').select('id, name, cost_price, sale_price').eq('is_active', true).neq('status', 'deleted').order('name');
     if (data) setProducts(data);
   };
 
