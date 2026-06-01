@@ -178,13 +178,14 @@ const LocalProductsPage: React.FC = () => {
     const productData = {
       name: formData.name.trim(),
       code: formData.code.trim() || undefined,
-      cost_price: costPrice,
-      sale_price: salePrice,
-      is_active: formData.isActive,
-      image_url: formData.imageUrl,
-      gallery_urls: formData.galleryUrls,
+      costPrice,
+      salePrice,
+      stock,
+      isActive: formData.isActive,
+      imageUrl: formData.imageUrl,
+      galleryUrls: formData.galleryUrls,
       description: formData.description.trim() || undefined,
-      category_id: formData.categoryId || null,
+      categoryId: formData.categoryId || null,
     };
 
     try {
