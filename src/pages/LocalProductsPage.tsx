@@ -566,9 +566,9 @@ const LocalProductsPage: React.FC = () => {
 
         <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
           <DialogContent>
-            <DialogHeader><DialogTitle>Confirmar Exclusão</DialogTitle></DialogHeader>
-            <p className="text-muted-foreground">Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.</p>
-            <DialogFooter><Button variant="outline" onClick={() => setDeleteConfirm(null)}>Cancelar</Button><Button variant="destructive" onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>Excluir</Button></DialogFooter>
+            <DialogHeader><DialogTitle>Deseja eliminar este produto?</DialogTitle></DialogHeader>
+            <p className="text-muted-foreground">Esta ação removerá permanentemente o produto do catálogo e do estoque.</p>
+            <DialogFooter><Button variant="outline" onClick={() => setDeleteConfirm(null)}>Cancelar</Button><Button variant="destructive" onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>Eliminar</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
