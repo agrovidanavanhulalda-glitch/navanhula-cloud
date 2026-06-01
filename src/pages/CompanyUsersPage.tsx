@@ -141,7 +141,7 @@ const CompanyUsersPage = () => {
     onError: (e: any) => toast.error('Erro ao convidar: ' + e.message),
   });
 
-  // Create user via Auth API
+  // Create user via Edge Function (Revised Flow)
   const createUser = useMutation({
     mutationFn: async () => {
       const email = createUserForm.email.trim().toLowerCase();
@@ -150,42 +150,50 @@ const CompanyUsersPage = () => {
       const branchId = createUserForm.branch_id || null;
       
       if (!email) throw new Error('O email é obrigatório');
-      if (!password || password.length < 6) throw new Error('Senha deve ter pelo menos 6 caracteres');
       if (!name) throw new Error('O nome é obrigatório');
       if (!createUserForm.role_id) throw new Error('O cargo é obrigatório');
 
       const selectedRole = roles.find(r => r.id === createUserForm.role_id);
-      
-      // FORÇAR USO DA ROLE KEY TÉCNICA (seller/manager/admin)
       const roleKey = selectedRole?.key?.toLowerCase();
       
       if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
-        throw new Error(`Cargo técnico inválido: "${roleKey || 'não definido'}". Selecione um cargo válido.`);
+        throw new Error(`Cargo técnico inválido. Selecione um cargo válido.`);
       }
       
-      // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser automaticamente
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-            company_id: companyId,
-            branch_id: branchId,
-            role: roleKey, // Envia sempre a key técnica
-            actor_id: user?.id // Para auditoria detalhada
-          }
+      const { data, error } = await supabase.functions.invoke('manage-team-member', {
+        body: {
+          email,
+          full_name: name,
+          role: roleKey,
+          branch_id: branchId,
+          password: password || undefined,
+          send_email: createUserForm.send_email
         }
       });
 
-      if (authError) throw authError;
-      return { success: true };
+      if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
-      toast.success('Utilizador criado. Ele deve verificar o email para activar a conta.');
+      
+      if (createUserForm.show_credentials) {
+        setCreatedUserResult({ email: data.email, password: data.password });
+        setShowResult(true);
+      } else {
+        toast.success('Utilizador criado com sucesso!');
+      }
+
       setShowCreateUser(false);
-      setCreateUserForm({ full_name: '', email: '', role_id: '', password: '', branch_id: '' });
+      setCreateUserForm({ 
+        full_name: '', 
+        email: '', 
+        role_id: '', 
+        password: '', 
+        branch_id: '',
+        send_email: false,
+        show_credentials: true
+      });
     },
     onError: (e: any) => toast.error('Erro ao criar utilizador: ' + e.message),
   });
