@@ -8228,6 +8228,7 @@ export type Database = {
         }
         Returns: Json
       }
+      current_company_id: { Args: never; Returns: string }
       decrement_product_stock: {
         Args: { p_product_id: string; p_quantity: number; p_store_id: string }
         Returns: undefined
