@@ -85,7 +85,6 @@ const LocalProductsPage: React.FC = () => {
   const [deleteZeroStockLoading, setDeleteZeroStockLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { company } = useAuth();
 
   // Form state
   const [formData, setFormData] = useState({
