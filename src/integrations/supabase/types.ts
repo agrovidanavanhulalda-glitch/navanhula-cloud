@@ -8652,6 +8652,7 @@ export type Database = {
         }
         Returns: Json
       }
+      restore_product: { Args: { p_product_id: string }; Returns: boolean }
       run_stock_reconciliation: {
         Args: { p_salesman_id: string }
         Returns: Json
