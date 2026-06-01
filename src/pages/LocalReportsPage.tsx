@@ -86,7 +86,9 @@ const LocalReportsPage: React.FC = () => {
     attempts?: { id: string; timestamp: Date; status: string; error_message?: string; retry_count: number }[];
   }[]>([]);
   const [selectedSyncFilter, setSelectedSyncFilter] = useState<'all' | 'pending' | 'syncing' | 'completed'>('all');
-  const [syncFilterError, setSyncFilterError] = useState<string | null>(null);
+  const [syncFilterError, setSyncFilterError] = useState<string | null>(
+    "Selecione um status válido: Pendente, Sincronizando, Sincronizado"
+  );
   const isInitialMount = useRef(true);
 
 
