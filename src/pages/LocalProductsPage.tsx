@@ -41,7 +41,7 @@ import PageTransition from '@/components/layout/PageTransition';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 const LocalProductsPage: React.FC = () => {
-  const { addProduct, updateProduct, deleteProduct, currentStore } = useLocalPOS();
+  const { addProduct, updateProduct, deleteProduct, currentStore, refreshData } = useLocalPOS();
   const { updateStep } = useOnboarding();
   const { isAdmin } = usePermissions();
 
