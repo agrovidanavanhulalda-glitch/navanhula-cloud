@@ -47,7 +47,8 @@ export function useProducts(options: {
           product_stock(*),
           categories(name)
         `, { count: 'exact' })
-        .eq('company_id', company.id);
+        .eq('company_id', company.id)
+        .neq('status', 'deleted');
 
       if (searchTerm) {
         query = query.or(`name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%`);
