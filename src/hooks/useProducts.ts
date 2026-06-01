@@ -43,7 +43,8 @@ export function useProducts(options: {
         .from('products')
         .select(`
           *,
-          product_stock(*)
+          product_stock(*),
+          categories(name)
         `, { count: 'exact' })
         .eq('company_id', company.id);
 
