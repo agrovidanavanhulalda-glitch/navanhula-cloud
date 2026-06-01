@@ -139,7 +139,7 @@ describe('Products CRUD E2E (Online & Offline)', () => {
     const newBtn = await screen.findByText(/Novo Produto/i);
     fireEvent.click(newBtn);
     
-    fireEvent.change(screen.getByPlaceholderText(/Nome do produto/i), { target: { value: 'Produto Teste Online' } });
+    fireEvent.change(await screen.findByPlaceholderText(/Nome do produto/i), { target: { value: 'Produto Teste Online' } });
     fireEvent.change(screen.getByLabelText(/Preço de Compra/i), { target: { value: '50' } });
     fireEvent.change(screen.getByLabelText(/Preço de Venda/i), { target: { value: '100' } });
     fireEvent.change(screen.getByLabelText(/Estoque Inicial/i), { target: { value: '10' } });
@@ -159,7 +159,7 @@ describe('Products CRUD E2E (Online & Offline)', () => {
     const newBtn = await screen.findByText(/Novo Produto/i);
     fireEvent.click(newBtn);
     
-    fireEvent.change(screen.getByPlaceholderText(/Nome do produto/i), { target: { value: 'Produto Teste Offline' } });
+    fireEvent.change(await screen.findByPlaceholderText(/Nome do produto/i), { target: { value: 'Produto Teste Offline' } });
     fireEvent.change(screen.getByLabelText(/Preço de Compra/i), { target: { value: '50' } });
     fireEvent.change(screen.getByLabelText(/Preço de Venda/i), { target: { value: '100' } });
     fireEvent.change(screen.getByLabelText(/Estoque Inicial/i), { target: { value: '10' } });
@@ -214,7 +214,7 @@ describe('Products CRUD E2E (Online & Offline)', () => {
     const editBtn = await screen.findByRole('button', { name: /pencil/i });
     fireEvent.click(editBtn);
     
-    fireEvent.change(screen.getByPlaceholderText(/Nome do produto/i), { target: { value: 'Existente Editado' } });
+    fireEvent.change(await screen.findByPlaceholderText(/Nome do produto/i), { target: { value: 'Existente Editado' } });
     fireEvent.click(screen.getByText(/Salvar Alterações/i));
     
     await screen.findByText(/Alterações salvas localmente/i);
