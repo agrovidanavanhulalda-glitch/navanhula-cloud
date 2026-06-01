@@ -142,7 +142,9 @@ const LocalProductsPage: React.FC = () => {
       stock: product.stock.toString(),
       isActive: product.isActive,
       imageUrl: product.imageUrl || null,
+      galleryUrls: product.galleryUrls || [],
       description: product.description || '',
+      categoryId: product.categoryId || '',
     });
     setEditingProduct(product);
     setShowForm(true);
