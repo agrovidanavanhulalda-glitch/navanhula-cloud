@@ -285,21 +285,34 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addProduct = async (p: any) => {
     const { data, error } = await supabase.from('products').insert({ ...p, company_id: company?.id }).select().single();
-    if (error) return false;
+    if (error) {
+      toast.error('Erro ao adicionar produto: ' + error.message);
+      return false;
+    }
+    toast.success('Produto adicionado com sucesso');
     await loadData(true);
     return true;
   };
 
   const updateProduct = async (id: string, p: any) => {
     const { error } = await supabase.from('products').update(p).eq('id', id);
-    if (error) return false;
+    if (error) {
+      toast.error('Erro ao atualizar produto: ' + error.message);
+      return false;
+    }
+    toast.success('Produto atualizado com sucesso');
     await loadData(true);
     return true;
   };
 
   const deleteProduct = async (id: string) => {
-    const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id);
-    if (error) return false;
+    // Physical delete as requested
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) {
+      toast.error('Erro ao eliminar produto: ' + error.message);
+      return false;
+    }
+    toast.success('Produto eliminado com sucesso');
     await loadData(true);
     return true;
   };
