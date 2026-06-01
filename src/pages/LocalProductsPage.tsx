@@ -386,14 +386,25 @@ const LocalProductsPage: React.FC = () => {
                           transform: `translateY(${virtualRow.start}px)` 
                         }}
                       >
-                        <td className="p-4 w-24"><code className="text-xs bg-muted px-1.5 py-0.5 rounded truncate block">{product.code || '---'}</code></td>
+                        <td className="p-4 w-16">
+                          {product.imageUrl ? (
+                            <img src={product.imageUrl} alt={product.name} className="w-10 h-10 object-cover rounded" />
+                          ) : (
+                            <div className="w-10 h-10 bg-muted flex items-center justify-center rounded">
+                              <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-4 w-32"><code className="text-xs bg-muted px-1.5 py-0.5 rounded truncate block">{product.code || '---'}</code></td>
                         <td className="p-4 flex-1 min-w-0"><div className="font-medium truncate">{product.name}</div></td>
+                        <td className="p-4 w-32 text-right">
+                          <Badge variant={product.stock <= 0 ? "destructive" : product.stock <= 10 ? "secondary" : "outline"}>
+                            {product.stock}
+                          </Badge>
+                        </td>
                         <td className="p-4 w-32 text-right text-muted-foreground">{formatCurrency(product.costPrice)}</td>
                         <td className="p-4 w-32 text-right font-medium">{formatCurrency(product.salePrice)}</td>
-                        <td className="p-4 w-24 text-right"><Badge variant="secondary">{calculateMargin(product.costPrice, product.salePrice)}%</Badge></td>
-                        <td className="p-4 w-24 text-right">
-                          <span className={product.stock <= 10 ? 'text-destructive font-medium' : ''}>{product.stock}</span>
-                        </td>
+                        <td className="p-4 w-32 truncate">{product.categoryName}</td>
                         <td className="p-4 w-28 text-center"><Badge variant={product.isActive ? 'default' : 'secondary'}>{product.isActive ? 'Ativo' : 'Inativo'}</Badge></td>
                         <td className="p-4 w-28">
                           <div className="flex items-center justify-center gap-2">
