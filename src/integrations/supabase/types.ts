@@ -5092,6 +5092,33 @@ export type Database = {
           },
         ]
       }
+      product_logs: {
+        Row: {
+          action: string
+          company_id: string | null
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       product_stock: {
         Row: {
           company_id: string | null
@@ -5166,6 +5193,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           dimensions: Json | null
+          gallery_urls: string[] | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -5195,6 +5223,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           dimensions?: Json | null
+          gallery_urls?: string[] | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -5224,6 +5253,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           dimensions?: Json | null
+          gallery_urls?: string[] | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
