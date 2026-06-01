@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { isValidId, sanitizeId } from '@/lib/uuid';
+import { syncManager } from '@/lib/syncQueue';
 
 export interface LocalProduct {
   id: string;
