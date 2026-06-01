@@ -363,12 +363,13 @@ const LocalProductsPage: React.FC = () => {
               <table className="w-full relative border-collapse">
                 <thead className="bg-muted/50 sticky top-0 z-10">
                   <tr>
-                    <th className="text-left p-4 font-medium w-24 bg-muted/50">SKU</th>
-                    <th className="text-left p-4 font-medium bg-muted/50">Produto</th>
+                    <th className="text-left p-4 font-medium w-16 bg-muted/50">Img</th>
+                    <th className="text-left p-4 font-medium w-32 bg-muted/50">SKU</th>
+                    <th className="text-left p-4 font-medium bg-muted/50">Nome</th>
+                    <th className="text-right p-4 font-medium w-32 bg-muted/50">Estoque</th>
                     <th className="text-right p-4 font-medium w-32 bg-muted/50">Compra</th>
                     <th className="text-right p-4 font-medium w-32 bg-muted/50">Venda</th>
-                    <th className="text-right p-4 font-medium w-24 bg-muted/50">Margem</th>
-                    <th className="text-right p-4 font-medium w-24 bg-muted/50">Estoque</th>
+                    <th className="text-left p-4 font-medium w-32 bg-muted/50">Categoria</th>
                     <th className="text-center p-4 font-medium w-28 bg-muted/50">Status</th>
                     <th className="text-center p-4 font-medium w-28 bg-muted/50">Ações</th>
                   </tr>
