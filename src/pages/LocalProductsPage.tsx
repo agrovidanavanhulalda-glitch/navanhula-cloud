@@ -448,7 +448,7 @@ const LocalProductsPage: React.FC = () => {
                         <td className="p-4 w-32 text-right font-medium">{formatCurrency(product.salePrice)}</td>
                         <td className="p-4 w-32 truncate">{product.categoryName}</td>
                         <td className="p-4 w-28 text-center">
-                          <Badge variant={product.id.includes('deleted') || showDeleted ? 'destructive' : product.isActive ? 'default' : 'secondary'}>
+                          <Badge variant={showDeleted ? 'destructive' : product.isActive ? 'default' : 'secondary'}>
                             {showDeleted ? 'Eliminado' : product.isActive ? 'Ativo' : 'Inativo'}
                           </Badge>
                         </td>
