@@ -119,7 +119,9 @@ const LocalProductsPage: React.FC = () => {
       stock: '',
       isActive: true,
       imageUrl: null,
+      galleryUrls: [],
       description: '',
+      categoryId: '',
     });
     setEditingProduct(null);
   };
