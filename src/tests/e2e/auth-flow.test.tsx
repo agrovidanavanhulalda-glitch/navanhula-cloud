@@ -111,7 +111,7 @@ describe('Auth & User Creation E2E Flows', () => {
     // Fill the form
     fireEvent.change(screen.getByPlaceholderText(/João Silva/i), { target: { value: 'Novo User' } });
     fireEvent.change(screen.getByPlaceholderText(/joao@exemplo.com/i), { target: { value: 'novo@test.com' } });
-    fireEvent.change(screen.getByPlaceholderText(/••••••••/i), { target: { value: 'Password123!' } });
+    fireEvent.change(screen.getByLabelText(/Senha Temporária/i), { target: { value: 'Password123!' } });
 
     // Select Role
     const roleSelect = screen.getByText(/Selecione o cargo/i);

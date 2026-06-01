@@ -112,7 +112,7 @@ describe('Role Enforcement E2E Tests', () => {
     // Fill the form
     fireEvent.change(screen.getByPlaceholderText(/João Silva/i), { target: { value: 'Novo Vendedor' } });
     fireEvent.change(screen.getByPlaceholderText(/joao@exemplo.com/i), { target: { value: 'vendedor@test.com' } });
-    fireEvent.change(screen.getByPlaceholderText(/••••••••/i), { target: { value: 'Password123!' } });
+    fireEvent.change(screen.getByLabelText(/Senha Temporária/i), { target: { value: 'Password123!' } });
 
     // Select Role "Vendedor" (should map to "seller")
     const roleSelect = screen.getByText(/Selecione o cargo/i);
