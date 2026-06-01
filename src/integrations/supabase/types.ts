@@ -1070,6 +1070,39 @@ export type Database = {
           },
         ]
       }
+      bootstrap_logs: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          message: string | null
+          metadata: Json | null
+          status: string
+          step: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          status: string
+          step: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          status?: string
+          step?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       branch_stock_transfers: {
         Row: {
           company_id: string | null
