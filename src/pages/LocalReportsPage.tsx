@@ -980,7 +980,7 @@ const LocalReportsPage: React.FC = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="text-xs h-8 flex items-center gap-1"
+                    className={`text-xs h-8 flex items-center gap-1 ${(!selectedSyncFilter || selectedSyncFilter === 'all') ? 'opacity-50 cursor-not-allowed' : ''}`}
                     onClick={() => {
                       if (!selectedSyncFilter || selectedSyncFilter === 'all') {
                         setShowSyncError(true);
