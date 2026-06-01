@@ -326,6 +326,10 @@ const LocalProductsPage: React.FC = () => {
               {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
               Importar Excel
             </Button>
+            <Button variant="destructive" onClick={handleDeleteZeroStock} disabled={deleteZeroStockLoading}>
+              {deleteZeroStockLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash className="w-4 h-4 mr-2" />}
+              Eliminar Estoque Zero
+            </Button>
             <Button onClick={handleNewProduct}>
               <Plus className="w-4 h-4 mr-2" />
               Novo Produto
