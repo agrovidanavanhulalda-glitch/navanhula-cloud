@@ -263,16 +263,16 @@ class SyncManager {
     const { id, product, action } = payload;
     if (action === 'CREATE') {
       const result = await supabase.from('products').insert(product);
-      if (result.error) throw result.error;
+      if (result && (result as any).error) throw (result as any).error;
     } else if (action === 'UPDATE') {
       const result = await supabase.from('products').update(product).eq('id', id);
-      if (result.error) throw result.error;
+      if (result && (result as any).error) throw (result as any).error;
     } else if (action === 'DELETE') {
       const result = await supabase
         .from('products')
         .update({ status: 'deleted', deleted_at: new Date().toISOString() })
         .eq('id', id);
-      if (result.error) throw result.error;
+      if (result && (result as any).error) throw (result as any).error;
     }
   }
 
