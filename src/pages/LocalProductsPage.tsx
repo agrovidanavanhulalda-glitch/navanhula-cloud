@@ -464,15 +464,40 @@ const LocalProductsPage: React.FC = () => {
               </div>
             )}
 
-            {totalPages > 1 && (
-              <div className="p-4 border-t flex items-center justify-between bg-muted/20">
-                <p className="text-xs text-muted-foreground">Página {page + 1} de {totalPages} ({totalCount} produtos)</p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>Anterior</Button>
-                  <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>Próximo</Button>
-                </div>
+          {totalCount > pageSize && (
+            <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/5 mt-auto">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {Math.min(mappedProducts.length, pageSize)} de {totalCount} produtos
               </div>
-            )}
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setPage(p => Math.max(0, p - 1));
+                    parentRef.current?.scrollTo(0, 0);
+                  }}
+                  disabled={page === 0 || productsLoading}
+                >
+                  Anterior
+                </Button>
+                <div className="text-sm font-medium min-w-[100px] text-center">
+                  Página {page + 1} de {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setPage(p => p + 1);
+                    parentRef.current?.scrollTo(0, 0);
+                  }}
+                  disabled={page >= totalPages - 1 || productsLoading}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          )}
           </Card>
         )}
 
