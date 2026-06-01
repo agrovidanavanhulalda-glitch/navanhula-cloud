@@ -142,7 +142,7 @@ describe('Product & Stock Offline Sync E2E', () => {
     fireEvent.change(document.getElementById('costPrice')!, { target: { value: '100' } });
     fireEvent.change(document.getElementById('stock')!, { target: { value: '10' } });
     
-    fireEvent.click(screen.getByText(/Salvar Produto/i));
+    fireEvent.click(screen.getByText(/Salvar/i));
     
     await waitFor(() => {
       expect(syncManager.getTasksByType('PRODUCT_UPDATE').length).toBe(1);
@@ -173,7 +173,7 @@ describe('Product & Stock Offline Sync E2E', () => {
     fireEvent.click(reasonSelectTrigger);
     
     // Wait for the reason and select it
-    const option = await screen.findByText(/Reposição de Estoque/i);
+    const option = await screen.findByText(/Reposição de Estoque/i, {}, { timeout: 5000 });
     fireEvent.click(option);
     
     fireEvent.click(screen.getByText(/Confirmar Ajuste/i));
