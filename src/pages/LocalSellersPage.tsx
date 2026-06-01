@@ -64,7 +64,7 @@ const LocalSellersPage: React.FC = () => {
     name: '',
     email: '',
     role: 'seller' as 'admin' | 'seller',
-    storeId: currentStore.id,
+    storeId: currentStore?.id || '',
     password: '123456',
     isActive: true,
   });
@@ -101,7 +101,7 @@ const LocalSellersPage: React.FC = () => {
       name: '',
       email: '',
       role: 'seller',
-      storeId: currentStore.id,
+      storeId: currentStore?.id || '',
       password: '123456',
       isActive: true,
     });
