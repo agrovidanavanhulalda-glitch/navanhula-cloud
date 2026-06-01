@@ -25,10 +25,15 @@ import {
   AlertTriangle,
   Loader2,
   FileSpreadsheet,
+  Image as ImageIcon,
+  History,
+  Trash
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import ProductImageUpload from '@/components/products/ProductImageUpload';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import * as XLSX from 'xlsx';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { SkeletonTable } from '@/components/ui/skeleton-card';
