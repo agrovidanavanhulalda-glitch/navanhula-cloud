@@ -50,7 +50,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 const LocalProductsPage: React.FC = () => {
   const { company } = useAuth();
-  const { addProduct, updateProduct, deleteProduct, currentStore, refreshData } = useLocalPOS();
+  const { addProduct, updateProduct, deleteProduct, restoreProduct, currentStore, refreshData } = useLocalPOS();
   const { updateStep } = useOnboarding();
   const { isAdmin } = usePermissions();
 
@@ -58,6 +58,7 @@ const LocalProductsPage: React.FC = () => {
   const debouncedSearch = useDebounce(searchTerm, 400);
   const [page, setPage] = useState(0);
   const pageSize = 50;
+  const [showDeleted, setShowDeleted] = useState(false);
   
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -65,7 +66,8 @@ const LocalProductsPage: React.FC = () => {
     searchTerm: debouncedSearch,
     page,
     pageSize,
-    storeId: currentStore?.id
+    storeId: currentStore?.id,
+    includeDeleted: showDeleted
   });
 
   const { data: categories = [] } = useQuery({
@@ -243,23 +245,17 @@ const LocalProductsPage: React.FC = () => {
     
     setDeleteZeroStockLoading(true);
     try {
-      // Physical delete for products with zero stock in ANY store? 
-      // The request says "DELETE FROM products WHERE stock_quantity = 0;"
-      // But stock is in product_stock. I'll delete products where total stock is 0.
-      
-      const { data: zeroStockProducts, error: fetchError } = await supabase
+      // Find products that have zero stock across all stores
+      // First, get all products
+      const { data: allProducts, error: fetchError } = await supabase
         .from('products')
         .select('id')
-        .eq('company_id', company.id);
+        .eq('company_id', company.id)
+        .neq('status', 'deleted');
 
       if (fetchError) throw fetchError;
 
-      // Filter products that have zero stock across all stores
-      // Actually, it might be simpler to just join or use a subquery if possible, 
-      // but Supabase's delete doesn't support complex joins easily.
-      
-      // Let's use a RPC or a raw query if we can, but I'll stick to a safer approach.
-      // First, get products that HAVE stock > 0
+      // Get products that HAVE stock > 0
       const { data: stockedProducts } = await supabase
         .from('product_stock')
         .select('product_id')
@@ -267,7 +263,7 @@ const LocalProductsPage: React.FC = () => {
         .eq('company_id', company.id);
       
       const stockedIds = new Set(stockedProducts?.map(p => p.product_id) || []);
-      const allProductIds = zeroStockProducts?.map(p => p.id) || [];
+      const allProductIds = allProducts?.map(p => p.id) || [];
       const toDelete = allProductIds.filter(id => !stockedIds.has(id));
 
       if (toDelete.length === 0) {
@@ -275,19 +271,26 @@ const LocalProductsPage: React.FC = () => {
         return;
       }
 
-      const { count, error } = await supabase
-        .from('products')
-        .delete()
-        .in('id', toDelete);
+      // Use the deleteProduct from context which handles soft delete
+      let count = 0;
+      for (const id of toDelete) {
+        const success = await deleteProduct(id);
+        if (success) count++;
+      }
 
-      if (error) throw error;
-
-      toast.success(`${toDelete.length} produtos removidos com sucesso`);
+      toast.success(`${count} produtos removidos com sucesso`);
       refreshData();
     } catch (error: any) {
       toast.error('Erro ao remover produtos: ' + error.message);
     } finally {
       setDeleteZeroStockLoading(false);
+    }
+  };
+
+  const handleRestore = async (id: string) => {
+    const success = await restoreProduct(id);
+    if (success) {
+      refreshData();
     }
   };
 
@@ -381,6 +384,14 @@ const LocalProductsPage: React.FC = () => {
             }}
             className="pl-10 max-w-md"
           />
+          <div className="flex items-center gap-2 ml-auto">
+            <Label htmlFor="show-deleted" className="text-sm text-muted-foreground">Mostrar Eliminados</Label>
+            <Switch 
+              id="show-deleted" 
+              checked={showDeleted} 
+              onCheckedChange={setShowDeleted} 
+            />
+          </div>
         </div>
 
         {productsLoading ? (
@@ -436,11 +447,24 @@ const LocalProductsPage: React.FC = () => {
                         <td className="p-4 w-32 text-right text-muted-foreground">{formatCurrency(product.costPrice)}</td>
                         <td className="p-4 w-32 text-right font-medium">{formatCurrency(product.salePrice)}</td>
                         <td className="p-4 w-32 truncate">{product.categoryName}</td>
-                        <td className="p-4 w-28 text-center"><Badge variant={product.isActive ? 'default' : 'secondary'}>{product.isActive ? 'Ativo' : 'Inativo'}</Badge></td>
+                        <td className="p-4 w-28 text-center">
+                          <Badge variant={showDeleted ? 'destructive' : product.isActive ? 'default' : 'secondary'}>
+                            {showDeleted ? 'Eliminado' : product.isActive ? 'Ativo' : 'Inativo'}
+                          </Badge>
+                        </td>
                         <td className="p-4 w-28">
                           <div className="flex items-center justify-center gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleEdit(product)}><Pencil className="w-4 h-4" /></Button>
-                            <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteConfirm(product.id)}><Trash2 className="w-4 h-4" /></Button>
+                            {showDeleted ? (
+                              <Button variant="outline" size="sm" onClick={() => handleRestore(product.id)} className="gap-1">
+                                <History className="w-4 h-4" />
+                                Restaurar
+                              </Button>
+                            ) : (
+                              <>
+                                <Button variant="ghost" size="sm" onClick={() => handleEdit(product)}><Pencil className="w-4 h-4" /></Button>
+                                <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteConfirm(product.id)}><Trash2 className="w-4 h-4" /></Button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>

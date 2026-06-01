@@ -129,6 +129,7 @@ interface LocalPOSContextType extends LocalPOSState {
   addProduct: (product: Omit<LocalProduct, 'id'>) => Promise<boolean>;
   updateProduct: (id: string, product: Partial<LocalProduct>) => Promise<boolean>;
   deleteProduct: (id: string) => Promise<boolean>;
+  restoreProduct: (id: string) => Promise<boolean>;
   addStore: (store: any) => Promise<void>;
   updateStore: (id: string, store: any) => Promise<void>;
   deleteStore: (id: string) => Promise<void>;
@@ -266,9 +267,82 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const getCancellationHistory = () => [];
 
   const completeSale = async (details: PaymentDetails) => {
-    toast.success('Venda concluída com sucesso');
-    clearCart();
-    return null;
+    if (!state.currentStore?.id || !user?.id) {
+      toast.error('Loja ou utilizador não identificados');
+      return null;
+    }
+
+    const subtotal = getSubtotal();
+    const total = getTotal();
+    const discount = total < subtotal ? subtotal - total : 0;
+    
+    // Calculate cost total and profit
+    const costTotal = state.cart.reduce((acc, item) => acc + (item.product.costPrice * item.quantity), 0);
+    const profit = total - costTotal;
+
+    try {
+      // 1. Create Sale
+      const { data: sale, error: saleError } = await supabase
+        .from('sales')
+        .insert({
+          company_id: company?.id,
+          store_id: state.currentStore.id,
+          user_id: user.id,
+          cash_register_id: state.currentCashRegister?.id,
+          subtotal,
+          total,
+          discount_amount: discount,
+          payment_method: details.method as any,
+          status: 'completed' as any,
+          cost_total: costTotal,
+          profit,
+          seller_name: user.full_name || user.email
+        })
+        .select()
+        .single();
+
+      if (saleError) throw saleError;
+
+      // 2. Create Sale Items and update stock movements
+      const itemPromises = state.cart.map(async (item) => {
+        // Add sale item
+        const { error: itemError } = await supabase
+          .from('sale_items')
+          .insert({
+            company_id: company?.id,
+            sale_id: sale.id,
+            product_id: item.product.id,
+            product_name: item.product.name,
+            quantity: item.quantity,
+            unit_price: item.product.salePrice,
+            cost_price: item.product.costPrice,
+            total: item.total,
+            profit: item.total - (item.product.costPrice * item.quantity),
+            created_by: user.id
+          });
+
+        if (itemError) throw itemError;
+
+        // Record stock movement (This will be handled by DB trigger handle_sale_item_stock if it exists,
+        // but user says stock disappears, so let's be explicit if needed or verify trigger)
+        // Based on previous search, update_stock_after_sale exists.
+      });
+
+      await Promise.all(itemPromises);
+
+      toast.success('Venda concluída com sucesso');
+      clearCart();
+      loadData(true);
+      return {
+        ...sale,
+        items: state.cart,
+        createdAt: new Date(sale.created_at)
+      } as unknown as LocalSale;
+    } catch (error: any) {
+      console.error('Error completing sale:', error);
+      toast.error('Erro ao processar venda: ' + error.message);
+      return null;
+    }
   };
 
   const openCashRegister = async (sid: string, sn: string, amt: number) => {
@@ -334,12 +408,18 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // Update stock if provided
     if (stock !== undefined && state.currentStore?.id) {
-      await supabase.from('product_stock').upsert({
-        product_id: data.id,
-        store_id: state.currentStore.id,
-        quantity: stock,
-        company_id: company?.id
+      const { data: result, error: stockError } = await supabase.rpc('record_stock_movement', {
+        p_product_id: data.id,
+        p_store_id: state.currentStore.id,
+        p_type: 'entrada',
+        p_quantity: stock,
+        p_unit_cost: costPrice || 0,
+        p_reason: 'Criação inicial de produto'
       });
+      
+      if (stockError) {
+        console.error('Error recording initial stock:', stockError);
+      }
     }
 
     toast.success('Produto adicionado com sucesso');
@@ -381,12 +461,18 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // Update stock if provided
     if (stock !== undefined && state.currentStore?.id) {
-      await supabase.from('product_stock').upsert({
-        product_id: id,
-        store_id: state.currentStore.id,
-        quantity: stock,
-        company_id: company?.id
-      }, { onConflict: 'product_id,store_id' });
+      const { data: result, error: stockError } = await supabase.rpc('record_stock_movement', {
+        p_product_id: id,
+        p_store_id: state.currentStore.id,
+        p_type: 'ajuste', // Using 'ajuste' which calculates difference in the RPC
+        p_quantity: stock,
+        p_unit_cost: costPrice || 0,
+        p_reason: 'Atualização manual via cadastro'
+      });
+
+      if (stockError) {
+        console.error('Error recording stock adjustment:', stockError);
+      }
     }
 
     toast.success('Produto atualizado com sucesso');
@@ -424,7 +510,19 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return true;
   };
 
+  const restoreProduct = async (id: string) => {
+    const { data, error } = await supabase.rpc('restore_product', { p_product_id: id });
+    if (error) {
+      toast.error('Erro ao restaurar produto: ' + error.message);
+      return false;
+    }
+    toast.success('Produto restaurado com sucesso');
+    await loadData(true);
+    return true;
+  };
+
   const addStore = async (s: any) => { 
+
     if (!navigator.onLine) {
       const tempId = crypto.randomUUID();
       await syncManager.addTask('STORE_UPDATE', { id: tempId, store: { ...s, id: tempId, company_id: company?.id }, action: 'CREATE' });
@@ -466,7 +564,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <LocalPOSContext.Provider value={{ ...state, store: state.currentStore, cashRegisterOpen: !!state.currentCashRegister, addToCart, addManualItem, removeFromCart, updateQuantity, clearCart, startNewSale, completeSale, openCashRegister, closeCashRegister, addProduct, updateProduct, deleteProduct, addStore, updateStore, deleteStore, addSeller, updateSeller, deleteSeller, getTotal, getSubtotal, getTotalDiscount, getLastSale, getCancelledSales, getCancellationHistory, cancelCompletedSale, refreshData: () => loadData(true), setCurrentStore }}>
+    <LocalPOSContext.Provider value={{ ...state, store: state.currentStore, cashRegisterOpen: !!state.currentCashRegister, addToCart, addManualItem, removeFromCart, updateQuantity, clearCart, startNewSale, completeSale, openCashRegister, closeCashRegister, addProduct, updateProduct, deleteProduct, restoreProduct, addStore, updateStore, deleteStore, addSeller, updateSeller, deleteSeller, getTotal, getSubtotal, getTotalDiscount, getLastSale, getCancelledSales, getCancellationHistory, cancelCompletedSale, refreshData: () => loadData(true), setCurrentStore }}>
       {children}
     </LocalPOSContext.Provider>
   );

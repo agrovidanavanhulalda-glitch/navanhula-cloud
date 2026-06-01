@@ -27,13 +27,14 @@ export function useProducts(options: {
   searchTerm?: string, 
   page?: number,
   pageSize?: number,
-  storeId?: string 
+  storeId?: string,
+  includeDeleted?: boolean
 } = {}) {
   const { company } = useAuth();
-  const { searchTerm = '', page = 0, pageSize = 50, storeId } = options;
+  const { searchTerm = '', page = 0, pageSize = 50, storeId, includeDeleted = false } = options;
 
   return useQuery({
-    queryKey: ['products', company?.id, storeId, searchTerm, page, pageSize],
+    queryKey: ['products', company?.id, storeId, searchTerm, page, pageSize, includeDeleted],
     queryFn: async () => {
       if (!isValidId(company?.id)) return { data: [], count: 0 };
 
@@ -47,8 +48,13 @@ export function useProducts(options: {
           product_stock(*),
           categories(name)
         `, { count: 'exact' })
-        .eq('company_id', company.id)
-        .neq('status', 'deleted');
+        .eq('company_id', company.id);
+      
+      if (!includeDeleted) {
+        query = query.or('status.is.null,status.neq.deleted');
+      } else {
+        query = query.eq('status', 'deleted');
+      }
 
       if (searchTerm) {
         query = query.or(`name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%`);
