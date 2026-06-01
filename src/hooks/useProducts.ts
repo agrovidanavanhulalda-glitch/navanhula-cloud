@@ -17,7 +17,9 @@ export interface ProductWithStock {
   is_active: boolean;
   image_url: string | null;
   description: string | null;
+  category_id: string | null;
   product_stock: ProductStock[];
+  categories?: { name: string } | null;
 }
 
 export function useProducts(options: { 
