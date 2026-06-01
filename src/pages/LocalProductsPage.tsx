@@ -503,13 +503,51 @@ const LocalProductsPage: React.FC = () => {
                   <Input id="salePrice" type="number" step="0.01" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="stock">Estoque Inicial {currentStore?.name ? `(${currentStore.name})` : ''} *</Label>
-                <Input id="stock" type="number" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="stock">Estoque Inicial *</Label>
+                  <Input id="stock" type="number" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Categoria</Label>
+                  <Select value={formData.categoryId} onValueChange={(value) => setFormData({ ...formData, categoryId: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem categoria</SelectItem>
+                      {categories.map((cat: any) => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
                 <Input id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Galeria de Fotos</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {formData.galleryUrls.map((url, idx) => (
+                    <div key={idx} className="relative group">
+                      <img src={url} alt={`Gallery ${idx}`} className="w-full h-20 object-cover rounded" />
+                      <button 
+                        onClick={() => setFormData({ ...formData, galleryUrls: formData.galleryUrls.filter((_, i) => i !== idx) })}
+                        className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <ProductImageUpload 
+                    currentUrl={null} 
+                    onUploaded={(url) => setFormData({ ...formData, galleryUrls: [...formData.galleryUrls, url] })} 
+                    label="+"
+                    compact
+                  />
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="isActive">Produto Ativo</Label>
