@@ -11,8 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck, Trash2, UserPlus, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck, Trash2, UserPlus, Eye, EyeOff, Loader2, Key } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 
 const VALID_TECHNICAL_ROLES = ['ceo', 'admin', 'manager', 'seller', 'driver', 'reseller'];
@@ -23,9 +24,19 @@ const CompanyUsersPage = () => {
   const companyId = company?.id;
   const [showInvite, setShowInvite] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
+  const [showResult, setShowResult] = useState(false);
   const [inviteForm, setInviteForm] = useState({ role_id: '', email: '', branch_id: '' });
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
-  const [createUserForm, setCreateUserForm] = useState({ full_name: '', email: '', role_id: '', password: '', branch_id: '' });
+  const [createUserForm, setCreateUserForm] = useState({ 
+    full_name: '', 
+    email: '', 
+    role_id: '', 
+    password: '', 
+    branch_id: '',
+    send_email: false,
+    show_credentials: true
+  });
+  const [createdUserResult, setCreatedUserResult] = useState<{ email: string, password: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
 
