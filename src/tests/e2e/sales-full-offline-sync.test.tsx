@@ -202,9 +202,9 @@ describe('Full Sales Offline & Sync E2E', () => {
     
     // 7. Verify Sync
     await waitFor(() => {
-      expect(syncManager.getQueueStatus().pending).toBe(0);
       // Sales and Sale Items should have been inserted
       expect(insertMock).toHaveBeenCalled();
+      expect(syncManager.getQueueStatus().pending).toBe(0);
     }, { timeout: 30000 });
     
     // Verify payload of sync (should include discount)
