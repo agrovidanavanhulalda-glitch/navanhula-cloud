@@ -51,18 +51,29 @@ Deno.serve(async (req) => {
     }
 
     // Check if caller is CEO, Admin, or Manager
+    const { data: profile } = await adminClient
+      .from('profiles')
+      .select('is_super_admin, company_id')
+      .eq('id', callingUser.id)
+      .maybeSingle();
+
     const { data: callerRole } = await adminClient
       .from('user_roles')
-      .select('role, company_id')
+      .select('role')
       .eq('user_id', callingUser.id)
       .maybeSingle();
 
-    if (!callerRole || !['ceo', 'admin', 'manager', 'owner'].includes(callerRole.role)) {
+    const isAuthorized = profile?.is_super_admin || 
+                        ['ceo', 'admin', 'manager', 'owner'].includes(callerRole?.role || '');
+
+    if (!isAuthorized) {
       return new Response(JSON.stringify({ error: 'Sem permissão para criar utilizadores' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const companyId = profile?.company_id || callerRole?.company_id;
 
     const { email, full_name, role, branch_id, store_id, password, send_email } = await req.json();
 
@@ -86,7 +97,7 @@ Deno.serve(async (req) => {
       email_confirm: true,
       user_metadata: {
         full_name,
-        company_id: callerRole.company_id,
+        company_id: companyId,
         role: role,
         branch_id: branch_id || store_id,
         actor_id: callingUser.id

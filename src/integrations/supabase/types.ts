@@ -8520,6 +8520,10 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_admin_or_manager: { Args: never; Returns: boolean }
       is_ceo: { Args: never; Returns: boolean }
+      is_ceo_of_company: {
+        Args: { p_company_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_global_ceo: { Args: never; Returns: boolean }
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_master_ceo: { Args: never; Returns: boolean }
