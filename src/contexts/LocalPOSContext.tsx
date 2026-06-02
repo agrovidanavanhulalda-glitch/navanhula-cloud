@@ -257,7 +257,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return {
           id: sale.id,
           items: items.map((i: any) => ({
-            product: { id: i.product_id, name: i.product_name, sale_price: i.unit_price, cost_price: i.cost_price } as any,
+            product: { id: i.product_id, name: i.product_name, salePrice: i.unit_price, costPrice: i.cost_price } as any,
             quantity: i.quantity,
             discount: 0,
             total: i.total
