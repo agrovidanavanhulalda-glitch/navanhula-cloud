@@ -319,7 +319,7 @@ const LocalSalesHistoryPage: React.FC = () => {
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-mono font-bold">
-                                #{sale.id.slice(-6).toUpperCase()}
+                                #{new Date(sale.createdAt).getTime().toString(36).toUpperCase().slice(-6)}
                               </span>
                               {getStatusBadge(sale.status)}
                               {getSyncBadge(sale.synced)}
