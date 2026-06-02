@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { syncManager } from '@/lib/syncQueue';
+import { Toaster } from '@/components/ui/sonner';
 
 // Test IDs
 const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440001';
