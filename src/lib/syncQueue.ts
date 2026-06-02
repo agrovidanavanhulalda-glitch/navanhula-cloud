@@ -208,12 +208,10 @@ class SyncManager {
     
     // Insert Sale
     const saleResult = await supabase.from('sales').insert(sale);
-    console.log('[Sync] Sale insert result:', saleResult);
     if (saleResult?.error) throw saleResult.error;
 
     // Insert Items
     const itemsResult = await supabase.from('sale_items').insert(items);
-    console.log('[Sync] Items insert result:', itemsResult);
     if (itemsResult?.error) throw itemsResult.error;
 
     // Wallet Credit
