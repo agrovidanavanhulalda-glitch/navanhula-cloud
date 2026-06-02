@@ -81,9 +81,11 @@ const LocalSalesHistoryPage: React.FC = () => {
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         const matchId = sale.id.toLowerCase().includes(searchLower);
+        const receiptNo = new Date(sale.createdAt).getTime().toString(36).toUpperCase().slice(-6);
+        const matchReceipt = receiptNo.toLowerCase().includes(searchLower);
         const matchSeller = sale.sellerName?.toLowerCase().includes(searchLower);
         const matchItems = sale.items.some(i => i.product.name.toLowerCase().includes(searchLower));
-        if (!matchId && !matchSeller && !matchItems) return false;
+        if (!matchId && !matchSeller && !matchItems && !matchReceipt) return false;
       }
 
       return true;
@@ -162,6 +164,22 @@ const LocalSalesHistoryPage: React.FC = () => {
           </Badge>
         );
     }
+  };
+  
+  // Get sync badge
+  const getSyncBadge = (synced?: boolean) => {
+    if (synced) {
+      return (
+        <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-600 border-blue-200">
+          Nuvem
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-600 border-amber-200 animate-pulse">
+        Pendente
+      </Badge>
+    );
   };
 
   // Get payment label
@@ -301,9 +319,10 @@ const LocalSalesHistoryPage: React.FC = () => {
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-mono font-bold">
-                                #{sale.id.slice(-6).toUpperCase()}
+                                #{new Date(sale.createdAt).getTime().toString(36).toUpperCase().slice(-6)}
                               </span>
                               {getStatusBadge(sale.status)}
+                              {getSyncBadge(sale.synced)}
                             </div>
                             <p className="text-sm text-muted-foreground">
                               {new Date(sale.createdAt).toLocaleString('pt-MZ')}
