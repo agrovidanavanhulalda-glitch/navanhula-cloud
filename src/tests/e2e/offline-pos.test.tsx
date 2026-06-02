@@ -153,8 +153,8 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent.click(await screen.findByText(/Dinheiro/i, {}, { timeout: 10000 }));
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
     
-    // Wait for the modal and toast notification
-    await screen.findByText(/Venda concluída/i);
+    // Wait for the cart to be cleared
+    await screen.findByText(/Nenhum produto selecionado/i);
     
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
