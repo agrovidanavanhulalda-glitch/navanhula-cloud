@@ -322,6 +322,7 @@ const LocalSalesHistoryPage: React.FC = () => {
                                 #{sale.id.slice(-6).toUpperCase()}
                               </span>
                               {getStatusBadge(sale.status)}
+                              {getSyncBadge(sale.synced)}
                             </div>
                             <p className="text-sm text-muted-foreground">
                               {new Date(sale.createdAt).toLocaleString('pt-MZ')}
