@@ -140,7 +140,7 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
           <div className="text-xs space-y-1">
             <div>Data: {formatDate(sale.createdAt)}</div>
             <div>Recibo: #{receiptNumber}</div>
-            <div>Pagamento: {getPaymentMethodName(sale.paymentMethod || 'cash')}</div>
+            <div>Pagamento: {getPaymentMethodName(sale)}</div>
             {resolvedSellerName && <div>Vendedor: {resolvedSellerName}</div>}
           </div>
 
