@@ -106,6 +106,17 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Sem permissão" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Verify caller has admin/manager/ceo role — payouts move real money
+    const { data: roleRow } = await serviceClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!roleRow || !["admin", "manager", "ceo", "master", "owner"].includes(roleRow.role)) {
+      return new Response(JSON.stringify({ error: "Apenas administradores podem processar levantamentos" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+
     const payoutProvider = provider || payout.payment_method || "mpesa";
     const payoutRef = `PAYOUT-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
