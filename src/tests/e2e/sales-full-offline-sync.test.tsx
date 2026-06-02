@@ -97,9 +97,7 @@ describe('Full Sales Offline & Sync E2E', () => {
         return Promise.resolve({ data: null, error: null });
       }),
       single: vi.fn().mockReturnValue(Promise.resolve({ data: { id: 'new-id' }, error: null })),
-      insert: vi.fn().mockImplementation((payload) => {
-        return insertMock(payload);
-      }),
+      insert: insertMock,
       update: vi.fn().mockReturnThis(),
       match: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
