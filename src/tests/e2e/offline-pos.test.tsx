@@ -64,6 +64,7 @@ const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         </LocalPOSProvider>
       </AuthProvider>
     </QueryClientProvider>
+    <Toaster />
   </BrowserRouter>
 );
 
