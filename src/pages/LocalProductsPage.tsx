@@ -527,14 +527,17 @@ const LocalProductsPage: React.FC = () => {
         )}
 
         <Dialog open={showForm} onOpenChange={setShowForm}>
-          <DialogContent>
-            <DialogHeader><DialogTitle>{editingProduct ? 'Editar Produto' : 'Novo Produto'}</DialogTitle></DialogHeader>
-            <div className="space-y-4">
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+            <DialogHeader className="px-6 py-4 border-b">
+              <DialogTitle>{editingProduct ? 'Editar Produto' : 'Novo Produto'}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               <div className="space-y-2">
                 <Label>Imagem do Produto</Label>
                 <ProductImageUpload currentUrl={formData.imageUrl || null} productId={editingProduct?.id} onUploaded={(url) => setFormData({ ...formData, imageUrl: url })} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome *</Label>
                   <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
@@ -544,7 +547,7 @@ const LocalProductsPage: React.FC = () => {
                   <Input id="code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="costPrice">Preço de Compra *</Label>
                   <Input id="costPrice" type="number" step="0.01" value={formData.costPrice} onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })} />
@@ -554,7 +557,7 @@ const LocalProductsPage: React.FC = () => {
                   <Input id="salePrice" type="number" step="0.01" value={formData.salePrice} onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="stock">Estoque Inicial *</Label>
                   <Input id="stock" type="number" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} />
@@ -610,7 +613,11 @@ const LocalProductsPage: React.FC = () => {
                 </div>
               )}
             </div>
-            <DialogFooter><Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button><Button onClick={handleSave}>Salvar</Button></DialogFooter>
+
+            <DialogFooter className="px-6 py-4 border-t flex flex-row justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+              <Button onClick={handleSave}>Salvar Produto</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 

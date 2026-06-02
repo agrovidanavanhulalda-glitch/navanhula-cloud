@@ -137,9 +137,11 @@ function TransfersTab({ isAdmin, user, company, sellers, products }: any) {
             <DialogTrigger asChild>
               <Button size="sm"><Send className="w-4 h-4 mr-1" /> Nova Transferência</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>Criar Transferência de Stock</DialogTitle></DialogHeader>
-              <div className="space-y-4">
+            <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0 overflow-hidden">
+              <DialogHeader className="px-6 py-4 border-b">
+                <DialogTitle>Criar Transferência de Stock</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
                 <div>
                   <label className="text-sm font-medium">Vendedor</label>
                   <Select value={selectedSalesman} onValueChange={setSelectedSalesman}>
@@ -176,6 +178,8 @@ function TransfersTab({ isAdmin, user, company, sellers, products }: any) {
                   <label className="text-sm font-medium">Notas (opcional)</label>
                   <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observações..." />
                 </div>
+              </div>
+              <div className="px-6 py-4 border-t">
                 <Button className="w-full" onClick={() => createTransfer.mutate()} disabled={!selectedSalesman || items.length === 0 || items.some(i => !i.product_id) || createTransfer.isPending}>
                   {createTransfer.isPending ? 'Enviando...' : 'Enviar Transferência'}
                 </Button>
