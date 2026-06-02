@@ -660,7 +660,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <LocalPOSContext.Provider value={{ ...state, store: state.currentStore, cashRegisterOpen: !!state.currentCashRegister, addToCart, addManualItem, removeFromCart, updateQuantity, clearCart, startNewSale, completeSale, openCashRegister, closeCashRegister, addProduct, updateProduct, deleteProduct, restoreProduct, addStore, updateStore, deleteStore, addSeller, updateSeller, deleteSeller, getTotal, getSubtotal, getTotalDiscount, getLastSale, getCancelledSales, getCancellationHistory, cancelCompletedSale, refreshData: () => loadData(true), setCurrentStore }}>
+    <LocalPOSContext.Provider value={{ ...state, store: state.currentStore, cashRegisterOpen: !!state.currentCashRegister, addToCart, addManualItem, removeFromCart, updateQuantity, updateDiscount, clearCart, startNewSale, completeSale, openCashRegister, closeCashRegister, addProduct, updateProduct, deleteProduct, restoreProduct, addStore, updateStore, deleteStore, addSeller, updateSeller, deleteSeller, getTotal, getSubtotal, getTotalDiscount, getLastSale, getCancelledSales, getCancellationHistory, cancelCompletedSale, refreshData: () => loadData(true), setCurrentStore }}>
       {children}
     </LocalPOSContext.Provider>
   );
