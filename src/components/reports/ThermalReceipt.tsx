@@ -141,6 +141,8 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
             <div>Data: {formatDate(sale.createdAt)}</div>
             <div>Recibo: #{receiptNumber}</div>
             <div>Pagamento: {getPaymentMethodName(sale)}</div>
+            {sale.isOffline && <div className="font-bold text-red-600">*** MODO OFFLINE ***</div>}
+            <div>Sincronizado: {sale.synced ? 'Sim' : 'Pendente'}</div>
             {resolvedSellerName && <div>Vendedor: {resolvedSellerName}</div>}
           </div>
 
