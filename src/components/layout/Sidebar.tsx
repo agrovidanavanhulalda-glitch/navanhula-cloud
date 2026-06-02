@@ -1,17 +1,19 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
+import { useI18n } from '@/contexts/i18n';
 import { usePermissions } from '@/hooks/usePermissions';
+
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, ShoppingCart, Package, Settings, LogOut,
   WalletCards, History, BarChart3, TrendingUp, Boxes, Shield, User,
-  MessageSquare, Users, UserPlus, Link2, Wallet, FileText, BookOpen,
-  UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag, Smartphone,
-  Cloud, Store, ChevronDown, Calculator, CreditCard, Banknote,
-  Building2, MapPin, Bird, MessageCircle, ArrowRightLeft, Landmark, Key,
-  Target, Gift, Rocket, ShieldCheck, Database, Warehouse
+  Users, UserPlus, Link2, Wallet, FileText,
+  UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag,
+  Cloud, Store, ChevronDown, 
+  Building2, MessageCircle, ArrowRightLeft, Landmark, Key,
+  ShieldCheck, Database, Warehouse
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -55,145 +57,133 @@ interface NavGroup {
   items: SubItem[];
 }
 
-const navGroups: NavGroup[] = [
-  {
-    title: 'Início',
-    icon: LayoutDashboard,
-    items: [
-      { label: 'Resumo Geral', href: '/app/dashboard', icon: LayoutDashboard },
-      { label: 'Visão Executiva', href: '/app/ceo', icon: TrendingUp, minRole: 'ceo' },
-      { label: 'Visão Direção', href: '/app/dashboard/diretor', icon: Building2, minRole: 'ceo' },
-      { label: 'Visão Gestão', href: '/app/dashboard/gestor', icon: Users, minRole: 'manager' },
-      { label: 'Recursos Humanos', href: '/app/dashboard/rh', icon: User, minRole: 'manager' },
-      { label: 'Análise de Dados', href: '/app/bi', icon: PieChart, minRole: 'manager' },
-    ],
-  },
-  {
-    title: 'Vendas',
-    icon: ShoppingCart,
-    module: 'sales',
-    items: [
-      { label: 'Realizar Venda', href: '/app/pdv', icon: ShoppingCart },
-      { label: 'Abrir/Fechar Caixa', href: '/app/caixa', icon: WalletCards },
-      { label: 'Histórico de Vendas', href: '/app/vendas', icon: History },
-      { label: 'Loja Online', href: '/app/ecommerce', icon: ShoppingBag, minRole: 'admin' },
-    ],
-  },
-  {
-    title: 'Produtos',
-    icon: Package,
-    module: 'products',
-    items: [
-      { label: 'Meus Produtos', href: '/app/produtos', icon: Package },
-    ],
-  },
-  {
-    title: 'Estoque',
-    icon: Boxes,
-    module: 'stock',
-    items: [
-      { label: 'Controlo de Stock', href: '/app/estoque', icon: Boxes },
-      { label: 'Gestão WMS', href: '/app/wms', icon: Warehouse, minRole: 'manager' },
-      { label: 'Mover Stock', href: '/app/transferencias-stock', icon: ArrowRightLeft, minRole: 'manager' },
-      { label: 'Stock das Filiais', href: '/app/estoque-filiais', icon: Building2, minRole: 'manager' },
-
-    ],
-  },
-  {
-    title: 'Clientes',
-    icon: UserCheck,
-    module: 'crm',
-    minRole: 'seller',
-    items: [
-      { label: 'Meus Clientes', href: '/app/crm', icon: UserCheck },
-      { label: 'Fornecedores', href: '/app/fornecedores', icon: Truck, minRole: 'manager' },
-    ],
-  },
-  {
-    title: 'Relatórios',
-    icon: BarChart3,
-    module: 'reports',
-    minRole: 'manager',
-    items: [
-      { label: 'Vendas e Lucros', href: '/app/relatorios', icon: BarChart3 },
-      { label: 'Documentos Fiscais', href: '/app/relatorios-fiscais', icon: FileText },
-      { label: 'Ganhos e Gastos', href: '/app/financeiro-rh', icon: TrendingUp, minRole: 'admin' },
-    ],
-  },
-  {
-    title: 'Ajustes',
-    icon: Settings,
-    module: 'settings',
-    minRole: 'manager',
-    items: [
-      { label: 'Geral do Sistema', href: '/app/configuracoes', icon: Settings },
-      { label: 'Regras de Impostos', href: '/app/fiscal', icon: FileText, minRole: 'admin' },
-      { label: 'Contas Bancárias', href: '/app/banco', icon: Landmark, minRole: 'admin' },
-      { label: 'Minha Equipa', href: '/app/equipa', icon: Users, minRole: 'admin' },
-      { label: 'Minhas Lojas', href: '/app/lojas', icon: Store, minRole: 'admin' },
-      { label: 'Assistente com IA', href: '/app/ai', icon: Brain, minRole: 'manager' },
-      { label: 'Mensagens WhatsApp', href: '/app/whatsapp', icon: MessageCircle, minRole: 'manager' },
-      { label: 'Segurança e Regras', href: '/app/compliance', icon: Shield, minRole: 'admin' },
-      { label: 'Níveis de Acesso', href: '/app/iam', icon: Shield, minRole: 'admin' },
-      { label: 'Tarefas Automáticas', href: '/app/automacao', icon: Settings, minRole: 'admin' },
-      { label: 'Chaves de Integração', href: '/app/api-keys', icon: Key, minRole: 'admin' },
-      { label: 'Pasta de Arquivos', href: '/app/documentos', icon: FileText, minRole: 'manager' },
-      { label: 'Mercado Aberto', href: '/app/marketplace', icon: ShoppingBag, minRole: 'manager' },
-      { label: 'Gestão Agrícola', href: '/app/agricultura', icon: Sprout, minRole: 'manager' },
-      { label: 'Criação de Aves', href: '/app/avicultura', icon: Egg, minRole: 'manager' },
-      { label: 'Clima e Ambiente', href: '/app/ambiente', icon: Cloud, minRole: 'manager' },
-      { label: 'Verificação de Dados', href: '/app/auditoria', icon: Shield, minRole: 'admin' },
-    ],
-  },
-];
-
-const adminResellerItems: SubItem[] = [
-  { label: 'Dashboard', href: '/app/revendedores/dashboard', icon: Users },
-  { label: 'Cadastrar', href: '/app/revendedores/cadastrar', icon: UserPlus },
-  { label: 'Lista', href: '/app/revendedores/lista', icon: Users },
-  { label: 'Comissões', href: '/app/revendedores/comissoes', icon: TrendingUp },
-  { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: Wallet },
-  { label: 'Links', href: '/app/revendedores/links', icon: Link2 },
-  { label: 'Performance', href: '/app/revendedores/performance', icon: BarChart3 },
-  { label: 'Materiais', href: '/app/revendedores/materiais', icon: FileText },
-];
-
-const resellerPortalItems: SubItem[] = [
-  { label: 'Meu Painel', href: '/app/revendedores/dashboard', icon: LayoutDashboard },
-  { label: 'Clientes Indicados', href: '/app/revendedores/lista', icon: Users },
-  { label: 'Comissões', href: '/app/revendedores/comissoes', icon: TrendingUp },
-  { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: Wallet },
-  { label: 'Links', href: '/app/revendedores/links', icon: Link2 },
-  { label: 'Materiais', href: '/app/revendedores/materiais', icon: FileText },
-  { label: 'Performance', href: '/app/revendedores/performance', icon: BarChart3 },
-];
-
 const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
+  const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, company, store, signOut, role } = useAuth();
+  const { user, signOut, role } = useAuth();
   const { hasMinimumRole, canViewModule, isMaster } = usePermissions();
   const { currentCashRegister } = useLocalPOS();
   const { state } = useSidebar();
   const collapsed = forceExpanded ? false : state === 'collapsed';
 
+  const navGroups: NavGroup[] = [
+    {
+      title: t('common.open'),
+      icon: LayoutDashboard,
+      items: [
+        { label: t('nav.dashboard'), href: '/app/dashboard', icon: LayoutDashboard },
+        { label: t('nav.ceoDashboard'), href: '/app/ceo', icon: TrendingUp, minRole: 'ceo' },
+        { label: 'Visão Direção', href: '/app/dashboard/diretor', icon: Building2, minRole: 'ceo' },
+        { label: 'Visão Gestão', href: '/app/dashboard/gestor', icon: Users, minRole: 'manager' },
+        { label: 'Recursos Humanos', href: '/app/dashboard/rh', icon: User, minRole: 'manager' },
+        { label: t('nav.bi'), href: '/app/bi', icon: PieChart, minRole: 'manager' },
+      ],
+    },
+    {
+      title: t('nav.sales'),
+      icon: ShoppingCart,
+      module: 'sales',
+      items: [
+        { label: t('pos.title'), href: '/app/pdv', icon: ShoppingCart },
+        { label: t('nav.cashRegister'), href: '/app/caixa', icon: WalletCards },
+        { label: t('nav.sales'), href: '/app/vendas', icon: History },
+        { label: 'Loja Online', href: '/app/ecommerce', icon: ShoppingBag, minRole: 'admin' },
+      ],
+    },
+    {
+      title: t('nav.products'),
+      icon: Package,
+      module: 'products',
+      items: [
+        { label: t('nav.products'), href: '/app/produtos', icon: Package },
+      ],
+    },
+    {
+      title: t('nav.inventory'),
+      icon: Boxes,
+      module: 'stock',
+      items: [
+        { label: t('nav.inventory'), href: '/app/estoque', icon: Boxes },
+        { label: 'Gestão WMS', href: '/app/wms', icon: Warehouse, minRole: 'manager' },
+        { label: 'Mover Stock', href: '/app/transferencias-stock', icon: ArrowRightLeft, minRole: 'manager' },
+        { label: 'Stock das Filiais', href: '/app/estoque-filiais', icon: Building2, minRole: 'manager' },
+      ],
+    },
+    {
+      title: t('dashboard.customers'),
+      icon: UserCheck,
+      module: 'crm',
+      minRole: 'seller',
+      items: [
+        { label: t('dashboard.customers'), href: '/app/crm', icon: UserCheck },
+        { label: t('nav.suppliers'), href: '/app/fornecedores', icon: Truck, minRole: 'manager' },
+      ],
+    },
+    {
+      title: t('nav.reports'),
+      icon: BarChart3,
+      module: 'reports',
+      minRole: 'manager',
+      items: [
+        { label: 'Vendas e Lucros', href: '/app/relatorios', icon: BarChart3 },
+        { label: 'Documentos Fiscais', href: '/app/relatorios-fiscais', icon: FileText },
+        { label: t('nav.financial'), href: '/app/financeiro-rh', icon: TrendingUp, minRole: 'admin' },
+      ],
+    },
+    {
+      title: t('nav.settings'),
+      icon: Settings,
+      module: 'settings',
+      minRole: 'manager',
+      items: [
+        { label: t('nav.settings'), href: '/app/configuracoes', icon: Settings },
+        { label: 'Regras de Impostos', href: '/app/fiscal', icon: FileText, minRole: 'admin' },
+        { label: 'Contas Bancárias', href: '/app/banco', icon: Landmark, minRole: 'admin' },
+        { label: 'Minha Equipa', href: '/app/equipa', icon: Users, minRole: 'admin' },
+        { label: t('nav.stores'), href: '/app/lojas', icon: Store, minRole: 'admin' },
+        { label: 'Assistente com IA', href: '/app/ai', icon: Brain, minRole: 'manager' },
+        { label: 'Mensagens WhatsApp', href: '/app/whatsapp', icon: MessageCircle, minRole: 'manager' },
+        { label: 'Segurança e Regras', href: '/app/compliance', icon: Shield, minRole: 'admin' },
+        { label: 'Níveis de Acesso', href: '/app/iam', icon: Shield, minRole: 'admin' },
+        { label: 'Tarefas Automáticas', href: '/app/automacao', icon: Settings, minRole: 'admin' },
+        { label: 'Chaves de Integração', href: '/app/api-keys', icon: Key, minRole: 'admin' },
+        { label: 'Pasta de Arquivos', href: '/app/documentos', icon: FileText, minRole: 'manager' },
+        { label: 'Mercado Aberto', href: '/app/marketplace', icon: ShoppingBag, minRole: 'manager' },
+        { label: t('nav.agriculture'), href: '/app/agricultura', icon: Sprout, minRole: 'manager' },
+        { label: t('nav.poultry'), href: '/app/avicultura', icon: Egg, minRole: 'manager' },
+        { label: 'Clima e Ambiente', href: '/app/ambiente', icon: Cloud, minRole: 'manager' },
+        { label: 'Verificação de Dados', href: '/app/auditoria', icon: Shield, minRole: 'admin' },
+      ],
+    },
+  ];
+
+  const adminResellerItems: SubItem[] = [
+    { label: t('nav.dashboard'), href: '/app/revendedores/dashboard', icon: Users },
+    { label: t('common.add'), href: '/app/revendedores/cadastrar', icon: UserPlus },
+    { label: 'Lista', href: '/app/revendedores/lista', icon: Users },
+    { label: 'Comissões', href: '/app/revendedores/comissoes', icon: TrendingUp },
+    { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: Wallet },
+    { label: 'Links', href: '/app/revendedores/links', icon: Link2 },
+    { label: 'Performance', href: '/app/revendedores/performance', icon: BarChart3 },
+    { label: 'Materiais', href: '/app/revendedores/materiais', icon: FileText },
+  ];
+
+  const resellerPortalItems: SubItem[] = [
+    { label: 'Meu Painel', href: '/app/revendedores/dashboard', icon: LayoutDashboard },
+    { label: 'Clientes Indicados', href: '/app/revendedores/lista', icon: Users },
+    { label: 'Comissões', href: '/app/revendedores/comissoes', icon: TrendingUp },
+    { label: 'Pagamentos', href: '/app/revendedores/pagamentos', icon: Wallet },
+    { label: 'Links', href: '/app/revendedores/links', icon: Link2 },
+    { label: 'Materiais', href: '/app/revendedores/materiais', icon: FileText },
+    { label: 'Performance', href: '/app/revendedores/performance', icon: BarChart3 },
+  ];
+
   const isBackofficeAdmin = hasMinimumRole('manager');
   const isReseller = role === 'reseller';
   const rawName = currentCashRegister?.sellerName || user?.full_name || '';
-  const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : 'Operador';
+  const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : t('cash.operator');
   
-  const currentOperatorRole =
-    isMaster ? 'Master Owner' :
-    role === 'reseller' ? 'Revendedor' :
-    role === 'ceo' ? 'CEO' :
-    role === 'director' ? 'Diretor' :
-    role === 'admin' ? 'Administrador' :
-    role === 'manager' ? 'Gestor' :
-    role === 'hr' ? 'RH' :
-    role === 'cashier' ? 'Caixa' :
-    role === 'seller' ? 'Vendedor' : 
-    role === 'viewer' ? 'Visualizador' : 'Utilizador';
-
   // Filter sub-items by role and module
   const filterSubItems = useCallback((items: SubItem[]): SubItem[] => {
     return items.filter(item => {
@@ -238,8 +228,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
     if (group.minRole && !hasMinimumRole(group.minRole)) return null;
     if (group.module && !canViewModule(group.module)) return null;
     const Icon = group.icon;
-    // Filter items for Dashboard group based on role
-    const visibleItems = React.useMemo(() => filterSubItems(group.items), [group.items, filterSubItems]);
+    const visibleItems = filterSubItems(group.items);
     if (visibleItems.length === 0) return null;
     const hasActive = groupHasActive(visibleItems);
 
@@ -287,7 +276,6 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
 
   return (
     <ShadcnSidebar collapsible={forceExpanded ? "none" : "icon"} className="border-r border-sidebar-border">
-      {/* Brand Header */}
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className={cn('flex items-center gap-3', collapsed ? 'justify-center px-0' : 'px-1')}>
           <BrandLogo 
@@ -304,7 +292,6 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
         </div>
       </SidebarHeader>
 
-      {/* Navigation */}
       <SidebarContent>
         {isReseller ? (
           <SidebarGroup>
@@ -325,10 +312,9 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
           </SidebarGroup>
         )}
 
-        {/* Reseller Admin */}
         {!isReseller && isBackofficeAdmin && (
           <SidebarGroup>
-            <SidebarGroupLabel>Revendedores</SidebarGroupLabel>
+            <SidebarGroupLabel>{t('nav.resellers')}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <Collapsible defaultOpen={groupHasActive(adminResellerItems)} className="group/collapsible">
@@ -336,7 +322,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton tooltip="Rede Comercial" className="font-semibold text-sidebar-foreground/80">
                         <Users className="h-4 w-4" />
-                        <span>Rede Comercial</span>
+                        <span>{t('nav.community')}</span>
                         <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
                       </SidebarMenuButton>
                     </CollapsibleTrigger>
@@ -353,7 +339,6 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
         )}
       </SidebarContent>
 
-      {/* Footer — User & Logout */}
       <SidebarFooter className="border-t border-sidebar-border p-3 gap-2">
         {!collapsed && (
           <div className="flex flex-col gap-2">
@@ -379,7 +364,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
-              <span className="text-xs font-semibold">Sair do sistema</span>
+              <span className="text-xs font-semibold">{t('auth.logout')}</span>
             </Button>
           </div>
         )}

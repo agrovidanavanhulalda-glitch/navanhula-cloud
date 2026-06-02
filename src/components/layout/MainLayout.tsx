@@ -13,7 +13,9 @@ import NetworkIndicator from './NetworkIndicator';
 import NotificationBell from './NotificationBell';
 import LanguageSelector from './LanguageSelector';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/i18n';
 import { Button } from '@/components/ui/button';
+
 import { LogOut, User, Building2, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
@@ -32,6 +34,8 @@ import WhatsAppFloat from '../public/landing/WhatsAppFloat';
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
   const { user, company, signOut, role, loading } = useAuth();
+  const { t } = useI18n();
+
 
   const handleLogout = async () => {
     await signOut();
@@ -71,7 +75,7 @@ const MainLayout: React.FC = () => {
             <div className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/50 border border-border/40">
               <Building2 className="w-4 h-4 text-primary" />
               <span className="font-semibold text-sm text-foreground truncate max-w-[200px]">
-                {company?.name || (loading ? 'Carregando...' : 'Navanhula Cloud')}
+                {company?.name || (loading ? t('common.loading') : 'Navanhula Cloud')}
               </span>
             </div>
 
@@ -100,7 +104,7 @@ const MainLayout: React.FC = () => {
                         {user?.full_name || user?.email?.split('@')[0]}
                       </span>
                       <span className="text-[10px] text-muted-foreground leading-tight capitalize">
-                        {role || 'Usuário'}
+                        {role || t('common.confirm')}
                       </span>
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -124,7 +128,7 @@ const MainLayout: React.FC = () => {
                     onClick={handleLogout}
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Sair do sistema</span>
+                    <span>{t('auth.logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
