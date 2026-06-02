@@ -346,7 +346,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton tooltip="Rede Comercial" className="font-semibold text-sidebar-foreground/80">
                         <Users className="h-4 w-4" />
-                        <span>Rede Comercial</span>
+                        <span>{t('nav.community')}</span>
                         <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
                       </SidebarMenuButton>
                     </CollapsibleTrigger>

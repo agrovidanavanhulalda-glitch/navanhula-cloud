@@ -501,15 +501,52 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return detectBrowserLanguage();
   });
 
-  const setLanguage = useCallback((lang: Language) => {
+  const setLanguage = useCallback(async (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('navanhula_lang', lang);
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    
+    // Persist to user profile if authenticated
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await supabase
+          .from('profiles')
+          .update({ language: lang })
+          .eq('id', session.user.id);
+      }
+    } catch (error) {
+      console.error('Error persisting language preference:', error);
+    }
   }, []);
+
 
   useEffect(() => {
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+
+    const loadProfileLanguage = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('language')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile?.language && profile.language !== language && SUPPORTED_LANGS.includes(profile.language as Language)) {
+            setLanguageState(profile.language as Language);
+            localStorage.setItem('navanhula_lang', profile.language);
+          }
+        }
+      } catch (error) {
+        console.warn('Could not load profile language:', error);
+      }
+    };
+
+    loadProfileLanguage();
   }, []);
+
 
   const t = useCallback((key: string): string => {
     return translations[language]?.[key] || translations['pt']?.[key] || translations['en']?.[key] || key;
