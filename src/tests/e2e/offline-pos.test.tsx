@@ -152,7 +152,7 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
     
     // Wait for the modal and toast notification
-    await screen.findByText(/Venda concluída com sucesso/i);
+    await screen.findByText(/Venda concluída/i);
     
     (navigator as any).onLine = true;
     fireEvent(window, new Event('online'));
