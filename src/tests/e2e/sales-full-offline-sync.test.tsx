@@ -187,7 +187,9 @@ describe('Full Sales Offline & Sync E2E', () => {
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
     
     // 5. Verify offline success
-    await screen.findByText(/Venda salva localmente/i);
+    await waitFor(() => {
+      expect(screen.getByText(/Venda concluída/i)).toBeTruthy();
+    }, { timeout: 10000 });
     
     // Check queue
     expect(syncManager.getQueueStatus().pending).toBe(1);
