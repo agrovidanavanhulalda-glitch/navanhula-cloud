@@ -245,7 +245,14 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const addToCart = (product: LocalProduct) => {
     setState(prev => {
       const existing = prev.cart.find(item => item.product.id === product.id);
-      if (existing) return { ...prev, cart: prev.cart.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.product.salePrice } : item) };
+      if (existing) {
+        const newQuantity = item.quantity + 1;
+        const total = (newQuantity * item.product.salePrice) - item.discount;
+        return { 
+          ...prev, 
+          cart: prev.cart.map(item => item.product.id === product.id ? { ...item, quantity: newQuantity, total } : item) 
+        };
+      }
       return { ...prev, cart: [...prev.cart, { product, quantity: 1, discount: 0, total: product.salePrice }] };
     });
     return true;
@@ -257,12 +264,35 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const removeFromCart = (productId: string) => setState(prev => ({ ...prev, cart: prev.cart.filter(i => i.product.id !== productId) }));
-  const updateQuantity = (productId: string, quantity: number) => setState(prev => ({ ...prev, cart: prev.cart.map(i => i.product.id === productId ? { ...i, quantity, total: quantity * i.product.salePrice } : i) }));
+  
+  const updateQuantity = (productId: string, quantity: number) => {
+    if (quantity < 1) return;
+    setState(prev => ({ 
+      ...prev, 
+      cart: prev.cart.map(i => i.product.id === productId ? { 
+        ...i, 
+        quantity, 
+        total: (quantity * i.product.salePrice) - i.discount 
+      } : i) 
+    }));
+  };
+
+  const updateDiscount = (productId: string, discount: number) => {
+    setState(prev => ({ 
+      ...prev, 
+      cart: prev.cart.map(i => i.product.id === productId ? { 
+        ...i, 
+        discount, 
+        total: (i.quantity * i.product.salePrice) - discount 
+      } : i) 
+    }));
+  };
+
   const clearCart = () => setState(prev => ({ ...prev, cart: [] }));
   const startNewSale = () => setState(prev => ({ ...prev, cart: [], currentSale: null }));
   const getTotal = () => state.cart.reduce((acc, item) => acc + item.total, 0);
-  const getSubtotal = () => getTotal();
-  const getTotalDiscount = () => 0;
+  const getSubtotal = () => state.cart.reduce((acc, item) => acc + (item.product.salePrice * item.quantity), 0);
+  const getTotalDiscount = () => state.cart.reduce((acc, item) => acc + item.discount, 0);
   const getLastSale = () => state.sales[0] || null;
   const getCancelledSales = () => state.sales.filter(s => s.status === 'cancelled');
   const getCancellationHistory = () => [];
