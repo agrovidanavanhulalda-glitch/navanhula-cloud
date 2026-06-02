@@ -246,8 +246,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setState(prev => {
       const existing = prev.cart.find(item => item.product.id === product.id);
       if (existing) {
-        const newQuantity = item.quantity + 1;
-        const total = (newQuantity * item.product.salePrice) - item.discount;
+        const newQuantity = existing.quantity + 1;
+        const total = (newQuantity * existing.product.salePrice) - existing.discount;
         return { 
           ...prev, 
           cart: prev.cart.map(item => item.product.id === product.id ? { ...item, quantity: newQuantity, total } : item) 
