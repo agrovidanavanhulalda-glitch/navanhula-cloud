@@ -45,6 +45,7 @@ const LocalPOSPage: React.FC = () => {
     addManualItem,
     removeFromCart,
     updateQuantity,
+    updateDiscount,
     completeSale,
     clearCart,
     getSubtotal,
