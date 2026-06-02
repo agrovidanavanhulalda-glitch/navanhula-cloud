@@ -233,7 +233,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const syncedSales: LocalSale[] = (syncedSalesData || []).map(s => ({
         id: s.id,
         items: s.sale_items.map((si: any) => ({
-          product: { id: si.product_id, name: si.product_name, sale_price: si.unit_price, cost_price: si.cost_price } as any,
+          product: { id: si.product_id, name: si.product_name, salePrice: si.unit_price, costPrice: si.cost_price } as any,
           quantity: si.quantity,
           discount: 0,
           total: si.total
