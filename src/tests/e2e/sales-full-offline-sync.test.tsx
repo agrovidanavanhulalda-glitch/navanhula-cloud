@@ -177,7 +177,7 @@ describe('Full Sales Offline & Sync E2E', () => {
     fireEvent.click(await screen.findByText(/Dinheiro/i));
     
     // Set amount received (140)
-    const amountInput = screen.getByPlaceholderText('0.00');
+    const amountInput = screen.getByLabelText(/Valor Entregue/i);
     fireEvent.change(amountInput, { target: { value: '150' } });
     
     // Verify change (150 - 140 = 10)
