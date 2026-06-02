@@ -151,8 +151,8 @@ describe('Full Sales Offline & Sync E2E', () => {
     
     // Verify items in cart
     await screen.findByText(/Itens da Venda/i);
-    expect(screen.getByText(/Arroz/i)).toBeTruthy();
-    expect(screen.getByText(/Feijão/i)).toBeTruthy();
+    expect(screen.getAllByText(/Arroz/i).length).toBeGreaterThan(1);
+    expect(screen.getAllByText(/Feijão/i).length).toBeGreaterThan(1);
     
     // 3. Apply discount to Arroz
     const arrozDiscountInput = screen.getByLabelText(/Desconto para Arroz/i);
