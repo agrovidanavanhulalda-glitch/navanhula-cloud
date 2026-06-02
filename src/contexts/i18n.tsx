@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
 
 export type Language = 'pt' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'ar' | 'zh' | 'ru' | 'hi';
 

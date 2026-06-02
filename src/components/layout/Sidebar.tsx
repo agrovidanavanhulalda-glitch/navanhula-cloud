@@ -2,7 +2,9 @@ import React, { useCallback, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
+import { useI18n } from '@/contexts/i18n';
 import { usePermissions } from '@/hooks/usePermissions';
+
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, ShoppingCart, Package, Settings, LogOut,
@@ -57,80 +59,85 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    title: 'Início',
+    title: t('common.open'),
     icon: LayoutDashboard,
     items: [
-      { label: 'Resumo Geral', href: '/app/dashboard', icon: LayoutDashboard },
-      { label: 'Visão Executiva', href: '/app/ceo', icon: TrendingUp, minRole: 'ceo' },
+      { label: t('nav.dashboard'), href: '/app/dashboard', icon: LayoutDashboard },
+      { label: t('nav.ceoDashboard'), href: '/app/ceo', icon: TrendingUp, minRole: 'ceo' },
       { label: 'Visão Direção', href: '/app/dashboard/diretor', icon: Building2, minRole: 'ceo' },
       { label: 'Visão Gestão', href: '/app/dashboard/gestor', icon: Users, minRole: 'manager' },
       { label: 'Recursos Humanos', href: '/app/dashboard/rh', icon: User, minRole: 'manager' },
-      { label: 'Análise de Dados', href: '/app/bi', icon: PieChart, minRole: 'manager' },
-    ],
-  },
-  {
-    title: 'Vendas',
-    icon: ShoppingCart,
-    module: 'sales',
-    items: [
-      { label: 'Realizar Venda', href: '/app/pdv', icon: ShoppingCart },
-      { label: 'Abrir/Fechar Caixa', href: '/app/caixa', icon: WalletCards },
-      { label: 'Histórico de Vendas', href: '/app/vendas', icon: History },
-      { label: 'Loja Online', href: '/app/ecommerce', icon: ShoppingBag, minRole: 'admin' },
-    ],
-  },
-  {
-    title: 'Produtos',
-    icon: Package,
-    module: 'products',
-    items: [
-      { label: 'Meus Produtos', href: '/app/produtos', icon: Package },
-    ],
-  },
-  {
-    title: 'Estoque',
-    icon: Boxes,
-    module: 'stock',
-    items: [
-      { label: 'Controlo de Stock', href: '/app/estoque', icon: Boxes },
-      { label: 'Gestão WMS', href: '/app/wms', icon: Warehouse, minRole: 'manager' },
-      { label: 'Mover Stock', href: '/app/transferencias-stock', icon: ArrowRightLeft, minRole: 'manager' },
-      { label: 'Stock das Filiais', href: '/app/estoque-filiais', icon: Building2, minRole: 'manager' },
+      { label: t('nav.bi'), href: '/app/bi', icon: PieChart, minRole: 'manager' },
 
     ],
   },
   {
-    title: 'Clientes',
+    title: t('nav.sales'),
+    icon: ShoppingCart,
+    module: 'sales',
+    items: [
+      { label: t('pos.title'), href: '/app/pdv', icon: ShoppingCart },
+      { label: t('nav.cashRegister'), href: '/app/caixa', icon: WalletCards },
+      { label: t('nav.sales'), href: '/app/vendas', icon: History },
+      { label: 'Loja Online', href: '/app/ecommerce', icon: ShoppingBag, minRole: 'admin' },
+
+    ],
+  },
+  {
+    title: t('nav.products'),
+    icon: Package,
+    module: 'products',
+    items: [
+      { label: t('nav.products'), href: '/app/produtos', icon: Package },
+    ],
+  },
+  {
+    title: t('nav.inventory'),
+    icon: Boxes,
+    module: 'stock',
+    items: [
+      { label: t('nav.inventory'), href: '/app/estoque', icon: Boxes },
+      { label: 'Gestão WMS', href: '/app/wms', icon: Warehouse, minRole: 'manager' },
+      { label: 'Mover Stock', href: '/app/transferencias-stock', icon: ArrowRightLeft, minRole: 'manager' },
+      { label: 'Stock das Filiais', href: '/app/estoque-filiais', icon: Building2, minRole: 'manager' },
+
+
+    ],
+  },
+  {
+    title: t('dashboard.customers'),
     icon: UserCheck,
     module: 'crm',
     minRole: 'seller',
     items: [
-      { label: 'Meus Clientes', href: '/app/crm', icon: UserCheck },
-      { label: 'Fornecedores', href: '/app/fornecedores', icon: Truck, minRole: 'manager' },
+      { label: t('dashboard.customers'), href: '/app/crm', icon: UserCheck },
+      { label: t('nav.suppliers'), href: '/app/fornecedores', icon: Truck, minRole: 'manager' },
+
     ],
   },
   {
-    title: 'Relatórios',
+    title: t('nav.reports'),
     icon: BarChart3,
     module: 'reports',
     minRole: 'manager',
     items: [
       { label: 'Vendas e Lucros', href: '/app/relatorios', icon: BarChart3 },
       { label: 'Documentos Fiscais', href: '/app/relatorios-fiscais', icon: FileText },
-      { label: 'Ganhos e Gastos', href: '/app/financeiro-rh', icon: TrendingUp, minRole: 'admin' },
+      { label: t('nav.financial'), href: '/app/financeiro-rh', icon: TrendingUp, minRole: 'admin' },
+
     ],
   },
   {
-    title: 'Ajustes',
+    title: t('nav.settings'),
     icon: Settings,
     module: 'settings',
     minRole: 'manager',
     items: [
-      { label: 'Geral do Sistema', href: '/app/configuracoes', icon: Settings },
+      { label: t('nav.settings'), href: '/app/configuracoes', icon: Settings },
       { label: 'Regras de Impostos', href: '/app/fiscal', icon: FileText, minRole: 'admin' },
       { label: 'Contas Bancárias', href: '/app/banco', icon: Landmark, minRole: 'admin' },
       { label: 'Minha Equipa', href: '/app/equipa', icon: Users, minRole: 'admin' },
-      { label: 'Minhas Lojas', href: '/app/lojas', icon: Store, minRole: 'admin' },
+      { label: t('nav.stores'), href: '/app/lojas', icon: Store, minRole: 'admin' },
       { label: 'Assistente com IA', href: '/app/ai', icon: Brain, minRole: 'manager' },
       { label: 'Mensagens WhatsApp', href: '/app/whatsapp', icon: MessageCircle, minRole: 'manager' },
       { label: 'Segurança e Regras', href: '/app/compliance', icon: Shield, minRole: 'admin' },
@@ -139,10 +146,11 @@ const navGroups: NavGroup[] = [
       { label: 'Chaves de Integração', href: '/app/api-keys', icon: Key, minRole: 'admin' },
       { label: 'Pasta de Arquivos', href: '/app/documentos', icon: FileText, minRole: 'manager' },
       { label: 'Mercado Aberto', href: '/app/marketplace', icon: ShoppingBag, minRole: 'manager' },
-      { label: 'Gestão Agrícola', href: '/app/agricultura', icon: Sprout, minRole: 'manager' },
-      { label: 'Criação de Aves', href: '/app/avicultura', icon: Egg, minRole: 'manager' },
+      { label: t('nav.agriculture'), href: '/app/agricultura', icon: Sprout, minRole: 'manager' },
+      { label: t('nav.poultry'), href: '/app/avicultura', icon: Egg, minRole: 'manager' },
       { label: 'Clima e Ambiente', href: '/app/ambiente', icon: Cloud, minRole: 'manager' },
       { label: 'Verificação de Dados', href: '/app/auditoria', icon: Shield, minRole: 'admin' },
+
     ],
   },
 ];
@@ -173,7 +181,9 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   const navigate = useNavigate();
   const { user, company, store, signOut, role } = useAuth();
   const { hasMinimumRole, canViewModule, isMaster } = usePermissions();
+  const { t } = useI18n();
   const { currentCashRegister } = useLocalPOS();
+
   const { state } = useSidebar();
   const collapsed = forceExpanded ? false : state === 'collapsed';
 
@@ -328,7 +338,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
         {/* Reseller Admin */}
         {!isReseller && isBackofficeAdmin && (
           <SidebarGroup>
-            <SidebarGroupLabel>Revendedores</SidebarGroupLabel>
+            <SidebarGroupLabel>{t('nav.resellers')}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <Collapsible defaultOpen={groupHasActive(adminResellerItems)} className="group/collapsible">
@@ -379,7 +389,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
-              <span className="text-xs font-semibold">Sair do sistema</span>
+              <span className="text-xs font-semibold">{t('auth.logout')}</span>
             </Button>
           </div>
         )}

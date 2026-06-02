@@ -5403,6 +5403,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_super_admin: boolean | null
+          language: string | null
           last_login: string | null
           onboarding_completed: boolean | null
           phone: string | null
@@ -5424,6 +5425,7 @@ export type Database = {
           id: string
           is_active?: boolean | null
           is_super_admin?: boolean | null
+          language?: string | null
           last_login?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
@@ -5445,6 +5447,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_super_admin?: boolean | null
+          language?: string | null
           last_login?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
