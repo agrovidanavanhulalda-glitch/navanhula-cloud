@@ -78,7 +78,27 @@ Deno.serve(async (req) => {
     }
 
     const rawPassword = typeof password === 'string' ? password.trim() : '';
-    const safePassword = rawPassword.length >= 6 ? rawPassword : '123456';
+    // Enforce a strong password policy: ≥ 8 chars, mixed case, digit
+    const isStrong = rawPassword.length >= 8
+      && /[a-z]/.test(rawPassword)
+      && /[A-Z]/.test(rawPassword)
+      && /[0-9]/.test(rawPassword);
+
+    if (!isStrong) {
+      // Generate a cryptographically strong temporary password instead of using a weak fallback
+      const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+      const lower = "abcdefghijkmnopqrstuvwxyz";
+      const digits = "23456789";
+      const symbols = "!@#$%&*";
+      const all = upper + lower + digits + symbols;
+      const rand = (n: number) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
+      let pwd = upper[rand(upper.length)] + lower[rand(lower.length)] + digits[rand(digits.length)] + symbols[rand(symbols.length)];
+      for (let i = 4; i < 14; i++) pwd += all[rand(all.length)];
+      var safePassword = pwd.split("").sort(() => rand(2) - 0.5).join("");
+    } else {
+      var safePassword = rawPassword;
+    }
+
 
     // Create auth user via admin API
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({

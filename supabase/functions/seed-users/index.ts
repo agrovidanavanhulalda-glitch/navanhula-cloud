@@ -36,25 +36,34 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify caller is CEO
+    // Verify caller is CEO or admin — MANDATORY (no auth bypass)
     const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
-      if (caller) {
-        const { data: callerRole } = await supabaseAdmin
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", caller.id)
-          .single();
-        if (callerRole?.role !== "ceo" && callerRole?.role !== "admin") {
-          return new Response(JSON.stringify({ error: "Apenas CEO ou Admin podem criar usuários" }), {
-            status: 403,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user: caller }, error: callerErr } = await supabaseAdmin.auth.getUser(token);
+    if (callerErr || !caller) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: callerRole } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", caller.id)
+      .maybeSingle();
+    if (!callerRole || !["ceo", "admin", "master"].includes(callerRole.role)) {
+      return new Response(JSON.stringify({ error: "Apenas CEO ou Admin podem criar usuários" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     const body = await req.json();
     const users: { email: string; full_name: string; role: string; password?: string }[] = body.users || [];

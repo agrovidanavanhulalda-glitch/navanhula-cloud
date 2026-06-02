@@ -115,18 +115,62 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  // AUTH: Require CRON_SECRET (for cron-driven retry mode) or authenticated user (for dispatch mode)
+  const authHeader = req.headers.get("Authorization") || "";
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+  let callerUserId: string | null = null;
+  let callerCompanyId: string | null = null;
+
+  if (!isCron) {
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const anonClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    callerUserId = claimsData.claims.sub as string;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("company_id")
+      .eq("id", callerUserId)
+      .maybeSingle();
+    callerCompanyId = profile?.company_id || null;
+  }
+
   try {
     const body = await req.json().catch(() => ({}));
     const { event_type, company_id, payload } = body;
 
     // Mode 1: Dispatch a new event to all active webhooks for a company
     if (event_type && company_id && payload) {
+      // Enforce: non-cron callers can only dispatch for their own company
+      if (!isCron && company_id !== callerCompanyId) {
+        return new Response(JSON.stringify({ error: "Forbidden: cannot dispatch for another company" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const { data: webhooks } = await supabase
         .from("webhooks")
         .select("*")
         .eq("company_id", company_id)
         .eq("is_active", true)
         .contains("events", [event_type]);
+
 
       if (!webhooks || webhooks.length === 0) {
         return new Response(

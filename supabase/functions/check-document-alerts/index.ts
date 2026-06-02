@@ -12,9 +12,22 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    // AUTH: this function is cron-driven; require CRON_SECRET (or service-role) bearer
+    const authHeader = req.headers.get("Authorization") || "";
+    const cronSecret = Deno.env.get("CRON_SECRET");
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+    const isService = authHeader === `Bearer ${serviceKey}`;
+    if (!isCron && !isService) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabase = createClient(supabaseUrl, serviceKey);
+
 
     // Fetch all documents with expiration dates
     const { data: docs, error: docsError } = await supabase
