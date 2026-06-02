@@ -138,6 +138,13 @@ describe('Full Sales Offline & Sync E2E', () => {
     });
   });
 
+  const selectProduct = async (name: string) => {
+    const items = await screen.findAllByText(new RegExp(name, 'i'));
+    const gridItem = items.find(el => el.tagName === 'H3');
+    if (!gridItem) throw new Error(`Grid product ${name} not found`);
+    fireEvent.click(gridItem);
+  };
+
   it('performs full offline sales flow with discounts and syncs correctly', { timeout: 60000 }, async () => {
     // 1. Go Offline
     (navigator as any).onLine = false;
@@ -146,8 +153,8 @@ describe('Full Sales Offline & Sync E2E', () => {
     
     // 2. Add products to cart
     await screen.findByText(/Arroz/i);
-    fireEvent.click(screen.getByText(/Arroz/i));
-    fireEvent.click(screen.getByText(/Feijão/i));
+    await selectProduct('Arroz');
+    await selectProduct('Feijão');
     
     // Verify items in cart
     await screen.findByText(/Itens da Venda/i);
