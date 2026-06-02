@@ -68,12 +68,12 @@ const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 );
 
 describe('Full Sales Offline & Sync E2E', () => {
-  const insertMock = vi.fn().mockImplementation(() => {
-    const builder: any = {
-      select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockReturnThis(),
-      then: (cb: any) => Promise.resolve(cb({ data: [], error: null }))
-    };
+  const insertMock = vi.fn().mockImplementation((payload) => {
+    const result = { data: payload, error: null };
+    const builder: any = Promise.resolve(result);
+    builder.select = vi.fn().mockReturnThis();
+    builder.single = vi.fn().mockReturnThis();
+    builder.eq = vi.fn().mockReturnThis();
     return builder;
   });
 
