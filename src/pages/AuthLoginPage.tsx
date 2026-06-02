@@ -20,6 +20,8 @@ const AuthLoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const { currentVersion } = useAppVersion();
 
@@ -29,10 +31,21 @@ const AuthLoginPage: React.FC = () => {
   const redirect = searchParams.get('redirect');
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
+    // Handle recovery session
+    const checkRecovery = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      // If we have a recovery session, show change password directly
+      if (session && window.location.hash.includes('type=recovery')) {
+        setShowChangePassword(true);
+        toast.info('Por favor, defina uma nova senha para sua conta');
+      }
+    };
+    checkRecovery();
+
+    if (!loading && isAuthenticated && !showChangePassword) {
       navigate(redirect || getDefaultRouteForRole(role), { replace: true });
     }
-  }, [loading, isAuthenticated, role, navigate]);
+  }, [loading, isAuthenticated, role, navigate, showChangePassword]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +104,31 @@ const AuthLoginPage: React.FC = () => {
       // If not temporary, let useEffect handle navigation
     } catch (err: any) {
       setError(err?.message || 'Erro ao fazer login');
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) {
+      setError('O e-mail é obrigatório');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      
+      if (resetError) throw resetError;
+      
+      toast.success('Instruções de redefinição enviadas para seu e-mail');
+      setShowForgotPassword(false);
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao enviar e-mail de redefinição');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -165,6 +203,45 @@ const AuthLoginPage: React.FC = () => {
             </div>
           )}
 
+          {showForgotPassword ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="forgotEmail" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Seu E-mail
+                </Label>
+                <Input
+                  id="forgotEmail"
+                  type="email"
+                  placeholder="seu@empresa.com"
+                  value={forgotEmail}
+                  onChange={(e) => { setForgotEmail(e.target.value); setError(null); }}
+                  required
+                  disabled={isLoading}
+                  className="h-14 text-lg"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="h-14 w-full text-lg font-bold shadow-lg glow-primary"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  'ENVIAR INSTRUÇÕES'
+                )}
+              </Button>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="w-full text-xs" 
+                onClick={() => setShowForgotPassword(false)}
+                disabled={isLoading}
+              >
+                Voltar ao login
+              </Button>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {!showChangePassword ? (
               <>
@@ -210,6 +287,15 @@ const AuthLoginPage: React.FC = () => {
                     >
                       {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
                     </Button>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      Esqueceu sua senha?
+                    </button>
                   </div>
                 </div>
               </>
@@ -278,6 +364,7 @@ const AuthLoginPage: React.FC = () => {
               </Button>
             )}
           </form>
+          )}
 
           <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
