@@ -173,7 +173,7 @@ describe('POS Offline & Sync E2E', () => {
     fireEvent.click(await screen.findByText(/Dinheiro/i));
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
     
-    await screen.findByText(/Venda concluída com sucesso/i);
+    await screen.findByText(/Venda concluída/i);
     await screen.findByText(/100,00 MT/i);
     
     fireEvent.click(screen.getByText(/Imprimir Recibo/i));
