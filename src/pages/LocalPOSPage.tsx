@@ -549,9 +549,9 @@ const LocalPOSPage: React.FC = () => {
       {showReceipt && lastSale && (
         <ThermalReceipt
           sale={lastSale}
-          storeName={store.name}
-          storeAddress={store.address}
-          storePhone={store.phone}
+          storeName={store?.name || ''}
+          storeAddress={store?.address || ''}
+          storePhone={store?.phone || ''}
           storeNuit={company?.nif || ''}
           fiscalRegime={(company as any)?.fiscal_regime || ''}
           companyName={company?.name || ''}
@@ -572,9 +572,9 @@ const LocalPOSPage: React.FC = () => {
           isOpen={showPostSaleModal}
           onClose={() => setShowPostSaleModal(false)}
           sale={lastSale}
-          storeName={store.name}
-          storeAddress={store.address}
-          storePhone={store.phone}
+          storeName={store?.name || ''}
+          storeAddress={store?.address || ''}
+          storePhone={store?.phone || ''}
           storeNuit={company?.nif || ''}
           fiscalRegime={(company as any)?.fiscal_regime || ''}
           companyName={company?.name || ''}
