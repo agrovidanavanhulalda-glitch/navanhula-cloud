@@ -207,12 +207,14 @@ class SyncManager {
     const { sale, items, paymentDetails } = payload;
     
     // Insert Sale
-    const { error: saleError } = await supabase.from('sales').insert(sale);
-    if (saleError) throw saleError;
+    const saleResult = await supabase.from('sales').insert(sale);
+    console.log('[Sync] Sale insert result:', saleResult);
+    if (saleResult?.error) throw saleResult.error;
 
     // Insert Items
-    const { error: itemsError } = await supabase.from('sale_items').insert(items);
-    if (itemsError) throw itemsError;
+    const itemsResult = await supabase.from('sale_items').insert(items);
+    console.log('[Sync] Items insert result:', itemsResult);
+    if (itemsResult?.error) throw itemsResult.error;
 
     // Wallet Credit
     if (paymentDetails && paymentDetails.method !== 'cash') {
