@@ -280,6 +280,73 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const costTotal = state.cart.reduce((acc, item) => acc + (item.product.costPrice * item.quantity), 0);
     const profit = total - costTotal;
 
+    if (!navigator.onLine) {
+      const saleId = crypto.randomUUID();
+      const saleData = {
+        id: saleId,
+        company_id: company?.id,
+        store_id: state.currentStore.id,
+        user_id: user.id,
+        cash_register_id: state.currentCashRegister?.id,
+        subtotal,
+        total,
+        discount_amount: discount,
+        payment_method: details.method,
+        status: 'completed',
+        cost_total: costTotal,
+        profit,
+        seller_name: user.full_name || user.email,
+        created_at: new Date().toISOString()
+      };
+
+      const itemsData = state.cart.map(item => ({
+        id: crypto.randomUUID(),
+        company_id: company?.id,
+        sale_id: saleId,
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        unit_price: item.product.salePrice,
+        cost_price: item.product.costPrice,
+        total: item.total,
+        profit: item.total - (item.product.costPrice * item.quantity),
+        created_by: user.id,
+        created_at: new Date().toISOString()
+      }));
+
+      await syncManager.addTask('SALE', { 
+        sale: saleData, 
+        items: itemsData, 
+        paymentDetails: details 
+      });
+
+      toast.info('Venda salva localmente. Será sincronizada quando estiver online.');
+      
+      const localSale: LocalSale = {
+        ...saleData,
+        items: [...state.cart],
+        createdAt: new Date(),
+        isOffline: true,
+        synced: false
+      } as any;
+
+      // Optimistic state update: reduce local stock and clear cart
+      setState(prev => ({
+        ...prev,
+        cart: [],
+        products: prev.products.map(p => {
+          const cartItem = state.cart.find(ci => ci.product.id === p.id);
+          if (cartItem) {
+            return { ...p, stock: Math.max(0, p.stock - cartItem.quantity) };
+          }
+          return p;
+        }),
+        sales: [localSale, ...prev.sales]
+      }));
+
+      return localSale;
+    }
+
     try {
       // 1. Create Sale
       const { data: sale, error: saleError } = await supabase
@@ -303,41 +370,39 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (saleError) throw saleError;
 
-      // 2. Create Sale Items and update stock movements
-      const itemPromises = state.cart.map(async (item) => {
-        // Add sale item
-        const { error: itemError } = await supabase
-          .from('sale_items')
-          .insert({
-            company_id: company?.id,
-            sale_id: sale.id,
-            product_id: item.product.id,
-            product_name: item.product.name,
-            quantity: item.quantity,
-            unit_price: item.product.salePrice,
-            cost_price: item.product.costPrice,
-            total: item.total,
-            profit: item.total - (item.product.costPrice * item.quantity),
-            created_by: user.id
-          });
+      // 2. Create Sale Items
+      const itemsData = state.cart.map(item => ({
+        company_id: company?.id,
+        sale_id: sale.id,
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        unit_price: item.product.salePrice,
+        cost_price: item.product.costPrice,
+        total: item.total,
+        profit: item.total - (item.product.costPrice * item.quantity),
+        created_by: user.id
+      }));
 
-        if (itemError) throw itemError;
-
-        // Record stock movement (This will be handled by DB trigger handle_sale_item_stock if it exists,
-        // but user says stock disappears, so let's be explicit if needed or verify trigger)
-        // Based on previous search, update_stock_after_sale exists.
-      });
-
-      await Promise.all(itemPromises);
+      const { error: itemsError } = await supabase.from('sale_items').insert(itemsData);
+      if (itemsError) throw itemsError;
 
       toast.success('Venda concluída com sucesso');
-      clearCart();
-      loadData(true);
-      return {
+      const completedSale = {
         ...sale,
-        items: state.cart,
-        createdAt: new Date(sale.created_at)
-      } as unknown as LocalSale;
+        items: [...state.cart],
+        createdAt: new Date(sale.created_at),
+        synced: true
+      } as any;
+
+      setState(prev => ({
+        ...prev,
+        cart: [],
+        sales: [completedSale, ...prev.sales]
+      }));
+
+      await loadData(true);
+      return completedSale;
     } catch (error: any) {
       console.error('Error completing sale:', error);
       toast.error('Erro ao processar venda: ' + error.message);
