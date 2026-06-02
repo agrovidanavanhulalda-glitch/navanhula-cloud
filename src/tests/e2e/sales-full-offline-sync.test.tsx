@@ -181,7 +181,8 @@ describe('Full Sales Offline & Sync E2E', () => {
     fireEvent.change(amountInput, { target: { value: '150' } });
     
     // Verify change (150 - 140 = 10)
-    await screen.findByText(/10,00 MT/i);
+    const changeDisplay = screen.getByText(/Troco a Devolver:/i).parentElement;
+    expect(changeDisplay?.textContent).toContain('10,00 MT');
     
     fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
     
