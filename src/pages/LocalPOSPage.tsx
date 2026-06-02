@@ -45,6 +45,7 @@ const LocalPOSPage: React.FC = () => {
     addManualItem,
     removeFromCart,
     updateQuantity,
+    updateDiscount,
     completeSale,
     clearCart,
     getSubtotal,
@@ -398,29 +399,44 @@ const LocalPOSPage: React.FC = () => {
                           </Button>
                         </div>
                         
-                        <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1.5">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-12 w-12 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
-                              onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                            >
-                              <Minus className="w-5 h-5" />
-                            </Button>
-                            <span className="w-12 text-center font-black text-xl tabular-nums">{item.quantity}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-12 w-12 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
-                              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                            >
-                              <Plus className="w-5 h-5" />
-                            </Button>
+                        <div className="flex flex-col gap-2 mt-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1.5">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
+                                onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                              >
+                                <Minus className="w-4 h-4" />
+                              </Button>
+                              <span className="w-8 text-center font-black text-lg tabular-nums">{item.quantity}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
+                                onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                              >
+                                <Plus className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <span className="font-bold text-lg text-[#0B1F3A] tabular-nums">
+                              {formatCurrency(item.total)}
+                            </span>
                           </div>
-                          <span className="font-bold text-xl text-[#0B1F3A] tabular-nums">
-                            {formatCurrency(item.total)}
-                          </span>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground font-medium">Desconto:</span>
+                            <Input
+                              type="number"
+                              value={item.discount || ''}
+                              onChange={(e) => updateDiscount(item.product.id, parseFloat(e.target.value) || 0)}
+                              placeholder="0.00"
+                              className="h-8 text-xs w-24"
+                              aria-label={`Desconto para ${item.product.name}`}
+                            />
+                            <span className="text-xs text-muted-foreground">MT</span>
+                          </div>
                         </div>
                       </Card>
                     </motion.div>
@@ -525,17 +541,17 @@ const LocalPOSPage: React.FC = () => {
         onClose={() => setShowPaymentModal(false)}
         total={getTotal()}
         onConfirm={handlePaymentConfirm}
-        storeId={store.id}
-        storeName={store.name}
+        storeId={store?.id || ''}
+        storeName={store?.name || ''}
       />
 
       {/* Thermal Receipt Modal */}
       {showReceipt && lastSale && (
         <ThermalReceipt
           sale={lastSale}
-          storeName={store.name}
-          storeAddress={store.address}
-          storePhone={store.phone}
+          storeName={store?.name || ''}
+          storeAddress={store?.address || ''}
+          storePhone={store?.phone || ''}
           storeNuit={company?.nif || ''}
           fiscalRegime={(company as any)?.fiscal_regime || ''}
           companyName={company?.name || ''}
@@ -556,9 +572,9 @@ const LocalPOSPage: React.FC = () => {
           isOpen={showPostSaleModal}
           onClose={() => setShowPostSaleModal(false)}
           sale={lastSale}
-          storeName={store.name}
-          storeAddress={store.address}
-          storePhone={store.phone}
+          storeName={store?.name || ''}
+          storeAddress={store?.address || ''}
+          storePhone={store?.phone || ''}
           storeNuit={company?.nif || ''}
           fiscalRegime={(company as any)?.fiscal_regime || ''}
           companyName={company?.name || ''}
