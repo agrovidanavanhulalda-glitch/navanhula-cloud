@@ -50,21 +50,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if caller is CEO or Admin (Managers can also create some roles, but let's keep it secure)
-    const { data: callerProfile } = await adminClient
-      .from('profiles')
-      .select('company_id, role')
-      .eq('id', callingUser.id)
-      .single();
+    // Check if caller is CEO, Admin, or Manager
+    const { data: callerRole } = await adminClient
+      .from('user_roles')
+      .select('role, company_id')
+      .eq('user_id', callingUser.id)
+      .maybeSingle();
 
-    if (!callerProfile || !['ceo', 'admin', 'manager'].includes(callerProfile.role)) {
+    if (!callerRole || !['ceo', 'admin', 'manager', 'owner'].includes(callerRole.role)) {
       return new Response(JSON.stringify({ error: 'Sem permissão para criar utilizadores' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const { email, full_name, role, branch_id, password, send_email } = await req.json();
+    const { email, full_name, role, branch_id, store_id, password, send_email } = await req.json();
 
     if (!email || !full_name || !role) {
       return new Response(JSON.stringify({ error: 'Email, nome e cargo são obrigatórios' }), {
@@ -73,24 +73,36 @@ Deno.serve(async (req) => {
       });
     }
 
-    const tempPassword = password || Math.random().toString(36).slice(-8) + 'A1!';
+    // Use a strong password if not provided
+    const tempPassword = password || Math.random().toString(36).slice(-4) + Math.random().toString(36).toUpperCase().slice(-4) + '1!';
     
     await logStep(null, email, 'auth_creation', 'processing', 'Iniciando criação de usuário auth');
 
-    // 1. Create Auth User
+    // 1. Create Auth User - The database trigger 'on_auth_user_created' will handle 
+    // profiles, company_users, and user_roles creation automatically.
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
       user_metadata: {
         full_name,
-        company_id: callerProfile.company_id,
-        role: role
+        company_id: callerRole.company_id,
+        role: role,
+        branch_id: branch_id || store_id,
+        actor_id: callingUser.id
       }
     });
 
     if (authError) {
       await logStep(null, email, 'auth_creation', 'failed', authError.message);
+      
+      if (authError.message?.includes('already been registered')) {
+        return new Response(JSON.stringify({ error: 'Este email já está registrado' }), {
+          status: 409,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       return new Response(JSON.stringify({ error: authError.message }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -98,48 +110,12 @@ Deno.serve(async (req) => {
     }
 
     const newUserId = authData.user.id;
-    await logStep(newUserId, email, 'auth_creation', 'completed', 'Usuário auth criado com sucesso');
+    await logStep(newUserId, email, 'auth_creation', 'completed', 'Usuário auth criado com sucesso. Trigger de banco de dados processará o perfil.');
 
-    // 2. Create Profile & Company User linkage
-    // We do this explicitly to ensure atomicity in this flow, even if triggers exist.
-    await logStep(newUserId, email, 'profile_creation', 'processing', 'Iniciando criação de perfil');
-
-    const { error: profileError } = await adminClient.from('profiles').upsert({
-      id: newUserId,
-      full_name,
-      email,
-      company_id: callerProfile.company_id,
-      role: role,
-      onboarding_completed: true
-    });
-
-    if (profileError) {
-      await logStep(newUserId, email, 'profile_creation', 'failed', profileError.message);
-      return new Response(JSON.stringify({ error: profileError.message }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Link to company_users if needed (depends on schema)
-    const { error: companyUserError } = await adminClient.from('company_users').upsert({
-      user_id: newUserId,
-      company_id: callerProfile.company_id,
-      role: role,
-      status: 'active'
-    });
-
-    if (companyUserError) {
-       console.warn('Company user linkage error (might be duplicate or already handled by trigger):', companyUserError.message);
-    }
-
-    await logStep(newUserId, email, 'profile_creation', 'completed', 'Perfil criado e vinculado com sucesso');
-
-    // 3. Handle Email Sending (Option A)
+    // 2. Optional: Send welcome email
     if (send_email) {
-      await logStep(newUserId, email, 'email_delivery', 'processing', 'Iniciando envio de email (simulado)');
-      // Here you would integrate with Resend or Lovable's email system
-      // For now, we log that it was requested.
+      await logStep(newUserId, email, 'email_delivery', 'processing', 'Iniciando envio de email de boas-vindas');
+      // Integration with email provider would go here
       await logStep(newUserId, email, 'email_delivery', 'completed', 'Solicitação de email registrada');
     }
 

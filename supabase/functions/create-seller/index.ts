@@ -36,16 +36,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check caller is admin/manager
+    // Check caller is admin/manager/ceo
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: callerRole } = await adminClient
       .from('user_roles')
-      .select('role')
+      .select('role, company_id')
       .eq('user_id', callingUser.id)
       .maybeSingle();
 
-    const allowedRoles = ['admin', 'manager', 'ceo'];
+    const allowedRoles = ['admin', 'manager', 'ceo', 'owner'];
     if (!callerRole || !allowedRoles.includes(callerRole.role)) {
       return new Response(JSON.stringify({ error: 'Sem permissão para criar vendedores' }), {
         status: 403,
@@ -53,22 +53,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get caller's company
-    const { data: callerProfile } = await adminClient
-      .from('profiles')
-      .select('company_id, store_id')
-      .eq('id', callingUser.id)
-      .single();
-
-    if (!callerProfile?.company_id) {
-      return new Response(JSON.stringify({ error: 'Empresa não encontrada' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const body = await req.json();
-    const { name, email, phone, store_id, role, password } = body;
+    const { name, email, phone, store_id, branch_id, role, password } = body;
 
     if (!name || !email) {
       return new Response(JSON.stringify({ error: 'Nome e email são obrigatórios' }), {
@@ -77,15 +63,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Enforce a strong password policy
     const rawPassword = typeof password === 'string' ? password.trim() : '';
-    // Enforce a strong password policy: ≥ 8 chars, mixed case, digit
     const isStrong = rawPassword.length >= 8
       && /[a-z]/.test(rawPassword)
       && /[A-Z]/.test(rawPassword)
       && /[0-9]/.test(rawPassword);
 
+    let safePassword = rawPassword;
     if (!isStrong) {
-      // Generate a cryptographically strong temporary password instead of using a weak fallback
       const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
       const lower = "abcdefghijkmnopqrstuvwxyz";
       const digits = "23456789";
@@ -94,25 +80,27 @@ Deno.serve(async (req) => {
       const rand = (n: number) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
       let pwd = upper[rand(upper.length)] + lower[rand(lower.length)] + digits[rand(digits.length)] + symbols[rand(symbols.length)];
       for (let i = 4; i < 14; i++) pwd += all[rand(all.length)];
-      var safePassword = pwd.split("").sort(() => rand(2) - 0.5).join("");
-    } else {
-      var safePassword = rawPassword;
+      safePassword = pwd.split("").sort(() => rand(2) - 0.5).join("");
     }
 
-
     // Create auth user via admin API
+    // The database trigger 'on_auth_user_created' handles profile, role, and company linkage.
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password: safePassword,
-      email_confirm: true, // Auto-confirm for seller accounts created by admin
+      email_confirm: true,
       user_metadata: {
         full_name: name,
+        company_id: callerRole.company_id,
+        role: role || 'seller',
+        branch_id: branch_id || store_id,
+        actor_id: callingUser.id,
+        phone: phone || null
       },
     });
 
     if (createError) {
       console.error('Create user error:', createError);
-      // Check if user already exists
       if (createError.message?.includes('already been registered')) {
         return new Response(JSON.stringify({ error: 'Este email já está registrado' }), {
           status: 409,
@@ -125,31 +113,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const sellerId = newUser.user.id;
-
-    // Upsert profile — handles both cases: trigger already created it, or not yet
-    const targetStoreId = store_id || callerProfile.store_id;
-    await adminClient.from('profiles').upsert({
-      id: sellerId,
-      full_name: name,
-      email,
-      phone: phone || null,
-      company_id: callerProfile.company_id,
-      store_id: targetStoreId,
-      is_active: true,
-      onboarding_completed: true,
-    }, { onConflict: 'id' });
-
-    // Assign role
-    const dbRole = role === 'admin' ? 'manager' : 'seller';
-    await adminClient.from('user_roles').upsert({
-      user_id: sellerId,
-      role: dbRole,
-    }, { onConflict: 'user_id,role' });
-
     return new Response(JSON.stringify({
       success: true,
-      seller_id: sellerId,
+      user_id: newUser.user.id,
       temporary_password: safePassword,
       message: 'Vendedor criado com sucesso',
     }), {
