@@ -121,6 +121,7 @@ interface LocalPOSContextType extends LocalPOSState {
   addManualItem: (name: string, price: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  updateDiscount: (productId: string, discount: number) => void;
   clearCart: () => void;
   startNewSale: () => void;
   completeSale: (paymentDetails: PaymentDetails) => Promise<LocalSale | null>;
