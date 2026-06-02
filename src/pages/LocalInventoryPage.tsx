@@ -469,82 +469,84 @@ const LocalInventoryPage: React.FC = () => {
 
       {/* Adjust Stock Dialog */}
       <Dialog open={showAdjustDialog} onOpenChange={setShowAdjustDialog}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>Ajustar Estoque</DialogTitle>
           </DialogHeader>
 
-          {selectedProduct && (
-            <div className="space-y-4">
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <p className="font-medium">{selectedProduct.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  Estoque atual: <span className="font-bold">{selectedProduct.stock_qty}</span> unidades
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Tipo de Ajuste</Label>
-                <Select value={adjustmentType} onValueChange={(v: AdjustmentType) => setAdjustmentType(v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="add">
-                      <div className="flex items-center gap-2"><ArrowDownToLine className="w-4 h-4 text-green-600" /> Adicionar (Entrada)</div>
-                    </SelectItem>
-                    <SelectItem value="remove">
-                      <div className="flex items-center gap-2"><ArrowUpFromLine className="w-4 h-4 text-destructive" /> Remover (Saída)</div>
-                    </SelectItem>
-                    <SelectItem value="set">
-                      <div className="flex items-center gap-2"><RefreshCw className="w-4 h-4 text-blue-600" /> Definir Valor (Ajuste)</div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Quantidade</Label>
-                <Input type="number" min="1" value={adjustmentQty} onChange={(e) => setAdjustmentQty(e.target.value)} placeholder="0" />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Motivo *</Label>
-                <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o motivo" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Reposição de Estoque">Reposição de Estoque</SelectItem>
-                    <SelectItem value="Correção de Inventário">Correção de Inventário</SelectItem>
-                    <SelectItem value="Perda / Avaria">Perda / Avaria</SelectItem>
-                    <SelectItem value="Roubo / Furto">Roubo / Furto</SelectItem>
-                    <SelectItem value="Devolução de Cliente">Devolução de Cliente</SelectItem>
-                    <SelectItem value="Outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Observações (opcional)</Label>
-                <Textarea value={adjustmentNotes} onChange={(e) => setAdjustmentNotes(e.target.value)} placeholder="Detalhes adicionais..." rows={2} />
-              </div>
-
-              {adjustmentQty && (
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <p className="text-sm">
-                    Novo estoque:{' '}
-                    <span className="font-bold">
-                      {adjustmentType === 'add'
-                        ? selectedProduct.stock_qty + parseInt(adjustmentQty || '0')
-                        : adjustmentType === 'remove'
-                        ? Math.max(0, selectedProduct.stock_qty - parseInt(adjustmentQty || '0'))
-                        : parseInt(adjustmentQty || '0')
-                      } unidades
-                    </span>
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            {selectedProduct && (
+              <div className="space-y-4">
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="font-medium">{selectedProduct.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Estoque atual: <span className="font-bold">{selectedProduct.stock_qty}</span> unidades
                   </p>
                 </div>
-              )}
-            </div>
-          )}
 
-          <DialogFooter>
+                <div className="space-y-2">
+                  <Label>Tipo de Ajuste</Label>
+                  <Select value={adjustmentType} onValueChange={(v: AdjustmentType) => setAdjustmentType(v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="add">
+                        <div className="flex items-center gap-2"><ArrowDownToLine className="w-4 h-4 text-green-600" /> Adicionar (Entrada)</div>
+                      </SelectItem>
+                      <SelectItem value="remove">
+                        <div className="flex items-center gap-2"><ArrowUpFromLine className="w-4 h-4 text-destructive" /> Remover (Saída)</div>
+                      </SelectItem>
+                      <SelectItem value="set">
+                        <div className="flex items-center gap-2"><RefreshCw className="w-4 h-4 text-blue-600" /> Definir Valor (Ajuste)</div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Quantidade</Label>
+                  <Input type="number" min="1" value={adjustmentQty} onChange={(e) => setAdjustmentQty(e.target.value)} placeholder="0" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Motivo *</Label>
+                  <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o motivo" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Reposição de Estoque">Reposição de Estoque</SelectItem>
+                      <SelectItem value="Correção de Inventário">Correção de Inventário</SelectItem>
+                      <SelectItem value="Perda / Avaria">Perda / Avaria</SelectItem>
+                      <SelectItem value="Roubo / Furto">Roubo / Furto</SelectItem>
+                      <SelectItem value="Devolução de Cliente">Devolução de Cliente</SelectItem>
+                      <SelectItem value="Outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Observações (opcional)</Label>
+                  <Textarea value={adjustmentNotes} onChange={(e) => setAdjustmentNotes(e.target.value)} placeholder="Detalhes adicionais..." rows={2} />
+                </div>
+
+                {adjustmentQty && (
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-sm">
+                      Novo estoque:{' '}
+                      <span className="font-bold">
+                        {adjustmentType === 'add'
+                          ? selectedProduct.stock_qty + parseInt(adjustmentQty || '0')
+                          : adjustmentType === 'remove'
+                          ? Math.max(0, selectedProduct.stock_qty - parseInt(adjustmentQty || '0'))
+                          : parseInt(adjustmentQty || '0')
+                        } unidades
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="px-6 py-4 border-t">
             <Button variant="outline" onClick={() => setShowAdjustDialog(false)}>Cancelar</Button>
             <Button onClick={handleAdjustStock} disabled={adjusting}>
               {adjusting ? 'Salvando...' : 'Confirmar Ajuste'}
