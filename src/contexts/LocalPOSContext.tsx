@@ -223,7 +223,73 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         id: cr.id, storeId: cr.store_id, sellerId: cr.user_id, sellerName: sellers.find(s => s.id === cr.user_id)?.name || '', openingAmount: cr.opening_amount, expectedAmount: cr.expected_amount, status: cr.status as 'open' | 'closed', openedAt: new Date(cr.opened_at), closedAt: cr.closed_at ? new Date(cr.closed_at) : undefined, salesTotal: 0, salesCount: 0
       }));
 
-      setState(prev => ({ ...prev, stores, currentStore, products, sellers, cashRegisters, currentCashRegister: cashRegisters.find(cr => cr.status === 'open' && cr.sellerId === user?.id) || null, loading: false }));
+      // Pull synced sales
+      const { data: syncedSalesData } = await supabase.from('sales')
+        .select('*, sale_items(*)')
+        .eq('company_id', targetCompanyId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      const syncedSales: LocalSale[] = (syncedSalesData || []).map(s => ({
+        id: s.id,
+        items: s.sale_items.map((si: any) => ({
+          product: { id: si.product_id, name: si.product_name, sale_price: si.unit_price, cost_price: si.cost_price } as any,
+          quantity: si.quantity,
+          discount: 0,
+          total: si.total
+        })),
+        subtotal: s.subtotal,
+        discount: s.discount_amount,
+        total: s.total,
+        status: s.status,
+        paymentMethod: s.payment_method,
+        createdAt: new Date(s.created_at),
+        storeId: s.store_id,
+        sellerId: s.user_id,
+        sellerName: s.seller_name,
+        synced: true
+      }));
+
+      // Pull pending sales from sync manager
+      const pendingTasks = syncManager.getTasksByType('SALE');
+      const pendingSales: LocalSale[] = pendingTasks.map(t => {
+        const { sale, items, paymentDetails } = t.payload;
+        return {
+          id: sale.id,
+          items: items.map((i: any) => ({
+            product: { id: i.product_id, name: i.product_name, sale_price: i.unit_price, cost_price: i.cost_price } as any,
+            quantity: i.quantity,
+            discount: 0,
+            total: i.total
+          })),
+          subtotal: sale.subtotal,
+          discount: sale.discount_amount,
+          total: sale.total,
+          status: sale.status,
+          paymentMethod: sale.payment_method,
+          paymentDetails,
+          createdAt: new Date(sale.created_at),
+          storeId: sale.store_id,
+          sellerId: sale.user_id,
+          sellerName: sale.seller_name,
+          synced: false,
+          isOffline: true
+        };
+      });
+
+      const allSales = [...pendingSales, ...syncedSales].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+      setState(prev => ({ 
+        ...prev, 
+        stores, 
+        currentStore, 
+        products, 
+        sellers, 
+        cashRegisters, 
+        sales: allSales,
+        currentCashRegister: cashRegisters.find(cr => cr.status === 'open' && cr.sellerId === user?.id) || null, 
+        loading: false 
+      }));
     } catch (error) {
       console.error('POS Load Error:', error);
       setState(prev => ({ ...prev, loading: false }));
