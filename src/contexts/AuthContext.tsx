@@ -233,7 +233,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log(`[Auth] Event: ${event}`);
 
       if (event === 'PASSWORD_RECOVERY') {
-        // Handle password recovery state if needed
+        console.log('[Auth] Modo de recuperação de senha detectado');
+      }
+
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('[Auth] Token de acesso renovado com sucesso');
       }
 
       if (event === 'SIGNED_OUT') {
