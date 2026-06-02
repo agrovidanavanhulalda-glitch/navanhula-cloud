@@ -85,11 +85,16 @@ const ThermalReceipt: React.FC<ThermalReceiptProps> = ({
     });
   };
 
-  const getPaymentMethodName = (method: string) => {
+  const getPaymentMethodName = (sale: LocalSale) => {
+    if (sale.paymentMethod === 'split' && sale.paymentDetails?.splitDetails) {
+      const { cashAmount, electronicAmount, electronicMethod } = sale.paymentDetails.splitDetails;
+      const eMethod = electronicMethod === 'mpesa' ? 'M-Pesa' : electronicMethod === 'emola' ? 'E-Mola' : 'Cartão';
+      return `Misto (D: ${formatCurrency(cashAmount)} + ${eMethod}: ${formatCurrency(electronicAmount)})`;
+    }
     const methods: Record<string, string> = {
       cash: 'Dinheiro', card: 'Cartão', mpesa: 'M-Pesa', emola: 'E-Mola',
     };
-    return methods[method] || 'Outro';
+    return methods[sale.paymentMethod || 'cash'] || 'Outro';
   };
 
   const formatDate = (date: Date) => {
