@@ -301,6 +301,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     value={amountReceived}
                     onChange={(e) => setAmountReceived(e.target.value)}
                     className="text-2xl h-14 text-center font-bold"
+                    aria-label="Valor Entregue"
                     autoFocus
                   />
                 </div>
