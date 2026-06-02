@@ -165,6 +165,22 @@ const LocalSalesHistoryPage: React.FC = () => {
         );
     }
   };
+  
+  // Get sync badge
+  const getSyncBadge = (synced?: boolean) => {
+    if (synced) {
+      return (
+        <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-600 border-blue-200">
+          Nuvem
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-600 border-amber-200 animate-pulse">
+        Pendente
+      </Badge>
+    );
+  };
 
   // Get payment label
   const getPaymentLabel = (method?: string) => {
