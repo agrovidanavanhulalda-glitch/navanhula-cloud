@@ -81,9 +81,11 @@ const LocalSalesHistoryPage: React.FC = () => {
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         const matchId = sale.id.toLowerCase().includes(searchLower);
+        const receiptNo = new Date(sale.createdAt).getTime().toString(36).toUpperCase().slice(-6);
+        const matchReceipt = receiptNo.toLowerCase().includes(searchLower);
         const matchSeller = sale.sellerName?.toLowerCase().includes(searchLower);
         const matchItems = sale.items.some(i => i.product.name.toLowerCase().includes(searchLower));
-        if (!matchId && !matchSeller && !matchItems) return false;
+        if (!matchId && !matchSeller && !matchItems && !matchReceipt) return false;
       }
 
       return true;
