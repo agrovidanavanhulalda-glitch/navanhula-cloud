@@ -351,7 +351,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         paymentDetails: details 
       });
 
-      toast.info('Venda salva localmente. Será sincronizada quando estiver online.');
+      toast.success('Venda concluída com sucesso');
       
       const localSale: LocalSale = {
         ...saleData,
