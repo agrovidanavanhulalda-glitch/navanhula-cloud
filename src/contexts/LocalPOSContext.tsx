@@ -53,7 +53,7 @@ export interface LocalSale {
   total: number;
   costTotal?: number;
   profit?: number;
-  status: 'open' | 'completed' | 'cancelled';
+  status: 'open' | 'completed' | 'cancelled' | 'pending' | 'refunded';
   paymentMethod?: string;
   paymentDetails?: PaymentDetails;
   amountReceived?: number;
