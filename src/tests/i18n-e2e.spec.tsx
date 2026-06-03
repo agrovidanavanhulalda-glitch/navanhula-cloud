@@ -41,7 +41,7 @@ describe('I18n End-to-End Language Switching', () => {
 
     // Helper to change language via selector
     const changeLang = (label: string) => {
-      const trigger = screen.getByRole('button');
+      const trigger = screen.getByTestId('language-selector-trigger');
       fireEvent.click(trigger);
       const option = screen.getByText(label);
       fireEvent.click(option);
@@ -88,7 +88,7 @@ describe('I18n End-to-End Language Switching', () => {
       </I18nProvider>
     );
 
-    const trigger = screen.getByRole('button');
+    const trigger = screen.getByTestId('language-selector-trigger');
     fireEvent.click(trigger);
     fireEvent.click(screen.getByText('English'));
 
