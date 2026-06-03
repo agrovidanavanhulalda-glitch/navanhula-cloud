@@ -106,7 +106,7 @@ const LocalSettingsPage: React.FC = () => {
 
   const handleSaveCompany = async () => {
     if (!companyForm.name.trim()) {
-      toast.error('Nome da empresa é obrigatório');
+      toast.error(t('settings.company.name_required') || 'Nome da empresa é obrigatório');
       return;
     }
     setSaving(true);
