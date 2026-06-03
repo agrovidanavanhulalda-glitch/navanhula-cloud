@@ -1,8 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import React from 'react';
 import { I18nProvider, useI18n } from '@/contexts/i18n';
 import LanguageSelector from '@/components/layout/LanguageSelector';
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+
+// Mock do DropdownMenu para evitar problemas com Portals no JSDOM
+vi.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }: any) => <div data-testid="dropdown-root">{children}</div>,
+  DropdownMenuTrigger: ({ children }: any) => <div data-testid="dropdown-trigger">{children}</div>,
+  DropdownMenuContent: ({ children }: any) => <div data-testid="dropdown-content">{children}</div>,
+  DropdownMenuItem: ({ children, onClick, 'data-testid': testId }: any) => (
+    <div data-testid={testId} onClick={onClick}>
+      {children}
+    </div>
+  ),
+}));
 
 // Componente de teste para exibir textos traduzidos
 const TestComponent = () => {
