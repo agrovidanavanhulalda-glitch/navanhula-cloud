@@ -494,27 +494,27 @@ const LocalSettingsPage: React.FC = () => {
         <TabsContent value="integracoes">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Plug className="w-5 h-5" /> Status do Sistema</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Plug className="w-5 h-5" /> {t('settings.integrations.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {[
                 { label: 'Backend (Lovable Cloud)', status: true },
-                { label: 'Base de Dados', status: true },
-                { label: 'Autenticação', status: true },
-                { label: 'Realtime (vendas)', status: true },
-                { label: 'Armazenamento (mídia)', status: true },
+                { label: t('settings.integrations.db'), status: true },
+                { label: t('settings.integrations.auth'), status: true },
+                { label: t('settings.integrations.realtime'), status: true },
+                { label: t('settings.integrations.storage'), status: true },
               ].map(item => (
                 <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <p className="text-sm font-medium">{item.label}</p>
                   <Badge variant={item.status ? 'default' : 'destructive'} className="gap-1">
                     {item.status ? <CheckCircle className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
-                    {item.status ? 'Conectado' : 'Offline'}
+                    {item.status ? t('settings.integrations.connected') : t('settings.integrations.offline')}
                   </Badge>
                 </div>
               ))}
               <p className="text-xs text-muted-foreground mt-4">
-                Loja actual: <strong>{store?.name || 'Não definida'}</strong> • 
-                Empresa: <strong>{company?.name || 'Não definida'}</strong>
+                {t('settings.integrations.current_store')}: <strong>{store?.name || t('settings.integrations.not_defined')}</strong> • 
+                {t('settings.integrations.company')}: <strong>{company?.name || t('settings.integrations.not_defined')}</strong>
               </p>
             </CardContent>
           </Card>
