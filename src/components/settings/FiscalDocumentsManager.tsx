@@ -412,23 +412,23 @@ const FiscalDocumentsManager: React.FC = () => {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="bg-muted/20">
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Documentos emitidos</p>
+            <p className="text-sm text-muted-foreground">{t('fiscal.issued_docs')}</p>
             <p className="mt-2 text-3xl font-bold">{documents.length}</p>
-            <p className="text-xs text-muted-foreground">Últimos registros da loja</p>
+            <p className="text-xs text-muted-foreground">{t('fiscal.last_records')}</p>
           </CardContent>
         </Card>
         <Card className="bg-muted/20">
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Cotações emitidas</p>
+            <p className="text-sm text-muted-foreground">{t('fiscal.quotations_issued')}</p>
             <p className="mt-2 text-3xl font-bold">{stats.quotations}</p>
-            <p className="text-xs text-muted-foreground">Propostas comerciais prontas para clientes</p>
+            <p className="text-xs text-muted-foreground">{t('fiscal.ready_proposals')}</p>
           </CardContent>
         </Card>
         <Card className="bg-muted/20">
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Valor total emitido</p>
+            <p className="text-sm text-muted-foreground">{t('fiscal.total_issued')}</p>
             <p className="mt-2 text-3xl font-bold">{formatCurrency(stats.totalIssued)}</p>
-            <p className="text-xs text-muted-foreground">Inclui facturas, recibos e notas</p>
+            <p className="text-xs text-muted-foreground">{t('fiscal.include_docs')}</p>
           </CardContent>
         </Card>
       </div>
