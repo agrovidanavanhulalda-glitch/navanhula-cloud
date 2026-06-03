@@ -440,6 +440,10 @@ const translations: Record<Language, Record<string, string>> = {
     'hr.employee.inactive': 'Inactivo',
     'hr.employee.total': 'Total Empleados',
     'hr.employee.payroll': 'Nómina',
+    'hr.employee.access_level': 'Nivel de Acceso',
+    'hr.employee.role_admin': 'Administrador',
+    'hr.employee.role_manager': 'Gerente',
+    'hr.employee.role_seller': 'Vendedor',
   },
   fr: {
     'nav.dashboard': 'Tableau de bord', 'nav.pos': 'PDV', 'nav.products': 'Produits', 'nav.inventory': 'Stock',
@@ -509,6 +513,10 @@ const translations: Record<Language, Record<string, string>> = {
     'hr.employee.inactive': 'Inactif',
     'hr.employee.total': 'Total Employés',
     'hr.employee.payroll': 'Paie',
+    'hr.employee.access_level': 'Niveau d\'Accès',
+    'hr.employee.role_admin': 'Administrateur',
+    'hr.employee.role_manager': 'Gérant',
+    'hr.employee.role_seller': 'Vendeur',
   },
   de: {
     'nav.dashboard': 'Dashboard', 'nav.pos': 'Kasse', 'nav.products': 'Produkte', 'nav.inventory': 'Lager',
@@ -576,6 +584,10 @@ const translations: Record<Language, Record<string, string>> = {
     'hr.employee.inactive': 'Inaktiv',
     'hr.employee.total': 'Gesamt Mitarbeiter',
     'hr.employee.payroll': 'Gehaltsliste',
+    'hr.employee.access_level': 'Zugriffsebene',
+    'hr.employee.role_admin': 'Administrator',
+    'hr.employee.role_manager': 'Manager',
+    'hr.employee.role_seller': 'Verkäufer',
   },
   it: {
     'nav.dashboard': 'Cruscotto', 'nav.pos': 'POS', 'nav.products': 'Prodotti', 'nav.inventory': 'Magazzino',
