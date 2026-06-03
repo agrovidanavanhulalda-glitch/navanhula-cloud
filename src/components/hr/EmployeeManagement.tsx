@@ -9,8 +9,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, UserPlus, Edit2, Users } from 'lucide-react';
+import { Plus, UserPlus, Edit2, Users, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
+import { useTranslation } from '@/contexts/i18n';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 
 interface Employee {
   id: string;
@@ -36,14 +48,45 @@ const POSITIONS = ['Vendedor', 'Gerente', 'Caixa', 'Estoquista', 'Motorista', 'C
 
 const EmployeeManagement: React.FC = () => {
   const { company } = useAuth();
+  const { t } = useTranslation();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  const [form, setForm] = useState({
-    full_name: '', email: '', phone: '', position: 'Vendedor',
-    department: 'Operações', hire_date: new Date().toISOString().split('T')[0],
-    base_salary: '', commission_rate: '0', inss_number: '', nuit: '', bank_name: '', bank_account: ''
+
+  const employeeSchema = z.object({
+    full_name: z.string().min(3, t('hr.employee.required')),
+    base_salary: z.string().min(1, t('hr.employee.required')).refine((val) => !isNaN(Number(val)) && Number(val) > 0, t('hr.employee.required')),
+    commission_rate: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100), '0-100%'),
+    hire_date: z.string().min(1, t('hr.employee.required')),
+    email: z.string().email(t('hr.employee.invalid_email')).optional().or(z.literal('')),
+    phone: z.string().optional(),
+    position: z.string().min(1, t('hr.employee.required')),
+    department: z.string().min(1, t('hr.employee.required')),
+    inss_number: z.string().optional(),
+    nuit: z.string().optional().refine((val) => !val || /^\d{9}$/.test(val), t('hr.employee.invalid_nuit')),
+    bank_name: z.string().optional(),
+    bank_account: z.string().optional(),
+  });
+
+  type EmployeeFormValues = z.infer<typeof employeeSchema>;
+
+  const form = useForm<EmployeeFormValues>({
+    resolver: zodResolver(employeeSchema),
+    defaultValues: {
+      full_name: '',
+      base_salary: '',
+      commission_rate: '0',
+      hire_date: new Date().toISOString().split('T')[0],
+      email: '',
+      phone: '',
+      position: 'Vendedor',
+      department: 'Operações',
+      inss_number: '',
+      nuit: '',
+      bank_name: '',
+      bank_account: '',
+    },
   });
 
   const loadEmployees = async () => {
@@ -58,44 +101,42 @@ const EmployeeManagement: React.FC = () => {
 
   useEffect(() => { loadEmployees(); }, []);
 
-  const resetForm = () => {
-    setForm({ full_name: '', email: '', phone: '', position: 'Vendedor', department: 'Operações', hire_date: new Date().toISOString().split('T')[0], base_salary: '', commission_rate: '0', inss_number: '', nuit: '', bank_name: '', bank_account: '' });
-    setEditingEmployee(null);
-  };
-
   const handleEdit = (emp: Employee) => {
     setEditingEmployee(emp);
-    setForm({
-      full_name: emp.full_name, email: emp.email || '', phone: emp.phone || '',
-      position: emp.position, department: emp.department, hire_date: emp.hire_date,
-      base_salary: String(emp.base_salary), commission_rate: String(emp.commission_rate || 0),
+    form.reset({
+      full_name: emp.full_name,
+      base_salary: String(emp.base_salary),
+      commission_rate: String(emp.commission_rate || 0),
+      hire_date: emp.hire_date,
+      email: emp.email || '',
+      phone: emp.phone || '',
+      position: emp.position,
+      department: emp.department,
       inss_number: emp.inss_number || '',
-      nuit: emp.nuit || '', bank_name: emp.bank_name || '', bank_account: emp.bank_account || ''
+      nuit: emp.nuit || '',
+      bank_name: emp.bank_name || '',
+      bank_account: emp.bank_account || '',
     });
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!form.full_name || !form.base_salary) {
-      toast.error('Nome e salário base são obrigatórios');
-      return;
-    }
+  const onSubmit = async (values: EmployeeFormValues) => {
     if (!company) return;
 
     const payload = {
       company_id: company.id,
-      full_name: form.full_name,
-      email: form.email || null,
-      phone: form.phone || null,
-      position: form.position,
-      department: form.department,
-      hire_date: form.hire_date,
-      base_salary: parseFloat(form.base_salary),
-      commission_rate: parseFloat(form.commission_rate) || 0,
-      inss_number: form.inss_number || null,
-      nuit: form.nuit || null,
-      bank_name: form.bank_name || null,
-      bank_account: form.bank_account || null,
+      full_name: values.full_name,
+      email: values.email || null,
+      phone: values.phone || null,
+      position: values.position,
+      department: values.department,
+      hire_date: values.hire_date,
+      base_salary: parseFloat(values.base_salary),
+      commission_rate: parseFloat(values.commission_rate || '0'),
+      inss_number: values.inss_number || null,
+      nuit: values.nuit || null,
+      bank_name: values.bank_name || null,
+      bank_account: values.bank_account || null,
       status: 'active'
     };
 
@@ -106,10 +147,15 @@ const EmployeeManagement: React.FC = () => {
       ({ error } = await supabase.from('employees').insert(payload as any));
     }
 
-    if (error) { toast.error('Erro ao salvar: ' + error.message); return; }
-    toast.success(editingEmployee ? 'Funcionário atualizado' : 'Funcionário adicionado');
+    if (error) { 
+      toast.error(t('settings.messages.save_error') + ': ' + error.message); 
+      return; 
+    }
+    
+    toast.success(t('hr.employee.save_success'));
     setDialogOpen(false);
-    resetForm();
+    form.reset();
+    setEditingEmployee(null);
     loadEmployees();
   };
 
@@ -121,65 +167,219 @@ const EmployeeManagement: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Users className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold">Gestão de Funcionários</h3>
-          <Badge variant="secondary">{activeEmployees.length} ativos</Badge>
+          <h3 className="text-lg font-semibold">{t('hr.employee.title')}</h3>
+          <Badge variant="secondary">{activeEmployees.length} {t('common.active').toLowerCase()}</Badge>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
+        <Dialog open={dialogOpen} onOpenChange={(o) => { 
+          setDialogOpen(o); 
+          if (!o) {
+            form.reset();
+            setEditingEmployee(null);
+          }
+        }}>
           <DialogTrigger asChild>
-            <Button size="sm"><UserPlus className="w-4 h-4 mr-2" /> Novo Funcionário</Button>
+            <Button size="sm"><UserPlus className="w-4 h-4 mr-2" /> {t('hr.employee.new')}</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingEmployee ? 'Editar Funcionário' : 'Novo Funcionário'}</DialogTitle>
+              <DialogTitle>{editingEmployee ? t('hr.employee.edit') : t('hr.employee.new')}</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Nome Completo *</Label><Input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} /></div>
-                <div><Label>Salário Base (MT) *</Label><Input type="number" value={form.base_salary} onChange={e => setForm(f => ({ ...f, base_salary: e.target.value }))} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Comissão (%)</Label><Input type="number" step="0.5" min="0" max="100" value={form.commission_rate} onChange={e => setForm(f => ({ ...f, commission_rate: e.target.value }))} placeholder="Ex: 5" /></div>
-                <div><Label>Data de Admissão</Label><Input type="date" value={form.hire_date} onChange={e => setForm(f => ({ ...f, hire_date: e.target.value }))} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Email</Label><Input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
-                <div><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Cargo</Label>
-                  <Select value={form.position} onValueChange={v => setForm(f => ({ ...f, position: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{POSITIONS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-                  </Select>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="full_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.full_name')} *</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="base_salary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.base_salary')} (MT) *</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <div>
-                  <Label>Departamento</Label>
-                  <Select value={form.department} onValueChange={v => setForm(f => ({ ...f, department: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="commission_rate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.commission')}</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.5" min="0" max="100" {...field} placeholder="Ex: 5" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="hire_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.hire_date')} *</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Nº INSS</Label><Input value={form.inss_number} onChange={e => setForm(f => ({ ...f, inss_number: e.target.value }))} /></div>
-                <div><Label>NUIT</Label><Input value={form.nuit} onChange={e => setForm(f => ({ ...f, nuit: e.target.value }))} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Banco</Label><Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} placeholder="Ex: BCI, Millennium" /></div>
-                <div><Label>Nº Conta Bancária</Label><Input value={form.bank_account} onChange={e => setForm(f => ({ ...f, bank_account: e.target.value }))} /></div>
-              </div>
-              <Button onClick={handleSave} className="w-full mt-2">
-                {editingEmployee ? 'Atualizar' : 'Adicionar'} Funcionário
-              </Button>
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.email')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.phone')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="position"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.position')}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione um cargo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {POSITIONS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.department')}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione um departamento" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="inss_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.inss')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="nuit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.nuit')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="bank_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.bank')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ex: BCI, Millennium" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="bank_account"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('hr.employee.account')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <Button type="submit" className="w-full mt-2" disabled={form.formState.isSubmitting}>
+                  {editingEmployee ? t('common.save') : t('common.add')} {t('nav.employees').toLowerCase()}
+                </Button>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Total Funcionários</p><p className="text-xl font-bold">{activeEmployees.length}</p></CardContent></Card>
-        <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Folha Salarial</p><p className="text-xl font-bold text-primary">{formatCurrency(totalPayroll)}</p></CardContent></Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">{t('hr.employee.total')}</p><p className="text-xl font-bold">{activeEmployees.length}</p></CardContent></Card>
+        <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">{t('hr.employee.payroll')}</p><p className="text-xl font-bold text-primary">{formatCurrency(totalPayroll)}</p></CardContent></Card>
         <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">INSS Empresa (3%)</p><p className="text-xl font-bold text-warning">{formatCurrency(totalPayroll * 0.03)}</p></CardContent></Card>
         <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Custo Total Estimado</p><p className="text-xl font-bold text-destructive">{formatCurrency(totalPayroll * 1.03)}</p></CardContent></Card>
       </div>
@@ -190,13 +390,13 @@ const EmployeeManagement: React.FC = () => {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-card">
                 <tr className="border-b border-border">
-                  <th className="text-left p-3">Nome</th>
-                  <th className="text-left p-3">Cargo</th>
-                  <th className="text-left p-3">Departamento</th>
-                  <th className="text-right p-3">Salário Base</th>
-                  <th className="text-center p-3">Comissão</th>
-                  <th className="text-center p-3">Status</th>
-                  <th className="text-center p-3">Acções</th>
+                  <th className="text-left p-3">{t('common.name')}</th>
+                  <th className="text-left p-3">{t('hr.employee.position')}</th>
+                  <th className="text-left p-3">{t('hr.employee.department')}</th>
+                  <th className="text-right p-3">{t('hr.employee.base_salary')}</th>
+                  <th className="text-center p-3">{t('hr.employee.commission')}</th>
+                  <th className="text-center p-3">{t('common.status')}</th>
+                  <th className="text-center p-3">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -215,7 +415,7 @@ const EmployeeManagement: React.FC = () => {
                     </td>
                     <td className="p-3 text-center">
                       <Badge variant={emp.status === 'active' ? 'default' : 'secondary'}>
-                        {emp.status === 'active' ? 'Ativo' : 'Inativo'}
+                        {emp.status === 'active' ? t('common.active') : t('common.inactive')}
                       </Badge>
                     </td>
                     <td className="p-3 text-center">
@@ -228,9 +428,9 @@ const EmployeeManagement: React.FC = () => {
                           size="sm" 
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={async () => {
-                            if (confirm(`Tem certeza que deseja remover ${emp.full_name}?`)) {
+                            if (confirm(t('hr.employee.delete_confirm'))) {
                               const { error } = await supabase.from('employees').delete().eq('id', emp.id);
-                              if (error) toast.error('Erro ao remover: ' + error.message);
+                              if (error) toast.error(t('settings.messages.save_error') + ': ' + error.message);
                               else {
                                 toast.success('Funcionário removido');
                                 loadEmployees();
@@ -238,7 +438,7 @@ const EmployeeManagement: React.FC = () => {
                             }
                           }}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </td>
