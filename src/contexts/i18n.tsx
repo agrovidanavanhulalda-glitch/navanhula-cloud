@@ -684,3 +684,5 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </I18nContext.Provider>
   );
 };
+
+export const useTranslation = useI18n;
