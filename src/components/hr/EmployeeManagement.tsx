@@ -167,7 +167,7 @@ const EmployeeManagement: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Banco</Label><Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} placeholder="Ex: BCI, Millennium" /></div>
-                
+                <div><Label>Nº Conta Bancária</Label><Input value={form.bank_account} onChange={e => setForm(f => ({ ...f, bank_account: e.target.value }))} /></div>
               </div>
               <Button onClick={handleSave} className="w-full mt-2">
                 {editingEmployee ? 'Atualizar' : 'Adicionar'} Funcionário
