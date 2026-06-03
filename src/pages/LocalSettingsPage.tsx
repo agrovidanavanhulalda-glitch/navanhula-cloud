@@ -385,12 +385,12 @@ const LocalSettingsPage: React.FC = () => {
         <TabsContent value="sistema">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5" /> Sistema</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5" /> {t('settings.system.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Moeda</Label>
+                  <Label>{t('settings.system.currency')}</Label>
                   <Select value={systemForm.currency} onValueChange={v => setSystemForm(p => ({ ...p, currency: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -401,7 +401,7 @@ const LocalSettingsPage: React.FC = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Fuso Horário</Label>
+                  <Label>{t('settings.system.timezone')}</Label>
                   <Select value={systemForm.timezone} onValueChange={v => setSystemForm(p => ({ ...p, timezone: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -411,7 +411,7 @@ const LocalSettingsPage: React.FC = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Estoque Mínimo Padrão</Label>
+                  <Label>{t('settings.system.min_stock')}</Label>
                   <Input type="number" value={systemForm.default_min_stock} onChange={e => setSystemForm(p => ({ ...p, default_min_stock: parseInt(e.target.value) || 10 }))} />
                 </div>
               </div>
