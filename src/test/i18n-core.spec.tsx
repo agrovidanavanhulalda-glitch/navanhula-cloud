@@ -28,8 +28,7 @@ describe('I18n End-to-End Core Logic', () => {
   });
 
   it('should switch language and update all texts instantly via context', async () => {
-    // Definir PT explicitamente no localStorage para o início do teste
-    localStorage.setItem('navanhula_lang', 'pt');
+    localStorage.setItem('navanhula_lang', 'en');
     
     render(
       <I18nProvider>
@@ -37,9 +36,16 @@ describe('I18n End-to-End Core Logic', () => {
       </I18nProvider>
     );
 
-    // PT (Padrão)
-    expect(screen.getByTestId('settings-title')).toHaveTextContent('Configurações');
-    expect(screen.getByTestId('save-btn')).toHaveTextContent('Salvar');
+    // Começar em EN
+    expect(screen.getByTestId('settings-title')).toHaveTextContent('Settings');
+    expect(screen.getByTestId('save-btn')).toHaveTextContent('Save');
+
+    // Mudar para PT
+    fireEvent.click(screen.getByTestId('btn-pt'));
+    await waitFor(() => {
+      expect(screen.getByTestId('settings-title')).toHaveTextContent('Configurações');
+      expect(screen.getByTestId('save-btn')).toHaveTextContent('Salvar');
+    });
 
     // Mudar para EN
     fireEvent.click(screen.getByTestId('btn-en'));
