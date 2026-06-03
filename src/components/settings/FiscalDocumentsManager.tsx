@@ -54,16 +54,6 @@ interface DocumentItemForm {
   tax_rate: number;
 }
 
-const DOCUMENT_TYPE_OPTIONS: Array<{ value: FiscalDocumentType; label: string; description: string }> = [
-  { value: 'quotation', label: 'Cotação', description: 'Proposta comercial para cliente' },
-  { value: 'proforma', label: 'Factura Proforma', description: 'Documento preliminar antes da venda' },
-  { value: 'invoice', label: 'Factura', description: 'Documento fiscal de venda' },
-  { value: 'invoice_receipt', label: 'Factura-Recibo', description: 'Venda e quitação no mesmo documento' },
-  { value: 'receipt', label: 'Recibo', description: 'Comprovativo de pagamento' },
-  { value: 'credit_note', label: 'Nota de Crédito', description: 'Ajuste a favor do cliente' },
-  { value: 'debit_note', label: 'Nota de Débito', description: 'Ajuste adicional ao cliente' },
-];
-
 const PREFIX_BY_TYPE: Record<FiscalDocumentType, string> = {
   quotation: 'COT',
   proforma: 'PRO',
