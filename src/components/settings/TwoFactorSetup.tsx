@@ -183,7 +183,7 @@ const TwoFactorSetup: React.FC = () => {
             )}
 
             <div className="flex flex-col items-center gap-2">
-              <p className="text-sm font-medium">Código de verificação:</p>
+              <p className="text-sm font-medium">{t('settings.2fa.verify_code')}</p>
               <InputOTP maxLength={6} value={verifyCode} onChange={setVerifyCode}>
                 <InputOTPGroup>
                   <InputOTPSlot index={0} />
@@ -201,7 +201,7 @@ const TwoFactorSetup: React.FC = () => {
               onClick={verifyEnrollment}
               disabled={verifyCode.length !== 6 || loading}
             >
-              {loading ? 'Verificando...' : 'Ativar 2FA'}
+              {loading ? t('common.loading') : t('settings.2fa.activate_btn')}
             </Button>
           </div>
         </DialogContent>
