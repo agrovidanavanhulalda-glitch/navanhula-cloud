@@ -437,7 +437,7 @@ const FiscalDocumentsManager: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ReceiptText className="h-5 w-5" /> Emissão de documentos
+              <ReceiptText className="h-5 w-5" /> {t('fiscal.issue_title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
