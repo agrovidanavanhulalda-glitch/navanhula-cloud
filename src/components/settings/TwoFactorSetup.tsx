@@ -89,7 +89,7 @@ const TwoFactorSetup: React.FC = () => {
     try {
       const { error } = await supabase.auth.mfa.unenroll({ factorId });
       if (error) throw error;
-      toast.success('2FA desativado');
+      toast.success(t('settings.2fa.disabled'));
       setIs2FAEnabled(false);
       setFactorId(null);
       setShowDisable(false);
