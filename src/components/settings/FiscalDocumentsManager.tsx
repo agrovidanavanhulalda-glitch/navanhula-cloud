@@ -92,6 +92,7 @@ const getDocumentLabel = (type: FiscalDocumentType) =>
 
 const FiscalDocumentsManager: React.FC = () => {
   const { company, store } = useAuth();
+  const { t } = useTranslation();
   const db = supabase as any;
 
   const [loading, setLoading] = useState(true);
