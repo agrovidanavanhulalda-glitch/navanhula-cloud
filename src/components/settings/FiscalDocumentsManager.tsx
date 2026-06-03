@@ -471,7 +471,7 @@ const FiscalDocumentsManager: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <UserRound className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm font-medium">Dados do cliente</p>
+                <p className="text-sm font-medium">{t('fiscal.customer_data')}</p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
