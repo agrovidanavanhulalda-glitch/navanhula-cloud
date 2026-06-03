@@ -417,18 +417,18 @@ const LocalSettingsPage: React.FC = () => {
               </div>
               <Separator />
               <div className="space-y-4">
-                <h4 className="font-medium flex items-center gap-2"><Package className="w-4 h-4" /> Funcionalidades</h4>
+                <h4 className="font-medium flex items-center gap-2"><Package className="w-4 h-4" /> {t('settings.system.features')}</h4>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-sm">QR Code para Pagamentos</p>
-                    <p className="text-xs text-muted-foreground">Gerar QR Code nas vendas</p>
+                    <p className="font-medium text-sm">{t('settings.system.qrcode')}</p>
+                    <p className="text-xs text-muted-foreground">{t('settings.system.qrcode_desc')}</p>
                   </div>
                   <Switch checked={systemForm.qrcode_enabled} onCheckedChange={v => setSystemForm(p => ({ ...p, qrcode_enabled: v }))} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-sm">Comunidade Empreendedora</p>
-                    <p className="text-xs text-muted-foreground">Activar módulo de comunidade</p>
+                    <p className="font-medium text-sm">{t('settings.system.community')}</p>
+                    <p className="text-xs text-muted-foreground">{t('settings.system.community_desc')}</p>
                   </div>
                   <Switch checked={systemForm.community_enabled} onCheckedChange={v => setSystemForm(p => ({ ...p, community_enabled: v }))} />
                 </div>
