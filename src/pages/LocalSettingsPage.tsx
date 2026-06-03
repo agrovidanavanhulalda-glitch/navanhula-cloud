@@ -347,18 +347,18 @@ const LocalSettingsPage: React.FC = () => {
         <TabsContent value="automacao">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Printer className="w-5 h-5" /> Automação POS</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Printer className="w-5 h-5" /> {t('settings.automation.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-sm text-muted-foreground">
-                Configure ações automáticas após cada venda finalizada.
+                {t('settings.automation.desc')}
               </p>
               <div className="space-y-4">
                 {[
-                  { key: 'autoPrint', label: 'Imprimir recibo automaticamente', desc: 'Envia o recibo para impressora térmica após cada venda' },
-                  { key: 'autoDrawer', label: 'Abrir gaveta automaticamente', desc: 'Abre a gaveta de dinheiro (ESC/POS) quando pagamento = Dinheiro' },
-                  { key: 'autoWhatsApp', label: 'Enviar recibo via WhatsApp', desc: 'Solicitar número do cliente e enviar recibo após venda' },
-                  { key: 'autoEmail', label: 'Enviar recibo por email', desc: 'Solicitar email do cliente e enviar PDF automaticamente' },
+                  { key: 'autoPrint', label: t('settings.automation.print'), desc: t('settings.automation.print_desc') },
+                  { key: 'autoDrawer', label: t('settings.automation.drawer'), desc: t('settings.automation.drawer_desc') },
+                  { key: 'autoWhatsApp', label: t('settings.automation.whatsapp'), desc: t('settings.automation.whatsapp_desc') },
+                  { key: 'autoEmail', label: t('settings.automation.email'), desc: t('settings.automation.email_desc') },
                 ].map(item => (
                   <div key={item.key} className="flex items-center justify-between">
                     <div>
@@ -375,7 +375,7 @@ const LocalSettingsPage: React.FC = () => {
               <Separator />
               <Button onClick={handleSaveAutomation}>
                 <Save className="w-4 h-4 mr-2" />
-                Salvar Automação
+                {t('settings.automation.save')}
               </Button>
             </CardContent>
           </Card>
