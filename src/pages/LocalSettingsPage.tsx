@@ -223,20 +223,20 @@ const LocalSettingsPage: React.FC = () => {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Settings className="w-6 h-6" />
-          Configurações
+          {t('settings.title')}
         </h1>
-        <p className="text-muted-foreground">Gerencie sua empresa, fiscal, sistema e segurança</p>
+        <p className="text-muted-foreground">{t('settings.subtitle')}</p>
       </div>
 
       <Tabs defaultValue="empresa" className="space-y-6">
         <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full">
-          <TabsTrigger value="empresa" className="gap-1"><Building2 className="w-4 h-4" /> Empresa</TabsTrigger>
-          <TabsTrigger value="fiscal" className="gap-1"><Receipt className="w-4 h-4" /> Fiscal</TabsTrigger>
-          <TabsTrigger value="documentos" className="gap-1"><FileText className="w-4 h-4" /> Documentos</TabsTrigger>
-          <TabsTrigger value="automacao" className="gap-1"><Printer className="w-4 h-4" /> Automação</TabsTrigger>
-          <TabsTrigger value="sistema" className="gap-1"><Globe className="w-4 h-4" /> Sistema</TabsTrigger>
-          <TabsTrigger value="seguranca" className="gap-1"><Shield className="w-4 h-4" /> Segurança</TabsTrigger>
-          <TabsTrigger value="integracoes" className="gap-1"><Plug className="w-4 h-4" /> Integrações</TabsTrigger>
+          <TabsTrigger value="empresa" className="gap-1"><Building2 className="w-4 h-4" /> {t('settings.tabs.company')}</TabsTrigger>
+          <TabsTrigger value="fiscal" className="gap-1"><Receipt className="w-4 h-4" /> {t('settings.tabs.fiscal')}</TabsTrigger>
+          <TabsTrigger value="documentos" className="gap-1"><FileText className="w-4 h-4" /> {t('settings.tabs.documents')}</TabsTrigger>
+          <TabsTrigger value="automacao" className="gap-1"><Printer className="w-4 h-4" /> {t('settings.tabs.automation')}</TabsTrigger>
+          <TabsTrigger value="sistema" className="gap-1"><Globe className="w-4 h-4" /> {t('settings.tabs.sistema')}</TabsTrigger>
+          <TabsTrigger value="seguranca" className="gap-1"><Shield className="w-4 h-4" /> {t('settings.tabs.security')}</TabsTrigger>
+          <TabsTrigger value="integracoes" className="gap-1"><Plug className="w-4 h-4" /> {t('settings.tabs.integrations')}</TabsTrigger>
         </TabsList>
 
         {/* EMPRESA */}
