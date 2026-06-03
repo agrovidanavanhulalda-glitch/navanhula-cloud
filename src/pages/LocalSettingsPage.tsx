@@ -394,9 +394,9 @@ const LocalSettingsPage: React.FC = () => {
                   <Select value={systemForm.currency} onValueChange={v => setSystemForm(p => ({ ...p, currency: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="MZN">MZN — Metical</SelectItem>
-                      <SelectItem value="USD">USD — Dólar</SelectItem>
-                      <SelectItem value="EUR">EUR — Euro</SelectItem>
+                      <SelectItem value="MZN">MZN — {t('common.currency.mzn')}</SelectItem>
+                      <SelectItem value="USD">USD — {t('common.currency.usd')}</SelectItem>
+                      <SelectItem value="EUR">EUR — {t('common.currency.eur')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
