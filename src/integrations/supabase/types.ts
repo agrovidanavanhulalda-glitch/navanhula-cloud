@@ -2716,6 +2716,7 @@ export type Database = {
       }
       employees: {
         Row: {
+          access_level: Database["public"]["Enums"]["app_role"] | null
           bank_account: string | null
           bank_name: string | null
           base_salary: number
@@ -2739,6 +2740,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_level?: Database["public"]["Enums"]["app_role"] | null
           bank_account?: string | null
           bank_name?: string | null
           base_salary?: number
@@ -2762,6 +2764,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_level?: Database["public"]["Enums"]["app_role"] | null
           bank_account?: string | null
           bank_name?: string | null
           base_salary?: number
