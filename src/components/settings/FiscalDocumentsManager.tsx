@@ -77,8 +77,6 @@ const createDefaultValidityDate = () => {
   return date.toISOString().slice(0, 10);
 };
 
-const getDocumentLabel = (type: FiscalDocumentType) =>
-  DOCUMENT_TYPE_OPTIONS.find((option) => option.value === type)?.label || type;
 
 const FiscalDocumentsManager: React.FC = () => {
   const { company, store } = useAuth();
