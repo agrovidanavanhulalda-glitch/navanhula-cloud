@@ -85,6 +85,19 @@ const FiscalDocumentsManager: React.FC = () => {
   const { t } = useTranslation();
   const db = supabase as any;
 
+  const DOCUMENT_TYPE_OPTIONS = useMemo(() => [
+    { value: 'quotation', label: t('doc.quotation'), description: t('fiscal.quotation_desc') || 'Proposta comercial para cliente' },
+    { value: 'proforma', label: t('doc.proforma'), description: t('fiscal.proforma_desc') || 'Documento preliminar antes da venda' },
+    { value: 'invoice', label: t('doc.invoice'), description: t('fiscal.invoice_desc') || 'Documento fiscal de venda' },
+    { value: 'invoice_receipt', label: t('doc.invoiceReceipt'), description: t('fiscal.invoice_receipt_desc') || 'Venda e quitação no mesmo documento' },
+    { value: 'receipt', label: t('doc.receipt'), description: t('fiscal.receipt_desc') || 'Comprovativo de pagamento' },
+    { value: 'credit_note', label: t('doc.creditNote'), description: t('fiscal.credit_note_desc') || 'Ajuste a favor do cliente' },
+    { value: 'debit_note', label: t('doc.debitNote'), description: t('fiscal.debit_note_desc') || 'Ajuste adicional ao cliente' },
+  ] as Array<{ value: FiscalDocumentType; label: string; description: string }>, [t]);
+
+  const getDocumentLabel = useCallback((type: FiscalDocumentType) =>
+    DOCUMENT_TYPE_OPTIONS.find((option) => option.value === type)?.label || type, [DOCUMENT_TYPE_OPTIONS]);
+
   const [loading, setLoading] = useState(true);
   const [savingSeries, setSavingSeries] = useState(false);
   const [issuing, setIssuing] = useState(false);
