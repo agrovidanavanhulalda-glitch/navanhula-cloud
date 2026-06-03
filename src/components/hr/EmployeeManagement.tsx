@@ -219,9 +219,28 @@ const EmployeeManagement: React.FC = () => {
                       </Badge>
                     </td>
                     <td className="p-3 text-center">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(emp)}>
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex justify-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(emp)}>
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={async () => {
+                            if (confirm(`Tem certeza que deseja remover ${emp.full_name}?`)) {
+                              const { error } = await supabase.from('employees').delete().eq('id', emp.id);
+                              if (error) toast.error('Erro ao remover: ' + error.message);
+                              else {
+                                toast.success('Funcionário removido');
+                                loadEmployees();
+                              }
+                            }
+                          }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
