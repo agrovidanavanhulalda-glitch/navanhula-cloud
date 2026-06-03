@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/contexts/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,6 +12,7 @@ interface LogoUploadProps {
 }
 
 const LogoUpload: React.FC<LogoUploadProps> = ({ currentUrl, companyId, onUploaded }) => {
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
