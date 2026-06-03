@@ -128,7 +128,7 @@ const LocalSettingsPage: React.FC = () => {
       toast.success(t('settings.messages.save_success'));
       refreshUserData();
     } catch (err: any) {
-      toast.error('Erro ao salvar: ' + err.message);
+      toast.error(t('settings.messages.save_error') + ': ' + err.message);
     } finally {
       setSaving(false);
     }
