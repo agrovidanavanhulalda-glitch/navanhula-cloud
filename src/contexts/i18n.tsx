@@ -28,10 +28,11 @@ const baseKeys = [
   'dashboard.todaySales', 'dashboard.monthSales', 'dashboard.totalRevenue',
   'dashboard.topProducts', 'dashboard.customers',
   'doc.quotation', 'doc.proforma', 'doc.invoice', 'doc.invoiceReceipt', 'doc.receipt',
-  'doc.creditNote', 'doc.debitNote',
-  'auth.login', 'auth.signup', 'auth.logout', 'auth.email', 'auth.password',
-  'app.title', 'app.subtitle',
-] as const;
+    'doc.creditNote', 'doc.debitNote',
+    'auth.login', 'auth.signup', 'auth.logout', 'auth.email', 'auth.password',
+    'app.title', 'app.subtitle',
+    'hr.employee.access_level', 'hr.employee.role_admin', 'hr.employee.role_manager', 'hr.employee.role_seller',
+  ] as const;
 
 const translations: Record<Language, Record<string, string>> = {
   pt: {
@@ -210,6 +211,10 @@ const translations: Record<Language, Record<string, string>> = {
     'hr.employee.inactive': 'Inativo',
     'hr.employee.total': 'Total Funcionários',
     'hr.employee.payroll': 'Folha Salarial',
+    'hr.employee.access_level': 'Nível de Acesso',
+    'hr.employee.role_admin': 'Administrador',
+    'hr.employee.role_manager': 'Gerente',
+    'hr.employee.role_seller': 'Vendedor',
   },
   en: {
     'nav.dashboard': 'Dashboard', 'nav.pos': 'POS', 'nav.products': 'Products', 'nav.inventory': 'Inventory',
@@ -362,6 +367,10 @@ const translations: Record<Language, Record<string, string>> = {
     'hr.employee.inactive': 'Inactive',
     'hr.employee.total': 'Total Employees',
     'hr.employee.payroll': 'Payroll',
+    'hr.employee.access_level': 'Access Level',
+    'hr.employee.role_admin': 'Administrator',
+    'hr.employee.role_manager': 'Manager',
+    'hr.employee.role_seller': 'Seller',
   },
   es: {
     'nav.dashboard': 'Panel', 'nav.pos': 'TPV', 'nav.products': 'Productos', 'nav.inventory': 'Inventario',
