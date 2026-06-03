@@ -202,9 +202,9 @@ const LocalSettingsPage: React.FC = () => {
         redirectTo: window.location.origin,
       });
       if (error) throw error;
-      toast.success('Email de redefinição enviado para ' + user.email);
+      toast.success(t('settings.security.reset_sent') || 'Email de redefinição enviado para ' + user.email);
     } catch (err: any) {
-      toast.error('Erro: ' + err.message);
+      toast.error(t('common.error') + ': ' + err.message);
     }
   };
 
