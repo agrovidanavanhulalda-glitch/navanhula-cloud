@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from '@/contexts/i18n';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 const TwoFactorSetup: React.FC = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
   const [factorId, setFactorId] = useState<string | null>(null);
