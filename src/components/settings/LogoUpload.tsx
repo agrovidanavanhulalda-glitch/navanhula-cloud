@@ -64,13 +64,13 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ currentUrl, companyId, onUpload
           <img src={currentUrl} alt="Logo" className="w-20 h-20 object-contain rounded-lg border bg-white" />
           <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
             {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-            Alterar Logo
+            {t('settings.logo.change')}
           </Button>
         </div>
       ) : (
         <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>
           {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-          Carregar Logo
+          {t('settings.logo.load')}
         </Button>
       )}
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
