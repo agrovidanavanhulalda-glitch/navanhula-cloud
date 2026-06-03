@@ -202,6 +202,8 @@ const translations: Record<Language, Record<string, string>> = {
     'hr.employee.required': 'Campo obrigatório',
     'hr.employee.invalid_email': 'Email inválido',
     'hr.employee.invalid_nuit': 'NUIT deve ter 9 dígitos',
+    'hr.employee.invalid_number': 'Valor inválido',
+    'hr.employee.invalid_commission': 'Comissão deve ser entre 0 e 100',
     'hr.employee.save_success': 'Funcionário salvo com sucesso',
     'hr.employee.delete_confirm': 'Tem certeza que deseja remover este funcionário?',
     'hr.employee.active': 'Ativo',
