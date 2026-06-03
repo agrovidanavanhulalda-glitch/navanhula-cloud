@@ -28,6 +28,9 @@ describe('I18n End-to-End Core Logic', () => {
   });
 
   it('should switch language and update all texts instantly via context', async () => {
+    // Definir PT explicitamente no localStorage para o início do teste
+    localStorage.setItem('navanhula_lang', 'pt');
+    
     render(
       <I18nProvider>
         <TestComponent />
