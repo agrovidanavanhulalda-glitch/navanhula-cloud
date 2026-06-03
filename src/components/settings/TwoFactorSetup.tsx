@@ -211,19 +211,19 @@ const TwoFactorSetup: React.FC = () => {
       <Dialog open={showDisable} onOpenChange={setShowDisable}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Desativar 2FA</DialogTitle>
+            <DialogTitle>{t('settings.2fa.disable_btn')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Tem a certeza de que deseja desativar a autenticação em dois fatores?
-              Isso tornará a sua conta menos segura.
+              {t('settings.2fa.disable_confirm')}
+              {t('settings.2fa.disable_warning')}
             </p>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setShowDisable(false)}>
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button variant="destructive" className="flex-1" onClick={disable2FA} disabled={loading}>
-                {loading ? 'Processando...' : 'Desativar'}
+                {loading ? t('common.loading') : t('common.delete')}
               </Button>
             </div>
           </div>
