@@ -138,6 +138,7 @@ const LocalDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { store, sales, products, cashRegisterOpen, startNewSale, loading: posLoading } = useLocalPOS();
   const { user, company } = useAuth();
+  const { isAdmin, isManager, isSeller } = usePermissions();
   const [chartPeriod, setChartPeriod] = useState<'today' | 'week' | 'month'>('week');
 
   const { data: stats, isLoading: statsLoading } = useDashboardStats(store?.id);
@@ -367,9 +368,9 @@ const LocalDashboardPage: React.FC = () => {
       <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
         <QuickAction icon={Plus} label="Nova Venda" onClick={handleNewSale} />
         <QuickAction icon={Users} label="Novo Cliente" onClick={() => navigate('/app/crm')} />
-        <QuickAction icon={DollarSign} label="Registrar Despesa" onClick={() => navigate('/app/financeiro')} />
-        <QuickAction icon={BarChart3} label="Análise de Desempenho" onClick={() => navigate('/app/relatorios')} />
-        <QuickAction icon={Package} label="Ver Estoque" onClick={() => navigate('/app/estoque')} />
+        {(isAdmin || isManager) && <QuickAction icon={DollarSign} label="Registrar Despesa" onClick={() => navigate('/app/financeiro')} />}
+        {(isAdmin || isManager) && <QuickAction icon={BarChart3} label="Análise de Desempenho" onClick={() => navigate('/app/relatorios')} />}
+        {(isAdmin || isManager) && <QuickAction icon={Package} label="Ver Estoque" onClick={() => navigate('/app/estoque')} />}
       </div>
 
       {/* Daily Goal Progress */}

@@ -336,7 +336,7 @@ const LocalProductsPage: React.FC = () => {
     }
   };
 
-  if (!isAdmin) {
+  if (!isAdmin && !hasMinimumRole('manager')) {
     return (
       <div className="p-8 text-center">
         <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-destructive" />
