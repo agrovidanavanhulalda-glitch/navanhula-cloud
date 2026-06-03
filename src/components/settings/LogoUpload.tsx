@@ -21,12 +21,12 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ currentUrl, companyId, onUpload
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Selecione uma imagem válida');
+      toast.error(t('settings.logo.error_image'));
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('Imagem deve ter no máximo 2MB');
+      toast.error(t('settings.logo.error_size'));
       return;
     }
 
