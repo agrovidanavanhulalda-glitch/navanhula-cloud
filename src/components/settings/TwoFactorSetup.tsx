@@ -52,7 +52,7 @@ const TwoFactorSetup: React.FC = () => {
       setSecret(data.totp.secret);
       setShowSetup(true);
     } catch (err: any) {
-      toast.error('Erro ao configurar 2FA: ' + (err.message || 'Erro desconhecido'));
+      toast.error(t('settings.messages.save_error') + ': ' + (err.message || 'Error'));
     } finally {
       setLoading(false);
     }
