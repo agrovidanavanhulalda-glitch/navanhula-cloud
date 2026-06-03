@@ -49,9 +49,9 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ currentUrl, companyId, onUpload
       await supabase.from('companies').update({ logo_url: publicUrl }).eq('id', companyId);
 
       onUploaded(publicUrl);
-      toast.success('Logo atualizado com sucesso');
+      toast.success(t('settings.logo.success'));
     } catch (err: any) {
-      toast.error('Erro ao enviar: ' + err.message);
+      toast.error(t('settings.messages.save_error') + ': ' + err.message);
     } finally {
       setUploading(false);
     }
