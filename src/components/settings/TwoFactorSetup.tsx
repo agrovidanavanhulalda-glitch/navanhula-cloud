@@ -155,14 +155,14 @@ const TwoFactorSetup: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <QrCode className="w-5 h-5" />
-              Configurar Autenticação 2FA
+              {t('settings.2fa.dialog_title')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground">
-              <p>1. Instale um aplicativo autenticador (Google Authenticator, Authy, etc.)</p>
-              <p>2. Escaneie o QR Code ou insira a chave manualmente</p>
-              <p>3. Digite o código de 6 dígitos gerado</p>
+              <p>{t('settings.2fa.step1')}</p>
+              <p>{t('settings.2fa.step2')}</p>
+              <p>{t('settings.2fa.step3')}</p>
             </div>
 
             {qrUri && (
