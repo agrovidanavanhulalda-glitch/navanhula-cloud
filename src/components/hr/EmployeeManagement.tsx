@@ -96,6 +96,7 @@ const EmployeeManagement: React.FC = () => {
       nuit: form.nuit || null,
       bank_name: form.bank_name || null,
       bank_account: form.bank_account || null,
+      status: 'active'
     };
 
     let error;
