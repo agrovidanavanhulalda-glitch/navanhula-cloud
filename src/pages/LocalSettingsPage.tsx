@@ -151,9 +151,9 @@ const LocalSettingsPage: React.FC = () => {
 
       if (error) throw error;
       setFiscalForm(prev => ({ ...prev, fiscal_rate: rate }));
-      toast.success('Configurações fiscais salvas');
+      toast.success(t('settings.messages.save_success'));
     } catch (err: any) {
-      toast.error('Erro ao salvar: ' + err.message);
+      toast.error(t('settings.messages.save_error') + ': ' + err.message);
     } finally {
       setSaving(false);
     }
