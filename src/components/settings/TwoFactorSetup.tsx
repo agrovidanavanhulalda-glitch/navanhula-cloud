@@ -129,9 +129,9 @@ const TwoFactorSetup: React.FC = () => {
           </div>
           <div>
             {is2FAEnabled ? (
-              <Badge variant="default" className="bg-green-600">Ativo</Badge>
+              <Badge variant="default" className="bg-green-600">{t('common.active')}</Badge>
             ) : (
-              <Badge variant="secondary">Inativo</Badge>
+              <Badge variant="secondary">{t('common.inactive')}</Badge>
             )}
           </div>
         </div>
