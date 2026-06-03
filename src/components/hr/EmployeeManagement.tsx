@@ -41,10 +41,16 @@ interface Employee {
   bank_account: string | null;
   status: string;
   store_id: string | null;
+  access_level?: string;
 }
 
 const DEPARTMENTS = ['Operações', 'Vendas', 'Administração', 'Logística', 'Financeiro'];
 const POSITIONS = ['Vendedor', 'Gerente', 'Caixa', 'Estoquista', 'Motorista', 'Contador', 'Auxiliar'];
+const ACCESS_LEVELS = [
+  { value: 'seller', labelKey: 'hr.employee.role_seller' },
+  { value: 'manager', labelKey: 'hr.employee.role_manager' },
+  { value: 'admin', labelKey: 'hr.employee.role_admin' }
+];
 
 const EmployeeManagement: React.FC = () => {
   const { company } = useAuth();
@@ -67,6 +73,7 @@ const EmployeeManagement: React.FC = () => {
     nuit: z.string().optional().refine((val) => !val || /^\d{9}$/.test(val), t('hr.employee.invalid_nuit')),
     bank_name: z.string().optional(),
     bank_account: z.string().optional(),
+    access_level: z.string().min(1, t('hr.employee.required')),
   });
 
   type EmployeeFormValues = z.infer<typeof employeeSchema>;
@@ -86,6 +93,7 @@ const EmployeeManagement: React.FC = () => {
       nuit: '',
       bank_name: '',
       bank_account: '',
+      access_level: 'seller',
     },
   });
 
@@ -116,6 +124,7 @@ const EmployeeManagement: React.FC = () => {
       nuit: emp.nuit || '',
       bank_name: emp.bank_name || '',
       bank_account: emp.bank_account || '',
+      access_level: emp.access_level || 'seller',
     });
     setDialogOpen(true);
   };
@@ -137,7 +146,8 @@ const EmployeeManagement: React.FC = () => {
       nuit: values.nuit || null,
       bank_name: values.bank_name || null,
       bank_account: values.bank_account || null,
-      status: 'active'
+      status: 'active',
+      access_level: values.access_level
     };
 
     let error;
@@ -368,6 +378,30 @@ const EmployeeManagement: React.FC = () => {
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="access_level"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('hr.employee.access_level')} *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('hr.employee.access_level')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ACCESS_LEVELS.map(level => (
+                            <SelectItem key={level.value} value={level.value}>
+                              {t(level.labelKey as any)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <Button type="submit" className="w-full mt-2" disabled={form.formState.isSubmitting}>
                   {editingEmployee ? t('common.save') : t('common.add')} {t('nav.employees').toLowerCase()}
                 </Button>
@@ -392,6 +426,7 @@ const EmployeeManagement: React.FC = () => {
                 <tr className="border-b border-border">
                   <th className="text-left p-3">{t('common.name')}</th>
                   <th className="text-left p-3">{t('hr.employee.position')}</th>
+                  <th className="text-left p-3">{t('hr.employee.access_level')}</th>
                   <th className="text-left p-3">{t('hr.employee.department')}</th>
                   <th className="text-right p-3">{t('hr.employee.base_salary')}</th>
                   <th className="text-center p-3">{t('hr.employee.commission')}</th>
@@ -404,6 +439,11 @@ const EmployeeManagement: React.FC = () => {
                   <tr key={emp.id} className="border-b border-border/50 hover:bg-muted/20">
                     <td className="p-3 font-medium">{emp.full_name}</td>
                     <td className="p-3">{emp.position}</td>
+                    <td className="p-3">
+                      <Badge variant="outline">
+                        {t(ACCESS_LEVELS.find(l => l.value === emp.access_level)?.labelKey as any || 'hr.employee.role_seller')}
+                      </Badge>
+                    </td>
                     <td className="p-3">{emp.department}</td>
                     <td className="p-3 text-right font-mono">{formatCurrency(emp.base_salary)}</td>
                     <td className="p-3 text-center">
