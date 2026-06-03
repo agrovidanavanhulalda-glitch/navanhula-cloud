@@ -259,37 +259,37 @@ const LocalSettingsPage: React.FC = () => {
               <Separator />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Nome da Empresa *</Label>
-                  <Input value={companyForm.name} onChange={e => setCompanyForm(p => ({ ...p, name: e.target.value }))} placeholder="Nome da empresa" />
+                  <Label>{t('settings.company.name')} *</Label>
+                  <Input value={companyForm.name} onChange={e => setCompanyForm(p => ({ ...p, name: e.target.value }))} placeholder={t('settings.company.name')} />
                 </div>
                 <div className="space-y-2">
-                  <Label>NUIT</Label>
-                  <Input value={companyForm.nif} onChange={e => setCompanyForm(p => ({ ...p, nif: e.target.value }))} placeholder="Número de contribuinte" />
+                  <Label>{t('settings.company.nuit')}</Label>
+                  <Input value={companyForm.nif} onChange={e => setCompanyForm(p => ({ ...p, nif: e.target.value }))} placeholder={t('settings.company.nuit')} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Email da empresa</Label>
-                  <Input type="email" value={companyForm.email} onChange={e => setCompanyForm(p => ({ ...p, email: e.target.value }))} placeholder="geral@empresa.com" />
+                  <Label>{t('settings.company.email')}</Label>
+                  <Input type="email" value={companyForm.email} onChange={e => setCompanyForm(p => ({ ...p, email: e.target.value }))} placeholder="email@empresa.com" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Contacto</Label>
+                  <Label>{t('settings.company.contact')}</Label>
                   <Input value={companyForm.phone} onChange={e => setCompanyForm(p => ({ ...p, phone: e.target.value }))} placeholder="+258 84 000 0000" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Endereço</Label>
-                  <Input value={companyForm.address} onChange={e => setCompanyForm(p => ({ ...p, address: e.target.value }))} placeholder="Endereço completo" />
+                  <Label>{t('settings.company.address')}</Label>
+                  <Input value={companyForm.address} onChange={e => setCompanyForm(p => ({ ...p, address: e.target.value }))} placeholder={t('settings.company.address')} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Cidade</Label>
-                  <Input value={companyForm.city} onChange={e => setCompanyForm(p => ({ ...p, city: e.target.value }))} placeholder="Maputo, Beira, etc." />
+                  <Label>{t('settings.company.city')}</Label>
+                  <Input value={companyForm.city} onChange={e => setCompanyForm(p => ({ ...p, city: e.target.value }))} placeholder="Maputo" />
                 </div>
                 <div className="space-y-2">
-                  <Label>País</Label>
+                  <Label>{t('settings.company.country')}</Label>
                   <Input value={companyForm.country} onChange={e => setCompanyForm(p => ({ ...p, country: e.target.value }))} placeholder="Moçambique" />
                 </div>
               </div>
               <Button onClick={handleSaveCompany} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Salvar Empresa
+                {t('settings.company.save')}
               </Button>
             </CardContent>
           </Card>
