@@ -105,7 +105,7 @@ const TwoFactorSetup: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-2">
         <Shield className="w-5 h-5 text-primary" />
-        <h3 className="text-lg font-semibold">Autenticação em Dois Fatores (2FA)</h3>
+        <h3 className="text-lg font-semibold">{t('settings.2fa.title')}</h3>
       </div>
 
       <Card className="p-5">
