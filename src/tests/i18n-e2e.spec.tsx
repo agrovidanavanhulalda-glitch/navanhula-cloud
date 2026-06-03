@@ -40,36 +40,36 @@ describe('I18n End-to-End Language Switching', () => {
     expect(screen.getByTestId('save-btn')).toHaveTextContent('Salvar');
 
     // Helper to change language via selector
-    const changeLang = (label: string) => {
+    const changeLang = (code: string) => {
       const trigger = screen.getByTestId('language-selector-trigger');
       fireEvent.click(trigger);
-      const option = screen.getByText(label);
+      const option = screen.getByTestId(`lang-option-${code}`);
       fireEvent.click(option);
     };
 
     // Switch to EN
-    changeLang('English');
+    changeLang('en');
     await waitFor(() => {
       expect(screen.getByTestId('settings-title')).toHaveTextContent('Settings');
       expect(screen.getByTestId('save-btn')).toHaveTextContent('Save');
     });
 
     // Switch to ES
-    changeLang('Español');
+    changeLang('es');
     await waitFor(() => {
       expect(screen.getByTestId('settings-title')).toHaveTextContent('Configuración');
       expect(screen.getByTestId('save-btn')).toHaveTextContent('Guardar');
     });
 
     // Switch to FR
-    changeLang('Français');
+    changeLang('fr');
     await waitFor(() => {
       expect(screen.getByTestId('settings-title')).toHaveTextContent('Paramètres');
       expect(screen.getByTestId('save-btn')).toHaveTextContent('Enregistrer');
     });
 
     // Switch to DE
-    changeLang('Deutsch');
+    changeLang('de');
     await waitFor(() => {
       expect(screen.getByTestId('settings-title')).toHaveTextContent('Einstellungen');
       expect(screen.getByTestId('save-btn')).toHaveTextContent('Speichern');
@@ -90,7 +90,7 @@ describe('I18n End-to-End Language Switching', () => {
 
     const trigger = screen.getByTestId('language-selector-trigger');
     fireEvent.click(trigger);
-    fireEvent.click(screen.getByText('English'));
+    fireEvent.click(screen.getByTestId('lang-option-en'));
 
     expect(localStorage.getItem('navanhula_lang')).toBe('en');
 

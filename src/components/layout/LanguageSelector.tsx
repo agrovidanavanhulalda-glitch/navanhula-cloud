@@ -41,6 +41,7 @@ const LanguageSelector: React.FC = () => {
             key={lang.code}
             onClick={() => setLanguage(lang.code)}
             className={language === lang.code ? 'bg-accent' : ''}
+            data-testid={`lang-option-${lang.code}`}
           >
             <span className="mr-2">{lang.flag}</span>
             {lang.label}
