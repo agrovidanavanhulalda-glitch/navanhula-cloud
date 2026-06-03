@@ -186,10 +186,10 @@ const LocalSettingsPage: React.FC = () => {
         if (storeError) throw storeError;
       }
 
-      toast.success('Configurações de sistema salvas');
+      toast.success(t('settings.messages.save_success'));
       refreshUserData();
     } catch (err: any) {
-      toast.error('Erro ao salvar: ' + err.message);
+      toast.error(t('settings.messages.save_error') + ': ' + err.message);
     } finally {
       setSaving(false);
     }
