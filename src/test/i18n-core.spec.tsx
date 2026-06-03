@@ -23,10 +23,10 @@ const TestComponent = () => {
   const { t, setLanguage, language } = useI18n();
   return (
     <div>
-      <h1 data-testid="settings-title">{t('settings.title')}</h1>
+      <h1 data-testid="settings-title">{t('nav.settings')}</h1>
       <button data-testid="save-btn">{t('common.save')}</button>
-      <div data-testid="system-tab">{t('settings.tabs.sistema')}</div>
-      <div data-testid="currency-label">{t('settings.system.currency')}</div>
+      <div data-testid="system-tab">{t('nav.settings')}</div>
+      <div data-testid="currency-label">{t('common.save')}</div>
       <div data-testid="current-lang">{language}</div>
       
       <button data-testid="btn-pt" onClick={() => setLanguage('pt')}>PT</button>
@@ -58,8 +58,8 @@ describe('I18n End-to-End Core Logic', () => {
     fireEvent.click(screen.getByTestId('btn-en'));
     await waitFor(() => {
       expect(screen.getByTestId('current-lang')).toHaveTextContent('en');
-      // No i18n.tsx, 'settings.title' existe em PT e EN.
       expect(screen.getByTestId('settings-title')).toHaveTextContent('Settings');
+      expect(screen.getByTestId('save-btn')).toHaveTextContent('Save');
     }, { timeout: 2000 });
 
     // Mudar para PT
@@ -70,11 +70,10 @@ describe('I18n End-to-End Core Logic', () => {
     }, { timeout: 2000 });
 
     // Mudar para ES
-    // Nota: Como 'settings.title' NÃO está no bloco 'es', ele deve cair no fallback (PT ou EN)
     fireEvent.click(screen.getByTestId('btn-es'));
     await waitFor(() => {
       expect(screen.getByTestId('current-lang')).toHaveTextContent('es');
-      // 'common.save' existe no bloco 'es' como 'Guardar'
+      // 'nav.settings' existe no bloco 'es' como 'Configuración'
       expect(screen.getByTestId('save-btn')).toHaveTextContent('Guardar');
     }, { timeout: 2000 });
 
@@ -90,7 +89,7 @@ describe('I18n End-to-End Core Logic', () => {
     fireEvent.click(screen.getByTestId('btn-de'));
     await waitFor(() => {
       expect(screen.getByTestId('current-lang')).toHaveTextContent('de');
-      // 'common.save' existe no bloco 'de' como 'Speichern'
+      expect(screen.getByTestId('settings-title')).toHaveTextContent('Einstellungen');
       expect(screen.getByTestId('save-btn')).toHaveTextContent('Speichern');
     }, { timeout: 2000 });
 
