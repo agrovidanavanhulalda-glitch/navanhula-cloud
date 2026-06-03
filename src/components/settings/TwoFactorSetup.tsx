@@ -139,11 +139,11 @@ const TwoFactorSetup: React.FC = () => {
         <div className="mt-4">
           {is2FAEnabled ? (
             <Button variant="destructive" size="sm" onClick={() => setShowDisable(true)} disabled={loading}>
-              <ShieldOff className="w-4 h-4 mr-1" /> Desativar 2FA
+              <ShieldOff className="w-4 h-4 mr-1" /> {t('settings.2fa.disable_btn')}
             </Button>
           ) : (
             <Button onClick={startEnrollment} disabled={loading}>
-              <KeyRound className="w-4 h-4 mr-1" /> Configurar 2FA
+              <KeyRound className="w-4 h-4 mr-1" /> {t('settings.2fa.setup_btn')}
             </Button>
           )}
         </div>
