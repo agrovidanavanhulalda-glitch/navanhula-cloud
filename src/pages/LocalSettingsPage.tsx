@@ -212,8 +212,8 @@ const LocalSettingsPage: React.FC = () => {
     return (
       <div className="p-8 text-center">
         <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-destructive" />
-        <h1 className="text-2xl font-bold mb-2">Acesso Restrito</h1>
-        <p className="text-muted-foreground">Você não tem permissão para acessar esta página.</p>
+        <h1 className="text-2xl font-bold mb-2">{t('settings.access_denied.title')}</h1>
+        <p className="text-muted-foreground">{t('settings.access_denied.desc')}</p>
       </div>
     );
   }
