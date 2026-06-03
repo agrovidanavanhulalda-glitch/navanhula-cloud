@@ -436,7 +436,7 @@ const LocalSettingsPage: React.FC = () => {
               <Separator />
               <Button onClick={handleSaveSystem} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Salvar Sistema
+                {t('settings.system.save')}
               </Button>
             </CardContent>
           </Card>
@@ -447,20 +447,20 @@ const LocalSettingsPage: React.FC = () => {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Lock className="w-5 h-5" /> Conta e Senha</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Lock className="w-5 h-5" /> {t('settings.security.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm"><strong>Email:</strong> {user?.email || '—'}</p>
-                  <p className="text-sm mt-1"><strong>Nome:</strong> {user?.full_name || '—'}</p>
-                  <p className="text-sm mt-1"><strong>Cargo:</strong> {
-                    role === 'admin' ? 'Administrador' :
-                    role === 'manager' ? 'Gerente' :
-                    (role as string) === 'ceo' ? 'CEO' : 'Vendedor'
+                  <p className="text-sm"><strong>{t('common.email')}:</strong> {user?.email || '—'}</p>
+                  <p className="text-sm mt-1"><strong>{t('common.name')}:</strong> {user?.full_name || '—'}</p>
+                  <p className="text-sm mt-1"><strong>{t('sellers.role')}:</strong> {
+                    role === 'admin' ? t('sellers.admin') :
+                    role === 'manager' ? t('nav.manager') || 'Gerente' :
+                    (role as string) === 'ceo' ? t('nav.ceoDashboard') || 'CEO' : t('sellers.seller')
                   }</p>
                 </div>
                 <Button variant="outline" onClick={handleResetPassword}>
-                  <RefreshCw className="w-4 h-4 mr-2" /> Redefinir Senha
+                  <RefreshCw className="w-4 h-4 mr-2" /> {t('settings.security.reset_pass')}
                 </Button>
               </CardContent>
             </Card>
