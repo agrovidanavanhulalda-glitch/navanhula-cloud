@@ -299,11 +299,11 @@ const LocalSettingsPage: React.FC = () => {
         <TabsContent value="fiscal">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Receipt className="w-5 h-5" /> Configurações Fiscais</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Receipt className="w-5 h-5" /> {t('settings.fiscal.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Regime Fiscal</Label>
+                <Label>{t('settings.fiscal.regime')}</Label>
                 <Select value={fiscalForm.fiscal_regime} onValueChange={v => setFiscalForm(p => ({ ...p, fiscal_regime: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -314,7 +314,7 @@ const LocalSettingsPage: React.FC = () => {
                 </Select>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-                <p className="text-sm font-medium">Taxas Aplicáveis:</p>
+                <p className="text-sm font-medium">{t('settings.fiscal.rates')}:</p>
                 <div className="grid grid-cols-3 gap-3 text-sm">
                   <div className={`p-3 rounded-lg text-center ${fiscalForm.fiscal_regime === 'irpc' ? 'bg-primary/10 ring-1 ring-primary' : 'bg-muted'}`}>
                     <p className="font-bold text-lg">3%</p>
@@ -332,7 +332,7 @@ const LocalSettingsPage: React.FC = () => {
               </div>
               <Button onClick={handleSaveFiscal} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Salvar Fiscal
+                {t('settings.fiscal.save')}
               </Button>
             </CardContent>
           </Card>
