@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/contexts/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,6 +12,7 @@ interface LogoUploadProps {
 }
 
 const LogoUpload: React.FC<LogoUploadProps> = ({ currentUrl, companyId, onUploaded }) => {
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -19,12 +21,12 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ currentUrl, companyId, onUpload
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Selecione uma imagem válida');
+      toast.error(t('settings.logo.error_image'));
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('Imagem deve ter no máximo 2MB');
+      toast.error(t('settings.logo.error_size'));
       return;
     }
 
@@ -47,9 +49,9 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ currentUrl, companyId, onUpload
       await supabase.from('companies').update({ logo_url: publicUrl }).eq('id', companyId);
 
       onUploaded(publicUrl);
-      toast.success('Logo atualizado com sucesso');
+      toast.success(t('settings.logo.success'));
     } catch (err: any) {
-      toast.error('Erro ao enviar: ' + err.message);
+      toast.error(t('settings.messages.save_error') + ': ' + err.message);
     } finally {
       setUploading(false);
     }
@@ -62,13 +64,13 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ currentUrl, companyId, onUpload
           <img src={currentUrl} alt="Logo" className="w-20 h-20 object-contain rounded-lg border bg-white" />
           <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
             {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-            Alterar Logo
+            {t('settings.logo.change')}
           </Button>
         </div>
       ) : (
         <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>
           {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-          Carregar Logo
+          {t('settings.logo.load')}
         </Button>
       )}
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />

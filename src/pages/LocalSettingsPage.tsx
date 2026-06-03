@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useTranslation } from '@/contexts/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ import TwoFactorSetup from '@/components/settings/TwoFactorSetup';
 const LocalSettingsPage: React.FC = () => {
   const { role, company, user, store, refreshUserData } = useAuth();
   const { isAdmin } = usePermissions();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -68,7 +70,7 @@ const LocalSettingsPage: React.FC = () => {
 
   const handleSaveAutomation = () => {
     localStorage.setItem('navanhula_pos_automation', JSON.stringify(automationForm));
-    toast.success('Preferências de automação salvas');
+    toast.success(t('settings.messages.save_success'));
   };
 
   
@@ -104,7 +106,7 @@ const LocalSettingsPage: React.FC = () => {
 
   const handleSaveCompany = async () => {
     if (!companyForm.name.trim()) {
-      toast.error('Nome da empresa é obrigatório');
+      toast.error(t('settings.company.name_required') || 'Nome da empresa é obrigatório');
       return;
     }
     setSaving(true);
@@ -123,10 +125,10 @@ const LocalSettingsPage: React.FC = () => {
         .eq('id', company!.id);
 
       if (error) throw error;
-      toast.success('Dados da empresa salvos');
+      toast.success(t('settings.messages.save_success'));
       refreshUserData();
     } catch (err: any) {
-      toast.error('Erro ao salvar: ' + err.message);
+      toast.error(t('settings.messages.save_error') + ': ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -149,9 +151,9 @@ const LocalSettingsPage: React.FC = () => {
 
       if (error) throw error;
       setFiscalForm(prev => ({ ...prev, fiscal_rate: rate }));
-      toast.success('Configurações fiscais salvas');
+      toast.success(t('settings.messages.save_success'));
     } catch (err: any) {
-      toast.error('Erro ao salvar: ' + err.message);
+      toast.error(t('settings.messages.save_error') + ': ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -184,10 +186,10 @@ const LocalSettingsPage: React.FC = () => {
         if (storeError) throw storeError;
       }
 
-      toast.success('Configurações de sistema salvas');
+      toast.success(t('settings.messages.save_success'));
       refreshUserData();
     } catch (err: any) {
-      toast.error('Erro ao salvar: ' + err.message);
+      toast.error(t('settings.messages.save_error') + ': ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -200,9 +202,9 @@ const LocalSettingsPage: React.FC = () => {
         redirectTo: window.location.origin,
       });
       if (error) throw error;
-      toast.success('Email de redefinição enviado para ' + user.email);
+      toast.success(t('settings.security.reset_sent') || 'Email de redefinição enviado para ' + user.email);
     } catch (err: any) {
-      toast.error('Erro: ' + err.message);
+      toast.error(t('common.error') + ': ' + err.message);
     }
   };
 
@@ -210,8 +212,8 @@ const LocalSettingsPage: React.FC = () => {
     return (
       <div className="p-8 text-center">
         <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-destructive" />
-        <h1 className="text-2xl font-bold mb-2">Acesso Restrito</h1>
-        <p className="text-muted-foreground">Você não tem permissão para acessar esta página.</p>
+        <h1 className="text-2xl font-bold mb-2">{t('settings.access_denied.title')}</h1>
+        <p className="text-muted-foreground">{t('settings.access_denied.desc')}</p>
       </div>
     );
   }
@@ -221,73 +223,73 @@ const LocalSettingsPage: React.FC = () => {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Settings className="w-6 h-6" />
-          Configurações
+          {t('settings.title')}
         </h1>
-        <p className="text-muted-foreground">Gerencie sua empresa, fiscal, sistema e segurança</p>
+        <p className="text-muted-foreground">{t('settings.subtitle')}</p>
       </div>
 
       <Tabs defaultValue="empresa" className="space-y-6">
         <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full">
-          <TabsTrigger value="empresa" className="gap-1"><Building2 className="w-4 h-4" /> Empresa</TabsTrigger>
-          <TabsTrigger value="fiscal" className="gap-1"><Receipt className="w-4 h-4" /> Fiscal</TabsTrigger>
-          <TabsTrigger value="documentos" className="gap-1"><FileText className="w-4 h-4" /> Documentos</TabsTrigger>
-          <TabsTrigger value="automacao" className="gap-1"><Printer className="w-4 h-4" /> Automação</TabsTrigger>
-          <TabsTrigger value="sistema" className="gap-1"><Globe className="w-4 h-4" /> Sistema</TabsTrigger>
-          <TabsTrigger value="seguranca" className="gap-1"><Shield className="w-4 h-4" /> Segurança</TabsTrigger>
-          <TabsTrigger value="integracoes" className="gap-1"><Plug className="w-4 h-4" /> Integrações</TabsTrigger>
+          <TabsTrigger value="empresa" className="gap-1"><Building2 className="w-4 h-4" /> {t('settings.tabs.company')}</TabsTrigger>
+          <TabsTrigger value="fiscal" className="gap-1"><Receipt className="w-4 h-4" /> {t('settings.tabs.fiscal')}</TabsTrigger>
+          <TabsTrigger value="documentos" className="gap-1"><FileText className="w-4 h-4" /> {t('settings.tabs.documents')}</TabsTrigger>
+          <TabsTrigger value="automacao" className="gap-1"><Printer className="w-4 h-4" /> {t('settings.tabs.automation')}</TabsTrigger>
+          <TabsTrigger value="sistema" className="gap-1"><Globe className="w-4 h-4" /> {t('settings.tabs.sistema')}</TabsTrigger>
+          <TabsTrigger value="seguranca" className="gap-1"><Shield className="w-4 h-4" /> {t('settings.tabs.security')}</TabsTrigger>
+          <TabsTrigger value="integracoes" className="gap-1"><Plug className="w-4 h-4" /> {t('settings.tabs.integrations')}</TabsTrigger>
         </TabsList>
 
         {/* EMPRESA */}
         <TabsContent value="empresa">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5" /> Dados da Empresa</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5" /> {t('settings.company.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Logo Upload */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Image className="w-4 h-4" /> Logo da Empresa</Label>
+                <Label className="flex items-center gap-2"><Image className="w-4 h-4" /> {t('settings.company.logo')}</Label>
                 <LogoUpload
                   currentUrl={companyForm.logo_url}
                   companyId={company!.id}
                   onUploaded={(url) => setCompanyForm(p => ({ ...p, logo_url: url }))}
                 />
-                <p className="text-xs text-muted-foreground">O logo aparecerá nas faturas e recibos</p>
+                <p className="text-xs text-muted-foreground">{t('settings.company.logo_desc')}</p>
               </div>
               <Separator />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Nome da Empresa *</Label>
-                  <Input value={companyForm.name} onChange={e => setCompanyForm(p => ({ ...p, name: e.target.value }))} placeholder="Nome da empresa" />
+                  <Label>{t('settings.company.name')} *</Label>
+                  <Input value={companyForm.name} onChange={e => setCompanyForm(p => ({ ...p, name: e.target.value }))} placeholder={t('settings.company.name')} />
                 </div>
                 <div className="space-y-2">
-                  <Label>NUIT</Label>
-                  <Input value={companyForm.nif} onChange={e => setCompanyForm(p => ({ ...p, nif: e.target.value }))} placeholder="Número de contribuinte" />
+                  <Label>{t('settings.company.nuit')}</Label>
+                  <Input value={companyForm.nif} onChange={e => setCompanyForm(p => ({ ...p, nif: e.target.value }))} placeholder={t('settings.company.nuit')} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Email da empresa</Label>
-                  <Input type="email" value={companyForm.email} onChange={e => setCompanyForm(p => ({ ...p, email: e.target.value }))} placeholder="geral@empresa.com" />
+                  <Label>{t('settings.company.email')}</Label>
+                  <Input type="email" value={companyForm.email} onChange={e => setCompanyForm(p => ({ ...p, email: e.target.value }))} placeholder="email@empresa.com" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Contacto</Label>
+                  <Label>{t('settings.company.contact')}</Label>
                   <Input value={companyForm.phone} onChange={e => setCompanyForm(p => ({ ...p, phone: e.target.value }))} placeholder="+258 84 000 0000" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Endereço</Label>
-                  <Input value={companyForm.address} onChange={e => setCompanyForm(p => ({ ...p, address: e.target.value }))} placeholder="Endereço completo" />
+                  <Label>{t('settings.company.address')}</Label>
+                  <Input value={companyForm.address} onChange={e => setCompanyForm(p => ({ ...p, address: e.target.value }))} placeholder={t('settings.company.address')} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Cidade</Label>
-                  <Input value={companyForm.city} onChange={e => setCompanyForm(p => ({ ...p, city: e.target.value }))} placeholder="Maputo, Beira, etc." />
+                  <Label>{t('settings.company.city')}</Label>
+                  <Input value={companyForm.city} onChange={e => setCompanyForm(p => ({ ...p, city: e.target.value }))} placeholder="Maputo" />
                 </div>
                 <div className="space-y-2">
-                  <Label>País</Label>
+                  <Label>{t('settings.company.country')}</Label>
                   <Input value={companyForm.country} onChange={e => setCompanyForm(p => ({ ...p, country: e.target.value }))} placeholder="Moçambique" />
                 </div>
               </div>
               <Button onClick={handleSaveCompany} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Salvar Empresa
+                {t('settings.company.save')}
               </Button>
             </CardContent>
           </Card>
@@ -297,11 +299,11 @@ const LocalSettingsPage: React.FC = () => {
         <TabsContent value="fiscal">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Receipt className="w-5 h-5" /> Configurações Fiscais</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Receipt className="w-5 h-5" /> {t('settings.fiscal.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Regime Fiscal</Label>
+                <Label>{t('settings.fiscal.regime')}</Label>
                 <Select value={fiscalForm.fiscal_regime} onValueChange={v => setFiscalForm(p => ({ ...p, fiscal_regime: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -312,7 +314,7 @@ const LocalSettingsPage: React.FC = () => {
                 </Select>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-                <p className="text-sm font-medium">Taxas Aplicáveis:</p>
+                <p className="text-sm font-medium">{t('settings.fiscal.rates')}:</p>
                 <div className="grid grid-cols-3 gap-3 text-sm">
                   <div className={`p-3 rounded-lg text-center ${fiscalForm.fiscal_regime === 'irpc' ? 'bg-primary/10 ring-1 ring-primary' : 'bg-muted'}`}>
                     <p className="font-bold text-lg">3%</p>
@@ -330,7 +332,7 @@ const LocalSettingsPage: React.FC = () => {
               </div>
               <Button onClick={handleSaveFiscal} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Salvar Fiscal
+                {t('settings.fiscal.save')}
               </Button>
             </CardContent>
           </Card>
@@ -345,18 +347,18 @@ const LocalSettingsPage: React.FC = () => {
         <TabsContent value="automacao">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Printer className="w-5 h-5" /> Automação POS</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Printer className="w-5 h-5" /> {t('settings.automation.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-sm text-muted-foreground">
-                Configure ações automáticas após cada venda finalizada.
+                {t('settings.automation.desc')}
               </p>
               <div className="space-y-4">
                 {[
-                  { key: 'autoPrint', label: 'Imprimir recibo automaticamente', desc: 'Envia o recibo para impressora térmica após cada venda' },
-                  { key: 'autoDrawer', label: 'Abrir gaveta automaticamente', desc: 'Abre a gaveta de dinheiro (ESC/POS) quando pagamento = Dinheiro' },
-                  { key: 'autoWhatsApp', label: 'Enviar recibo via WhatsApp', desc: 'Solicitar número do cliente e enviar recibo após venda' },
-                  { key: 'autoEmail', label: 'Enviar recibo por email', desc: 'Solicitar email do cliente e enviar PDF automaticamente' },
+                  { key: 'autoPrint', label: t('settings.automation.print'), desc: t('settings.automation.print_desc') },
+                  { key: 'autoDrawer', label: t('settings.automation.drawer'), desc: t('settings.automation.drawer_desc') },
+                  { key: 'autoWhatsApp', label: t('settings.automation.whatsapp'), desc: t('settings.automation.whatsapp_desc') },
+                  { key: 'autoEmail', label: t('settings.automation.email'), desc: t('settings.automation.email_desc') },
                 ].map(item => (
                   <div key={item.key} className="flex items-center justify-between">
                     <div>
@@ -373,7 +375,7 @@ const LocalSettingsPage: React.FC = () => {
               <Separator />
               <Button onClick={handleSaveAutomation}>
                 <Save className="w-4 h-4 mr-2" />
-                Salvar Automação
+                {t('settings.automation.save')}
               </Button>
             </CardContent>
           </Card>
@@ -383,23 +385,23 @@ const LocalSettingsPage: React.FC = () => {
         <TabsContent value="sistema">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5" /> Sistema</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5" /> {t('settings.system.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Moeda</Label>
+                  <Label>{t('settings.system.currency')}</Label>
                   <Select value={systemForm.currency} onValueChange={v => setSystemForm(p => ({ ...p, currency: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="MZN">MZN — Metical</SelectItem>
-                      <SelectItem value="USD">USD — Dólar</SelectItem>
-                      <SelectItem value="EUR">EUR — Euro</SelectItem>
+                      <SelectItem value="MZN">MZN — {t('common.currency.mzn')}</SelectItem>
+                      <SelectItem value="USD">USD — {t('common.currency.usd')}</SelectItem>
+                      <SelectItem value="EUR">EUR — {t('common.currency.eur')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Fuso Horário</Label>
+                  <Label>{t('settings.system.timezone')}</Label>
                   <Select value={systemForm.timezone} onValueChange={v => setSystemForm(p => ({ ...p, timezone: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -409,24 +411,24 @@ const LocalSettingsPage: React.FC = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Estoque Mínimo Padrão</Label>
+                  <Label>{t('settings.system.min_stock')}</Label>
                   <Input type="number" value={systemForm.default_min_stock} onChange={e => setSystemForm(p => ({ ...p, default_min_stock: parseInt(e.target.value) || 10 }))} />
                 </div>
               </div>
               <Separator />
               <div className="space-y-4">
-                <h4 className="font-medium flex items-center gap-2"><Package className="w-4 h-4" /> Funcionalidades</h4>
+                <h4 className="font-medium flex items-center gap-2"><Package className="w-4 h-4" /> {t('settings.system.features')}</h4>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-sm">QR Code para Pagamentos</p>
-                    <p className="text-xs text-muted-foreground">Gerar QR Code nas vendas</p>
+                    <p className="font-medium text-sm">{t('settings.system.qrcode')}</p>
+                    <p className="text-xs text-muted-foreground">{t('settings.system.qrcode_desc')}</p>
                   </div>
                   <Switch checked={systemForm.qrcode_enabled} onCheckedChange={v => setSystemForm(p => ({ ...p, qrcode_enabled: v }))} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-sm">Comunidade Empreendedora</p>
-                    <p className="text-xs text-muted-foreground">Activar módulo de comunidade</p>
+                    <p className="font-medium text-sm">{t('settings.system.community')}</p>
+                    <p className="text-xs text-muted-foreground">{t('settings.system.community_desc')}</p>
                   </div>
                   <Switch checked={systemForm.community_enabled} onCheckedChange={v => setSystemForm(p => ({ ...p, community_enabled: v }))} />
                 </div>
@@ -434,7 +436,7 @@ const LocalSettingsPage: React.FC = () => {
               <Separator />
               <Button onClick={handleSaveSystem} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Salvar Sistema
+                {t('settings.system.save')}
               </Button>
             </CardContent>
           </Card>
@@ -445,20 +447,20 @@ const LocalSettingsPage: React.FC = () => {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Lock className="w-5 h-5" /> Conta e Senha</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Lock className="w-5 h-5" /> {t('settings.security.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm"><strong>Email:</strong> {user?.email || '—'}</p>
-                  <p className="text-sm mt-1"><strong>Nome:</strong> {user?.full_name || '—'}</p>
-                  <p className="text-sm mt-1"><strong>Cargo:</strong> {
-                    role === 'admin' ? 'Administrador' :
-                    role === 'manager' ? 'Gerente' :
-                    (role as string) === 'ceo' ? 'CEO' : 'Vendedor'
+                  <p className="text-sm"><strong>{t('common.email')}:</strong> {user?.email || '—'}</p>
+                  <p className="text-sm mt-1"><strong>{t('common.name')}:</strong> {user?.full_name || '—'}</p>
+                  <p className="text-sm mt-1"><strong>{t('sellers.role')}:</strong> {
+                    role === 'admin' ? t('sellers.admin') :
+                    role === 'manager' ? t('nav.manager') || 'Gerente' :
+                    (role as string) === 'ceo' ? t('nav.ceoDashboard') || 'CEO' : t('sellers.seller')
                   }</p>
                 </div>
                 <Button variant="outline" onClick={handleResetPassword}>
-                  <RefreshCw className="w-4 h-4 mr-2" /> Redefinir Senha
+                  <RefreshCw className="w-4 h-4 mr-2" /> {t('settings.security.reset_pass')}
                 </Button>
               </CardContent>
             </Card>
@@ -492,27 +494,27 @@ const LocalSettingsPage: React.FC = () => {
         <TabsContent value="integracoes">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Plug className="w-5 h-5" /> Status do Sistema</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Plug className="w-5 h-5" /> {t('settings.integrations.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {[
                 { label: 'Backend (Lovable Cloud)', status: true },
-                { label: 'Base de Dados', status: true },
-                { label: 'Autenticação', status: true },
-                { label: 'Realtime (vendas)', status: true },
-                { label: 'Armazenamento (mídia)', status: true },
+                { label: t('settings.integrations.db'), status: true },
+                { label: t('settings.integrations.auth'), status: true },
+                { label: t('settings.integrations.realtime'), status: true },
+                { label: t('settings.integrations.storage'), status: true },
               ].map(item => (
                 <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <p className="text-sm font-medium">{item.label}</p>
                   <Badge variant={item.status ? 'default' : 'destructive'} className="gap-1">
                     {item.status ? <CheckCircle className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
-                    {item.status ? 'Conectado' : 'Offline'}
+                    {item.status ? t('settings.integrations.connected') : t('settings.integrations.offline')}
                   </Badge>
                 </div>
               ))}
               <p className="text-xs text-muted-foreground mt-4">
-                Loja actual: <strong>{store?.name || 'Não definida'}</strong> • 
-                Empresa: <strong>{company?.name || 'Não definida'}</strong>
+                {t('settings.integrations.current_store')}: <strong>{store?.name || t('settings.integrations.not_defined')}</strong> • 
+                {t('settings.integrations.company')}: <strong>{company?.name || t('settings.integrations.not_defined')}</strong>
               </p>
             </CardContent>
           </Card>

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from '@/contexts/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,16 +54,6 @@ interface DocumentItemForm {
   tax_rate: number;
 }
 
-const DOCUMENT_TYPE_OPTIONS: Array<{ value: FiscalDocumentType; label: string; description: string }> = [
-  { value: 'quotation', label: 'Cotação', description: 'Proposta comercial para cliente' },
-  { value: 'proforma', label: 'Factura Proforma', description: 'Documento preliminar antes da venda' },
-  { value: 'invoice', label: 'Factura', description: 'Documento fiscal de venda' },
-  { value: 'invoice_receipt', label: 'Factura-Recibo', description: 'Venda e quitação no mesmo documento' },
-  { value: 'receipt', label: 'Recibo', description: 'Comprovativo de pagamento' },
-  { value: 'credit_note', label: 'Nota de Crédito', description: 'Ajuste a favor do cliente' },
-  { value: 'debit_note', label: 'Nota de Débito', description: 'Ajuste adicional ao cliente' },
-];
-
 const PREFIX_BY_TYPE: Record<FiscalDocumentType, string> = {
   quotation: 'COT',
   proforma: 'PRO',
@@ -86,12 +77,24 @@ const createDefaultValidityDate = () => {
   return date.toISOString().slice(0, 10);
 };
 
-const getDocumentLabel = (type: FiscalDocumentType) =>
-  DOCUMENT_TYPE_OPTIONS.find((option) => option.value === type)?.label || type;
 
 const FiscalDocumentsManager: React.FC = () => {
   const { company, store } = useAuth();
+  const { t } = useTranslation();
   const db = supabase as any;
+
+  const DOCUMENT_TYPE_OPTIONS = useMemo(() => [
+    { value: 'quotation', label: t('doc.quotation'), description: t('fiscal.quotation_desc') || 'Proposta comercial para cliente' },
+    { value: 'proforma', label: t('doc.proforma'), description: t('fiscal.proforma_desc') || 'Documento preliminar antes da venda' },
+    { value: 'invoice', label: t('doc.invoice'), description: t('fiscal.invoice_desc') || 'Documento fiscal de venda' },
+    { value: 'invoice_receipt', label: t('doc.invoiceReceipt'), description: t('fiscal.invoice_receipt_desc') || 'Venda e quitação no mesmo documento' },
+    { value: 'receipt', label: t('doc.receipt'), description: t('fiscal.receipt_desc') || 'Comprovativo de pagamento' },
+    { value: 'credit_note', label: t('doc.creditNote'), description: t('fiscal.credit_note_desc') || 'Ajuste a favor do cliente' },
+    { value: 'debit_note', label: t('doc.debitNote'), description: t('fiscal.debit_note_desc') || 'Ajuste adicional ao cliente' },
+  ] as Array<{ value: FiscalDocumentType; label: string; description: string }>, [t]);
+
+  const getDocumentLabel = useCallback((type: FiscalDocumentType) =>
+    DOCUMENT_TYPE_OPTIONS.find((option) => option.value === type)?.label || type, [DOCUMENT_TYPE_OPTIONS]);
 
   const [loading, setLoading] = useState(true);
   const [savingSeries, setSavingSeries] = useState(false);
@@ -399,7 +402,7 @@ const FiscalDocumentsManager: React.FC = () => {
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
-          Configure primeiro os dados da empresa para emitir documentos fiscais.
+          {t('fiscal.configure_first')}
         </CardContent>
       </Card>
     );
@@ -410,23 +413,23 @@ const FiscalDocumentsManager: React.FC = () => {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="bg-muted/20">
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Documentos emitidos</p>
+            <p className="text-sm text-muted-foreground">{t('fiscal.issued_docs')}</p>
             <p className="mt-2 text-3xl font-bold">{documents.length}</p>
-            <p className="text-xs text-muted-foreground">Últimos registros da loja</p>
+            <p className="text-xs text-muted-foreground">{t('fiscal.last_records')}</p>
           </CardContent>
         </Card>
         <Card className="bg-muted/20">
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Cotações emitidas</p>
+            <p className="text-sm text-muted-foreground">{t('fiscal.quotations_issued')}</p>
             <p className="mt-2 text-3xl font-bold">{stats.quotations}</p>
-            <p className="text-xs text-muted-foreground">Propostas comerciais prontas para clientes</p>
+            <p className="text-xs text-muted-foreground">{t('fiscal.ready_proposals')}</p>
           </CardContent>
         </Card>
         <Card className="bg-muted/20">
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Valor total emitido</p>
+            <p className="text-sm text-muted-foreground">{t('fiscal.total_issued')}</p>
             <p className="mt-2 text-3xl font-bold">{formatCurrency(stats.totalIssued)}</p>
-            <p className="text-xs text-muted-foreground">Inclui facturas, recibos e notas</p>
+            <p className="text-xs text-muted-foreground">{t('fiscal.include_docs')}</p>
           </CardContent>
         </Card>
       </div>
@@ -435,13 +438,13 @@ const FiscalDocumentsManager: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ReceiptText className="h-5 w-5" /> Emissão de documentos
+              <ReceiptText className="h-5 w-5" /> {t('fiscal.issue_title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Tipo de documento</Label>
+                <Label>{t('fiscal.doc_type')}</Label>
                 <Select value={documentType} onValueChange={(value) => setDocumentType(value as FiscalDocumentType)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -456,11 +459,11 @@ const FiscalDocumentsManager: React.FC = () => {
                 </Select>
               </div>
               <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Próximo número</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('fiscal.next_number')}</p>
                 <p className="mt-2 text-lg font-semibold">
                   {(activeSeries?.prefix || PREFIX_BY_TYPE[documentType]) + '-' + String(activeSeries?.next_number || 1).padStart(6, '0')}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">Série activa para {getDocumentLabel(documentType).toLowerCase()}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t('fiscal.active_series')} {getDocumentLabel(documentType).toLowerCase()}</p>
               </div>
             </div>
 
@@ -469,7 +472,7 @@ const FiscalDocumentsManager: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <UserRound className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm font-medium">Dados do cliente</p>
+                <p className="text-sm font-medium">{t('fiscal.customer_data')}</p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
