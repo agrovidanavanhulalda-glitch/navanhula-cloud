@@ -70,7 +70,7 @@ const LocalSettingsPage: React.FC = () => {
 
   const handleSaveAutomation = () => {
     localStorage.setItem('navanhula_pos_automation', JSON.stringify(automationForm));
-    toast.success('Preferências de automação salvas');
+    toast.success(t('settings.messages.save_success'));
   };
 
   
