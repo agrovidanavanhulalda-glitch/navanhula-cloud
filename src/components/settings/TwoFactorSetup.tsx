@@ -72,12 +72,12 @@ const TwoFactorSetup: React.FC = () => {
       });
       if (verify.error) throw verify.error;
 
-      toast.success('2FA ativado com sucesso!');
+      toast.success(t('settings.messages.save_success'));
       setIs2FAEnabled(true);
       setShowSetup(false);
       setVerifyCode('');
     } catch (err: any) {
-      toast.error('Código inválido. Tente novamente.');
+      toast.error(t('settings.2fa.invalid_code') || 'Código inválido. Tente novamente.');
     } finally {
       setLoading(false);
     }
