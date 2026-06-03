@@ -125,7 +125,7 @@ const LocalSettingsPage: React.FC = () => {
         .eq('id', company!.id);
 
       if (error) throw error;
-      toast.success('Dados da empresa salvos');
+      toast.success(t('settings.messages.save_success'));
       refreshUserData();
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + err.message);
