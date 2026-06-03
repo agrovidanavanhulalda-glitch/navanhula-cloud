@@ -401,7 +401,7 @@ const FiscalDocumentsManager: React.FC = () => {
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
-          Configure primeiro os dados da empresa para emitir documentos fiscais.
+          {t('fiscal.configure_first')}
         </CardContent>
       </Card>
     );
