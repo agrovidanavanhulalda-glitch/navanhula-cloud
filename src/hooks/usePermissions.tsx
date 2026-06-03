@@ -45,13 +45,14 @@ export function usePermissions() {
       case 'compliance':
       case 'audit':
       case 'settings':
+      case 'configuracoes':
         return hasMinimumRole('admin');
       case 'finance':
       case 'reports':
         return hasMinimumRole('manager');
       case 'stock':
       case 'products':
-        return hasMinimumRole('seller');
+        return hasMinimumRole('manager');
       case 'sales':
       case 'pos':
         return hasMinimumRole('seller');

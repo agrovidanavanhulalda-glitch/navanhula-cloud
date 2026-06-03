@@ -42,7 +42,7 @@ interface InventoryProduct {
 type AdjustmentType = 'add' | 'remove' | 'set';
 
 const LocalInventoryPage: React.FC = () => {
-  const { isAdmin } = usePermissions();
+  const { isAdmin, hasMinimumRole } = usePermissions();
   const { user, store } = useAuth();
   const [products, setProducts] = useState<InventoryProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -281,6 +281,16 @@ const LocalInventoryPage: React.FC = () => {
     }
     return <Badge className="bg-green-100 text-green-700 border-green-300">Normal</Badge>;
   };
+
+  if (!isAdmin && !hasMinimumRole('manager')) {
+    return (
+      <div className="p-8 text-center">
+        <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-destructive" />
+        <h1 className="text-2xl font-bold mb-2">Acesso Restrito</h1>
+        <p className="text-muted-foreground">Você não tem permissão para gerir o inventário.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

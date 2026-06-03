@@ -36,6 +36,8 @@ const routeRoleMap: Record<string, AppRole[]> = {
   '/app/configuracoes': ['ceo', 'admin', 'manager'],
   '/app/lojas': ['ceo', 'admin'],
   '/app/vendedores': ['ceo', 'admin', 'manager'],
+  '/app/produtos': ['ceo', 'admin', 'manager', 'director'],
+  '/app/estoque': ['ceo', 'admin', 'manager', 'director'],
 };
 
 export function canAccessRoute(path: string, role: AppRole | null): boolean {

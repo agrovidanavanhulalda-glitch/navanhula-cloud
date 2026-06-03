@@ -37,7 +37,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
  */
 const LocalSalesHistoryPage: React.FC = () => {
   const { sales, stores, currentStore, cancelCompletedSale, currentCashRegister, loading } = useLocalPOS();
-  const { isAdmin } = usePermissions();
+  const { isAdmin, hasMinimumRole } = usePermissions();
   const { user, company } = useAuth();
   const targetCompanyId = (company as any)?.id;
 
@@ -127,8 +127,8 @@ const LocalSalesHistoryPage: React.FC = () => {
 
   // Open cancel dialog
   const handleOpenCancelDialog = (sale: LocalSale) => {
-    if (!isAdmin) {
-      toast.error('Apenas administradores podem cancelar vendas');
+    if (!isAdmin && !hasMinimumRole('manager')) {
+      toast.error('Apenas administradores ou gerentes podem cancelar vendas');
       return;
     }
     if (sale.status === 'cancelled') {
