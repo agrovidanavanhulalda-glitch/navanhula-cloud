@@ -243,18 +243,18 @@ const LocalSettingsPage: React.FC = () => {
         <TabsContent value="empresa">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5" /> Dados da Empresa</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5" /> {t('settings.company.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Logo Upload */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Image className="w-4 h-4" /> Logo da Empresa</Label>
+                <Label className="flex items-center gap-2"><Image className="w-4 h-4" /> {t('settings.company.logo')}</Label>
                 <LogoUpload
                   currentUrl={companyForm.logo_url}
                   companyId={company!.id}
                   onUploaded={(url) => setCompanyForm(p => ({ ...p, logo_url: url }))}
                 />
-                <p className="text-xs text-muted-foreground">O logo aparecerá nas faturas e recibos</p>
+                <p className="text-xs text-muted-foreground">{t('settings.company.logo_desc')}</p>
               </div>
               <Separator />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
