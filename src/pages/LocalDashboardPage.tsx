@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import PageTransition from '@/components/layout/PageTransition';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { usePermissions } from '@/hooks/usePermissions';
 
 
 import { useAuth } from '@/contexts/AuthContext';

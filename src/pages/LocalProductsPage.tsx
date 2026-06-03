@@ -52,7 +52,7 @@ const LocalProductsPage: React.FC = () => {
   const { company } = useAuth();
   const { addProduct, updateProduct, deleteProduct, restoreProduct, currentStore, refreshData } = useLocalPOS();
   const { updateStep } = useOnboarding();
-  const { isAdmin } = usePermissions();
+  const { isAdmin, hasMinimumRole } = usePermissions();
 
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 400);
