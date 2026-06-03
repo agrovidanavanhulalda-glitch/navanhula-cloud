@@ -458,11 +458,11 @@ const FiscalDocumentsManager: React.FC = () => {
                 </Select>
               </div>
               <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Próximo número</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('fiscal.next_number')}</p>
                 <p className="mt-2 text-lg font-semibold">
                   {(activeSeries?.prefix || PREFIX_BY_TYPE[documentType]) + '-' + String(activeSeries?.next_number || 1).padStart(6, '0')}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">Série activa para {getDocumentLabel(documentType).toLowerCase()}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t('fiscal.active_series')} {getDocumentLabel(documentType).toLowerCase()}</p>
               </div>
             </div>
 
