@@ -443,7 +443,7 @@ const FiscalDocumentsManager: React.FC = () => {
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Tipo de documento</Label>
+                <Label>{t('fiscal.doc_type')}</Label>
                 <Select value={documentType} onValueChange={(value) => setDocumentType(value as FiscalDocumentType)}>
                   <SelectTrigger>
                     <SelectValue />
