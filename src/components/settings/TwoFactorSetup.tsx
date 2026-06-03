@@ -118,12 +118,12 @@ const TwoFactorSetup: React.FC = () => {
             )}
             <div>
               <p className="font-medium">
-                {is2FAEnabled ? '2FA está ativo' : '2FA não configurado'}
+                {is2FAEnabled ? t('settings.2fa.enabled') : t('settings.2fa.disabled')}
               </p>
               <p className="text-sm text-muted-foreground">
                 {is2FAEnabled
-                  ? 'Sua conta está protegida com autenticação por aplicativo'
-                  : 'Adicione uma camada extra de segurança à sua conta'}
+                  ? t('settings.2fa.enabled_desc')
+                  : t('settings.2fa.disabled_desc')}
               </p>
             </div>
           </div>
