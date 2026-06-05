@@ -40,17 +40,30 @@ const EnterpriseDebugMonitor: React.FC = () => {
     };
   }, []);
 
-  const switchRole = async (newRole: string) => {
+  const switchRole = async (newRole: AppRole) => {
     if (!user?.id) return;
     setIsSwitching(true);
     try {
+      // Find existing role record to get its ID if necessary, or use upsert if supported correctly by types
+      const { data: existingRoles } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const payload: any = {
+        user_id: user.id,
+        role: newRole,
+        company_id: company?.id
+      };
+
+      if (existingRoles?.id) {
+        payload.id = existingRoles.id;
+      }
+
       const { error } = await supabase
         .from('user_roles')
-        .upsert({ 
-          user_id: user.id, 
-          role: newRole,
-          company_id: company?.id 
-        }, { onConflict: 'user_id' });
+        .upsert(payload);
 
       if (error) throw error;
       
@@ -59,6 +72,7 @@ const EnterpriseDebugMonitor: React.FC = () => {
       // Force reload to ensure all guards re-evaluate
       window.location.reload();
     } catch (error: any) {
+      console.error("[Debug] Switch role error:", error);
       toast.error("Erro ao trocar papel: " + error.message);
     } finally {
       setIsSwitching(false);
