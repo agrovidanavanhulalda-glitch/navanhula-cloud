@@ -155,17 +155,18 @@ const LocalSellersPage: React.FC = () => {
 
       const tempPassword = formData.password.trim() || 'NAV@12345';
       
-      // ENTERPRISE: Use RPC to create user without email confirmation
-      // @ts-ignore - supabase is imported but TS might be acting up if context is lost
-      const { data: rpcData, error: rpcError } = await supabase.rpc('create_enterprise_seller', {
-        p_store_id: formData.storeId,
-        p_full_name: formData.name.trim(),
-        p_email: formData.email.trim().toLowerCase(),
-        p_password: tempPassword,
-        p_role: formData.role
+      // ENTERPRISE: Use Edge Function to create user with pre-confirmed email
+      const { data: edgeData, error: edgeError } = await supabase.functions.invoke('manage-team-member', {
+        body: {
+          store_id: formData.storeId,
+          full_name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          password: tempPassword,
+          role: formData.role
+        }
       });
 
-      if (rpcError) throw rpcError;
+      if (edgeError) throw edgeError;
 
       // Update local context
       // @ts-ignore - refreshData is available via useLocalPOS destructuring
