@@ -1,25 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
-import Sidebar from '@/components/layout/Sidebar';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter } from 'react-router-dom';
-import { I18nProvider } from '@/contexts/i18n';
-import { supabase } from '@/integrations/supabase/client';
 
-// Mock window.localStorage
-Object.defineProperty(window, 'localStorage', {
-  value: {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
-  },
-  writable: true
-});
-
-// Mock Supabase
+// Mock Supabase COMPLETELY before importing any context or component
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(),
@@ -31,6 +14,13 @@ vi.mock('@/integrations/supabase/client', () => ({
     rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
   },
 }));
+
+import Sidebar from '@/components/layout/Sidebar';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
+import { I18nProvider } from '@/contexts/i18n';
+import { supabase } from '@/integrations/supabase/client';
 
 // Mock useSidebar for Shadcn Sidebar
 vi.mock('@/components/ui/sidebar', async (importOriginal) => {
