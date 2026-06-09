@@ -458,67 +458,104 @@ const CompanyUsersPage = () => {
         </Dialog>
 
         {/* Create User Dialog */}
-        <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
-          <DialogContent>
+        <Dialog open={showCreateUser} onOpenChange={(open) => {
+          if (!createUser.isPending) setShowCreateUser(open);
+        }}>
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Criar Novo Utilizador</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Nome Completo</Label>
-                <Input 
-                  placeholder="João Silva" 
-                  value={createUserForm.full_name}
-                  onChange={e => setCreateUserForm({ ...createUserForm, full_name: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Nome Completo</Label>
+                  <Input 
+                    placeholder="João Silva" 
+                    value={createUserForm.full_name}
+                    onChange={e => setCreateUserForm({ ...createUserForm, full_name: e.target.value })}
+                    disabled={createUser.isPending}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input 
+                    placeholder="joao@exemplo.com" 
+                    value={createUserForm.email}
+                    onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
+                    disabled={createUser.isPending}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input 
-                  placeholder="joao@exemplo.com" 
-                  value={createUserForm.email}
-                  onChange={e => setCreateUserForm({ ...createUserForm, email: e.target.value })}
-                />
-              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="temp-password">Senha Temporária (Opcional)</Label>
-                <Input 
-                  id="temp-password"
-                  type="password"
-                  placeholder="Deixe vazio para gerar automaticamente" 
-                  value={createUserForm.password}
-                  onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Cargo</Label>
-                <Select 
-                  value={createUserForm.role_id}
-                  onValueChange={v => setCreateUserForm({ ...createUserForm, role_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o cargo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((r: any) => (
-                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                    ))}
-                    </SelectContent>
-                </Select>
-                {createUserForm.role_id && !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') && (
-                  <p className="text-xs text-destructive mt-1">Este cargo não possui uma chave técnica válida e não pode ser usado.</p>
-                )}
+                <div className="relative">
+                  <Input 
+                    id="temp-password"
+                    type="password"
+                    placeholder="Deixe vazio para gerar automaticamente" 
+                    value={createUserForm.password}
+                    onChange={e => setCreateUserForm({ ...createUserForm, password: e.target.value })}
+                    disabled={createUser.isPending}
+                    className="pr-10"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+                    <Key className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground italic">Mínimo 8 caracteres recomendado.</p>
               </div>
 
-              <div className="space-y-3 pt-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Cargo</Label>
+                  <Select 
+                    value={createUserForm.role_id}
+                    onValueChange={v => setCreateUserForm({ ...createUserForm, role_id: v })}
+                    disabled={createUser.isPending}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((r: any) => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {createUserForm.role_id && !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') && (
+                    <p className="text-[10px] text-destructive font-medium">Cargo técnico inválido.</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>Branch / Loja</Label>
+                  <Select 
+                    value={createUserForm.branch_id}
+                    onValueChange={v => setCreateUserForm({ ...createUserForm, branch_id: v })}
+                    disabled={createUser.isPending}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map((b: any) => (
+                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4 border-t">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="send_email" 
                     checked={createUserForm.send_email}
                     onCheckedChange={(checked) => setCreateUserForm({ ...createUserForm, send_email: !!checked })}
+                    disabled={createUser.isPending}
                   />
                   <Label htmlFor="send_email" className="text-sm font-normal cursor-pointer">
-                    Enviar credenciais por email (Opção A)
+                    Enviar credenciais por email <span className="text-xs text-muted-foreground">(Opção A)</span>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -526,26 +563,49 @@ const CompanyUsersPage = () => {
                     id="show_credentials" 
                     checked={createUserForm.show_credentials}
                     onCheckedChange={(checked) => setCreateUserForm({ ...createUserForm, show_credentials: !!checked })}
+                    disabled={createUser.isPending}
                   />
                   <Label htmlFor="show_credentials" className="text-sm font-normal cursor-pointer">
-                    Mostrar credenciais agora (Opção B)
+                    Mostrar credenciais agora <span className="text-xs text-muted-foreground">(Opção B)</span>
                   </Label>
                 </div>
               </div>
+
+              {createUser.isError && (
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md flex items-start gap-2 text-destructive text-xs">
+                  <Ban className="w-4 h-4 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-semibold">Erro ao criar:</p>
+                    <p>{(createUser.error as any)?.message || 'Erro desconhecido. Verifique os dados e tente novamente.'}</p>
+                  </div>
+                </div>
+              )}
+
+              {createUser.isPending && (
+                <div className="p-3 bg-primary/5 border border-primary/10 rounded-md flex items-center gap-3 text-primary text-xs animate-pulse">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <p>Processando criação e configurando perfil no banco de dados...</p>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button 
                 onClick={() => createUser.mutate()} 
-                className="w-full"
+                className="w-full h-11"
                 disabled={
                   createUser.isPending || 
                   !createUserForm.email || 
+                  !createUserForm.full_name ||
                   !createUserForm.role_id ||
                   !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '')
                 }
               >
-                {createUser.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                {createUser.isPending ? 'Criando...' : 'Criar Utilizador'}
+                {createUser.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Criando Utilizador...
+                  </>
+                ) : 'Confirmar e Criar Utilizador'}
               </Button>
             </DialogFooter>
           </DialogContent>
