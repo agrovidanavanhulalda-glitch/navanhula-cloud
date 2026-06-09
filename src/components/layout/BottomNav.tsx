@@ -54,7 +54,11 @@ const BottomNav: React.FC = () => {
       }}
     >
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
-        {navItems.map((item) => {
+        {navItems.filter(item => {
+          if (item.minRole && !hasMinimumRole(item.minRole)) return false;
+          if (item.module && !canViewModule(item.module)) return false;
+          return true;
+        }).map((item) => {
           if (item.isMenu) {
             return (
               <Sheet key={item.label} open={menuOpen} onOpenChange={setMenuOpen}>
