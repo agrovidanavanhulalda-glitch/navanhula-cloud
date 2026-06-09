@@ -5,8 +5,18 @@ import Sidebar from '@/components/layout/Sidebar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { I18nProvider } from '@/contexts/i18n';
+
+// Mock window.localStorage
+Object.defineProperty(window, 'localStorage', {
+  value: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  },
+  writable: true
+});
 
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => ({
@@ -15,7 +25,9 @@ vi.mock('@/integrations/supabase/client', () => ({
     auth: {
       getSession: vi.fn(),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+      signOut: vi.fn().mockResolvedValue({ error: null }),
     },
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
   },
 }));
 
