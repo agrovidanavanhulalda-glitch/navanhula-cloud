@@ -1,10 +1,12 @@
 import React, { memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, Users, BarChart3, Menu, Package, Boxes } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Menu, Package, Boxes } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from './Sidebar';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useI18n } from '@/contexts/i18n';
 
 interface NavItem {
   label: string;
