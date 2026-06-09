@@ -1,38 +1,67 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import React from 'react';
+import { describe, it, expect } from 'vitest';
+import { canAccessRoute, getDefaultRouteForRole } from '@/lib/roleRoutes';
+import type { AppRole } from '@/types/pos';
 
-// Mock Supabase COMPLETELY before importing any context or component
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(),
-    auth: {
-      getSession: vi.fn(),
-      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
-      signOut: vi.fn().mockResolvedValue({ error: null }),
-    },
-    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
-  },
-}));
+describe('RBAC Routing and Logic Tests', () => {
+  describe('canAccessRoute logic', () => {
+    it('Seller: should be restricted from admin/manager routes', () => {
+      const sellerRole: AppRole = 'seller';
+      
+      // Allowed
+      expect(canAccessRoute('/app/pdv', sellerRole)).toBe(true);
+      expect(canAccessRoute('/app/vendas', sellerRole)).toBe(true);
+      
+      // Restricted (requires manager/admin)
+      expect(canAccessRoute('/app/configuracoes', sellerRole)).toBe(false);
+      expect(canAccessRoute('/app/lojas', sellerRole)).toBe(false);
+      expect(canAccessRoute('/app/compliance', sellerRole)).toBe(false);
+      expect(canAccessRoute('/app/bi', sellerRole)).toBe(false);
+    });
 
-import Sidebar from '@/components/layout/Sidebar';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter } from 'react-router-dom';
-import { I18nProvider } from '@/contexts/i18n';
-import { supabase } from '@/integrations/supabase/client';
+    it('Manager: should access inventory and settings, but restricted from CEO/Compliance', () => {
+      const managerRole: AppRole = 'manager';
+      
+      // Allowed
+      expect(canAccessRoute('/app/estoque', managerRole)).toBe(true);
+      expect(canAccessRoute('/app/configuracoes', managerRole)).toBe(true);
+      expect(canAccessRoute('/app/dashboard/gestor', managerRole)).toBe(true);
+      
+      // Restricted
+      expect(canAccessRoute('/app/ceo', managerRole)).toBe(false);
+      expect(canAccessRoute('/app/compliance', managerRole)).toBe(false);
+      expect(canAccessRoute('/app/auditoria', managerRole)).toBe(false);
+    });
 
-// Mock useSidebar for Shadcn Sidebar
-vi.mock('@/components/ui/sidebar', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual as any,
-    useSidebar: () => ({
-      state: 'expanded',
-      isMobile: false,
-    }),
-  };
+    it('Admin/CEO: should have access to everything', () => {
+      const adminRole: AppRole = 'admin';
+      const ceoRole: AppRole = 'ceo';
+      
+      const allRoutes = [
+        '/app/pdv',
+        '/app/configuracoes',
+        '/app/ceo',
+        '/app/compliance',
+        '/app/auditoria',
+        '/app/bi'
+      ];
+      
+      allRoutes.forEach(route => {
+        expect(canAccessRoute(route, adminRole)).toBe(true);
+        expect(canAccessRoute(route, ceoRole)).toBe(true);
+      });
+    });
+  });
+
+  describe('getDefaultRouteForRole logic', () => {
+    it('should return correct landing page for each role', () => {
+      expect(getDefaultRouteForRole('seller')).toBe('/app/pdv');
+      expect(getDefaultRouteForRole('manager')).toBe('/app/dashboard/gestor');
+      expect(getDefaultRouteForRole('admin')).toBe('/app/dashboard');
+      expect(getDefaultRouteForRole('ceo')).toBe('/app/ceo');
+    });
+  });
 });
+
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
