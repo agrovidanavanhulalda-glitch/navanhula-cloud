@@ -15,15 +15,26 @@ interface NavItem {
   isMenu?: boolean;
 }
 
-const navItems: NavItem[] = [
-  { label: 'Início', icon: LayoutDashboard, path: '/app/dashboard' },
-  { label: 'Vendas', icon: ShoppingCart, path: '/app/pdv' },
-  { label: 'Produtos', icon: Package, path: '/app/produtos' },
-  { label: 'Stock', icon: Boxes, path: '/app/estoque' },
-  { label: 'Menu', icon: Menu, path: '', isMenu: true },
-];
+interface NavItem {
+  label: string;
+  icon: React.ElementType;
+  path: string;
+  isMenu?: boolean;
+  minRole?: string;
+  module?: string;
+}
 
 const BottomNav: React.FC = () => {
+  const { t } = useI18n();
+  const { canViewModule, hasMinimumRole } = usePermissions();
+
+  const navItems: NavItem[] = [
+    { label: t('common.open'), icon: LayoutDashboard, path: '/app/dashboard' },
+    { label: t('nav.sales'), icon: ShoppingCart, path: '/app/pdv' },
+    { label: t('nav.products'), icon: Package, path: '/app/produtos' },
+    { label: 'Stock', icon: Boxes, path: '/app/estoque', minRole: 'manager' },
+    { label: 'Menu', icon: Menu, path: '', isMenu: true },
+  ];
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = React.useState(false);
