@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { I18nProvider } from '@/contexts/i18n';
+import { supabase } from '@/integrations/supabase/client';
 
 // Mock window.localStorage
 Object.defineProperty(window, 'localStorage', {
