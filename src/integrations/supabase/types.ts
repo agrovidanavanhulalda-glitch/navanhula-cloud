@@ -8299,6 +8299,17 @@ export type Database = {
         }
         Returns: Json
       }
+      create_enterprise_user: {
+        Args: {
+          p_company_id: string
+          p_email: string
+          p_full_name: string
+          p_password: string
+          p_role: string
+          p_store_id?: string
+        }
+        Returns: Json
+      }
       create_journal_entry: {
         Args: {
           p_description: string
