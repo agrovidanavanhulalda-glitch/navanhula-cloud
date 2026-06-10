@@ -864,6 +864,7 @@ export type Database = {
       }
       auth_flow_logs: {
         Row: {
+          company_id: string | null
           created_at: string
           email: string | null
           error_message: string | null
@@ -875,6 +876,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           email?: string | null
           error_message?: string | null
@@ -886,6 +888,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           email?: string | null
           error_message?: string | null
