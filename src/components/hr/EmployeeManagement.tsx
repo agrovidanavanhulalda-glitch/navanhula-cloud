@@ -132,41 +132,72 @@ const EmployeeManagement: React.FC = () => {
   const onSubmit = async (values: EmployeeFormValues) => {
     if (!company) return;
 
-    const payload = {
-      company_id: company.id,
-      full_name: values.full_name,
-      email: values.email || null,
-      phone: values.phone || null,
-      position: values.position,
-      department: values.department,
-      hire_date: values.hire_date,
-      base_salary: parseFloat(values.base_salary),
-      commission_rate: parseFloat(values.commission_rate || '0'),
-      inss_number: values.inss_number || null,
-      nuit: values.nuit || null,
-      bank_name: values.bank_name || null,
-      bank_account: values.bank_account || null,
-      status: 'active',
-      access_level: values.access_level
-    };
+    try {
+      const payload = {
+        company_id: company.id,
+        full_name: values.full_name,
+        email: values.email || null,
+        phone: values.phone || null,
+        position: values.position,
+        department: values.department,
+        hire_date: values.hire_date,
+        base_salary: parseFloat(values.base_salary),
+        commission_rate: parseFloat(values.commission_rate || '0'),
+        inss_number: values.inss_number || null,
+        nuit: values.nuit || null,
+        bank_name: values.bank_name || null,
+        bank_account: values.bank_account || null,
+        status: 'active',
+        access_level: values.access_level
+      };
 
-    let error;
-    if (editingEmployee) {
-      ({ error } = await supabase.from('employees').update(payload as any).eq('id', editingEmployee.id));
-    } else {
-      ({ error } = await supabase.from('employees').insert(payload as any));
-    }
+      if (editingEmployee) {
+        const { error } = await supabase.from('employees').update(payload as any).eq('id', editingEmployee.id);
+        if (error) throw error;
+        toast.success(t('hr.employee.save_success'));
+      } else {
+        // If it's a new employee with an email, use the Edge Function to create an Auth user + Profile
+        if (values.email) {
+          const { data, error: functionError } = await supabase.functions.invoke('manage-team-member', {
+            body: {
+              email: values.email,
+              full_name: values.full_name,
+              role: values.access_level,
+              send_email: true,
+              // Note: The edge function will also handle company_id assignment
+            }
+          });
 
-    if (error) { 
-      toast.error(t('settings.messages.save_error') + ': ' + error.message); 
-      return; 
+          if (functionError) throw functionError;
+          if (data?.error) throw new Error(data.error);
+          
+          // Add the employee record linked to the new auth user if possible
+          const { error: insertError } = await supabase.from('employees').insert({
+            ...payload,
+            id: data.user_id // Try to keep IDs in sync if the schema allows
+          } as any);
+          
+          if (insertError) {
+            console.error("Error creating employee record (auth user created):", insertError);
+            // Non-blocking error since auth user was created
+          }
+        } else {
+          // No email, just a local employee record
+          const { error: insertError } = await supabase.from('employees').insert(payload as any);
+          if (insertError) throw insertError;
+        }
+        
+        toast.success(t('hr.employee.save_success'));
+      }
+
+      setDialogOpen(false);
+      form.reset();
+      setEditingEmployee(null);
+      loadEmployees();
+    } catch (error: any) {
+      console.error("Employee save error:", error);
+      toast.error(t('settings.messages.save_error') + ': ' + (error.message || 'Erro desconhecido'));
     }
-    
-    toast.success(t('hr.employee.save_success'));
-    setDialogOpen(false);
-    form.reset();
-    setEditingEmployee(null);
-    loadEmployees();
   };
 
   const activeEmployees = employees.filter(e => e.status === 'active');
