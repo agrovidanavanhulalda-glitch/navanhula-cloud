@@ -1,15 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { supabase } from '@/lib/supabase';
 
 // Mock Supabase to simulate RLS failures and responses
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(),
-    auth: {
-      getUser: vi.fn(),
-    },
+const mockSupabase = {
+  from: vi.fn(),
+  auth: {
+    getUser: vi.fn(),
   },
+};
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: mockSupabase
 }));
+
+// Import after mocking
+import { supabase } from '@/integrations/supabase/client';
+
 
 describe('Backend RBAC (RLS Simulation) Tests', () => {
   const mockUserId = 'user-123';
