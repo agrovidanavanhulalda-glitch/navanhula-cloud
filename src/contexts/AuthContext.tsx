@@ -154,8 +154,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isInitializing.current = true;
     
     try {
-      // Retry logic for bootstrap to handle transient network issues/timeouts
-      let retries = 3;
+      console.log('[Auth] Inciando sincronização imediata de perfil...');
+      
+      // 1. Immediate sync check via RPC
+      const { data: syncData, error: syncError } = await supabase.rpc('sync_user_profile', { 
+        target_user_id: userId 
+      });
+      
+      if (syncError) {
+        console.warn('[Auth] Sync RPC error (falling back to bootstrap):', syncError);
+      } else {
+        console.log('[Auth] Sincronização concluída:', syncData);
+      }
+
+      // 2. Original bootstrap logic as fallback/secondary check
+      let retries = 2;
       let lastError = null;
 
       while (retries > 0) {
@@ -166,13 +179,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         lastError = bootstrapError;
-        console.warn(`[Auth] Bootstrap retry ${4 - retries}/3...`, bootstrapError);
+        console.warn(`[Auth] Bootstrap retry ${3 - retries}/2...`, bootstrapError);
         retries--;
-        if (retries > 0) await new Promise(r => setTimeout(r, 1000));
+        if (retries > 0) await new Promise(r => setTimeout(r, 800));
       }
 
-      if (lastError) {
-        console.error('[Auth] Bootstrap failed after retries:', lastError);
+      if (lastError && !syncData?.success) {
+        console.error('[Auth] Setup failed after retries:', lastError);
         toast.error('Erro ao configurar perfil. Algumas funcionalidades podem estar limitadas.');
       }
 
