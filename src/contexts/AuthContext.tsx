@@ -159,7 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 1. Immediate sync check via RPC
       const { data: syncData, error: syncError } = await supabase.rpc('sync_user_profile', { 
         target_user_id: userId 
-      }) as { data: any, error: any };
+      });
       
       if (syncError) {
         console.warn('[Auth] Sync RPC error (falling back to bootstrap):', syncError);
@@ -184,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (retries > 0) await new Promise(r => setTimeout(r, 800));
       }
 
-      if (lastError && !syncData?.success) {
+      if (lastError && !(syncData as any)?.success) {
         console.error('[Auth] Setup failed after retries:', lastError);
         toast.error('Erro ao configurar perfil. Algumas funcionalidades podem estar limitadas.');
       }
