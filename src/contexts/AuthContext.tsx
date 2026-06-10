@@ -159,7 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 1. Immediate sync check via RPC
       const { data: syncData, error: syncError } = await supabase.rpc('sync_user_profile', { 
         target_user_id: userId 
-      });
+      }) as { data: any, error: any };
       
       if (syncError) {
         console.warn('[Auth] Sync RPC error (falling back to bootstrap):', syncError);
