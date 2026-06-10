@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, UserPlus, Edit2, Users, Trash2 } from 'lucide-react';
+import { Plus, UserPlus, Edit2, Users, Trash2, RefreshCcw, ShieldCheck } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { useTranslation } from '@/contexts/i18n';
 import { useForm } from 'react-hook-form';
@@ -158,28 +158,48 @@ const EmployeeManagement: React.FC = () => {
       } else {
         // If it's a new employee with an email, use the Edge Function to create an Auth user + Profile
         if (values.email) {
+          const loadingToast = toast.loading('Criando utilizador e sincronizando permissões...');
+          
           const { data, error: functionError } = await supabase.functions.invoke('manage-team-member', {
             body: {
               email: values.email,
               full_name: values.full_name,
               role: values.access_level,
               send_email: true,
-              // Note: The edge function will also handle company_id assignment
             }
           });
 
-          if (functionError) throw functionError;
-          if (data?.error) throw new Error(data.error);
+          if (functionError) {
+            toast.dismiss(loadingToast);
+            throw functionError;
+          }
+          if (data?.error) {
+            toast.dismiss(loadingToast);
+            throw new Error(data.error);
+          }
+          
+          const newUserId = data.user_id;
+
+          // Perform immediate sync verification
+          const { error: syncError } = await supabase.rpc('sync_user_profile', {
+            target_user_id: newUserId
+          });
+
+          if (syncError) {
+            console.warn("Sync verification error:", syncError);
+            toast.warning('Utilizador criado, mas a sincronização de permissões pode levar alguns segundos.');
+          }
           
           // Add the employee record linked to the new auth user if possible
           const { error: insertError } = await supabase.from('employees').insert({
             ...payload,
-            id: data.user_id // Try to keep IDs in sync if the schema allows
+            id: newUserId
           } as any);
+          
+          toast.dismiss(loadingToast);
           
           if (insertError) {
             console.error("Error creating employee record (auth user created):", insertError);
-            // Non-blocking error since auth user was created
           }
         } else {
           // No email, just a local employee record
@@ -197,6 +217,22 @@ const EmployeeManagement: React.FC = () => {
     } catch (error: any) {
       console.error("Employee save error:", error);
       toast.error(t('settings.messages.save_error') + ': ' + (error.message || 'Erro desconhecido'));
+    }
+  const handleSync = async (userId: string) => {
+    const loadingToast = toast.loading('Sincronizando permissões...');
+    try {
+      const { data, error } = await supabase.rpc('sync_user_profile', {
+        target_user_id: userId
+      });
+
+      if (error) throw error;
+      toast.success('Perfil e permissões sincronizados!');
+      loadEmployees();
+    } catch (err: any) {
+      console.error("Sync error:", err);
+      toast.error('Erro na sincronização: ' + (err.message || 'Erro desconhecido'));
+    } finally {
+      toast.dismiss(loadingToast);
     }
   };
 
@@ -491,8 +527,17 @@ const EmployeeManagement: React.FC = () => {
                     </td>
                     <td className="p-3 text-center">
                       <div className="flex justify-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(emp)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(emp)} title="Editar">
                           <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-primary hover:bg-primary/10" 
+                          onClick={() => handleSync(emp.id)}
+                          title="Sincronizar Permissões"
+                        >
+                          <RefreshCcw className="w-4 h-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
