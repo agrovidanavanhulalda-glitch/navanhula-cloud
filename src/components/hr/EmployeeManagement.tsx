@@ -218,6 +218,8 @@ const EmployeeManagement: React.FC = () => {
       console.error("Employee save error:", error);
       toast.error(t('settings.messages.save_error') + ': ' + (error.message || 'Erro desconhecido'));
     }
+  };
+
   const handleSync = async (userId: string) => {
     const loadingToast = toast.loading('Sincronizando permissões...');
     try {
