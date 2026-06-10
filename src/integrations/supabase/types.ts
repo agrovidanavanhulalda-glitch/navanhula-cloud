@@ -8689,6 +8689,7 @@ export type Database = {
         Args: { p_company_id: string }
         Returns: undefined
       }
+      sync_user_profile: { Args: { target_user_id?: string }; Returns: Json }
       terminate_user_session: { Args: { p_session_id: string }; Returns: Json }
       toggle_company_status: {
         Args: { p_active: boolean; p_company_id: string }
