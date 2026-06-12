@@ -8585,6 +8585,7 @@ export type Database = {
         Returns: string
       }
       map_role_name: { Args: { p_role: string }; Returns: string }
+      max_user_role_level: { Args: { _user_id: string }; Returns: number }
       notify_company_admins: {
         Args: {
           p_category?: string
@@ -8677,6 +8678,10 @@ export type Database = {
         Returns: Json
       }
       restore_product: { Args: { p_product_id: string }; Returns: boolean }
+      role_level: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: number
+      }
       run_stock_reconciliation: {
         Args: { p_salesman_id: string }
         Returns: Json
