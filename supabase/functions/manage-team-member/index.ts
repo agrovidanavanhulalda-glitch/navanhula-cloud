@@ -5,6 +5,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// Roles permitted in the public.app_role enum
+const VALID_DB_ROLES = ['ceo', 'admin', 'manager', 'seller', 'cashier', 'viewer'];
+// Roles that REQUIRE a branch_id to be assigned (operational)
+const OPERATIONAL_ROLES = ['seller', 'cashier', 'driver'];
+// Owner-level roles that bypass normal restrictions
+const OWNER_ALIASES = ['owner', 'super_admin', 'superadmin', 'proprietario', 'proprietário'];
+
+const json = (status: number, body: Record<string, unknown>) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+
+// Normalize an incoming role string to a valid DB enum value.
+// Returns { dbRole, isOwner } so the caller can apply owner privileges.
+function normalizeRole(input: string): { dbRole: string | null; isOwner: boolean } {
+  const raw = String(input || '').trim().toLowerCase();
+  if (!raw) return { dbRole: null, isOwner: false };
+  if (OWNER_ALIASES.includes(raw)) return { dbRole: 'admin', isOwner: true };
+  if (raw === 'gerente') return { dbRole: 'manager', isOwner: false };
+  if (raw === 'vendedor') return { dbRole: 'seller', isOwner: false };
+  if (raw === 'caixa') return { dbRole: 'cashier', isOwner: false };
+  if (VALID_DB_ROLES.includes(raw)) return { dbRole: raw, isOwner: raw === 'ceo' };
+  return { dbRole: null, isOwner: false };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -14,151 +40,224 @@ Deno.serve(async (req) => {
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-  const logStep = async (userId: string | null, email: string, step: string, status: string, message: string, metadata: any = {}) => {
-    try {
-      await adminClient.from('bootstrap_logs').insert({
-        user_id: userId,
-        email,
-        step,
-        status,
-        message,
-        metadata
-      });
-    } catch (e) {
-      console.error(`Failed to log step ${step}:`, e);
-    }
-  };
+  let payload: any = {};
 
   try {
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    if (!authHeader) return json(401, { error: 'Não autorizado', code: 'NO_AUTH_HEADER' });
 
     const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user: callingUser } } = await userClient.auth.getUser();
-    if (!callingUser) {
-      return new Response(JSON.stringify({ error: 'Sessão inválida' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const { data: { user: callingUser }, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !callingUser) {
+      console.error('[manage-team-member] invalid session', { userErr });
+      return json(401, { error: 'Sessão inválida', code: 'INVALID_SESSION' });
     }
 
-    // Check if caller is CEO, Admin, or Manager
     const { data: profile } = await adminClient
       .from('profiles')
       .select('is_super_admin, company_id')
       .eq('id', callingUser.id)
       .maybeSingle();
 
-    const { data: callerRole } = await adminClient
+    const { data: callerRoleRow } = await adminClient
       .from('user_roles')
       .select('role')
       .eq('user_id', callingUser.id)
       .maybeSingle();
 
-    const isAuthorized = profile?.is_super_admin || 
-                        ['ceo', 'admin', 'manager', 'owner'].includes(callerRole?.role || '');
+    const callerRoleName = (callerRoleRow?.role || '').toLowerCase();
+    const isOwnerCaller = !!profile?.is_super_admin || ['ceo', 'admin'].includes(callerRoleName);
+    const isAuthorized = isOwnerCaller || callerRoleName === 'manager';
 
     if (!isAuthorized) {
-      return new Response(JSON.stringify({ error: 'Sem permissão para criar utilizadores' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      console.error('[manage-team-member] forbidden caller', { callerId: callingUser.id, callerRoleName });
+      return json(403, { error: 'Sem permissão para criar utilizadores', code: 'FORBIDDEN' });
+    }
+
+    const companyId = profile?.company_id;
+
+    try {
+      payload = await req.json();
+    } catch (e) {
+      console.error('[manage-team-member] invalid JSON body', e);
+      return json(400, { error: 'Corpo da requisição inválido (JSON)', code: 'BAD_JSON' });
+    }
+
+    const { email, full_name, role, branch_id, store_id, password, send_email } = payload;
+
+    if (!full_name || !role) {
+      return json(400, { error: 'Nome e cargo são obrigatórios', code: 'MISSING_FIELDS' });
+    }
+
+    const { dbRole, isOwner } = normalizeRole(role);
+    if (!dbRole) {
+      console.error('[manage-team-member] invalid role', { role, payload });
+      return json(400, {
+        error: `Cargo inválido: "${role}". Use: owner, admin, ceo, manager, seller, cashier, viewer`,
+        code: 'INVALID_ROLE',
       });
     }
 
-    const companyId = profile?.company_id || callerRole?.company_id;
+    // Hierarchy: owner/super_admin caller bypasses. Otherwise cannot assign >= own level.
+    if (!isOwnerCaller) {
+      const ROLE_LEVELS: Record<string, number> = { ceo: 5, admin: 4, manager: 3, seller: 2, cashier: 2, viewer: 1 };
+      const callerLevel = ROLE_LEVELS[callerRoleName] ?? 0;
+      const assignLevel = ROLE_LEVELS[dbRole] ?? 0;
+      if (assignLevel >= callerLevel) {
+        return json(403, {
+          error: 'Não pode atribuir um cargo igual ou superior ao seu',
+          code: 'ROLE_ESCALATION',
+        });
+      }
+    }
 
-    const { email, full_name, role, branch_id, store_id, password, send_email } = await req.json();
-
-    if (!email || !full_name || !role) {
-      return new Response(JSON.stringify({ error: 'Email, nome e cargo são obrigatórios' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Branch is only required for operational roles
+    const effectiveBranch = branch_id || store_id || null;
+    const incomingRoleLc = String(role).toLowerCase();
+    if (OPERATIONAL_ROLES.includes(incomingRoleLc) && !effectiveBranch) {
+      return json(400, {
+        error: `O cargo "${role}" exige seleção de filial/loja`,
+        code: 'BRANCH_REQUIRED',
       });
     }
 
-    // Enforce role hierarchy: caller cannot assign a role >= their own.
-    // Super admin has the highest implicit privilege.
-    const ROLE_LEVELS: Record<string, number> = { ceo: 5, admin: 4, owner: 4, manager: 3, seller: 2, cashier: 1, viewer: 1 };
-    const callerRoleName = (callerRole?.role || '').toLowerCase();
-    const callerLevel = profile?.is_super_admin ? 99 : (ROLE_LEVELS[callerRoleName] ?? 0);
-    const requestedRole = String(role).toLowerCase();
-    const assignLevel = ROLE_LEVELS[requestedRole] ?? 0;
-    if (assignLevel === 0 || assignLevel >= callerLevel) {
-      return new Response(JSON.stringify({ error: 'Não pode atribuir um cargo igual ou superior ao seu' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Email is OPTIONAL for owners: if missing, synthesize a placeholder so auth.users can be created
+    const safeEmail = (email && String(email).trim().toLowerCase())
+      || `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}@local.navanhula`;
 
-    // Use a strong password if not provided
-    const tempPassword = password || Math.random().toString(36).slice(-4) + Math.random().toString(36).toUpperCase().slice(-4) + '1!';
-    
-    await logStep(null, email, 'auth_creation', 'processing', 'Iniciando criação de usuário auth');
+    const tempPassword =
+      password ||
+      (Math.random().toString(36).slice(-6) +
+        Math.random().toString(36).toUpperCase().slice(-4) +
+        '1!');
 
-    // 1. Create Auth User - The database trigger 'on_auth_user_created' will handle 
-    // profiles, company_users, and user_roles creation automatically.
+    // 1. Create auth user
+    let newUserId: string | null = null;
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-      email,
+      email: safeEmail,
       password: tempPassword,
       email_confirm: true,
       user_metadata: {
         full_name,
         company_id: companyId,
-        role: requestedRole,
-        branch_id: branch_id || store_id,
-        actor_id: callingUser.id
-      }
+        role: dbRole,
+        branch_id: effectiveBranch,
+        actor_id: callingUser.id,
+      },
     });
 
     if (authError) {
-      await logStep(null, email, 'auth_creation', 'failed', authError.message);
-      
-      if (authError.message?.includes('already been registered')) {
-        return new Response(JSON.stringify({ error: 'Este email já está registrado' }), {
-          status: 409,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      const isDuplicate =
+        authError.message?.toLowerCase().includes('already') ||
+        authError.message?.toLowerCase().includes('registered');
+
+      console.error('[manage-team-member] auth.createUser error', {
+        role,
+        dbRole,
+        branch_id: effectiveBranch,
+        email: safeEmail,
+        payload,
+        supabase_error: authError,
+      });
+
+      if (isDuplicate) {
+        // Find existing user by email and proceed — per business rule
+        const { data: list, error: listErr } = await adminClient.auth.admin.listUsers();
+        if (listErr) {
+          return json(500, {
+            error: 'Email já registado e falhou a busca do utilizador existente',
+            code: 'LOOKUP_FAILED',
+            details: listErr.message,
+          });
+        }
+        const existing = list?.users?.find(
+          (u) => (u.email || '').toLowerCase() === safeEmail.toLowerCase()
+        );
+        if (!existing) {
+          return json(409, {
+            error: 'Este email já está registado mas não foi encontrado',
+            code: 'EMAIL_CONFLICT',
+          });
+        }
+        newUserId = existing.id;
+      } else {
+        return json(400, {
+          error: authError.message,
+          code: 'AUTH_CREATE_FAILED',
+          details: authError,
         });
       }
+    } else {
+      newUserId = authData.user.id;
+    }
 
-      return new Response(JSON.stringify({ error: authError.message }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (!newUserId) {
+      return json(500, { error: 'Falha ao obter ID do utilizador', code: 'NO_USER_ID' });
+    }
+
+    // 2. Ensure profile + role + company_users rows exist (idempotent upserts).
+    // Triggers normally handle this on creation, but we re-assert to cover the
+    // "user already existed" branch and any partial trigger failures.
+    const { error: profileErr } = await adminClient
+      .from('profiles')
+      .upsert(
+        {
+          id: newUserId,
+          full_name,
+          company_id: companyId,
+          store_id: effectiveBranch,
+          branch_id: effectiveBranch,
+        },
+        { onConflict: 'id' }
+      );
+    if (profileErr) {
+      console.error('[manage-team-member] profile upsert failed', {
+        newUserId,
+        payload,
+        supabase_error: profileErr,
       });
     }
 
-    const newUserId = authData.user.id;
-    await logStep(newUserId, email, 'auth_creation', 'completed', 'Usuário auth criado com sucesso. Trigger de banco de dados processará o perfil.');
-
-    // 2. Optional: Send welcome email
-    if (send_email) {
-      await logStep(newUserId, email, 'email_delivery', 'processing', 'Iniciando envio de email de boas-vindas');
-      // Integration with email provider would go here
-      await logStep(newUserId, email, 'email_delivery', 'completed', 'Solicitação de email registrada');
+    const { error: roleErr } = await adminClient
+      .from('user_roles')
+      .upsert(
+        { user_id: newUserId, role: dbRole, company_id: companyId },
+        { onConflict: 'user_id,role' }
+      );
+    if (roleErr) {
+      console.error('[manage-team-member] user_roles upsert failed', {
+        newUserId,
+        dbRole,
+        supabase_error: roleErr,
+      });
     }
 
-    return new Response(JSON.stringify({
+    if (companyId) {
+      await adminClient
+        .from('company_users')
+        .upsert(
+          { user_id: newUserId, company_id: companyId, role: dbRole },
+          { onConflict: 'user_id,company_id' }
+        );
+    }
+
+    return json(200, {
       success: true,
       user_id: newUserId,
-      email: email,
-      message: 'Utilizador criado com sucesso. A senha temporária foi enviada por email.'
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      email: safeEmail,
+      role: dbRole,
+      is_owner: isOwner,
+      message: 'Utilizador criado com sucesso',
     });
-
-  } catch (error) {
-    console.error('Edge function error:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Erro interno' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  } catch (error: any) {
+    console.error('[manage-team-member] unhandled error', { payload, error });
+    return json(500, {
+      error: error?.message || 'Erro interno',
+      code: 'UNHANDLED',
+      details: String(error?.stack || error),
     });
   }
 });
