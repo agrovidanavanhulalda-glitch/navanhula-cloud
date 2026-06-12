@@ -166,37 +166,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // AUTH: Require either a valid CRON_SECRET or an authenticated CEO/admin user
+    // AUTH: This function aggregates data across ALL tenants using the service role,
+    // so it is restricted to cron/service invocations only. User-facing audit views
+    // must scope per-company via RLS-backed APIs, not this function.
     const authHeader = req.headers.get("Authorization") || "";
     const cronSecret = Deno.env.get("CRON_SECRET");
-    let authorized = false;
 
-    if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
-      authorized = true;
-    } else if (authHeader.startsWith("Bearer ")) {
-      const token = authHeader.replace("Bearer ", "");
-      const anonClient = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!
-      );
-      const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
-      if (!claimsError && claimsData?.claims?.sub) {
-        const adminCheck = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-        );
-        const { data: roleRow } = await adminCheck
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", claimsData.claims.sub)
-          .maybeSingle();
-        if (roleRow && ["ceo", "admin", "master"].includes(roleRow.role)) {
-          authorized = true;
-        }
-      }
-    }
-
-    if (!authorized) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

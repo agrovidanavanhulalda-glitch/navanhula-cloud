@@ -208,7 +208,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Mode 2: Retry failed deliveries (called by cron)
+    // Mode 2: Retry failed deliveries (called by cron ONLY — cross-tenant)
+    if (!isCron) {
+      return new Response(JSON.stringify({ error: "Forbidden: retry mode is cron-only" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data: retryable } = await supabase
       .from("webhook_deliveries")
       .select("*, webhooks(*)")

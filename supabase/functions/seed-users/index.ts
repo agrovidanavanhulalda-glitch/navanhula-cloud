@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
         role: u.role,
       }, { onConflict: "user_id,role" });
 
-      results.push({ email: u.email, password, role: u.role, full_name: u.full_name, status: "created" });
+      results.push({ email: u.email, password: "[hidden — entregue por canal seguro]", role: u.role, full_name: u.full_name, status: "created" });
     }
 
     return new Response(JSON.stringify({ success: true, users: results }), {
