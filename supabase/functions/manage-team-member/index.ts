@@ -84,6 +84,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Enforce role hierarchy: caller cannot assign a role >= their own.
+    // Super admin has the highest implicit privilege.
+    const ROLE_LEVELS: Record<string, number> = { ceo: 5, admin: 4, owner: 4, manager: 3, seller: 2, cashier: 1, viewer: 1 };
+    const callerRoleName = (callerRole?.role || '').toLowerCase();
+    const callerLevel = profile?.is_super_admin ? 99 : (ROLE_LEVELS[callerRoleName] ?? 0);
+    const requestedRole = String(role).toLowerCase();
+    const assignLevel = ROLE_LEVELS[requestedRole] ?? 0;
+    if (assignLevel === 0 || assignLevel >= callerLevel) {
+      return new Response(JSON.stringify({ error: 'Não pode atribuir um cargo igual ou superior ao seu' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Use a strong password if not provided
     const tempPassword = password || Math.random().toString(36).slice(-4) + Math.random().toString(36).toUpperCase().slice(-4) + '1!';
     
