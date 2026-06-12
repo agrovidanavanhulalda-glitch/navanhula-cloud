@@ -136,35 +136,59 @@ const LoadingScreen = React.forwardRef<HTMLDivElement>((_, ref) => (
 ));
 LoadingScreen.displayName = "LoadingScreen";
 
+const PROTECTED_ROUTE_FAILSAFE_MS = 8000;
+
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading, role, company } = useAuth();
   const location = useLocation();
+  const [failsafeExpired, setFailsafeExpired] = React.useState(false);
+
+  const needsProfile = isAuthenticated && (!role || !isValidId(company?.id));
+
+  React.useEffect(() => {
+    if (!needsProfile) {
+      setFailsafeExpired(false);
+      return;
+    }
+    const t0 = performance.now();
+    console.warn('[ProtectedRoute] Aguardando perfil/role/company...');
+    const timer = setTimeout(() => {
+      console.error(
+        `[ProtectedRoute] FAILSAFE atingido após ${Math.round(performance.now() - t0)}ms — limpando sessão e redirecionando para /login`
+      );
+      try {
+        supabase.auth.signOut().catch(() => {});
+      } catch {}
+      setFailsafeExpired(true);
+    }, PROTECTED_ROUTE_FAILSAFE_MS);
+    return () => clearTimeout(timer);
+  }, [needsProfile]);
 
   if (loading) {
     return <LoadingScreen />;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || failsafeExpired) {
     return <Navigate to="/login" replace />;
   }
 
-  // Enterprise Guard: If authenticated, we MUST have a role and company context
-  // unless we are in the middle of a transition. 
-  // This prevents crashes in child components that expect these to be present.
-  if (!role || !isValidId(company?.id)) {
-    // If we've been loading for a while but still don't have these, 
-    // it's better to show a clear error or retry than to crash.
+  if (needsProfile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
         <p className="text-sm font-medium text-muted-foreground">Finalizando configuração segura...</p>
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <p className="text-[11px] text-muted-foreground/70 mt-1">Se demorar mais que 8s será redirecionado ao login.</p>
+        <Button
+          variant="ghost"
+          size="sm"
           className="mt-4 text-xs"
-          onClick={() => window.location.reload()}
+          onClick={() => {
+            supabase.auth.signOut().finally(() => {
+              window.location.href = '/login';
+            });
+          }}
         >
-          Se demorar muito, clique aqui para recarregar
+          Voltar ao login
         </Button>
       </div>
     );
