@@ -63,6 +63,18 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Enforce role hierarchy: caller cannot assign a role equal to or higher than their own
+    const ROLE_LEVELS: Record<string, number> = { ceo: 5, admin: 4, owner: 4, manager: 3, seller: 2, cashier: 1, viewer: 1 };
+    const requestedRole = (role || 'seller').toLowerCase();
+    const callerLevel = ROLE_LEVELS[callerRole.role] ?? 0;
+    const assignLevel = ROLE_LEVELS[requestedRole] ?? 0;
+    if (assignLevel === 0 || assignLevel >= callerLevel) {
+      return new Response(JSON.stringify({ error: 'Não pode atribuir um cargo igual ou superior ao seu' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Enforce a strong password policy
     const rawPassword = typeof password === 'string' ? password.trim() : '';
     const isStrong = rawPassword.length >= 8
