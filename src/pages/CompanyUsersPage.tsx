@@ -171,7 +171,26 @@ const CompanyUsersPage = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Surface the real HTTP status + edge-function error body instead of the generic
+        // "Edge Function returned a non-2xx status code" message.
+        let realMessage = error.message || 'Erro desconhecido';
+        let status: number | undefined;
+        try {
+          const ctx: any = (error as any).context;
+          status = ctx?.status;
+          if (ctx && typeof ctx.json === 'function') {
+            const body = await ctx.json();
+            if (body?.error) realMessage = body.error;
+            if (body?.code) realMessage += ` [${body.code}]`;
+          } else if (ctx && typeof ctx.text === 'function') {
+            const t = await ctx.text();
+            if (t) realMessage = t;
+          }
+        } catch { /* ignore parse errors */ }
+        console.error('[create-user] edge function failed', { status, realMessage, error });
+        throw new Error(status ? `${status}: ${realMessage}` : realMessage);
+      }
       return data;
     },
     onSuccess: (data) => {
