@@ -148,8 +148,7 @@ Deno.serve(async (req) => {
       success: true,
       user_id: newUserId,
       email: email,
-      password: tempPassword,
-      message: 'Utilizador criado com sucesso'
+      message: 'Utilizador criado com sucesso. A senha temporária foi enviada por email.'
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
