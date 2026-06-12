@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
       user_metadata: {
         full_name,
         company_id: companyId,
-        role: role,
+        role: requestedRole,
         branch_id: branch_id || store_id,
         actor_id: callingUser.id
       }
