@@ -344,7 +344,8 @@ const IAMPage = () => {
       const email = userForm.email.trim().toLowerCase();
       const password = userForm.password || "12345678";
       const name = userForm.name;
-      const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null;
+      const fallbackBranchId = (branches as any[])?.[0]?.id || null;
+      const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : fallbackBranchId;
       
       if (!email) throw new Error('Email é obrigatório');
       if (!name) throw new Error('Nome é obrigatório');
