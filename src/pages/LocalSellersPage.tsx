@@ -166,7 +166,19 @@ const LocalSellersPage: React.FC = () => {
         }
       });
 
-      if (edgeError) throw edgeError;
+      if (edgeError) {
+        let realMessage = edgeError.message || 'Erro desconhecido';
+        try {
+          const ctx: any = (edgeError as any).context;
+          if (ctx?.status && typeof ctx.json === 'function') {
+            const body = await ctx.json();
+            if (body?.error) realMessage = `${ctx.status}: ${body.error}${body?.code ? ` [${body.code}]` : ''}`;
+          }
+        } catch {
+          // noop
+        }
+        throw new Error(realMessage);
+      }
 
       // Update local context
       // @ts-ignore - refreshData is available via useLocalPOS destructuring
