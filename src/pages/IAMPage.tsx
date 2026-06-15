@@ -345,9 +345,10 @@ const IAMPage = () => {
       const password = userForm.password || "12345678";
       const name = userForm.name;
       const fallbackBranchId = (branches as any[])?.[0]?.id || null;
-      const branchId = userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : fallbackBranchId;
+      const branchId = OPERATIONAL_ROLES.includes(userForm.role?.toLowerCase())
+        ? ((userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : fallbackBranchId) || null)
+        : (userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : null);
       
-      if (!email) throw new Error('Email é obrigatório');
       if (!name) throw new Error('Nome é obrigatório');
       if (!password || password.length < 6) throw new Error('Senha deve ter pelo menos 6 caracteres');
 
@@ -363,7 +364,7 @@ const IAMPage = () => {
 
       const { data, error } = await supabase.functions.invoke('manage-team-member', {
         body: {
-          email,
+          email: email || undefined,
           full_name: name,
           role: roleKey,
           branch_id: branchId,
@@ -443,7 +444,7 @@ const IAMPage = () => {
                     <Input id="user-name" value={userForm.name} onChange={e => setUserForm(f => ({ ...f, name: e.target.value }))} placeholder="Ex: João Silva" />
                   </div>
                   <div>
-                    <Label htmlFor="user-email">Email *</Label>
+                    <Label htmlFor="user-email">Email (Opcional)</Label>
                     <Input id="user-email" type="email" value={userForm.email} onChange={e => setUserForm(f => ({ ...f, email: e.target.value }))} placeholder="joao@exemplo.com" />
                   </div>
                   <div>
@@ -499,9 +500,9 @@ const IAMPage = () => {
                     onClick={() => createUserMutation.mutate()} 
                     disabled={
                       !userForm.name || 
-                      !userForm.email || 
                       createUserMutation.isPending ||
-                      !VALID_TECHNICAL_ROLES.includes(userForm.role.toLowerCase())
+                      !VALID_TECHNICAL_ROLES.includes(userForm.role.toLowerCase()) ||
+                      (OPERATIONAL_ROLES.includes(userForm.role.toLowerCase()) && !branchId)
                     }
                   >
                     {createUserMutation.isPending ? 'Criando...' : 'Criar Utilizador'}
