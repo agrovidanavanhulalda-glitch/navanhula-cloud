@@ -146,7 +146,7 @@ describe('Role Enforcement E2E Tests', () => {
 
     const roleSelect = screen.getByText(/Selecione o cargo/i);
     fireEvent.click(roleSelect);
-    const adminOption = await screen.findByText(/Admin/i);
+    const adminOption = (await screen.findAllByText(/^Admin$/i))[0];
     fireEvent.click(adminOption);
 
     const submitBtn = screen.getByRole('button', { name: /Confirmar e Criar Utilizador|Criar Utilizador/i });
