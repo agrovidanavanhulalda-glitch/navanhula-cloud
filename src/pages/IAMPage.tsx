@@ -502,7 +502,7 @@ const IAMPage = () => {
                       !userForm.name || 
                       createUserMutation.isPending ||
                       !VALID_TECHNICAL_ROLES.includes(userForm.role.toLowerCase()) ||
-                      (OPERATIONAL_ROLES.includes(userForm.role.toLowerCase()) && !branchId)
+                      (OPERATIONAL_ROLES.includes(userForm.role.toLowerCase()) && !((userForm.branch_id && userForm.branch_id !== 'none' ? userForm.branch_id : ((branches as any[])?.[0]?.id || null))))
                     }
                   >
                     {createUserMutation.isPending ? 'Criando...' : 'Criar Utilizador'}
