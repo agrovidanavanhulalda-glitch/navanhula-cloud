@@ -148,7 +148,8 @@ const CompanyUsersPage = () => {
       const email = createUserForm.email.trim().toLowerCase();
       const password = createUserForm.password;
       const name = createUserForm.full_name;
-      const branchId = createUserForm.branch_id || null;
+      const fallbackBranchId = branches[0]?.id || null;
+      const branchId = createUserForm.branch_id || fallbackBranchId || null;
       
       if (!email) throw new Error('O email é obrigatório');
       if (!name) throw new Error('O nome é obrigatório');
@@ -627,7 +628,7 @@ const CompanyUsersPage = () => {
                   !createUserForm.full_name ||
                   !createUserForm.role_id ||
                   !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') ||
-                  (OPERATIONAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') && !createUserForm.branch_id)
+                  (OPERATIONAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') && !(createUserForm.branch_id || branches[0]?.id))
                 }
               >
                 {createUser.isPending ? (
