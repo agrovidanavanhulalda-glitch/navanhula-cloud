@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 
-const VALID_TECHNICAL_ROLES = ['ceo', 'admin', 'manager', 'seller', 'cashier', 'viewer', 'driver', 'reseller'];
+const VALID_TECHNICAL_ROLES = ['ceo', 'admin', 'manager', 'seller', 'cashier'];
+const OPERATIONAL_ROLES = ['seller', 'cashier'];
 
 const ROLES = [
   { value: 'ceo', label: 'CEO' },
@@ -355,29 +356,47 @@ const IAMPage = () => {
         throw new Error(`Cargo técnico "${roleKey}" é inválido. Selecione um cargo permitido.`);
       }
       
-      // Criar utilizador via Auth - O trigger do banco tratará Profile e CompanyUser
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-            company_id: companyId,
-            role: roleKey, // Envia sempre a key técnica
-            branch_id: branchId,
-            actor_id: user?.id // Para auditoria detalhada
-          }
+      if (OPERATIONAL_ROLES.includes(roleKey) && !branchId) {
+        throw new Error('A branch é obrigatória para vendedores e caixas');
+      }
+
+      const { data, error } = await supabase.functions.invoke('manage-team-member', {
+        body: {
+          email,
+          full_name: name,
+          role: roleKey,
+          branch_id: branchId,
+          password,
         }
       });
 
-      if (signUpError) throw signUpError;
-      if (!signUpData.user) throw new Error('Erro ao criar conta de utilizador');
+      if (error) {
+        let realMessage = error.message || 'Erro desconhecido';
+        let status: number | undefined;
 
-      return { success: true };
+        try {
+          const ctx: any = (error as any).context;
+          status = ctx?.status;
+          if (ctx && typeof ctx.json === 'function') {
+            const body = await ctx.json();
+            if (body?.error) realMessage = body.error;
+            if (body?.code) realMessage += ` [${body.code}]`;
+          } else if (ctx && typeof ctx.text === 'function') {
+            const t = await ctx.text();
+            if (t) realMessage = t;
+          }
+        } catch {
+          // noop
+        }
+
+        throw new Error(status ? `${status}: ${realMessage}` : realMessage);
+      }
+
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
-      toast.success('Utilizador criado. Ele deve verificar o e-mail para ativar a conta.');
+      toast.success('Utilizador criado com sucesso.');
       setShowCreateUser(false);
       setUserForm({ name: '', email: '', password: '', branch_id: '', role: 'seller' });
     },
