@@ -158,7 +158,7 @@ describe('Role Enforcement E2E Tests', () => {
           full_name: 'Novo Admin',
           role: 'admin',
           email: undefined,
-          branch_id: undefined,
+          branch_id: null,
         })
       }));
     });
