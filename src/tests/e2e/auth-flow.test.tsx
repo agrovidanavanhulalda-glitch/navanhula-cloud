@@ -136,6 +136,62 @@ describe('Auth Flow E2E Tests', () => {
     });
   });
 
+  it('Flow: Should create manager without email', async () => {
+    render(<CompanyUsersPage />, { wrapper: Wrapper });
+
+    const createBtn = await screen.findByText(/Criar Utilizador/i);
+    fireEvent.click(createBtn);
+
+    fireEvent.change(screen.getByPlaceholderText(/João Silva/i), { target: { value: 'Novo Gerente' } });
+
+    const roleSelect = screen.getByText(/Selecione o cargo/i);
+    fireEvent.click(roleSelect);
+    const adminOption = (await screen.findAllByText(/^Admin$/i))[0];
+    fireEvent.click(adminOption);
+
+    const submitBtn = screen.getByRole('button', { name: /Confirmar e Criar Utilizador|Criar Utilizador/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(supabase.functions.invoke).toHaveBeenCalledWith('manage-team-member', expect.objectContaining({
+        body: expect.objectContaining({
+          full_name: 'Novo Gerente',
+          role: 'admin',
+          email: undefined,
+        })
+      }));
+    });
+  });
+
+  it('Flow: Should create user with temporary password', async () => {
+    render(<CompanyUsersPage />, { wrapper: Wrapper });
+
+    const createBtn = await screen.findByText(/Criar Utilizador/i);
+    fireEvent.click(createBtn);
+
+    fireEvent.change(screen.getByPlaceholderText(/João Silva/i), { target: { value: 'Novo Operador' } });
+    fireEvent.change(screen.getByPlaceholderText(/joao@exemplo.com/i), { target: { value: 'operador@test.com' } });
+    fireEvent.change(screen.getByPlaceholderText(/Deixe vazio para gerar automaticamente/i), { target: { value: 'Temp@1234' } });
+
+    const roleSelect = screen.getByText(/Selecione o cargo/i);
+    fireEvent.click(roleSelect);
+    const sellerOption = await screen.findByText(/Vendedor/i);
+    fireEvent.click(sellerOption);
+
+    const submitBtn = screen.getByRole('button', { name: /Confirmar e Criar Utilizador|Criar Utilizador/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(supabase.functions.invoke).toHaveBeenCalledWith('manage-team-member', expect.objectContaining({
+        body: expect.objectContaining({
+          email: 'operador@test.com',
+          role: 'seller',
+          password: 'Temp@1234',
+        })
+      }));
+    });
+  });
+
   it('Flow: Should invite user with correct branch_id and role_id', async () => {
     render(<CompanyUsersPage />, { wrapper: Wrapper });
 

@@ -136,6 +136,34 @@ describe('Role Enforcement E2E Tests', () => {
     });
   });
 
+  it('Create User Flow: admin role may omit branch and email', async () => {
+    render(<CompanyUsersPage />, { wrapper: Wrapper });
+
+    const createBtn = await screen.findByText(/Criar Utilizador/i);
+    fireEvent.click(createBtn);
+
+    fireEvent.change(screen.getByPlaceholderText(/João Silva/i), { target: { value: 'Novo Admin' } });
+
+    const roleSelect = screen.getByText(/Selecione o cargo/i);
+    fireEvent.click(roleSelect);
+    const adminOption = (await screen.findAllByText(/^Admin$/i))[0];
+    fireEvent.click(adminOption);
+
+    const submitBtn = screen.getByRole('button', { name: /Confirmar e Criar Utilizador|Criar Utilizador/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(supabase.functions.invoke).toHaveBeenCalledWith('manage-team-member', expect.objectContaining({
+        body: expect.objectContaining({
+          full_name: 'Novo Admin',
+          role: 'admin',
+          email: undefined,
+          branch_id: null,
+        })
+      }));
+    });
+  });
+
   it('Invite User Flow: must send TECHNICAL role key to invitation table or metadata', async () => {
     render(<CompanyUsersPage />, { wrapper: Wrapper });
 
