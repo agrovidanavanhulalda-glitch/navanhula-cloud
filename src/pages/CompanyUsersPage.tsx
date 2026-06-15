@@ -16,7 +16,8 @@ import { toast } from 'sonner';
 import { Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck, Trash2, UserPlus, Eye, EyeOff, Loader2, Key } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 
-const VALID_TECHNICAL_ROLES = ['ceo', 'admin', 'manager', 'seller', 'driver', 'reseller'];
+const VALID_TECHNICAL_ROLES = ['ceo', 'admin', 'manager', 'seller', 'cashier'];
+const OPERATIONAL_ROLES = ['seller', 'cashier'];
 
 const CompanyUsersPage = () => {
   const { company, user } = useAuth();
@@ -158,6 +159,10 @@ const CompanyUsersPage = () => {
       
       if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
         throw new Error(`Cargo técnico inválido. Selecione um cargo válido.`);
+      }
+
+      if (OPERATIONAL_ROLES.includes(roleKey) && !branchId) {
+        throw new Error('A branch é obrigatória para vendedores e caixas.');
       }
       
       const { data, error } = await supabase.functions.invoke('manage-team-member', {
@@ -547,7 +552,7 @@ const CompanyUsersPage = () => {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Branch / Loja</Label>
+                  <Label>Branch / Loja {OPERATIONAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') ? '*' : ''}</Label>
                   <Select 
                     value={createUserForm.branch_id}
                     onValueChange={v => setCreateUserForm({ ...createUserForm, branch_id: v })}
@@ -562,6 +567,11 @@ const CompanyUsersPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {OPERATIONAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') ? (
+                    <p className="text-[10px] text-muted-foreground">Obrigatória para vendedores e caixas.</p>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground">Opcional para cargos administrativos.</p>
+                  )}
                 </div>
               </div>
 
@@ -616,7 +626,8 @@ const CompanyUsersPage = () => {
                   !createUserForm.email || 
                   !createUserForm.full_name ||
                   !createUserForm.role_id ||
-                  !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '')
+                  !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') ||
+                  (OPERATIONAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') && !createUserForm.branch_id)
                 }
               >
                 {createUser.isPending ? (
