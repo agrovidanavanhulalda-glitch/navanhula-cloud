@@ -136,6 +136,33 @@ describe('Auth Flow E2E Tests', () => {
     });
   });
 
+  it('Flow: Should create manager without email', async () => {
+    render(<CompanyUsersPage />, { wrapper: Wrapper });
+
+    const createBtn = await screen.findByText(/Criar Utilizador/i);
+    fireEvent.click(createBtn);
+
+    fireEvent.change(screen.getByPlaceholderText(/João Silva/i), { target: { value: 'Novo Gerente' } });
+
+    const roleSelect = screen.getByText(/Selecione o cargo/i);
+    fireEvent.click(roleSelect);
+    const adminOption = await screen.findByText(/Admin/i);
+    fireEvent.click(adminOption);
+
+    const submitBtn = screen.getByRole('button', { name: /Confirmar e Criar Utilizador|Criar Utilizador/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(supabase.functions.invoke).toHaveBeenCalledWith('manage-team-member', expect.objectContaining({
+        body: expect.objectContaining({
+          full_name: 'Novo Gerente',
+          role: 'admin',
+          email: undefined,
+        })
+      }));
+    });
+  });
+
   it('Flow: Should invite user with correct branch_id and role_id', async () => {
     render(<CompanyUsersPage />, { wrapper: Wrapper });
 
