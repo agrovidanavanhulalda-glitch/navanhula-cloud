@@ -138,14 +138,74 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Branch is only required for operational roles
-    const effectiveBranch = branch_id || store_id || null;
+    // Branch is only required for operational roles.
+    // `branch_id` must reference public.branches; `store_id` must reference public.stores.
+    let effectiveBranch = branch_id || null;
+    let effectiveStore = store_id || null;
     const incomingRoleLc = String(role).toLowerCase();
-    if (OPERATIONAL_ROLES.includes(incomingRoleLc) && !effectiveBranch) {
+    if (!effectiveBranch && !effectiveStore && OPERATIONAL_ROLES.includes(incomingRoleLc)) {
       return json(400, {
         error: `O cargo "${role}" exige seleção de filial/loja`,
         code: 'BRANCH_REQUIRED',
       });
+    }
+
+    if (effectiveBranch) {
+      const { data: branchRow, error: branchLookupError } = await adminClient
+        .from('branches')
+        .select('id')
+        .eq('id', effectiveBranch)
+        .maybeSingle();
+
+      if (branchLookupError) {
+        console.error('[manage-team-member] branch lookup failed', {
+          role,
+          branch_id: effectiveBranch,
+          store_id: effectiveStore,
+          payload,
+          supabase_error: branchLookupError,
+        });
+        return json(500, {
+          error: 'Falha ao validar filial do utilizador',
+          code: 'BRANCH_LOOKUP_FAILED',
+          details: branchLookupError.message,
+        });
+      }
+
+      if (!branchRow && !effectiveStore) {
+        effectiveStore = effectiveBranch;
+        effectiveBranch = null;
+      }
+    }
+
+    if (effectiveStore) {
+      const { data: storeRow, error: storeLookupError } = await adminClient
+        .from('stores')
+        .select('id')
+        .eq('id', effectiveStore)
+        .maybeSingle();
+
+      if (storeLookupError) {
+        console.error('[manage-team-member] store lookup failed', {
+          role,
+          branch_id: effectiveBranch,
+          store_id: effectiveStore,
+          payload,
+          supabase_error: storeLookupError,
+        });
+        return json(500, {
+          error: 'Falha ao validar loja do utilizador',
+          code: 'STORE_LOOKUP_FAILED',
+          details: storeLookupError.message,
+        });
+      }
+
+      if (!storeRow) {
+        return json(400, {
+          error: 'A loja/filial informada não existe',
+          code: 'STORE_NOT_FOUND',
+        });
+      }
     }
 
     // Email is OPTIONAL for owners: if missing, synthesize a placeholder so auth.users can be created
@@ -169,6 +229,7 @@ Deno.serve(async (req) => {
         company_id: companyId,
         role: dbRole,
         branch_id: effectiveBranch,
+        store_id: effectiveStore,
         actor_id: callingUser.id,
       },
     });
@@ -247,7 +308,7 @@ Deno.serve(async (req) => {
           id: newUserId,
           full_name,
           company_id: companyId,
-          store_id: effectiveBranch,
+          store_id: effectiveStore,
           branch_id: effectiveBranch,
         },
         { onConflict: 'id' }
@@ -314,6 +375,7 @@ Deno.serve(async (req) => {
       is_owner: isOwner,
       company_id: companyId || null,
       branch_id: effectiveBranch,
+      store_id: effectiveStore,
       send_email: !!send_email,
       message: 'Utilizador criado com sucesso',
     });
