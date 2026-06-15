@@ -149,15 +149,15 @@ const CompanyUsersPage = () => {
       const password = createUserForm.password;
       const name = createUserForm.full_name;
       const fallbackBranchId = branches[0]?.id || null;
-      const branchId = createUserForm.branch_id || fallbackBranchId || null;
+      const selectedRole = roles.find(r => r.id === createUserForm.role_id);
+      const roleKey = selectedRole?.key?.toLowerCase();
+      const branchId = OPERATIONAL_ROLES.includes(roleKey || '')
+        ? (createUserForm.branch_id || fallbackBranchId || null)
+        : (createUserForm.branch_id || null);
       
-      if (!email) throw new Error('O email é obrigatório');
       if (!name) throw new Error('O nome é obrigatório');
       if (!createUserForm.role_id) throw new Error('O cargo é obrigatório');
 
-      const selectedRole = roles.find(r => r.id === createUserForm.role_id);
-      const roleKey = selectedRole?.key?.toLowerCase();
-      
       if (!roleKey || !VALID_TECHNICAL_ROLES.includes(roleKey)) {
         throw new Error(`Cargo técnico inválido. Selecione um cargo válido.`);
       }
@@ -168,7 +168,7 @@ const CompanyUsersPage = () => {
       
       const { data, error } = await supabase.functions.invoke('manage-team-member', {
         body: {
-          email,
+          email: email || undefined,
           full_name: name,
           role: roleKey,
           branch_id: branchId,
@@ -502,7 +502,7 @@ const CompanyUsersPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Email</Label>
+                  <Label>Email (Opcional)</Label>
                   <Input 
                     placeholder="joao@exemplo.com" 
                     value={createUserForm.email}
@@ -624,7 +624,6 @@ const CompanyUsersPage = () => {
                 className="w-full h-11"
                 disabled={
                   createUser.isPending || 
-                  !createUserForm.email || 
                   !createUserForm.full_name ||
                   !createUserForm.role_id ||
                   !VALID_TECHNICAL_ROLES.includes(roles.find(r => r.id === createUserForm.role_id)?.key?.toLowerCase() || '') ||
