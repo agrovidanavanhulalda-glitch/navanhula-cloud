@@ -5,10 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Roles permitted in the public.app_role enum
-const VALID_DB_ROLES = ['ceo', 'admin', 'manager', 'seller', 'cashier', 'viewer'];
+// Roles permitted in the current public.app_role enum / company_users constraint surface
+const VALID_ASSIGNABLE_ROLES = ['ceo', 'admin', 'manager', 'seller', 'cashier'];
 // Roles that REQUIRE a branch_id to be assigned (operational)
-const OPERATIONAL_ROLES = ['seller', 'cashier', 'driver'];
+const OPERATIONAL_ROLES = ['seller', 'cashier'];
 // Owner-level roles that bypass normal restrictions
 const OWNER_ALIASES = ['owner', 'super_admin', 'superadmin', 'proprietario', 'proprietário'];
 
@@ -27,7 +27,8 @@ function normalizeRole(input: string): { dbRole: string | null; isOwner: boolean
   if (raw === 'gerente') return { dbRole: 'manager', isOwner: false };
   if (raw === 'vendedor') return { dbRole: 'seller', isOwner: false };
   if (raw === 'caixa') return { dbRole: 'cashier', isOwner: false };
-  if (VALID_DB_ROLES.includes(raw)) return { dbRole: raw, isOwner: raw === 'ceo' };
+  if (raw === 'super_admin' || raw === 'superadmin') return { dbRole: 'admin', isOwner: true };
+  if (VALID_ASSIGNABLE_ROLES.includes(raw)) return { dbRole: raw, isOwner: raw === 'ceo' };
   return { dbRole: null, isOwner: false };
 }
 
@@ -88,6 +89,16 @@ Deno.serve(async (req) => {
 
     const { email, full_name, role, branch_id, store_id, password, send_email } = payload;
 
+    console.error('[manage-team-member] payload received', {
+      role,
+      branch_id: branch_id || null,
+      store_id: store_id || null,
+      payload,
+      caller_id: callingUser.id,
+      caller_role: callerRoleName,
+      company_id: companyId || null,
+    });
+
     if (!full_name || !role) {
       return json(400, { error: 'Nome e cargo são obrigatórios', code: 'MISSING_FIELDS' });
     }
@@ -96,8 +107,21 @@ Deno.serve(async (req) => {
     if (!dbRole) {
       console.error('[manage-team-member] invalid role', { role, payload });
       return json(400, {
-        error: `Cargo inválido: "${role}". Use: owner, admin, ceo, manager, seller, cashier, viewer`,
+        error: `Cargo inválido: "${role}". Use: owner, super_admin, admin, ceo, manager, seller ou cashier`,
         code: 'INVALID_ROLE',
+      });
+    }
+
+    if (!companyId && !profile?.is_super_admin) {
+      console.error('[manage-team-member] caller without company context', {
+        role,
+        branch_id: branch_id || store_id || null,
+        payload,
+        supabase_error: 'CALLER_COMPANY_MISSING',
+      });
+      return json(400, {
+        error: 'O utilizador atual não possui empresa associada para criar novos utilizadores',
+        code: 'CALLER_COMPANY_MISSING',
       });
     }
 
@@ -198,7 +222,22 @@ Deno.serve(async (req) => {
       return json(500, { error: 'Falha ao obter ID do utilizador', code: 'NO_USER_ID' });
     }
 
-    // 2. Ensure profile + role + company_users rows exist (idempotent upserts).
+    // 2. Force profile sync so auth trigger failures do not leave the user half-created.
+    const { data: syncData, error: syncError } = await adminClient.rpc('sync_user_profile', {
+      target_user_id: newUserId,
+    });
+
+    if (syncError || (syncData as any)?.success === false) {
+      console.error('[manage-team-member] sync_user_profile failed', {
+        newUserId,
+        role,
+        branch_id: effectiveBranch,
+        payload,
+        supabase_error: syncError || syncData,
+      });
+    }
+
+    // 3. Ensure profile + role + company_users rows exist (idempotent upserts).
     // Triggers normally handle this on creation, but we re-assert to cover the
     // "user already existed" branch and any partial trigger failures.
     const { error: profileErr } = await adminClient
@@ -231,29 +270,61 @@ Deno.serve(async (req) => {
       console.error('[manage-team-member] user_roles upsert failed', {
         newUserId,
         dbRole,
+        company_id: companyId || null,
         supabase_error: roleErr,
+      });
+      return json(500, {
+        error: 'Falha ao gravar cargo do utilizador',
+        code: 'USER_ROLE_UPSERT_FAILED',
+        details: roleErr.message,
       });
     }
 
     if (companyId) {
-      await adminClient
+      const { error: companyUserErr } = await adminClient
         .from('company_users')
         .upsert(
-          { user_id: newUserId, company_id: companyId, role: dbRole },
+          { user_id: newUserId, company_id: companyId, branch_id: effectiveBranch, role: dbRole, status: 'active' },
           { onConflict: 'user_id,company_id' }
         );
+
+      if (companyUserErr) {
+        console.error('[manage-team-member] company_users upsert failed', {
+          newUserId,
+          role: dbRole,
+          company_id: companyId,
+          branch_id: effectiveBranch,
+          payload,
+          supabase_error: companyUserErr,
+        });
+        return json(500, {
+          error: 'Falha ao vincular utilizador à empresa',
+          code: 'COMPANY_USER_UPSERT_FAILED',
+          details: companyUserErr.message,
+        });
+      }
     }
 
     return json(200, {
       success: true,
       user_id: newUserId,
       email: safeEmail,
+      password: tempPassword,
       role: dbRole,
       is_owner: isOwner,
+      company_id: companyId || null,
+      branch_id: effectiveBranch,
+      send_email: !!send_email,
       message: 'Utilizador criado com sucesso',
     });
   } catch (error: any) {
-    console.error('[manage-team-member] unhandled error', { payload, error });
+    console.error('[manage-team-member] unhandled error', {
+      payload,
+      role: payload?.role,
+      branch_id: payload?.branch_id || payload?.store_id || null,
+      supabase_error: error,
+      stack: error?.stack,
+    });
     return json(500, {
       error: error?.message || 'Erro interno',
       code: 'UNHANDLED',
