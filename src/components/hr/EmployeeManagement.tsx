@@ -237,7 +237,17 @@ const EmployeeManagement: React.FC = () => {
 
           if (functionError) {
             toast.dismiss(loadingToast);
-            throw functionError;
+            let realMessage = functionError.message || 'Erro desconhecido';
+            try {
+              const ctx: any = (functionError as any).context;
+              if (ctx?.status && typeof ctx.json === 'function') {
+                const body = await ctx.json();
+                if (body?.error) realMessage = `${ctx.status}: ${body.error}${body?.code ? ` [${body.code}]` : ''}`;
+              }
+            } catch {
+              // noop
+            }
+            throw new Error(realMessage);
           }
           if (data?.error) {
             toast.dismiss(loadingToast);
