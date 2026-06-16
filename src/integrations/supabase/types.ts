@@ -1781,6 +1781,7 @@ export type Database = {
           plan: string | null
           status: string | null
           subscription_status: string | null
+          tenant_id: string | null
           timezone: string | null
           trial_end_date: string | null
           trial_expires_at: string | null
@@ -1811,6 +1812,7 @@ export type Database = {
           plan?: string | null
           status?: string | null
           subscription_status?: string | null
+          tenant_id?: string | null
           timezone?: string | null
           trial_end_date?: string | null
           trial_expires_at?: string | null
@@ -1841,6 +1843,7 @@ export type Database = {
           plan?: string | null
           status?: string | null
           subscription_status?: string | null
+          tenant_id?: string | null
           timezone?: string | null
           trial_end_date?: string | null
           trial_expires_at?: string | null
@@ -1852,6 +1855,13 @@ export type Database = {
             columns: ["parent_company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "companies_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -2656,6 +2666,67 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          branch_id: string | null
+          code: string | null
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          manager_id: string | null
+          name: string
+          parent_department_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          code?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          manager_id?: string | null
+          name: string
+          parent_department_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          code?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          manager_id?: string | null
+          name?: string
+          parent_department_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "departments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "departments_parent_department_id_fkey"
+            columns: ["parent_department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
             referencedColumns: ["id"]
           },
         ]
@@ -4680,22 +4751,28 @@ export type Database = {
       }
       permissions: {
         Row: {
+          action: string | null
           created_at: string | null
           description: string | null
           id: string
           key: string
+          module: string | null
         }
         Insert: {
+          action?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           key: string
+          module?: string | null
         }
         Update: {
+          action?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           key?: string
+          module?: string | null
         }
         Relationships: []
       }
@@ -6161,18 +6238,21 @@ export type Database = {
           created_by: string | null
           permission_id: string
           role_id: string
+          scope: string
         }
         Insert: {
           company_id?: string | null
           created_by?: string | null
           permission_id: string
           role_id: string
+          scope?: string
         }
         Update: {
           company_id?: string | null
           created_by?: string | null
           permission_id?: string
           role_id?: string
+          scope?: string
         }
         Relationships: [
           {
@@ -6251,21 +6331,33 @@ export type Database = {
       roles: {
         Row: {
           created_at: string | null
+          description: string | null
           id: string
+          is_system: boolean
           key: string | null
+          level: number
           name: string
+          scope_default: string
         }
         Insert: {
           created_at?: string | null
+          description?: string | null
           id?: string
+          is_system?: boolean
           key?: string | null
+          level?: number
           name: string
+          scope_default?: string
         }
         Update: {
           created_at?: string | null
+          description?: string | null
           id?: string
+          is_system?: boolean
           key?: string | null
+          level?: number
           name?: string
+          scope_default?: string
         }
         Relationships: []
       }
@@ -7652,6 +7744,74 @@ export type Database = {
           },
         ]
       }
+      teams: {
+        Row: {
+          created_at: string
+          department_id: string
+          id: string
+          is_active: boolean
+          lead_user_id: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          id?: string
+          is_active?: boolean
+          lead_user_id?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          id?: string
+          is_active?: boolean
+          lead_user_id?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          owner_user_id: string | null
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          owner_user_id?: string | null
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          owner_user_id?: string | null
+          slug?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_company: {
         Row: {
           company_id: string | null
@@ -7700,37 +7860,128 @@ export type Database = {
           },
         ]
       }
-      user_roles: {
+      user_permissions: {
         Row: {
+          branch_id: string | null
           company_id: string | null
-          created_at: string | null
+          created_at: string
           created_by: string | null
+          department_id: string | null
+          granted: boolean
           id: string
-          role: Database["public"]["Enums"]["app_role"]
+          permission_id: string
+          scope: Database["public"]["Enums"]["permission_scope"]
           user_id: string
         }
         Insert: {
+          branch_id?: string | null
           company_id?: string | null
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
+          department_id?: string | null
+          granted?: boolean
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          permission_id: string
+          scope?: Database["public"]["Enums"]["permission_scope"]
           user_id: string
         }
         Update: {
+          branch_id?: string | null
           company_id?: string | null
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
+          department_id?: string | null
+          granted?: boolean
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          permission_id?: string
+          scope?: Database["public"]["Enums"]["permission_scope"]
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_permissions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permissions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permissions_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          branch_id: string | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          department_id: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          scope: string
+          user_id: string
+        }
+        Insert: {
+          branch_id?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          department_id?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          scope?: string
+          user_id: string
+        }
+        Update: {
+          branch_id?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          department_id?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          scope?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_roles_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
             referencedColumns: ["id"]
           },
         ]
@@ -8725,6 +8976,16 @@ export type Database = {
         Args: { p_company_id: string; p_new_role: string; p_user_id: string }
         Returns: Json
       }
+      user_has_permission: {
+        Args: {
+          _branch_id?: string
+          _company_id?: string
+          _department_id?: string
+          _key: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       validate_and_redeem_voucher: {
         Args: { p_code: string; p_store_id?: string }
         Returns: Json
@@ -8753,6 +9014,7 @@ export type Database = {
         | "credit_note"
         | "debit_note"
       payment_method: "cash" | "mpesa" | "emola" | "card" | "voucher"
+      permission_scope: "GLOBAL" | "COMPANY" | "BRANCH" | "DEPARTMENT"
       plan_tier: "starter" | "pro" | "enterprise"
       purchase_order_status:
         | "draft"
@@ -8931,6 +9193,7 @@ export const Constants = {
         "debit_note",
       ],
       payment_method: ["cash", "mpesa", "emola", "card", "voucher"],
+      permission_scope: ["GLOBAL", "COMPANY", "BRANCH", "DEPARTMENT"],
       plan_tier: ["starter", "pro", "enterprise"],
       purchase_order_status: [
         "draft",
