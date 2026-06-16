@@ -18,6 +18,11 @@ const json = (status: number, body: Record<string, unknown>) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 
+const errorContext = (extra: Record<string, unknown>) => ({
+  ...extra,
+  stack: new Error().stack,
+});
+
 // Normalize an incoming role string to a valid DB enum value.
 // Returns { dbRole, isOwner } so the caller can apply owner privileges.
 function normalizeRole(input: string): { dbRole: string | null; isOwner: boolean } {
@@ -53,7 +58,7 @@ Deno.serve(async (req) => {
 
     const { data: { user: callingUser }, error: userErr } = await userClient.auth.getUser();
     if (userErr || !callingUser) {
-      console.error('[manage-team-member] invalid session', { userErr });
+      console.error('[manage-team-member] invalid session', errorContext({ supabase_error: userErr }));
       return json(401, { error: 'Sessão inválida', code: 'INVALID_SESSION' });
     }
 
@@ -74,7 +79,12 @@ Deno.serve(async (req) => {
     const isAuthorized = isOwnerCaller || callerRoleName === 'manager';
 
     if (!isAuthorized) {
-      console.error('[manage-team-member] forbidden caller', { callerId: callingUser.id, callerRoleName });
+      console.error('[manage-team-member] forbidden caller', errorContext({
+        callerId: callingUser.id,
+        callerRoleName,
+        company_id: companyId || null,
+        role: callerRoleName || null,
+      }));
       return json(403, { error: 'Sem permissão para criar utilizadores', code: 'FORBIDDEN' });
     }
 
@@ -83,7 +93,7 @@ Deno.serve(async (req) => {
     try {
       payload = await req.json();
     } catch (e) {
-      console.error('[manage-team-member] invalid JSON body', e);
+      console.error('[manage-team-member] invalid JSON body', errorContext({ supabase_error: e }));
       return json(400, { error: 'Corpo da requisição inválido (JSON)', code: 'BAD_JSON' });
     }
 
@@ -105,7 +115,13 @@ Deno.serve(async (req) => {
 
     const { dbRole, isOwner } = normalizeRole(role);
     if (!dbRole) {
-      console.error('[manage-team-member] invalid role', { role, payload });
+      console.error('[manage-team-member] invalid role', errorContext({
+        role,
+        branch_id: branch_id || store_id || null,
+        company_id: companyId || null,
+        payload,
+        supabase_error: 'INVALID_ROLE',
+      }));
       return json(400, {
         error: `Cargo inválido: "${role}". Use: owner, super_admin, admin, ceo, manager, seller ou cashier`,
         code: 'INVALID_ROLE',
@@ -113,12 +129,12 @@ Deno.serve(async (req) => {
     }
 
     if (!companyId && !profile?.is_super_admin) {
-      console.error('[manage-team-member] caller without company context', {
+      console.error('[manage-team-member] caller without company context', errorContext({
         role,
         branch_id: branch_id || store_id || null,
         payload,
         supabase_error: 'CALLER_COMPANY_MISSING',
-      });
+      }));
       return json(400, {
         error: 'O utilizador atual não possui empresa associada para criar novos utilizadores',
         code: 'CALLER_COMPANY_MISSING',
@@ -142,8 +158,7 @@ Deno.serve(async (req) => {
     // `branch_id` must reference public.branches; `store_id` must reference public.stores.
     let effectiveBranch = branch_id || null;
     let effectiveStore = store_id || null;
-    const incomingRoleLc = String(role).toLowerCase();
-    if (!effectiveBranch && !effectiveStore && OPERATIONAL_ROLES.includes(incomingRoleLc)) {
+    if (!effectiveBranch && !effectiveStore && OPERATIONAL_ROLES.includes(dbRole)) {
       return json(400, {
         error: `O cargo "${role}" exige seleção de filial/loja`,
         code: 'BRANCH_REQUIRED',
