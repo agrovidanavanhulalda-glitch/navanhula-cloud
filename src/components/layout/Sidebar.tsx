@@ -228,6 +228,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   };
 
   const renderCollapsibleGroup = (group: NavGroup) => {
+    if (group.permission && !hasPerm(group.permission)) return null;
     if (group.minRole && !hasMinimumRole(group.minRole)) return null;
     if (group.module && !canViewModule(group.module)) return null;
     const Icon = group.icon;
