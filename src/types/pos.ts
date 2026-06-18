@@ -202,6 +202,14 @@ export interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   onboardingCompleted: boolean;
+  // RBAC Phase 2 — unified app_context
+  permissions: string[];
+  roles: string[];
+  branch: { id: string; name: string; company_id: string } | null;
+  tenant: { id: string; name: string; slug?: string | null } | null;
+  isMaster: boolean;
+  appReady: boolean;
+  hasPerm: (key: string) => boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, referralCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
