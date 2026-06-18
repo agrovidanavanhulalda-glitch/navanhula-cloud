@@ -298,6 +298,18 @@ Deno.serve(async (req) => {
       return json(500, { error: 'Falha ao obter ID do utilizador', code: 'NO_USER_ID' });
     }
 
+    // Track whether this run created the auth user (so we can rollback on failure).
+    const createdAuthUser = !authError && !!authData?.user?.id;
+    const rollbackAuthUser = async (reason: string, details?: unknown) => {
+      if (!createdAuthUser || !newUserId) return;
+      try {
+        await adminClient.auth.admin.deleteUser(newUserId);
+        console.error('[manage-team-member] rollback: deleted auth user', { newUserId, reason, details });
+      } catch (delErr) {
+        console.error('[manage-team-member] rollback FAILED', { newUserId, reason, delErr });
+      }
+    };
+
     // 2. Force profile sync so auth trigger failures do not leave the user half-created.
     const { data: syncData, error: syncError } = await adminClient.rpc('sync_user_profile', {
       target_user_id: newUserId,
@@ -305,50 +317,36 @@ Deno.serve(async (req) => {
 
     if (syncError || (syncData as any)?.success === false) {
       console.error('[manage-team-member] sync_user_profile failed', {
-        newUserId,
-        role,
-        branch_id: effectiveBranch,
-        payload,
+        newUserId, role, branch_id: effectiveBranch, payload,
         supabase_error: syncError || syncData,
       });
     }
 
-    // 3. Ensure profile + role + company_users rows exist (idempotent upserts).
-    // Triggers normally handle this on creation, but we re-assert to cover the
-    // "user already existed" branch and any partial trigger failures.
+    // 3. Profile / role / company_users — idempotent upserts. Rollback auth on hard failures.
     const { error: profileErr } = await adminClient
       .from('profiles')
       .upsert(
-        {
-          id: newUserId,
-          full_name,
-          company_id: companyId,
-          store_id: effectiveStore,
-          branch_id: effectiveBranch,
-        },
-        { onConflict: 'id' }
+        { id: newUserId, full_name, company_id: companyId, store_id: effectiveStore, branch_id: effectiveBranch },
+        { onConflict: 'id' },
       );
     if (profileErr) {
-      console.error('[manage-team-member] profile upsert failed', {
-        newUserId,
-        payload,
-        supabase_error: profileErr,
+      console.error('[manage-team-member] profile upsert failed', { newUserId, payload, supabase_error: profileErr });
+      await rollbackAuthUser('profile_upsert_failed', profileErr);
+      return json(500, {
+        error: 'Falha ao criar perfil do utilizador',
+        code: 'PROFILE_UPSERT_FAILED',
+        details: profileErr.message,
       });
     }
 
     const { error: roleErr } = await adminClient
       .from('user_roles')
-      .upsert(
-        { user_id: newUserId, role: dbRole, company_id: companyId },
-        { onConflict: 'user_id,role' }
-      );
+      .upsert({ user_id: newUserId, role: dbRole, company_id: companyId }, { onConflict: 'user_id,role' });
     if (roleErr) {
       console.error('[manage-team-member] user_roles upsert failed', {
-        newUserId,
-        dbRole,
-        company_id: companyId || null,
-        supabase_error: roleErr,
+        newUserId, dbRole, company_id: companyId || null, supabase_error: roleErr,
       });
+      await rollbackAuthUser('user_roles_upsert_failed', roleErr);
       return json(500, {
         error: 'Falha ao gravar cargo do utilizador',
         code: 'USER_ROLE_UPSERT_FAILED',
@@ -361,18 +359,15 @@ Deno.serve(async (req) => {
         .from('company_users')
         .upsert(
           { user_id: newUserId, company_id: companyId, branch_id: effectiveBranch, role: dbRole, status: 'active' },
-          { onConflict: 'user_id,company_id' }
+          { onConflict: 'user_id,company_id' },
         );
 
       if (companyUserErr) {
         console.error('[manage-team-member] company_users upsert failed', {
-          newUserId,
-          role: dbRole,
-          company_id: companyId,
-          branch_id: effectiveBranch,
-          payload,
+          newUserId, role: dbRole, company_id: companyId, branch_id: effectiveBranch, payload,
           supabase_error: companyUserErr,
         });
+        await rollbackAuthUser('company_users_upsert_failed', companyUserErr);
         return json(500, {
           error: 'Falha ao vincular utilizador à empresa',
           code: 'COMPANY_USER_UPSERT_FAILED',
