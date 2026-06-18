@@ -1,109 +1,106 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
-import { AppRole } from '@/types/pos';
 
+/**
+ * RBAC bridge — backwards-compatible with the previous role-hierarchy API
+ * but resolves every check through `useAuth().hasPerm()` whenever a granular
+ * permission key (modulo.acao) is provided. Keeps `hasMinimumRole` for the
+ * legacy call-sites; new code should call `hasPerm` directly.
+ */
 export function usePermissions() {
-  const { user, role, isAuthenticated } = useAuth();
+  const { user, role, roles, isMaster, hasPerm } = useAuth();
 
-  // Define role hierarchy
-  const roles = ['viewer', 'seller', 'manager', 'admin', 'ceo', 'master'];
-  
+  const isOwnerLike = isMaster || roles.includes('owner') || roles.includes('admin');
+
   const getRoleWeight = (r: string | null) => {
     if (!r) return -1;
-    if (user?.is_super_admin) return 100; // Master weight
-    const normalizedRole = r.toLowerCase();
-    if (normalizedRole === 'director' || normalizedRole === 'ceo') return 5;
-    if (normalizedRole === 'admin') return 4;
-    if (normalizedRole === 'manager') return 3;
-    if (normalizedRole === 'seller') return 2;
-    if (normalizedRole === 'viewer') return 1;
+    if (user?.is_super_admin || isMaster) return 100;
+    const n = r.toLowerCase();
+    if (n === 'owner') return 100;
+    if (n === 'director' || n === 'ceo') return 5;
+    if (n === 'admin') return 4;
+    if (n === 'manager') return 3;
+    if (n === 'seller' || n === 'cashier') return 2;
+    if (n === 'viewer') return 1;
     return 0;
   };
 
   const hasMinimumRole = (minRole: string): boolean => {
-    const userWeight = getRoleWeight(role);
-    const minWeight = getRoleWeight(minRole);
-    return userWeight >= minWeight;
+    if (isOwnerLike) return true;
+    // Use highest role in the user's role list, not just the primary
+    const maxWeight = roles.length
+      ? Math.max(...roles.map(getRoleWeight))
+      : getRoleWeight(role);
+    return maxWeight >= getRoleWeight(minRole);
   };
 
-  const hasPermission = (permissionKey: string): boolean => {
-    // Master user/CEO/Admin have all permissions
-    if (user?.is_super_admin || hasMinimumRole('admin')) return true;
-    
-    // For specific granular permissions, we could add a list here if needed
-    // but for now we follow the hierarchy requirement
-    return false;
+  // Module -> default `view` permission key (modulo.acao)
+  const MODULE_PERM_MAP: Record<string, string> = {
+    users: 'users.view',
+    iam: 'users.view',
+    settings: 'settings.manage',
+    configuracoes: 'settings.manage',
+    compliance: 'settings.manage',
+    audit: 'settings.manage',
+    finance: 'finance.view',
+    reports: 'reports.view',
+    stock: 'inventory.view',
+    inventory: 'inventory.view',
+    products: 'inventory.view',
+    sales: 'sales.view',
+    pos: 'sales.view',
+    cash: 'cash.view',
+    hr: 'hr.view',
+    crm: 'sales.view',
   };
 
-  const canViewModule = (module: string) => {
-    if (user?.is_super_admin || hasMinimumRole('admin')) return true;
-    
-    switch (module) {
-      case 'users':
-      case 'iam':
-      case 'compliance':
-      case 'audit':
-      case 'settings':
-      case 'configuracoes':
-        return hasMinimumRole('admin');
-      case 'finance':
-      case 'reports':
-        return hasMinimumRole('manager');
-      case 'stock':
-      case 'products':
-        return hasMinimumRole('manager');
-      case 'sales':
-      case 'pos':
-        return hasMinimumRole('seller');
-      default:
-        return true;
-    }
+  const moduleAction = (module: string, action: string): string => {
+    const base = MODULE_PERM_MAP[module] || `${module}.view`;
+    const prefix = base.split('.')[0];
+    return `${prefix}.${action}`;
   };
 
-  const canCreateIn = (module: string) => {
-    if (user?.is_super_admin || hasMinimumRole('admin')) return true;
-    
-    switch (module) {
-      case 'users':
-        return false;
-      case 'sales':
-      case 'pos':
-        return hasMinimumRole('seller');
-      case 'stock':
-      case 'products':
-        return hasMinimumRole('manager');
-      default:
-        return hasMinimumRole('admin');
-    }
+  const hasPermission = (key: string): boolean => hasPerm(key);
+
+  const canViewModule = (module: string): boolean => {
+    if (isOwnerLike) return true;
+    return hasPerm(MODULE_PERM_MAP[module] || `${module}.view`);
   };
 
-  const canEditIn = (module: string) => canCreateIn(module);
-  
-  const canDeleteIn = (module: string) => {
-    if (user?.is_super_admin || hasMinimumRole('ceo')) return true;
-    return false;
+  const canCreateIn = (module: string): boolean => {
+    if (isOwnerLike) return true;
+    return hasPerm(moduleAction(module, 'create'));
   };
 
-  const canApproveIn = (module: string) => {
-    if (user?.is_super_admin || hasMinimumRole('manager')) return true;
-    return false;
+  const canEditIn = (module: string): boolean => {
+    if (isOwnerLike) return true;
+    return hasPerm(moduleAction(module, 'edit')) || hasPerm(moduleAction(module, 'create'));
   };
 
-  return { 
+  const canDeleteIn = (module: string): boolean => {
+    if (isOwnerLike) return true;
+    return hasPerm(moduleAction(module, 'delete'));
+  };
+
+  const canApproveIn = (module: string): boolean => {
+    if (isOwnerLike) return true;
+    return hasPerm(moduleAction(module, 'approve'));
+  };
+
+  return {
     role,
-    hasPermission, 
+    hasPermission,
+    hasPerm,
     hasMinimumRole,
-    canViewModule, 
-    canCreateIn, 
-    canEditIn, 
-    canDeleteIn, 
+    canViewModule,
+    canCreateIn,
+    canEditIn,
+    canDeleteIn,
     canApproveIn,
-    isMaster: !!user?.is_super_admin,
+    isMaster,
     isCEO: hasMinimumRole('ceo'),
     isAdmin: hasMinimumRole('admin'),
     isManager: hasMinimumRole('manager'),
     isSeller: hasMinimumRole('seller'),
-    isViewer: hasMinimumRole('viewer')
+    isViewer: hasMinimumRole('viewer'),
   };
 }
