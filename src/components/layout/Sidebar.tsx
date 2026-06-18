@@ -47,6 +47,7 @@ interface SubItem {
   icon: React.ElementType;
   module?: string;
   minRole?: string;
+  permission?: string; // RBAC Phase 2 — granular `modulo.acao`
 }
 
 interface NavGroup {
@@ -54,6 +55,7 @@ interface NavGroup {
   icon: React.ElementType;
   module?: string;
   minRole?: string;
+  permission?: string;
   items: SubItem[];
 }
 
@@ -61,7 +63,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, role } = useAuth();
+  const { user, signOut, role, hasPerm } = useAuth();
   const { hasMinimumRole, canViewModule, isMaster } = usePermissions();
   const { currentCashRegister } = useLocalPOS();
   const { state } = useSidebar();
@@ -84,10 +86,11 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       title: t('nav.sales'),
       icon: ShoppingCart,
       module: 'sales',
+      permission: 'sales.view',
       items: [
-        { label: t('pos.title'), href: '/app/pdv', icon: ShoppingCart },
-        { label: t('nav.cashRegister'), href: '/app/caixa', icon: WalletCards },
-        { label: t('nav.sales'), href: '/app/vendas', icon: History },
+        { label: t('pos.title'), href: '/app/pdv', icon: ShoppingCart, permission: 'sales.view' },
+        { label: t('nav.cashRegister'), href: '/app/caixa', icon: WalletCards, permission: 'cash.view' },
+        { label: t('nav.sales'), href: '/app/vendas', icon: History, permission: 'sales.view' },
         { label: 'Loja Online', href: '/app/ecommerce', icon: ShoppingBag, minRole: 'admin' },
       ],
     },
@@ -95,16 +98,18 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       title: t('nav.products'),
       icon: Package,
       module: 'products',
+      permission: 'inventory.view',
       items: [
-        { label: t('nav.products'), href: '/app/produtos', icon: Package },
+        { label: t('nav.products'), href: '/app/produtos', icon: Package, permission: 'inventory.view' },
       ],
     },
     {
       title: t('nav.inventory'),
       icon: Boxes,
       module: 'stock',
+      permission: 'inventory.view',
       items: [
-        { label: t('nav.inventory'), href: '/app/estoque', icon: Boxes },
+        { label: t('nav.inventory'), href: '/app/estoque', icon: Boxes, permission: 'inventory.view' },
         { label: 'Gestão WMS', href: '/app/wms', icon: Warehouse, minRole: 'manager' },
         { label: 'Mover Stock', href: '/app/transferencias-stock', icon: ArrowRightLeft, minRole: 'manager' },
         { label: 'Stock das Filiais', href: '/app/estoque-filiais', icon: Building2, minRole: 'manager' },
@@ -124,28 +129,28 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       title: t('nav.reports'),
       icon: BarChart3,
       module: 'reports',
-      minRole: 'manager',
+      permission: 'reports.view',
       items: [
-        { label: 'Vendas e Lucros', href: '/app/relatorios', icon: BarChart3 },
-        { label: 'Documentos Fiscais', href: '/app/relatorios-fiscais', icon: FileText },
-        { label: t('nav.financial'), href: '/app/financeiro-rh', icon: TrendingUp, minRole: 'admin' },
+        { label: 'Vendas e Lucros', href: '/app/relatorios', icon: BarChart3, permission: 'reports.view' },
+        { label: 'Documentos Fiscais', href: '/app/relatorios-fiscais', icon: FileText, permission: 'finance.view' },
+        { label: t('nav.financial'), href: '/app/financeiro-rh', icon: TrendingUp, permission: 'finance.view' },
       ],
     },
     {
       title: t('nav.settings'),
       icon: Settings,
       module: 'settings',
-      minRole: 'manager',
+      permission: 'settings.manage',
       items: [
-        { label: t('nav.settings'), href: '/app/configuracoes', icon: Settings },
+        { label: t('nav.settings'), href: '/app/configuracoes', icon: Settings, permission: 'settings.manage' },
         { label: 'Regras de Impostos', href: '/app/fiscal', icon: FileText, minRole: 'admin' },
         { label: 'Contas Bancárias', href: '/app/banco', icon: Landmark, minRole: 'admin' },
-        { label: 'Minha Equipa', href: '/app/equipa', icon: Users, minRole: 'admin' },
-        { label: t('nav.stores'), href: '/app/lojas', icon: Store, minRole: 'admin' },
+        { label: 'Minha Equipa', href: '/app/equipa', icon: Users, permission: 'users.view' },
+        { label: t('nav.stores'), href: '/app/lojas', icon: Store, permission: 'branches.manage' },
         { label: 'Assistente com IA', href: '/app/ai', icon: Brain, minRole: 'manager' },
         { label: 'Mensagens WhatsApp', href: '/app/whatsapp', icon: MessageCircle, minRole: 'manager' },
         { label: 'Segurança e Regras', href: '/app/compliance', icon: Shield, minRole: 'admin' },
-        { label: 'Níveis de Acesso', href: '/app/iam', icon: Shield, minRole: 'admin' },
+        { label: 'Níveis de Acesso', href: '/app/iam', icon: Shield, permission: 'roles.manage' },
         { label: 'Tarefas Automáticas', href: '/app/automacao', icon: Settings, minRole: 'admin' },
         { label: 'Chaves de Integração', href: '/app/api-keys', icon: Key, minRole: 'admin' },
         { label: 'Pasta de Arquivos', href: '/app/documentos', icon: FileText, minRole: 'manager' },
@@ -184,10 +189,11 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   const rawName = currentCashRegister?.sellerName || user?.full_name || '';
   const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : t('cash.operator');
   
-  // Filter sub-items by role and module
+  // Filter sub-items by granular permission, role and module (in that priority).
   const filterSubItems = useCallback((items: SubItem[]): SubItem[] => {
     return items.filter(item => {
       try {
+        if (item.permission && !hasPerm(item.permission)) return false;
         if (item.minRole && !hasMinimumRole(item.minRole)) return false;
         if (item.module && !canViewModule(item.module)) return false;
         return true;
@@ -196,7 +202,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
         return false;
       }
     });
-  }, [hasMinimumRole, canViewModule]);
+  }, [hasPerm, hasMinimumRole, canViewModule]);
 
   const handleLogout = async () => {
     await signOut();
@@ -225,6 +231,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   };
 
   const renderCollapsibleGroup = (group: NavGroup) => {
+    if (group.permission && !hasPerm(group.permission)) return null;
     if (group.minRole && !hasMinimumRole(group.minRole)) return null;
     if (group.module && !canViewModule(group.module)) return null;
     const Icon = group.icon;

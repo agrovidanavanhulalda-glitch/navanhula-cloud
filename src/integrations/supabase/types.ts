@@ -8759,10 +8759,12 @@ export type Database = {
           company_id: string
         }[]
       }
+      get_user_app_context: { Args: { _user_id: string }; Returns: Json }
       get_user_branch_ids: { Args: never; Returns: string[] }
       get_user_company: { Args: { _user_id: string }; Returns: string }
       get_user_company_id: { Args: never; Returns: string }
       get_user_company_ids: { Args: never; Returns: string[] }
+      get_user_permissions: { Args: { _user_id: string }; Returns: string[] }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

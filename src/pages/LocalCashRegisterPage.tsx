@@ -49,7 +49,7 @@ const LocalCashRegisterPage: React.FC = () => {
     openCashRegister,
     closeCashRegister,
   } = useLocalPOS();
-  const { role } = useAuth();
+  const { role, company, branch, user, appReady } = useAuth();
   const { updateStep } = useOnboarding();
   const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
 
@@ -59,14 +59,26 @@ const LocalCashRegisterPage: React.FC = () => {
   const [closingAmount, setClosingAmount] = useState('');
   const [selectedSellerId, setSelectedSellerId] = useState('');
 
-  // Get active sellers for current store
-  const activeSellers = sellers.filter(s => s.isActive && s.storeId === currentStore.id);
+  // Safe-by-default: cash register must never crash if company/branch/operator are missing.
+  const storeId = currentStore?.id ?? null;
+  const activeSellers = storeId
+    ? sellers.filter((s) => s.isActive && s.storeId === storeId)
+    : [];
 
-  // Get history for current store
-  const storeHistory = cashRegisters
-    .filter(cr => cr.storeId === currentStore.id)
-    .sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime())
-    .slice(0, 10); // Últimos 10 registros
+  const storeHistory = storeId
+    ? cashRegisters
+        .filter((cr) => cr.storeId === storeId)
+        .sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime())
+        .slice(0, 10)
+    : [];
+
+  // Empty-state guard: render a friendly message instead of crashing when context is missing.
+  const missingContext: string[] = [];
+  if (appReady) {
+    if (!company) missingContext.push('empresa');
+    if (!branch && !currentStore) missingContext.push('filial/loja');
+    if (!user) missingContext.push('operador');
+  }
 
   const handleOpenRegister = async () => {
     const amount = parseFloat(openingAmount) || 0;
@@ -123,6 +135,24 @@ const LocalCashRegisterPage: React.FC = () => {
     if (register.closingAmount === undefined || register.expectedAmount === undefined) return null;
     return register.closingAmount - register.expectedAmount;
   };
+
+  // Empty state — never render the rest with a null currentStore.
+  if (missingContext.length > 0 || !currentStore) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-xl mx-auto mt-20 text-center space-y-4">
+          <Wallet className="w-12 h-12 mx-auto text-muted-foreground" />
+          <h1 className="text-2xl font-bold">Caixa indisponível</h1>
+          <p className="text-muted-foreground">
+            {missingContext.length > 0
+              ? `Antes de abrir o caixa precisa de: ${missingContext.join(', ')}.`
+              : 'Selecione uma loja para continuar.'}
+          </p>
+          <Button onClick={() => navigate('/app/configuracoes')}>Ir para configurações</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-6">

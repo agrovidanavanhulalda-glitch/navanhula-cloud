@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
+import AppContextWidget from '@/components/debug/AppContextWidget';
 import { useNavigate } from 'react-router-dom';
 import PageTransition from '@/components/layout/PageTransition';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
@@ -342,6 +343,10 @@ const LocalDashboardPage: React.FC = () => {
 
       {/* Onboarding Checklist */}
       <OnboardingChecklist />
+
+      {/* RBAC Phase 2 — temporary debug widget */}
+      <AppContextWidget />
+
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
