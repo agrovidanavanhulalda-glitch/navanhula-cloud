@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
+import AppContextWidget from '@/components/debug/AppContextWidget';
 import { useNavigate } from 'react-router-dom';
 import PageTransition from '@/components/layout/PageTransition';
 import { useLocalPOS } from '@/contexts/LocalPOSContext';
