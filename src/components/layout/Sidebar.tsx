@@ -47,6 +47,7 @@ interface SubItem {
   icon: React.ElementType;
   module?: string;
   minRole?: string;
+  permission?: string; // RBAC Phase 2 — granular `modulo.acao`
 }
 
 interface NavGroup {
@@ -54,6 +55,7 @@ interface NavGroup {
   icon: React.ElementType;
   module?: string;
   minRole?: string;
+  permission?: string;
   items: SubItem[];
 }
 
@@ -61,7 +63,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, role } = useAuth();
+  const { user, signOut, role, hasPerm } = useAuth();
   const { hasMinimumRole, canViewModule, isMaster } = usePermissions();
   const { currentCashRegister } = useLocalPOS();
   const { state } = useSidebar();
