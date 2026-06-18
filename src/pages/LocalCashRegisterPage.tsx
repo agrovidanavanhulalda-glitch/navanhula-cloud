@@ -136,6 +136,24 @@ const LocalCashRegisterPage: React.FC = () => {
     return register.closingAmount - register.expectedAmount;
   };
 
+  // Empty state — never render the rest with a null currentStore.
+  if (missingContext.length > 0 || !currentStore) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-xl mx-auto mt-20 text-center space-y-4">
+          <Wallet className="w-12 h-12 mx-auto text-muted-foreground" />
+          <h1 className="text-2xl font-bold">Caixa indisponível</h1>
+          <p className="text-muted-foreground">
+            {missingContext.length > 0
+              ? `Antes de abrir o caixa precisa de: ${missingContext.join(', ')}.`
+              : 'Selecione uma loja para continuar.'}
+          </p>
+          <Button onClick={() => navigate('/app/configuracoes')}>Ir para configurações</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-6">
       {/* Header */}
