@@ -186,10 +186,11 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   const rawName = currentCashRegister?.sellerName || user?.full_name || '';
   const currentOperator = rawName && !/^[0-9a-f-]{36}$/i.test(rawName) ? rawName : t('cash.operator');
   
-  // Filter sub-items by role and module
+  // Filter sub-items by granular permission, role and module (in that priority).
   const filterSubItems = useCallback((items: SubItem[]): SubItem[] => {
     return items.filter(item => {
       try {
+        if (item.permission && !hasPerm(item.permission)) return false;
         if (item.minRole && !hasMinimumRole(item.minRole)) return false;
         if (item.module && !canViewModule(item.module)) return false;
         return true;
@@ -198,7 +199,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
         return false;
       }
     });
-  }, [hasMinimumRole, canViewModule]);
+  }, [hasPerm, hasMinimumRole, canViewModule]);
 
   const handleLogout = async () => {
     await signOut();
