@@ -49,7 +49,7 @@ const LocalCashRegisterPage: React.FC = () => {
     openCashRegister,
     closeCashRegister,
   } = useLocalPOS();
-  const { role } = useAuth();
+  const { role, company, branch, user, appReady } = useAuth();
   const { updateStep } = useOnboarding();
   const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
 
@@ -59,14 +59,26 @@ const LocalCashRegisterPage: React.FC = () => {
   const [closingAmount, setClosingAmount] = useState('');
   const [selectedSellerId, setSelectedSellerId] = useState('');
 
-  // Get active sellers for current store
-  const activeSellers = sellers.filter(s => s.isActive && s.storeId === currentStore.id);
+  // Safe-by-default: cash register must never crash if company/branch/operator are missing.
+  const storeId = currentStore?.id ?? null;
+  const activeSellers = storeId
+    ? sellers.filter((s) => s.isActive && s.storeId === storeId)
+    : [];
 
-  // Get history for current store
-  const storeHistory = cashRegisters
-    .filter(cr => cr.storeId === currentStore.id)
-    .sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime())
-    .slice(0, 10); // Últimos 10 registros
+  const storeHistory = storeId
+    ? cashRegisters
+        .filter((cr) => cr.storeId === storeId)
+        .sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime())
+        .slice(0, 10)
+    : [];
+
+  // Empty-state guard: render a friendly message instead of crashing when context is missing.
+  const missingContext: string[] = [];
+  if (appReady) {
+    if (!company) missingContext.push('empresa');
+    if (!branch && !currentStore) missingContext.push('filial/loja');
+    if (!user) missingContext.push('operador');
+  }
 
   const handleOpenRegister = async () => {
     const amount = parseFloat(openingAmount) || 0;
