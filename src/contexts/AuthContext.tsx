@@ -1,23 +1,21 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile, Store, Company, AppRole, AuthContextType } from '@/types/pos';
 import { toast } from 'sonner';
 import { setFormatterCountry } from '@/lib/formatters';
 import { isValidId } from '@/lib/uuid';
+import { clearPermissionCache } from '@/hooks/usePermission';
 
 /**
- * NAVANHULA CLOUD - Auth Context
- * 
- * REGRAS:
- * 1. SEM ONBOARDING - empresa criada automaticamente
- * 2. Loading máximo 2 segundos
- * 3. Dashboard abre SEMPRE
- * 4. Fallback local se backend falhar
+ * NAVANHULA CLOUD - Auth Context (RBAC Phase 2)
+ *
+ * Carrega o app_context unificado num único round-trip:
+ *   auth -> user -> company -> roles -> permissions -> branch -> session_ready
+ * Proíbe estados parciais: appReady só é true depois de tudo carregado.
  */
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Fallback context for when provider is temporarily unmounted (HMR, etc.)
 const fallbackAuth: AuthContextType = {
   user: null,
   role: null,
@@ -26,6 +24,13 @@ const fallbackAuth: AuthContextType = {
   loading: true,
   isAuthenticated: false,
   onboardingCompleted: false,
+  permissions: [],
+  roles: [],
+  branch: null,
+  tenant: null,
+  isMaster: false,
+  appReady: false,
+  hasPerm: () => false,
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
@@ -42,12 +47,7 @@ export const useAuth = () => {
   return context;
 };
 
-// Maximum loading time - 5 seconds (emergency mode)
 const MAX_LOADING_TIME = 5000;
-
-// Deprecated fallback constants (to be removed after full UUID migration)
-const DEFAULT_COMPANY = null;
-const DEFAULT_STORE = null;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<Profile | null>(null);
@@ -57,18 +57,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
 
+  // RBAC Phase 2 unified context
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [branch, setBranch] = useState<AuthContextType['branch']>(null);
+  const [tenant, setTenant] = useState<AuthContextType['tenant']>(null);
+  const [isMaster, setIsMaster] = useState(false);
+  const [appReady, setAppReady] = useState(false);
+
   // Sync currency formatter with company country
   useEffect(() => {
     const country = (company as any)?.country || 'MZ';
     setFormatterCountry(country);
   }, [company]);
 
-
   const initComplete = useRef(false);
   const setupRan = useRef(false);
   const isInitializing = useRef(false);
 
-  // Force loading complete
   const forceComplete = useCallback(() => {
     if (!initComplete.current) {
       initComplete.current = true;
@@ -76,120 +82,95 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const fetchUserData = useCallback(async (userId: string): Promise<void> => {
-    if (!isValidId(userId)) {
-      console.warn('[Auth] Invalid userId for fetchUserData:', userId);
-      return;
-    }
-    
+  /**
+   * Single-shot loader for the unified app_context.
+   * Never sets partial state — only flips `appReady` once everything is resolved.
+   */
+  const loadAppContext = useCallback(async (userId: string): Promise<void> => {
+    if (!isValidId(userId)) return;
     try {
-      // Use maybeSingle to prevent 406 errors on missing profiles
-      const [profileResult, userRolesResult] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
-        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
-      ]);
-
-      if (profileResult.error) {
-        console.error('[Auth] Profile error:', profileResult.error);
-        throw profileResult.error;
+      const { data, error } = await supabase.rpc('get_user_app_context', { _user_id: userId });
+      if (error || !data) {
+        console.warn('[Auth] get_user_app_context failed, fallback to legacy fetch', error);
+        await legacyFetchUserData(userId);
+        return;
       }
+      const ctx: any = data;
 
-      const profileData = profileResult.data;
-      const userRole = (userRolesResult.data?.role?.toLowerCase() || 'viewer') as AppRole;
+      const profile = ctx.profile as Profile | null;
+      const companyRow = ctx.company as Company | null;
+      const branchRow = ctx.branch as any;
+      const tenantRow = ctx.tenant as any;
+      const perms: string[] = Array.isArray(ctx.permissions) ? ctx.permissions : [];
+      const rolesArr: string[] = Array.isArray(ctx.roles) ? ctx.roles : [];
 
-      if (profileData) {
-        // Hydrate profile
-        setUser(profileData as Profile);
-        setRole(userRole);
+      setUser(profile);
+      setCompany(companyRow);
+      setBranch(branchRow ? { id: branchRow.id, name: branchRow.name, company_id: branchRow.company_id } : null);
+      setTenant(tenantRow ? { id: tenantRow.id, name: tenantRow.name, slug: tenantRow.slug } : null);
+      setPermissions(perms);
+      setRoles(rolesArr);
+      setIsMaster(!!ctx.is_master);
 
-        // Batch fetching store and company - only if IDs are valid UUIDs
-        const fetches = [];
-        const validStoreId = isValidId(profileData.store_id) ? profileData.store_id : null;
-        const validCompanyId = isValidId(profileData.company_id) ? profileData.company_id : null;
+      // Pick primary role (highest precedence)
+      const ROLE_PRIORITY = ['owner','admin','ceo','director','manager','hr','cashier','seller','reseller','viewer'];
+      const primary = ROLE_PRIORITY.find(r => rolesArr.includes(r)) || rolesArr[0] || 'viewer';
+      setRole(primary as AppRole);
 
-        if (validStoreId) {
-          fetches.push(supabase.from('stores').select('*').eq('id', validStoreId).maybeSingle());
-        }
-        if (validCompanyId) {
-          fetches.push(supabase.from('companies').select('*').eq('id', validCompanyId).maybeSingle());
-        }
-
-        if (fetches.length > 0) {
-          const results = await Promise.all(fetches);
-          let resIdx = 0;
-          
-          if (validStoreId) {
-            setStore(results[resIdx]?.data as Store || null);
-            resIdx++;
-          } else {
-            setStore(null);
-          }
-
-          if (validCompanyId) {
-            setCompany(results[resIdx]?.data as Company || null);
-          } else {
-            setCompany(null);
-          }
-        } else {
-          setStore(null);
-          setCompany(null);
-        }
+      // Store fetch (only if profile has a valid store_id)
+      const storeId = (profile as any)?.store_id;
+      if (isValidId(storeId)) {
+        const { data: storeData } = await supabase.from('stores').select('*').eq('id', storeId).maybeSingle();
+        setStore(storeData as Store | null);
       } else {
-        // Fallback for missing profile
-        console.warn('[Auth] No profile found for user:', userId);
-        setCompany(null);
         setStore(null);
-        setRole('viewer');
       }
-    } catch (error) {
-      console.error("[Auth] Error fetching user data:", error);
-      // In emergency mode, we ensure we don't hang the loading screen indefinitely
-      // but we also don't wipe data if it's already there (stale-while-revalidate style)
+
+      clearPermissionCache();
+      setAppReady(true);
+    } catch (e) {
+      console.error('[Auth] loadAppContext crashed', e);
+      setAppReady(false);
     }
   }, []);
 
-  // Auto-setup user with company
+  // Legacy fallback (kept for resilience if the RPC isn't available)
+  const legacyFetchUserData = useCallback(async (userId: string) => {
+    const [profileResult, userRolesResult] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+      supabase.from('user_roles').select('role').eq('user_id', userId),
+    ]);
+    const profileData = profileResult.data as Profile | null;
+    const rolesArr = (userRolesResult.data || []).map((r: any) => String(r.role).toLowerCase());
+    const primary = (rolesArr[0] || 'viewer') as AppRole;
+    setUser(profileData);
+    setRoles(rolesArr);
+    setRole(primary);
+    setPermissions([]);
+    setBranch(null);
+    setTenant(null);
+    if (profileData?.company_id && isValidId(profileData.company_id)) {
+      const { data: c } = await supabase.from('companies').select('*').eq('id', profileData.company_id).maybeSingle();
+      setCompany(c as Company | null);
+    } else {
+      setCompany(null);
+    }
+    setAppReady(true);
+  }, []);
+
   const autoSetupUser = useCallback(async (userId: string) => {
     if (setupRan.current || isInitializing.current) return;
     isInitializing.current = true;
-    
     try {
-      console.log('[Auth] Inciando sincronização imediata de perfil...');
-      
-      // 1. Immediate sync check via RPC
-      const { data: syncData, error: syncError } = await supabase.rpc('sync_user_profile', { 
-        target_user_id: userId 
-      });
-      
-      if (syncError) {
-        console.warn('[Auth] Sync RPC error (falling back to bootstrap):', syncError);
-      } else {
-        console.log('[Auth] Sincronização concluída:', syncData);
-      }
+      // 1. Sync profile (so user_roles/profile rows exist)
+      const { error: syncError } = await supabase.rpc('sync_user_profile', { target_user_id: userId });
+      if (syncError) console.warn('[Auth] sync_user_profile error:', syncError);
 
-      // 2. Original bootstrap logic as fallback/secondary check
-      let retries = 2;
-      let lastError = null;
+      // 2. Bootstrap legacy structures (best-effort)
+      try { await supabase.rpc('bootstrap_current_user'); } catch {}
 
-      while (retries > 0) {
-        const { error: bootstrapError } = await supabase.rpc('bootstrap_current_user');
-        if (!bootstrapError) {
-          lastError = null;
-          break;
-        }
-        
-        lastError = bootstrapError;
-        console.warn(`[Auth] Bootstrap retry ${3 - retries}/2...`, bootstrapError);
-        retries--;
-        if (retries > 0) await new Promise(r => setTimeout(r, 800));
-      }
-
-      if (lastError && !(syncData as any)?.success) {
-        console.error('[Auth] Setup failed after retries:', lastError);
-        toast.error('Erro ao configurar perfil. Algumas funcionalidades podem estar limitadas.');
-      }
-
-      await fetchUserData(userId);
+      // 3. Atomic context load
+      await loadAppContext(userId);
       setupRan.current = true;
     } catch (error) {
       console.error('[Auth] Critical setup error:', error);
@@ -198,16 +179,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isInitializing.current = false;
       forceComplete();
     }
-  }, [fetchUserData, forceComplete]);
+  }, [loadAppContext, forceComplete]);
 
-  // Refresh user data (public method)
   const refreshUserData = useCallback(async () => {
     if (authUserId) {
-      await fetchUserData(authUserId);
+      setAppReady(false);
+      await loadAppContext(authUserId);
     }
-  }, [authUserId, fetchUserData]);
+  }, [authUserId, loadAppContext]);
 
-  // Initialize auth
   useEffect(() => {
     let mounted = true;
 
@@ -215,27 +195,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
-        
-        if (mounted) {
-          if (session?.user) {
-            setAuthUserId(session.user.id);
-            await autoSetupUser(session.user.id);
-          } else {
-            setUser(null);
-            setRole(null);
-            setStore(null);
-            setCompany(null);
-            setAuthUserId(null);
-            setLoading(false);
-            initComplete.current = true;
-          }
+        if (!mounted) return;
+        if (session?.user) {
+          setAuthUserId(session.user.id);
+          await autoSetupUser(session.user.id);
+        } else {
+          setUser(null); setRole(null); setStore(null); setCompany(null);
+          setAuthUserId(null); setPermissions([]); setRoles([]); setBranch(null); setTenant(null);
+          setIsMaster(false); setAppReady(false);
+          setLoading(false); initComplete.current = true;
         }
       } catch (err) {
         console.error('[Auth] Init error:', err);
-        if (mounted) {
-          setLoading(false);
-          initComplete.current = true;
-        }
+        if (mounted) { setLoading(false); initComplete.current = true; }
       }
     };
 
@@ -244,26 +216,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       console.log(`[Auth] Event: ${event}`);
-
-      if (event === 'PASSWORD_RECOVERY') {
-        console.log('[Auth] Modo de recuperação de senha detectado');
-      }
-
-      if (event === 'TOKEN_REFRESHED') {
-        console.log('[Auth] Token de acesso renovado com sucesso');
-      }
-
       if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setRole(null);
-        setStore(null);
-        setCompany(null);
-        setAuthUserId(null);
+        setUser(null); setRole(null); setStore(null); setCompany(null);
+        setAuthUserId(null); setPermissions([]); setRoles([]); setBranch(null); setTenant(null);
+        setIsMaster(false); setAppReady(false);
         setupRan.current = false;
+        clearPermissionCache();
         setLoading(false);
         return;
       }
-
       if (session?.user && authUserId !== session.user.id) {
         setAuthUserId(session.user.id);
         setupRan.current = false;
@@ -285,68 +246,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [autoSetupUser, forceComplete, authUserId]);
 
-
-  // Computed values - ALWAYS true if authenticated (no onboarding needed)
   const isAuthenticated = authUserId !== null;
-  const onboardingCompleted = isAuthenticated; // Always complete in emergency mode
+  const onboardingCompleted = isAuthenticated;
 
-  // Auth methods
+  const permSet = useMemo(() => new Set(permissions), [permissions]);
+  const hasPerm = useCallback(
+    (key: string): boolean => isMaster || roles.includes('owner') || roles.includes('admin') || permSet.has(key),
+    [isMaster, roles, permSet],
+  );
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast.error('Erro ao fazer login: ' + error.message);
-      throw error;
-    }
+    if (error) { toast.error('Erro ao fazer login: ' + error.message); throw error; }
     toast.success('Login realizado!');
   };
 
   const signUp = async (email: string, password: string, fullName: string, referralCode?: string) => {
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
+      email, password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: {
-          full_name: fullName,
-          referral_code: referralCode ?? null,
-        },
+        data: { full_name: fullName, referral_code: referralCode ?? null },
       },
     });
-    if (error) {
-      toast.error('Erro ao criar conta: ' + error.message);
-      throw error;
-    }
+    if (error) { toast.error('Erro ao criar conta: ' + error.message); throw error; }
     toast.success('Conta criada! Verifique seu email.');
   };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error('Erro ao sair: ' + error.message);
-      throw error;
-    }
+    if (error) { toast.error('Erro ao sair: ' + error.message); throw error; }
     toast.success('Sessão encerrada');
   };
 
-  // completeOnboarding is now a no-op (auto-complete)
-  const completeOnboarding = async () => {
-    return Promise.resolve();
-  };
+  const completeOnboarding = async () => Promise.resolve();
 
   return (
     <AuthContext.Provider value={{
-      user,
-      role,
-      store,
-      company,
-      loading,
-      isAuthenticated,
-      onboardingCompleted,
-      signIn,
-      signUp,
-      signOut,
-      completeOnboarding,
-      refreshUserData,
+      user, role, store, company, loading,
+      isAuthenticated, onboardingCompleted,
+      permissions, roles, branch, tenant, isMaster, appReady, hasPerm,
+      signIn, signUp, signOut, completeOnboarding, refreshUserData,
     }}>
       {children}
     </AuthContext.Provider>
