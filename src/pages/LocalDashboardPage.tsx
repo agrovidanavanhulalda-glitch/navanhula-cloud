@@ -344,6 +344,10 @@ const LocalDashboardPage: React.FC = () => {
       {/* Onboarding Checklist */}
       <OnboardingChecklist />
 
+      {/* RBAC Phase 2 — temporary debug widget */}
+      <AppContextWidget />
+
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
