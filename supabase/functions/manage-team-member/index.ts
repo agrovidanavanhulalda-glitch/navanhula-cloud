@@ -78,10 +78,6 @@ Deno.serve(async (req) => {
     const isOwnerCaller = !!profile?.is_super_admin || ['ceo', 'admin'].includes(callerRoleName);
     const isAuthorized = isOwnerCaller || callerRoleName === 'manager';
 
-    const callerRoleName = (callerRoleRow?.role || '').toLowerCase();
-    const isOwnerCaller = !!profile?.is_super_admin || ['ceo', 'admin'].includes(callerRoleName);
-    const isAuthorized = isOwnerCaller || callerRoleName === 'manager';
-
     const companyId = profile?.company_id;
 
     if (!isAuthorized) {
