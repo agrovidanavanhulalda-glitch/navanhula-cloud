@@ -320,6 +320,7 @@ const AppRoutes = () => {
           <Route path="relatorios-fiscais" element={<SubscriptionGate><TaxReportsPage /></SubscriptionGate>} />
           <Route path="equipa" element={<SubscriptionGate><CompanyUsersPage /></SubscriptionGate>} />
           <Route path="iam" element={<SubscriptionGate><IAMPage /></SubscriptionGate>} />
+          <Route path="governanca" element={<SubscriptionGate><GovernancePage /></SubscriptionGate>} />
           <Route path="automacao" element={<SubscriptionGate><AutomationRulesPage /></SubscriptionGate>} />
           <Route path="api-keys" element={<SubscriptionGate><ApiKeysPage /></SubscriptionGate>} />
           <Route path="leads" element={<SubscriptionGate><LeadsPipelinePage /></SubscriptionGate>} />
