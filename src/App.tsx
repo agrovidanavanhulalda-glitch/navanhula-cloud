@@ -83,6 +83,7 @@ const TaxReportsPage = React.lazy(() => import("./pages/TaxReportsPage"));
 const CompanyUsersPage = React.lazy(() => import("./pages/CompanyUsersPage"));
 const ApiKeysPage = React.lazy(() => import("./pages/ApiKeysPage"));
 const IAMPage = React.lazy(() => import("./pages/IAMPage"));
+const GovernancePage = React.lazy(() => import("./pages/GovernancePage"));
 const AutomationRulesPage = React.lazy(() => import("./pages/AutomationRulesPage"));
 const InviteAcceptPage = React.lazy(() => import("./pages/InviteAcceptPage"));
 const LeadsPipelinePage = React.lazy(() => import("./pages/LeadsPipelinePage"));
@@ -319,6 +320,7 @@ const AppRoutes = () => {
           <Route path="relatorios-fiscais" element={<SubscriptionGate><TaxReportsPage /></SubscriptionGate>} />
           <Route path="equipa" element={<SubscriptionGate><CompanyUsersPage /></SubscriptionGate>} />
           <Route path="iam" element={<SubscriptionGate><IAMPage /></SubscriptionGate>} />
+          <Route path="governanca" element={<SubscriptionGate><GovernancePage /></SubscriptionGate>} />
           <Route path="automacao" element={<SubscriptionGate><AutomationRulesPage /></SubscriptionGate>} />
           <Route path="api-keys" element={<SubscriptionGate><ApiKeysPage /></SubscriptionGate>} />
           <Route path="leads" element={<SubscriptionGate><LeadsPipelinePage /></SubscriptionGate>} />

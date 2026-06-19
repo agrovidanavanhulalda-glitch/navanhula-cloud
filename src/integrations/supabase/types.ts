@@ -679,6 +679,219 @@ export type Database = {
           },
         ]
       }
+      approval_actions: {
+        Row: {
+          action: string
+          actor_id: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          request_id: string
+          step_order: number
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          request_id: string
+          step_order: number
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          request_id?: string
+          step_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_actions_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_requests: {
+        Row: {
+          amount: number | null
+          branch_id: string | null
+          company_id: string
+          created_at: string
+          current_step: number
+          entity_id: string | null
+          entity_type: string
+          id: string
+          notes: string | null
+          payload: Json | null
+          requested_by: string | null
+          resolved_at: string | null
+          status: string
+          updated_at: string
+          workflow_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          branch_id?: string | null
+          company_id: string
+          created_at?: string
+          current_step?: number
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          notes?: string | null
+          payload?: Json | null
+          requested_by?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          workflow_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          branch_id?: string | null
+          company_id?: string
+          created_at?: string
+          current_step?: number
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          notes?: string | null
+          payload?: Json | null
+          requested_by?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_requests_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "approval_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_steps: {
+        Row: {
+          approver_role: string
+          created_at: string
+          id: string
+          required: boolean
+          step_order: number
+          workflow_id: string
+        }
+        Insert: {
+          approver_role: string
+          created_at?: string
+          id?: string
+          required?: boolean
+          step_order: number
+          workflow_id: string
+        }
+        Update: {
+          approver_role?: string
+          created_at?: string
+          id?: string
+          required?: boolean
+          step_order?: number
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_steps_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "approval_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_workflows: {
+        Row: {
+          branch_id: string | null
+          company_id: string | null
+          created_at: string
+          department_id: string | null
+          entity_type: string
+          id: string
+          is_active: boolean
+          max_amount: number | null
+          min_amount: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          entity_type: string
+          id?: string
+          is_active?: boolean
+          max_amount?: number | null
+          min_amount?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          entity_type?: string
+          id?: string
+          is_active?: boolean
+          max_amount?: number | null
+          min_amount?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_workflows_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_workflows_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_workflows_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           absences: number | null
@@ -2629,6 +2842,53 @@ export type Database = {
           },
         ]
       }
+      delegations: {
+        Row: {
+          company_id: string
+          created_at: string
+          ends_at: string
+          from_user_id: string
+          id: string
+          is_active: boolean
+          reason: string | null
+          scope: string
+          starts_at: string
+          to_user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          ends_at: string
+          from_user_id: string
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          scope?: string
+          starts_at?: string
+          to_user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          ends_at?: string
+          from_user_id?: string
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          scope?: string
+          starts_at?: string
+          to_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delegations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_drivers: {
         Row: {
           company_id: string
@@ -3313,6 +3573,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      impersonation_sessions: {
+        Row: {
+          actor_id: string
+          ended_at: string | null
+          id: string
+          read_only: boolean
+          reason: string | null
+          started_at: string
+          target_id: string
+        }
+        Insert: {
+          actor_id: string
+          ended_at?: string | null
+          id?: string
+          read_only?: boolean
+          reason?: string | null
+          started_at?: string
+          target_id: string
+        }
+        Update: {
+          actor_id?: string
+          ended_at?: string | null
+          id?: string
+          read_only?: boolean
+          reason?: string | null
+          started_at?: string
+          target_id?: string
+        }
+        Relationships: []
       }
       insights_ia: {
         Row: {
@@ -6794,6 +7084,92 @@ export type Database = {
           },
         ]
       }
+      sod_rules: {
+        Row: {
+          company_id: string | null
+          conflicting_permissions: string[]
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          severity: string
+        }
+        Insert: {
+          company_id?: string | null
+          conflicting_permissions: string[]
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          severity?: string
+        }
+        Update: {
+          company_id?: string | null
+          conflicting_permissions?: string[]
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sod_rules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sod_violations: {
+        Row: {
+          company_id: string | null
+          details: Json | null
+          detected_at: string
+          id: string
+          resolved: boolean
+          rule_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          details?: Json | null
+          detected_at?: string
+          id?: string
+          resolved?: boolean
+          rule_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          details?: Json | null
+          detected_at?: string
+          id?: string
+          resolved?: boolean
+          rule_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sod_violations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sod_violations_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "sod_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_adjustments: {
         Row: {
           adjusted_by: string
@@ -8501,6 +8877,14 @@ export type Database = {
         Returns: undefined
       }
       check_is_master: { Args: { user_uuid: string }; Returns: boolean }
+      check_sod_for_user: {
+        Args: { _user_id: string }
+        Returns: {
+          conflicting_permissions: string[]
+          rule_id: string
+          rule_name: string
+        }[]
+      }
       check_subscription_status: {
         Args: { p_store_id: string }
         Returns: Database["public"]["Enums"]["subscription_status"]
@@ -8709,6 +9093,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_governance_dashboard: { Args: never; Returns: Json }
       get_invitation_by_token: {
         Args: { p_token: string }
         Returns: {
@@ -8825,6 +9210,17 @@ export type Database = {
       link_referral_company: {
         Args: { _company_id: string; _user_id: string }
         Returns: undefined
+      }
+      log_audit_event: {
+        Args: {
+          _action: string
+          _entity_id?: string
+          _entity_type?: string
+          _metadata?: Json
+          _new?: Json
+          _old?: Json
+        }
+        Returns: string
       }
       log_auth_event: {
         Args: {
