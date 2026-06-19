@@ -287,7 +287,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         sellers, 
         cashRegisters, 
         sales: allSales,
-        currentCashRegister: cashRegisters.find(cr => cr.status === 'open' && cr.sellerId === user?.id) || null, 
+        // Single source of truth: latest open cash register for the current store
+        // (any operator). Aligns dashboard status with history view and prevents
+        // FECHADO/ABERTO divergence when a session is opened by a selected seller.
+        currentCashRegister: cashRegisters.find(cr => cr.status === 'open' && cr.storeId === currentStore?.id) || null,
         loading: false 
       }));
     } catch (error) {
