@@ -138,7 +138,11 @@ const QuickAction: React.FC<{ icon: React.ElementType; label: string; onClick: (
 /* ─── Main Dashboard ─── */
 const LocalDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { store, sales, products, cashRegisterOpen, startNewSale, loading: posLoading } = useLocalPOS();
+  const { store, sales, products, cashRegisterOpen, startNewSale, loading: posLoading, refreshData } = useLocalPOS();
+  const [syncing, setSyncing] = useState(false);
+  const handleSync = async () => {
+    try { setSyncing(true); await refreshData?.(); } finally { setSyncing(false); }
+  };
   const { user, company } = useAuth();
   const { isAdmin, isManager, isSeller } = usePermissions();
   const [chartPeriod, setChartPeriod] = useState<'today' | 'week' | 'month'>('week');
