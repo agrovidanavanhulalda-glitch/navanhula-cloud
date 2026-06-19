@@ -138,7 +138,11 @@ const QuickAction: React.FC<{ icon: React.ElementType; label: string; onClick: (
 /* ─── Main Dashboard ─── */
 const LocalDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { store, sales, products, cashRegisterOpen, startNewSale, loading: posLoading } = useLocalPOS();
+  const { store, sales, products, cashRegisterOpen, startNewSale, loading: posLoading, refreshData } = useLocalPOS();
+  const [syncing, setSyncing] = useState(false);
+  const handleSync = async () => {
+    try { setSyncing(true); await refreshData?.(); } finally { setSyncing(false); }
+  };
   const { user, company } = useAuth();
   const { isAdmin, isManager, isSeller } = usePermissions();
   const [chartPeriod, setChartPeriod] = useState<'today' | 'week' | 'month'>('week');
@@ -364,6 +368,9 @@ const LocalDashboardPage: React.FC = () => {
             <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 ${cashRegisterOpen ? 'bg-success animate-pulse' : 'bg-destructive/60'}`} />
             Caixa {cashRegisterOpen ? 'Aberto' : 'Fechado'}
           </Badge>
+          <Button size="sm" variant="outline" onClick={handleSync} disabled={syncing} className="gap-1.5 rounded-lg" title="Sincronizar dados">
+            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} /> Sincronizar
+          </Button>
           <Button size="sm" onClick={handleNewSale} className="gap-1.5 rounded-lg font-medium">
             <Plus className="w-4 h-4" /> Nova Venda
           </Button>
