@@ -9040,6 +9040,19 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_cash_status: {
+        Args: { p_store_id: string }
+        Returns: {
+          cash_register_id: string
+          closed_at: string
+          is_open: boolean
+          opened_at: string
+          opening_amount: number
+          status: string
+          store_id: string
+          user_id: string
+        }[]
+      }
       get_ceo_dashboard_stats: { Args: never; Returns: Json }
       get_companies_no_sales: {
         Args: { days_count?: number }
