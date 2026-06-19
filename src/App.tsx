@@ -83,6 +83,7 @@ const TaxReportsPage = React.lazy(() => import("./pages/TaxReportsPage"));
 const CompanyUsersPage = React.lazy(() => import("./pages/CompanyUsersPage"));
 const ApiKeysPage = React.lazy(() => import("./pages/ApiKeysPage"));
 const IAMPage = React.lazy(() => import("./pages/IAMPage"));
+const GovernancePage = React.lazy(() => import("./pages/GovernancePage"));
 const AutomationRulesPage = React.lazy(() => import("./pages/AutomationRulesPage"));
 const InviteAcceptPage = React.lazy(() => import("./pages/InviteAcceptPage"));
 const LeadsPipelinePage = React.lazy(() => import("./pages/LeadsPipelinePage"));
