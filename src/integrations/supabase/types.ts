@@ -9401,6 +9401,23 @@ export type Database = {
         Args: { p_code: string; p_store_id?: string }
         Returns: Json
       }
+      view_team_members: {
+        Args: {
+          p_branch_id?: string
+          p_company_id: string
+          p_permission?: string
+        }
+        Returns: {
+          branch_id: string
+          branch_name: string
+          email: string
+          full_name: string
+          has_permission: boolean
+          is_active: boolean
+          role_label: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       accounting_entry_type: "revenue" | "expense" | "tax" | "transfer"
