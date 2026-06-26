@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLocalPOS, LocalCashRegister, LocalSeller } from '@/contexts/LocalPOSContext';
+import { useLocalPOS, LocalCashRegister } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,11 +46,10 @@ const LocalCashRegisterPage: React.FC = () => {
     currentStore,
     currentCashRegister,
     cashRegisters,
-    sellers,
     openCashRegister,
     closeCashRegister,
   } = useLocalPOS();
-  const { role, company, branch, user, appReady } = useAuth();
+  const { role, company, branch, user, appReady, hasPerm } = useAuth();
   const { updateStep } = useOnboarding();
   const isAdmin = role === 'admin' || role === 'manager' || role === 'ceo' || role === 'director';
 
@@ -61,9 +61,12 @@ const LocalCashRegisterPage: React.FC = () => {
 
   // Safe-by-default: cash register must never crash if company/branch/operator are missing.
   const storeId = currentStore?.id ?? null;
-  const activeSellers = storeId
-    ? sellers.filter((s) => s.isActive && s.storeId === storeId)
-    : [];
+
+  // Unified source: only authorised operators (cash.open) of the active company/branch.
+  const { activeMembers: activeSellers } = useTeamMembers({
+    permission: 'cash.open',
+    branchId: (branch as any)?.id ?? null,
+  });
 
   const storeHistory = storeId
     ? cashRegisters
@@ -82,13 +85,13 @@ const LocalCashRegisterPage: React.FC = () => {
 
   const handleOpenRegister = async () => {
     const amount = parseFloat(openingAmount) || 0;
-    const seller = sellers.find(s => s.id === selectedSellerId);
-    
+    const seller = activeSellers.find(s => s.id === selectedSellerId);
+
     if (!selectedSellerId || !seller) {
-      toast.error('Selecione um vendedor');
+      toast.error('Selecione um operador autorizado');
       return;
     }
-    
+
     try {
       await openCashRegister(seller.id, seller.name, amount);
       updateStep('first_cash_opened');
@@ -108,7 +111,17 @@ const LocalCashRegisterPage: React.FC = () => {
       toast.error('Informe o valor de fechamento');
       return;
     }
-    
+
+    // Validate operator of the session before closing.
+    if (currentCashRegister && user?.id) {
+      const isOwner = currentCashRegister.sellerId === user.id;
+      const canCloseAny = hasPerm('cash.close_any') || isAdmin;
+      if (!isOwner && !canCloseAny) {
+        toast.error('Apenas o operador que abriu o caixa (ou um administrador) pode fechá-lo.');
+        return;
+      }
+    }
+
     try {
       await closeCashRegister(amount);
       setShowCloseDialog(false);
