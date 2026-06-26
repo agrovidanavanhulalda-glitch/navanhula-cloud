@@ -398,6 +398,8 @@ const IAMPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
+      queryClient.invalidateQueries({ queryKey: ['team-members'] });
+      emitTeamEvent('USER_CREATED');
       toast.success('Utilizador criado com sucesso.');
       setShowCreateUser(false);
       setUserForm({ name: '', email: '', password: '', branch_id: '', role: 'seller' });
