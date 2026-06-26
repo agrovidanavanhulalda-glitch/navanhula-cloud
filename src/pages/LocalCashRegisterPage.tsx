@@ -365,7 +365,10 @@ const LocalCashRegisterPage: React.FC = () => {
                     <SelectItem key={seller.id} value={seller.id} className="text-base py-3">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        {seller.name}
+                        <span className="font-medium">{seller.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          • {seller.role}{seller.branchName ? ` • ${seller.branchName}` : ''}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
@@ -373,7 +376,7 @@ const LocalCashRegisterPage: React.FC = () => {
               </Select>
               {activeSellers.length === 0 && (
                 <p className="text-sm text-destructive">
-                  Cadastre vendedores primeiro
+                  Nenhum operador com permissão "cash.open". Adicione/autorize em Equipa.
                 </p>
               )}
             </div>
