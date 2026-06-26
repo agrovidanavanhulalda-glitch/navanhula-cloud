@@ -1,118 +1,105 @@
+# Unificação Operacional — POS, Caixa e Equipa
 
-# Fase 1 — Arquitetura Enterprise RBAC + Multiempresa
+Hoje existem duas fontes de utilizadores em paralelo: `LocalSellers` (no `LocalPOSContext`, persistido em IndexedDB/localStorage) e o sistema oficial (`company_users` + `profiles` + `user_roles`). Isso causa divergências entre POS, Caixa, Equipa e dropdowns. Este sprint elimina a fonte local e centraliza tudo numa única origem auditável via RBAC (`user_has_permission('sales.create')`).
 
-Objetivo: introduzir um modelo organizacional escalável (Tenant → Empresa → Filial → Departamento → Equipa → Utilizador) com permissões granulares `modulo.acao` e escopos (GLOBAL/EMPRESA/FILIAL/DEPARTAMENTO), **sem quebrar dados existentes** e sem novas features de UI.
+## 1. Backend — fonte única de operadores
 
-## 1. Diagrama organizacional
+Migração nova (`..._team_members_view.sql`):
 
-```text
-tenants (NEW)
-  └── companies (EXISTENTE — ganha tenant_id)
-        └── branches (EXISTENTE)
-              └── departments (NEW)
-                    └── teams (NEW)
-                          └── users (auth.users)
+- `CREATE OR REPLACE FUNCTION public.view_team_members(p_company_id uuid, p_branch_id uuid DEFAULT NULL, p_permission text DEFAULT NULL)` — `SECURITY DEFINER`, `SET search_path = public`.
+  - Retorna: `user_id, full_name, email, role_label, branch_id, branch_name, is_active, has_permission`.
+  - Faz `JOIN` em `company_users → profiles → user_roles → roles`, filtrando por `is_active = true`, empresa e filial actuais.
+  - Quando `p_permission` é passada, usa `public.user_has_permission(user_id, p_permission)` para filtrar (POS → `sales.create`, Caixa → `cash.open`).
+- `GRANT EXECUTE ON FUNCTION public.view_team_members(...) TO authenticated, service_role;`
+- Index helper se faltar: `(company_users.company_id, company_users.is_active)`.
 
-roles (EXISTENTE)──┐
-                   ├── role_permissions (EXISTENTE, expandido com scope)
-permissions (EXIST)┘
+Sem `CREATE TABLE` novo; nenhuma tabela é alterada — só uma RPC de leitura, totalmente compatível com dados existentes.
 
-user_roles (EXISTENTE — expandido: company_id, branch_id, department_id, scope)
-user_permissions (NEW — overrides por utilizador)
-```
+## 2. Hook único `useTeamMembers`
 
-## 2. Tabelas
+`src/hooks/useTeamMembers.ts` (novo):
 
-**Novas**
-- `tenants` — agrupa empresas de um mesmo cliente raiz (id, name, slug, owner_user_id, is_active).
-- `departments` — (id, company_id, branch_id NULL, name, code, parent_department_id, manager_id).
-- `teams` — (id, department_id, name, lead_user_id).
-- `user_permissions` — overrides finos (id, user_id, permission_id, scope, company_id, branch_id, department_id, granted/revoked).
+- `useTeamMembers({ permission?, branchId? })` → React Query com `queryKey = ['team-members', companyId, branchId, permission]`.
+- `staleTime: 60s`; `enabled` apenas quando `appReady`.
+- Retorna `{ members, isLoading, refetch }`. Cada `member` traz `{ id, name, role, branchName, isActive, hasPermission }`.
+- Centraliza a única chamada a `supabase.rpc('view_team_members', ...)`.
 
-**Existentes alteradas (aditivo, nunca destrutivo)**
-- `companies` + `tenant_id uuid REFERENCES tenants(id)` (nullable; backfill 1 tenant default por owner).
-- `roles` + `is_system boolean default false`, `scope_default text`, `level int`.
-- `permissions` + `module text`, `action text` (derivados da `key`).
-- `role_permissions` + `scope text default 'COMPANY'` (GLOBAL/COMPANY/BRANCH/DEPARTMENT).
-- `user_roles` + `branch_id uuid`, `department_id uuid`, `scope text default 'COMPANY'`.
+Realtime/eventos para invalidação (`src/lib/teamEvents.ts`):
 
-**Enum novo**: `permission_scope` (`GLOBAL`,`COMPANY`,`BRANCH`,`DEPARTMENT`).
+- Pequeno `EventTarget` global emitindo `USER_CREATED | USER_UPDATED | ROLE_CHANGED | BRANCH_CHANGED`.
+- `useTeamMembers` faz `queryClient.invalidateQueries(['team-members'])` ao receber qualquer um.
+- `manage-team-member` (edge) e páginas de edição passam a disparar esses eventos após sucesso.
 
-## 3. Permissões padrão (seed)
+## 3. Remover fonte local de vendedores
 
-Formato `modulo.acao`. Inseridas via `INSERT ... ON CONFLICT (key) DO NOTHING`:
+`src/contexts/LocalPOSContext.tsx`:
 
-- `users.create|edit|delete|view`
-- `sales.view|create|cancel`
-- `cash.open|close|view`
-- `finance.view|approve|export`
-- `hr.payroll|attendance|view`
-- `reports.view|export`
-- `settings.manage`
-- `inventory.view|adjust`
-- `branches.manage`
-- `roles.manage`
+- Apagar estado `sellers`, `addSeller`, `updateSeller`, `deleteSeller`, persistência IndexedDB de sellers.
+- Manter cart, stores, products, sales, cash registers (não tocar lógica POS).
+- Adicionar atalho `getActiveSellers()` que delega a `useTeamMembers({ permission: 'sales.create' })` — mas a forma preferida é o hook directo.
 
-## 4. Papéis padrão (seed em `roles`)
+`src/pages/LocalSellersPage.tsx`:
 
-OWNER, CEO, COO, CFO, CHRO, CTO, ADMIN_MASTER, ADMIN_RH, ADMIN_CONTABILIDADE, ADMIN_COMERCIAL, GERENTE, SUPERVISOR, CONTABILISTA, RH, CAIXA, VENDEDOR, VISITANTE — com `level` e `scope_default`:
+- Substituir listagem local por `useTeamMembers()` (sem filtro de permissão — mostra equipa toda).
+- Criação/edição continua via `supabase.functions.invoke('manage-team-member', ...)` (já existente). Após sucesso → `emit('USER_CREATED')`.
+- Toggle activo/desactivo passa a actualizar `company_users.is_active` via RPC dedicada (ou `update`), não estado local.
+- Manter a UI; mudar apenas a fonte de dados e os handlers.
 
-- OWNER → GLOBAL, level 100
-- CEO → COMPANY, level 90
-- CxO / ADMIN_MASTER → COMPANY, level 80
-- ADMIN_* → COMPANY, level 70
-- GERENTE → BRANCH, level 50
-- SUPERVISOR → DEPARTMENT, level 40
-- CONTABILISTA/RH → COMPANY, level 30
-- CAIXA/VENDEDOR → BRANCH, level 20
-- VISITANTE → COMPANY, level 0
+`src/contexts/LocalSellerAuthContext.tsx`:
 
-Mapeamento de `role_permissions` semeado para cada papel (somente system roles; cargos custom continuam configuráveis).
+- Marcar deprecated; ponto de login do vendedor passa a usar Supabase Auth normal (já é o padrão na app). Se ainda for usado em rota, mapear para `useAuth`.
 
-## 5. Middleware de autorização
+## 4. POS — dropdown de vendedor
 
-Funções SECURITY DEFINER (substituem checagens espalhadas; mantêm `has_role` para compat):
+`src/pages/LocalPOSPage.tsx` (e qualquer `SellerSelect` interno):
 
-- `current_tenant_id()`, `current_company_id()` (já existe), `current_branch_ids()`, `current_department_ids()`.
-- `user_has_permission(_user uuid, _key text, _company uuid DEFAULT NULL, _branch uuid DEFAULT NULL, _department uuid DEFAULT NULL) returns boolean` — resolve: OWNER → true; senão união de `role_permissions` (via `user_roles`) + `user_permissions` (overrides), respeitando escopo.
-- `require_permission(_key text, …)` — usado em RLS/edge functions.
+- Substituir `useLocalPOS().sellers` por `useTeamMembers({ permission: 'sales.create', branchId: currentBranchId })`.
+- Item da lista mostra `nome • cargo • filial • estado`. Inactivos são escondidos.
+- Se a lista estiver vazia → mostrar empty state com link para `/app/equipa`.
 
-Frontend: hook `usePermission('sales.create', { branch_id })` que chama a RPC e cacheia. Componentes existentes que usam `has_role` continuam funcionando (compat).
+## 5. Caixa
 
-## 6. Compatibilidade
+`src/pages/LocalCashRegisterPage.tsx`:
 
-- Toda alteração é aditiva (nenhuma coluna existente removida/renomeada).
-- `app_role` enum mantém-se; é mapeado para os novos `roles.key` via tabela `roles` (já existe coluna `key`).
-- Trigger `handle_new_auth_user` ajustado para também popular `user_roles.branch_id`/`department_id` quando presentes em metadata.
-- Migração de backfill: cria 1 `tenant` por `companies.owner_user_id` distinto e preenche `companies.tenant_id`.
+- Ao abrir caixa: dropdown de operador usa `useTeamMembers({ permission: 'cash.open' })`.
+- Ao fechar caixa: validar `session.user_id === currentAuthUserId || hasPerm('cash.close_any')`. Caso contrário, bloquear com toast e logar em `audit_logs`.
+- Manter o fix do sprint anterior (status único por loja via `get_cash_status`).
 
-## 7. Migrações (ordem)
+## 6. Outros call-sites a migrar
 
-1. `tenants`, `departments`, `teams`, `user_permissions` + GRANTs + RLS + policies por `current_company_id()`.
-2. ALTERs aditivos em `companies`, `roles`, `permissions`, `role_permissions`, `user_roles`.
-3. Funções `user_has_permission`, `require_permission`, helpers de escopo.
-4. Seed de `permissions` e `roles` (idempotente).
-5. Backfill `tenant_id` e `permissions.module/action` derivados de `key`.
+Trocar leitura local por `useTeamMembers`:
 
-## 8. Impacto
+- `src/components/hr/SellerRanking.tsx`
+- `src/pages/StockTransferPage.tsx` (selector de operador)
+- `src/pages/LocalReportsPage.tsx` (filtro por vendedor)
+- `src/pages/BIDashboardPage.tsx` (filtro por vendedor)
+- `src/components/monetization/LimitWarning.tsx` (contagem de utilizadores)
+- `src/pages/LocalSettingsPage.tsx` (qualquer secção “Vendedores”)
 
-- **Banco**: 4 tabelas novas, 5 alteradas (aditivo). Sem perda de dados.
-- **Edge functions**: `manage-team-member` aceita `branch_id`/`department_id` opcionais (já parcialmente suporta); valida via `user_has_permission('users.create', …)`.
-- **Frontend**: nenhum redesign. Apenas:
-  - novo hook `usePermission`;
-  - `CompanyUsersPage`/`IAMPage` passam a listar permissões/escopos (mesma UI, novas colunas opcionais — fora do escopo desta fase salvo necessidade).
-- **RLS**: tabelas críticas ganham policies adicionais usando `user_has_permission`, mantendo as atuais como fallback.
+`ResellersNetworkPage.tsx` é domínio diferente (afiliados) — fora do escopo.
 
-## 9. Testes
+## 7. Testes
 
-- Unit (pg): `user_has_permission` para OWNER, CEO multi-empresa, GERENTE com escopo BRANCH, VENDEDOR sem `sales.cancel`.
-- Integration: criar utilizador com papel GERENTE + branch → consegue `sales.create` só nessa filial.
-- E2E (vitest existentes): `auth-flow`, `role-enforcement` estendidos com cenário de escopo BRANCH e override via `user_permissions`.
-- Regressão: rodar suite atual; checar que `has_role`/`get_user_company_ids` continuam respondendo igual.
+E2E em `src/tests/e2e/team-pos-unification.test.tsx` (novo):
 
-## 10. Fora desta fase
-- UI de gestão de departamentos/equipas/permissões granulares.
-- Migração dos call-sites legados de `has_role` → `user_has_permission` (gradual em fase 2).
-- Billing/limites por tenant.
+1. Criar utilizador via `manage-team-member` com role `seller` → aparece em Equipa, POS e dropdown de Caixa.
+2. Criar utilizador com role `viewer` (sem `sales.create`) → aparece em Equipa mas **não** no POS nem na Caixa.
+3. Fluxo: abrir caixa → fazer venda → fechar caixa, validando que `cash_registers.user_id` bate com o operador escolhido.
+4. Após `ROLE_CHANGED`, cache do POS é invalidada e o utilizador aparece/desaparece sem reload.
 
-Após aprovação, começo pelas migrações na ordem acima (uma migration por bloco) e só depois ajusto edge function + hook `usePermission`.
+Actualizar `workflow.test.tsx` e `report-generation.test.tsx` para deixar de usar mocks de `sellers` locais.
+
+## 8. Entregáveis
+
+- Migração: `view_team_members` RPC + GRANTs.
+- Novo hook: `useTeamMembers`, novo bus: `teamEvents`.
+- `LocalPOSContext` sem sellers; `LocalSellersPage` migrada.
+- POS, Caixa, Ranking, Transfers, Reports, BI a consumir a RPC.
+- 4 testes E2E novos + 2 actualizados.
+- Métrica: medir tempo de carregamento do POS antes/depois (`performance.now()` no `LocalPOSPage` mount) e anexar ao relatório de sprint.
+
+## 9. Riscos & compatibilidade
+
+- Utilizadores que só existiam localmente (sem `auth.users`) deixam de aparecer. Mitigação: script de migração one-shot que detecta `localStorage.sellers`, mostra um modal listando-os e instrui o admin a recriá-los via Equipa. Não importamos automaticamente para evitar criar `auth.users` órfãos.
+- Sessões de caixa antigas com `user_id` apontando para um seller local ficam intactas (histórico preservado); apenas novas operações exigem `auth.uid`.
+- Nenhuma tabela é dropada; nenhum dado existente é apagado.
