@@ -3,6 +3,7 @@ import { useLocalPOS, LocalSeller } from '@/contexts/LocalPOSContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { emitTeamEvent } from '@/lib/teamEvents';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -180,9 +181,11 @@ const LocalSellersPage: React.FC = () => {
         throw new Error(realMessage);
       }
 
-      // Update local context
+      // Update local context + invalidate unified team-member caches
       // @ts-ignore - refreshData is available via useLocalPOS destructuring
       await refreshData();
+      emitTeamEvent('USER_CREATED', { email: formData.email });
+      
       
       setCreatedSellerInfo({ 
         email: formData.email.trim().toLowerCase(), 
