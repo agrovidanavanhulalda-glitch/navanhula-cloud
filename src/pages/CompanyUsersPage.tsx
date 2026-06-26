@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck, Trash2, UserPlus, Eye, EyeOff, Loader2, Key } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
+import { emitTeamEvent } from '@/lib/teamEvents';
 
 const VALID_TECHNICAL_ROLES = ['ceo', 'admin', 'manager', 'seller', 'cashier'];
 const OPERATIONAL_ROLES = ['seller', 'cashier'];
@@ -201,6 +202,8 @@ const CompanyUsersPage = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
+      emitTeamEvent('USER_CREATED', { email: data?.email });
+      
       
       if (createUserForm.show_credentials) {
         setCreatedUserResult({ email: data.email, password: data.password });

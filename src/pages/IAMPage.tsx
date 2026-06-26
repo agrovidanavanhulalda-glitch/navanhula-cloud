@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { emitTeamEvent } from '@/lib/teamEvents';
 import {
   Users, Plus, Shield, Link2, Copy, Check, Ban, UserCheck,
   Trash2, Settings2, Building2, Monitor, ScrollText, MapPin, Eye, EyeOff
@@ -398,6 +399,8 @@ const IAMPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['iam-members'] });
+      queryClient.invalidateQueries({ queryKey: ['team-members'] });
+      emitTeamEvent('USER_CREATED');
       toast.success('Utilizador criado com sucesso.');
       setShowCreateUser(false);
       setUserForm({ name: '', email: '', password: '', branch_id: '', role: 'seller' });
