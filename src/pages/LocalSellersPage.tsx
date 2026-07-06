@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useLocalPOS, LocalSeller } from '@/contexts/LocalPOSContext';
+import { useLocalPOS } from '@/contexts/LocalPOSContext';
+import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -24,9 +25,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Users, 
-  Plus, 
+import {
+  Users,
+  Plus,
   Search,
   Mail,
   Store,
@@ -40,25 +41,18 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// 100% LOCAL - Gestão de vendedores offline-friendly
+// UNIFIED: single source of truth via view_team_members RPC (company_users + profiles + user_roles)
 
 const LocalSellersPage: React.FC = () => {
-  const { 
-    sellers, 
-    stores,
-    currentStore,
-    addSeller, 
-    updateSeller, 
-    deleteSeller,
-    refreshData,
-  } = useLocalPOS();
+  const { stores, currentStore } = useLocalPOS();
+  const { members: sellers, refetch: refetchTeam } = useTeamMembers();
   const { company } = useAuth();
   const { isAdmin, role } = usePermissions();
   const targetCompanyId = (company as any)?.id;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showDialog, setShowDialog] = useState(false);
-  const [editingSeller, setEditingSeller] = useState<LocalSeller | null>(null);
+  const [editingSeller, setEditingSeller] = useState<TeamMember | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -73,11 +67,12 @@ const LocalSellersPage: React.FC = () => {
   // Filter sellers
   const filteredSellers = sellers.filter(s =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (s.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Get store name - human readable
-  const getStoreName = (storeId: string) => {
+  const getStoreName = (storeId: string | null) => {
+    if (!storeId) return 'Todas as lojas';
     const store = stores.find(s => s.id === storeId);
     return store?.name || 'Loja Principal';
   };
@@ -94,6 +89,7 @@ const LocalSellersPage: React.FC = () => {
       default: return role;
     }
   };
+
 
   // Open dialog for new seller
   const handleNew = () => {
