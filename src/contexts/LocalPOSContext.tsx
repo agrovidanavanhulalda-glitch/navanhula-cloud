@@ -207,17 +207,12 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         imageUrl: p.image_url
       }));
 
-      const sellers = (profilesRes.data || []).map(p => ({
-        id: p.id,
-        name: p.full_name || p.email || 'Vendedor',
-        email: p.email || '',
-        role: (p.is_super_admin ? 'admin' : 'seller') as 'admin' | 'seller',
-        storeId: p.store_id || '',
-        isActive: p.is_active
-      }));
+      const profileMap = new Map(
+        (profilesRes.data || []).map((p) => [p.id, p.full_name || p.email || 'Operador'] as const)
+      );
 
       const cashRegisters = (cashRegistersRes.data || []).map(cr => ({
-        id: cr.id, storeId: cr.store_id, sellerId: cr.user_id, sellerName: sellers.find(s => s.id === cr.user_id)?.name || '', openingAmount: cr.opening_amount, expectedAmount: cr.expected_amount, status: cr.status as 'open' | 'closed', openedAt: new Date(cr.opened_at), closedAt: cr.closed_at ? new Date(cr.closed_at) : undefined, salesTotal: 0, salesCount: 0
+        id: cr.id, storeId: cr.store_id, sellerId: cr.user_id, sellerName: profileMap.get(cr.user_id) || '', openingAmount: cr.opening_amount, expectedAmount: cr.expected_amount, status: cr.status as 'open' | 'closed', openedAt: new Date(cr.opened_at), closedAt: cr.closed_at ? new Date(cr.closed_at) : undefined, salesTotal: 0, salesCount: 0
       }));
 
       // Pull synced sales
