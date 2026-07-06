@@ -1,105 +1,81 @@
-# Unificação Operacional — POS, Caixa e Equipa
+# Unificação Operacional POS + Equipa — Fase Final
 
-Hoje existem duas fontes de utilizadores em paralelo: `LocalSellers` (no `LocalPOSContext`, persistido em IndexedDB/localStorage) e o sistema oficial (`company_users` + `profiles` + `user_roles`). Isso causa divergências entre POS, Caixa, Equipa e dropdowns. Este sprint elimina a fonte local e centraliza tudo numa única origem auditável via RBAC (`user_has_permission('sales.create')`).
+A base já está feita: `view_team_members()` RPC, hook `useTeamMembers`, bus `teamEvents`, dropdown do POS (`sales.create`), caixa filtrada por `cash.open` e validação de fecho. Falta remover a fonte local (`LocalSellers`) e migrar os call-sites restantes que ainda leem `useLocalPOS().sellers` ou fazem query própria.
 
-## 1. Backend — fonte única de operadores
-
-Migração nova (`..._team_members_view.sql`):
-
-- `CREATE OR REPLACE FUNCTION public.view_team_members(p_company_id uuid, p_branch_id uuid DEFAULT NULL, p_permission text DEFAULT NULL)` — `SECURITY DEFINER`, `SET search_path = public`.
-  - Retorna: `user_id, full_name, email, role_label, branch_id, branch_name, is_active, has_permission`.
-  - Faz `JOIN` em `company_users → profiles → user_roles → roles`, filtrando por `is_active = true`, empresa e filial actuais.
-  - Quando `p_permission` é passada, usa `public.user_has_permission(user_id, p_permission)` para filtrar (POS → `sales.create`, Caixa → `cash.open`).
-- `GRANT EXECUTE ON FUNCTION public.view_team_members(...) TO authenticated, service_role;`
-- Index helper se faltar: `(company_users.company_id, company_users.is_active)`.
-
-Sem `CREATE TABLE` novo; nenhuma tabela é alterada — só uma RPC de leitura, totalmente compatível com dados existentes.
-
-## 2. Hook único `useTeamMembers`
-
-`src/hooks/useTeamMembers.ts` (novo):
-
-- `useTeamMembers({ permission?, branchId? })` → React Query com `queryKey = ['team-members', companyId, branchId, permission]`.
-- `staleTime: 60s`; `enabled` apenas quando `appReady`.
-- Retorna `{ members, isLoading, refetch }`. Cada `member` traz `{ id, name, role, branchName, isActive, hasPermission }`.
-- Centraliza a única chamada a `supabase.rpc('view_team_members', ...)`.
-
-Realtime/eventos para invalidação (`src/lib/teamEvents.ts`):
-
-- Pequeno `EventTarget` global emitindo `USER_CREATED | USER_UPDATED | ROLE_CHANGED | BRANCH_CHANGED`.
-- `useTeamMembers` faz `queryClient.invalidateQueries(['team-members'])` ao receber qualquer um.
-- `manage-team-member` (edge) e páginas de edição passam a disparar esses eventos após sucesso.
-
-## 3. Remover fonte local de vendedores
+## 1. Purga da fonte local em `LocalPOSContext`
 
 `src/contexts/LocalPOSContext.tsx`:
 
-- Apagar estado `sellers`, `addSeller`, `updateSeller`, `deleteSeller`, persistência IndexedDB de sellers.
-- Manter cart, stores, products, sales, cash registers (não tocar lógica POS).
-- Adicionar atalho `getActiveSellers()` que delega a `useTeamMembers({ permission: 'sales.create' })` — mas a forma preferida é o hook directo.
+- Remover do state: `sellers`, `LocalSeller` interface exposta, initial `sellers: []`.
+- Remover do contract: `sellers`, `addSeller`, `updateSeller`, `deleteSeller`.
+- Remover implementações e o mapeamento em `loadData` (`profilesRes → sellers`).
+- Manter apenas: cart, products, stores, sales, cash registers, sync.
 
-`src/pages/LocalSellersPage.tsx`:
+Isto é a "fonte removida" pedida no brief. Nenhum outro módulo pode continuar a ler `useLocalPOS().sellers`.
 
-- Substituir listagem local por `useTeamMembers()` (sem filtro de permissão — mostra equipa toda).
-- Criação/edição continua via `supabase.functions.invoke('manage-team-member', ...)` (já existente). Após sucesso → `emit('USER_CREATED')`.
-- Toggle activo/desactivo passa a actualizar `company_users.is_active` via RPC dedicada (ou `update`), não estado local.
-- Manter a UI; mudar apenas a fonte de dados e os handlers.
+## 2. Migrar call-sites restantes para `useTeamMembers`
 
-`src/contexts/LocalSellerAuthContext.tsx`:
+Todos passam a consumir a mesma origem oficial:
 
-- Marcar deprecated; ponto de login do vendedor passa a usar Supabase Auth normal (já é o padrão na app). Se ainda for usado em rota, mapear para `useAuth`.
+- `src/pages/LocalSellersPage.tsx` — listagem passa a `useTeamMembers()` (sem filtro de permissão, mostra equipa toda com estado). Criar/editar continua via edge function `manage-team-member`; após sucesso emite `USER_CREATED` / `USER_UPDATED`.
+- `src/pages/LocalReportsPage.tsx` — filtro "Vendedor" alimentado por `useTeamMembers({ permission: 'sales.create' })`.
+- `src/pages/BIDashboardPage.tsx` — agregação de top-sellers continua sobre `sales`, mas o mapa id→nome vem de `useTeamMembers()` (evita depender de `sales.seller_name` colado).
+- `src/pages/StockTransferPage.tsx` — a query `['sellers-for-transfer']` cai; passa a `useTeamMembers({ permission: 'sales.create' })` (transferências são para vendedores).
+- `src/components/hr/SellerRanking.tsx` — o cálculo do ranking mantém-se sobre `sales`, mas a lista base de vendedores usa `useTeamMembers({ permission: 'sales.create' })`.
+- `src/components/monetization/LimitWarning.tsx` — quando `resource === 'sellers'`, contagem vem de `useTeamMembers().members.length` (não do state local).
+- `src/pages/LocalSettingsPage.tsx` — só usa labels de `t('sellers.*')`, sem dependência de dados; nada a mudar.
 
-## 4. POS — dropdown de vendedor
+`ResellersNetworkPage.tsx` é domínio de afiliados, fora do escopo.
 
-`src/pages/LocalPOSPage.tsx` (e qualquer `SellerSelect` interno):
+## 3. Dropdown do POS — exibição rica
 
-- Substituir `useLocalPOS().sellers` por `useTeamMembers({ permission: 'sales.create', branchId: currentBranchId })`.
-- Item da lista mostra `nome • cargo • filial • estado`. Inactivos são escondidos.
-- Se a lista estiver vazia → mostrar empty state com link para `/app/equipa`.
+Já implementado. Confirmar que mostra `nome • cargo • filial` e esconde inativos (o hook já expõe `activeMembers`). Adicionar tooltip "Sem permissão sales.create" no empty state, já ligado a `/app/equipa`.
 
-## 5. Caixa
+## 4. Cache — eventos que já invalidam
 
-`src/pages/LocalCashRegisterPage.tsx`:
+O hook já ouve `team:ANY`. Garantir que os pontos de mutação emitem os 4 eventos do brief:
 
-- Ao abrir caixa: dropdown de operador usa `useTeamMembers({ permission: 'cash.open' })`.
-- Ao fechar caixa: validar `session.user_id === currentAuthUserId || hasPerm('cash.close_any')`. Caso contrário, bloquear com toast e logar em `audit_logs`.
-- Manter o fix do sprint anterior (status único por loja via `get_cash_status`).
+- `USER_CREATED` — em `manage-team-member` success handlers de `LocalSellersPage`, `CompanyUsersPage`, `IAMPage` (já emitido).
+- `USER_UPDATED` — idem em updates.
+- `ROLE_CHANGED` — em `IAMPage` ao alterar role/permissão.
+- `BRANCH_CHANGED` — quando `company_users.branch_id` muda em qualquer página de gestão.
 
-## 6. Outros call-sites a migrar
+Auditar os 3 ficheiros e adicionar `emitTeamEvent('ROLE_CHANGED')` / `'BRANCH_CHANGED'` onde faltar.
 
-Trocar leitura local por `useTeamMembers`:
+## 5. Testes
 
-- `src/components/hr/SellerRanking.tsx`
-- `src/pages/StockTransferPage.tsx` (selector de operador)
-- `src/pages/LocalReportsPage.tsx` (filtro por vendedor)
-- `src/pages/BIDashboardPage.tsx` (filtro por vendedor)
-- `src/components/monetization/LimitWarning.tsx` (contagem de utilizadores)
-- `src/pages/LocalSettingsPage.tsx` (qualquer secção “Vendedores”)
+Novo `src/tests/e2e/team-pos-unification.test.tsx`:
 
-`ResellersNetworkPage.tsx` é domínio diferente (afiliados) — fora do escopo.
+1. Criar utilizador com role `seller` via `manage-team-member` → aparece em Equipa **e** no dropdown do POS **e** no dropdown de abertura de Caixa.
+2. Criar utilizador com role `viewer` (sem `sales.create`) → aparece em Equipa mas **não** aparece no POS nem na Caixa.
+3. Fluxo completo: abrir caixa (operador X) → registar venda (mesmo X selecionado no POS) → fechar caixa validando que `cash_registers.user_id = X` e a venda ficou com `sales.user_id = X`.
+4. Após emitir `ROLE_CHANGED`, cache do POS é invalidada e o utilizador aparece/desaparece do dropdown sem reload.
 
-## 7. Testes
+Atualizar `workflow.test.tsx` e `report-generation.test.tsx` para não mockar `sellers` locais — passam a mockar `supabase.rpc('view_team_members')`.
 
-E2E em `src/tests/e2e/team-pos-unification.test.tsx` (novo):
+## 6. Métrica de tempo de carregamento
 
-1. Criar utilizador via `manage-team-member` com role `seller` → aparece em Equipa, POS e dropdown de Caixa.
-2. Criar utilizador com role `viewer` (sem `sales.create`) → aparece em Equipa mas **não** no POS nem na Caixa.
-3. Fluxo: abrir caixa → fazer venda → fechar caixa, validando que `cash_registers.user_id` bate com o operador escolhido.
-4. Após `ROLE_CHANGED`, cache do POS é invalidada e o utilizador aparece/desaparece sem reload.
+Instrumentar `LocalPOSPage`:
 
-Actualizar `workflow.test.tsx` e `report-generation.test.tsx` para deixar de usar mocks de `sellers` locais.
+```ts
+useEffect(() => {
+  const t0 = performance.now();
+  return () => console.log('[POS] mount duration ms', performance.now() - t0);
+}, []);
+```
 
-## 8. Entregáveis
+Reportar antes/depois no entregável.
 
-- Migração: `view_team_members` RPC + GRANTs.
-- Novo hook: `useTeamMembers`, novo bus: `teamEvents`.
-- `LocalPOSContext` sem sellers; `LocalSellersPage` migrada.
-- POS, Caixa, Ranking, Transfers, Reports, BI a consumir a RPC.
-- 4 testes E2E novos + 2 actualizados.
-- Métrica: medir tempo de carregamento do POS antes/depois (`performance.now()` no `LocalPOSPage` mount) e anexar ao relatório de sprint.
+## Entregáveis
 
-## 9. Riscos & compatibilidade
+- `sellers` removido de `LocalPOSContext` (fonte única eliminada).
+- 6 call-sites migrados para `useTeamMembers`.
+- Emissão dos 4 eventos de invalidação nos pontos de mutação.
+- 4 novos testes E2E + 2 atualizados.
+- Nota de performance: tempo de mount do POS antes vs depois.
 
-- Utilizadores que só existiam localmente (sem `auth.users`) deixam de aparecer. Mitigação: script de migração one-shot que detecta `localStorage.sellers`, mostra um modal listando-os e instrui o admin a recriá-los via Equipa. Não importamos automaticamente para evitar criar `auth.users` órfãos.
-- Sessões de caixa antigas com `user_id` apontando para um seller local ficam intactas (histórico preservado); apenas novas operações exigem `auth.uid`.
-- Nenhuma tabela é dropada; nenhum dado existente é apagado.
+## Riscos
+
+- Utilizadores que só existiam em `LocalSellers` (sem `auth.users`) desaparecem — expected. Mostrar toast único "N vendedores locais migrados: recriar em /app/equipa" com base num check de `localStorage`.
+- Sessões de caixa antigas com `user_id` de seller local ficam intactas (histórico preservado); apenas novas operações exigem `auth.uid`.
+- Nenhuma tabela é dropada; nenhum dado é apagado.
