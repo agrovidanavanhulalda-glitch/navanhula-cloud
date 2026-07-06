@@ -30,6 +30,9 @@ import PostSaleModal from '@/components/pos/PostSaleModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import PageTransition from '@/components/layout/PageTransition';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Users } from 'lucide-react';
 
 
 // HYBRID: Local POS data + Cloud Auth
