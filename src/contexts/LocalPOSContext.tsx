@@ -276,7 +276,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         stores, 
         currentStore, 
         products, 
-        sellers, 
         cashRegisters, 
         sales: allSales,
         // Single source of truth: latest open cash register for the current store
