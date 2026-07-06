@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { LocalSeller, useLocalPOS } from './LocalPOSContext';
+import { LocalSeller } from './LocalPOSContext';
 
 /**
  * Local Seller Auth Context
