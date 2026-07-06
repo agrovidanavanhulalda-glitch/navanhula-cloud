@@ -106,14 +106,14 @@ const LocalSellersPage: React.FC = () => {
   };
 
   // Open dialog for editing
-  const handleEdit = (seller: LocalSeller) => {
+  const handleEdit = (seller: TeamMember) => {
     setEditingSeller(seller);
     setFormData({
       name: seller.name,
-      email: seller.email,
-      role: seller.role,
-      storeId: seller.storeId,
-      password: seller.password,
+      email: seller.email || '',
+      role: (seller.role === 'admin' ? 'admin' : 'seller') as 'admin' | 'seller',
+      storeId: seller.branchId || currentStore?.id || '',
+      password: '',
       isActive: seller.isActive,
     });
     setShowDialog(true);
@@ -142,16 +142,23 @@ const LocalSellersPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       if (editingSeller) {
-        await updateSeller(editingSeller.id, formData);
+        // Update via profiles + company_users (name / active). Role changes go through IAM.
+        const [{ error: pErr }, { error: cuErr }] = await Promise.all([
+          supabase.from('profiles').update({ full_name: formData.name.trim(), is_active: formData.isActive }).eq('id', editingSeller.id),
+          supabase.from('company_users').update({ status: formData.isActive ? 'active' : 'inactive' }).eq('user_id', editingSeller.id).eq('company_id', targetCompanyId),
+        ]);
+        if (pErr || cuErr) throw (pErr || cuErr);
+        emitTeamEvent('USER_UPDATED', { id: editingSeller.id });
+        await refetchTeam();
         toast.success('Vendedor atualizado!');
         setShowDialog(false);
         setEditingSeller(null);
-        setIsSubmitting(false); // Fix potential state update before return
+        setIsSubmitting(false);
         return;
       }
 
       const tempPassword = formData.password.trim() || 'NAV@12345';
-      
+
       // ENTERPRISE: Use Edge Function to create user with pre-confirmed email
       const { data: edgeData, error: edgeError } = await supabase.functions.invoke('manage-team-member', {
         body: {
@@ -177,14 +184,11 @@ const LocalSellersPage: React.FC = () => {
         throw new Error(realMessage);
       }
 
-      // Update local context + invalidate unified team-member caches
-      // @ts-ignore - refreshData is available via useLocalPOS destructuring
-      await refreshData();
       emitTeamEvent('USER_CREATED', { email: formData.email });
-      
-      
-      setCreatedSellerInfo({ 
-        email: formData.email.trim().toLowerCase(), 
+      await refetchTeam();
+
+      setCreatedSellerInfo({
+        email: formData.email.trim().toLowerCase(),
         pass: tempPassword,
         name: formData.name.trim()
       });
@@ -204,18 +208,39 @@ const LocalSellersPage: React.FC = () => {
   };
 
   // Toggle active status
-  const handleToggleActive = (seller: LocalSeller) => {
-    updateSeller(seller.id, { isActive: !seller.isActive });
+  const handleToggleActive = async (seller: TeamMember) => {
+    const nextActive = !seller.isActive;
+    const { error } = await supabase
+      .from('company_users')
+      .update({ status: nextActive ? 'active' : 'inactive' })
+      .eq('user_id', seller.id)
+      .eq('company_id', targetCompanyId);
+    if (error) {
+      toast.error('Erro ao alterar estado');
+      return;
+    }
+    emitTeamEvent('USER_UPDATED', { id: seller.id, active: nextActive });
+    await refetchTeam();
     toast.success(seller.isActive ? 'Vendedor desativado' : 'Vendedor ativado');
   };
 
-  // Delete seller
-  const handleDelete = (seller: LocalSeller) => {
-    if (window.confirm(`Remover vendedor "${seller.name}"?`)) {
-      deleteSeller(seller.id);
-      toast.success('Vendedor removido');
+  // Delete seller (soft: remove from this company)
+  const handleDelete = async (seller: TeamMember) => {
+    if (!window.confirm(`Remover vendedor "${seller.name}" desta empresa?`)) return;
+    const { error } = await supabase
+      .from('company_users')
+      .delete()
+      .eq('user_id', seller.id)
+      .eq('company_id', targetCompanyId);
+    if (error) {
+      toast.error('Erro ao remover vendedor');
+      return;
     }
+    emitTeamEvent('USER_UPDATED', { id: seller.id, removed: true });
+    await refetchTeam();
+    toast.success('Vendedor removido');
   };
+
 
   return (
     <div className="p-6">
