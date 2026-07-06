@@ -43,6 +43,8 @@ export interface PaymentDetails {
     customerName?: string;
     phoneNumber?: string;
   };
+  sellerId?: string;
+  sellerName?: string;
 }
 
 export interface LocalSale {
