@@ -558,7 +558,7 @@ const LocalPOSPage: React.FC = () => {
 
                 <Button 
                   className="w-full h-20 text-2xl font-black shadow-2xl rounded-2xl gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:hover:scale-100"
-                  disabled={cart.length === 0}
+                  disabled={cart.length === 0 || !selectedSellerId}
                   onClick={() => setShowPaymentModal(true)}
                   style={{ 
                     backgroundColor: cart.length > 0 ? '#10b981' : undefined,
