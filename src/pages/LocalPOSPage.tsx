@@ -473,6 +473,49 @@ const LocalPOSPage: React.FC = () => {
 
             {/* Cart Footer - Total & Checkout */}
             <div className="p-4 md:p-6 bg-slate-50 border-t space-y-4">
+              {/* Seller selector — RBAC: sales.create @ current branch */}
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <Users className="w-3.5 h-3.5" />
+                  Vendedor Responsável
+                </label>
+                <Select
+                  value={selectedSellerId}
+                  onValueChange={setSelectedSellerId}
+                  disabled={loadingSellers || eligibleSellers.length === 0}
+                >
+                  <SelectTrigger className="w-full bg-white">
+                    <SelectValue
+                      placeholder={
+                        loadingSellers
+                          ? 'A carregar vendedores...'
+                          : eligibleSellers.length === 0
+                          ? 'Nenhum vendedor com permissão sales.create'
+                          : 'Selecionar vendedor'
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eligibleSellers.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{m.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {m.role}
+                            {m.branchName ? ` • ${m.branchName}` : ''}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!loadingSellers && eligibleSellers.length === 0 && (
+                  <p className="text-xs text-destructive">
+                    Adicione vendedores em <a href="/app/equipa" className="underline">Gestão de Equipa</a>.
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <div className="flex justify-between text-muted-foreground font-medium">
                   <span>Soma dos Itens</span>
