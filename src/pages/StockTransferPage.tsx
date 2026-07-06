@@ -586,8 +586,16 @@ export default function StockTransferPage() {
     queryKey: ['sellers-for-transfer', company?.id],
     queryFn: async () => {
       if (!company?.id) return [];
-      const { data } = await supabase.from('profiles').select('id, full_name, email').eq('company_id', company.id).eq('is_active', true);
-      return data || [];
+      // UNIFIED: same source as POS / Cash (view_team_members with sales.create).
+      const { data, error } = await (supabase as any).rpc('view_team_members', {
+        p_company_id: company.id,
+        p_branch_id: null,
+        p_permission: 'sales.create',
+      });
+      if (error) return [];
+      return ((data as any[]) || [])
+        .filter((r) => r.is_active)
+        .map((r) => ({ id: r.user_id, full_name: r.full_name, email: r.email }));
     },
     enabled: !!company?.id,
   });

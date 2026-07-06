@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useLocalPOS, LocalSeller } from '@/contexts/LocalPOSContext';
+import { useLocalPOS } from '@/contexts/LocalPOSContext';
+import { useTeamMembers, TeamMember } from '@/hooks/useTeamMembers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -24,9 +25,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Users, 
-  Plus, 
+import {
+  Users,
+  Plus,
   Search,
   Mail,
   Store,
@@ -40,25 +41,18 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// 100% LOCAL - Gestão de vendedores offline-friendly
+// UNIFIED: single source of truth via view_team_members RPC (company_users + profiles + user_roles)
 
 const LocalSellersPage: React.FC = () => {
-  const { 
-    sellers, 
-    stores,
-    currentStore,
-    addSeller, 
-    updateSeller, 
-    deleteSeller,
-    refreshData,
-  } = useLocalPOS();
+  const { stores, currentStore } = useLocalPOS();
+  const { members: sellers, refetch: refetchTeam } = useTeamMembers();
   const { company } = useAuth();
   const { isAdmin, role } = usePermissions();
   const targetCompanyId = (company as any)?.id;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showDialog, setShowDialog] = useState(false);
-  const [editingSeller, setEditingSeller] = useState<LocalSeller | null>(null);
+  const [editingSeller, setEditingSeller] = useState<TeamMember | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -73,11 +67,12 @@ const LocalSellersPage: React.FC = () => {
   // Filter sellers
   const filteredSellers = sellers.filter(s =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (s.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Get store name - human readable
-  const getStoreName = (storeId: string) => {
+  const getStoreName = (storeId: string | null) => {
+    if (!storeId) return 'Todas as lojas';
     const store = stores.find(s => s.id === storeId);
     return store?.name || 'Loja Principal';
   };
@@ -95,6 +90,7 @@ const LocalSellersPage: React.FC = () => {
     }
   };
 
+
   // Open dialog for new seller
   const handleNew = () => {
     setEditingSeller(null);
@@ -110,14 +106,14 @@ const LocalSellersPage: React.FC = () => {
   };
 
   // Open dialog for editing
-  const handleEdit = (seller: LocalSeller) => {
+  const handleEdit = (seller: TeamMember) => {
     setEditingSeller(seller);
     setFormData({
       name: seller.name,
-      email: seller.email,
-      role: seller.role,
-      storeId: seller.storeId,
-      password: seller.password,
+      email: seller.email || '',
+      role: (seller.role === 'admin' ? 'admin' : 'seller') as 'admin' | 'seller',
+      storeId: seller.branchId || currentStore?.id || '',
+      password: '',
       isActive: seller.isActive,
     });
     setShowDialog(true);
@@ -146,16 +142,23 @@ const LocalSellersPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       if (editingSeller) {
-        await updateSeller(editingSeller.id, formData);
+        // Update via profiles + company_users (name / active). Role changes go through IAM.
+        const [{ error: pErr }, { error: cuErr }] = await Promise.all([
+          supabase.from('profiles').update({ full_name: formData.name.trim(), is_active: formData.isActive }).eq('id', editingSeller.id),
+          supabase.from('company_users').update({ status: formData.isActive ? 'active' : 'inactive' }).eq('user_id', editingSeller.id).eq('company_id', targetCompanyId),
+        ]);
+        if (pErr || cuErr) throw (pErr || cuErr);
+        emitTeamEvent('USER_UPDATED', { id: editingSeller.id });
+        await refetchTeam();
         toast.success('Vendedor atualizado!');
         setShowDialog(false);
         setEditingSeller(null);
-        setIsSubmitting(false); // Fix potential state update before return
+        setIsSubmitting(false);
         return;
       }
 
       const tempPassword = formData.password.trim() || 'NAV@12345';
-      
+
       // ENTERPRISE: Use Edge Function to create user with pre-confirmed email
       const { data: edgeData, error: edgeError } = await supabase.functions.invoke('manage-team-member', {
         body: {
@@ -181,14 +184,11 @@ const LocalSellersPage: React.FC = () => {
         throw new Error(realMessage);
       }
 
-      // Update local context + invalidate unified team-member caches
-      // @ts-ignore - refreshData is available via useLocalPOS destructuring
-      await refreshData();
       emitTeamEvent('USER_CREATED', { email: formData.email });
-      
-      
-      setCreatedSellerInfo({ 
-        email: formData.email.trim().toLowerCase(), 
+      await refetchTeam();
+
+      setCreatedSellerInfo({
+        email: formData.email.trim().toLowerCase(),
         pass: tempPassword,
         name: formData.name.trim()
       });
@@ -208,18 +208,39 @@ const LocalSellersPage: React.FC = () => {
   };
 
   // Toggle active status
-  const handleToggleActive = (seller: LocalSeller) => {
-    updateSeller(seller.id, { isActive: !seller.isActive });
+  const handleToggleActive = async (seller: TeamMember) => {
+    const nextActive = !seller.isActive;
+    const { error } = await supabase
+      .from('company_users')
+      .update({ status: nextActive ? 'active' : 'inactive' })
+      .eq('user_id', seller.id)
+      .eq('company_id', targetCompanyId);
+    if (error) {
+      toast.error('Erro ao alterar estado');
+      return;
+    }
+    emitTeamEvent('USER_UPDATED', { id: seller.id, active: nextActive });
+    await refetchTeam();
     toast.success(seller.isActive ? 'Vendedor desativado' : 'Vendedor ativado');
   };
 
-  // Delete seller
-  const handleDelete = (seller: LocalSeller) => {
-    if (window.confirm(`Remover vendedor "${seller.name}"?`)) {
-      deleteSeller(seller.id);
-      toast.success('Vendedor removido');
+  // Delete seller (soft: remove from this company)
+  const handleDelete = async (seller: TeamMember) => {
+    if (!window.confirm(`Remover vendedor "${seller.name}" desta empresa?`)) return;
+    const { error } = await supabase
+      .from('company_users')
+      .delete()
+      .eq('user_id', seller.id)
+      .eq('company_id', targetCompanyId);
+    if (error) {
+      toast.error('Erro ao remover vendedor');
+      return;
     }
+    emitTeamEvent('USER_UPDATED', { id: seller.id, removed: true });
+    await refetchTeam();
+    toast.success('Vendedor removido');
   };
+
 
   return (
     <div className="p-6">
@@ -297,7 +318,7 @@ const LocalSellersPage: React.FC = () => {
                   <td className="p-4">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Store className="w-4 h-4" />
-                      {getStoreName(seller.storeId)}
+                      {seller.branchName || getStoreName(seller.branchId)}
                     </div>
                   </td>
                   <td className="p-4">

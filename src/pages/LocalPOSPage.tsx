@@ -74,6 +74,15 @@ const LocalPOSPage: React.FC = () => {
     }
   }, [user?.id, eligibleSellers, selectedSellerId]);
 
+  // Perf metric — POS mount duration (unified team source)
+  React.useEffect(() => {
+    const t0 = performance.now();
+    return () => {
+      // eslint-disable-next-line no-console
+      console.log('[POS] mount duration ms', Math.round(performance.now() - t0));
+    };
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualName, setManualName] = useState('');
