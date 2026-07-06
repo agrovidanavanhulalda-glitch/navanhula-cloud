@@ -48,7 +48,12 @@ import PDFReportPreview, { exportPDFReport, exportExcelReport, exportLogsPDF, ex
 // Relatórios profissionais com templates separados
 
 const LocalReportsPage: React.FC = () => {
-  const { sales, stores, currentStore, products, sellers, getCancelledSales, getCancellationHistory } = useLocalPOS();
+  const { sales, stores, currentStore, products, getCancelledSales, getCancellationHistory } = useLocalPOS();
+  const { activeMembers: sellersRaw } = useTeamMembers({ permission: 'sales.create' });
+  const sellers = useMemo(
+    () => sellersRaw.map((m) => ({ id: m.id, name: m.name, email: m.email || '' })),
+    [sellersRaw]
+  );
   const { role, company } = useAuth();
   const { toast } = useToast();
   const targetCompanyId = (company as any)?.id;
