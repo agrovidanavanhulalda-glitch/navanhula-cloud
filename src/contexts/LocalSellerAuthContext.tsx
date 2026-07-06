@@ -39,23 +39,14 @@ export const useLocalSellerAuth = () => {
 };
 
 export const LocalSellerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { sellers } = useLocalPOS();
+  // DEPRECATED: local sellers were removed. Auth flows through Supabase Auth + useAuth.
+  const sellers: LocalSeller[] = [];
   const [currentSeller, setCurrentSeller] = useState<LocalSeller | null>(null);
 
-  const loginSeller = useCallback((sellerId: string, password: string): boolean => {
-    const seller = sellers.find(s => s.id === sellerId && s.isActive);
-    
-    if (!seller) {
-      return false;
-    }
-
-    if (seller.password !== password) {
-      return false;
-    }
-
-    setCurrentSeller(seller);
-    return true;
-  }, [sellers]);
+  const loginSeller = useCallback((_sellerId: string, _password: string): boolean => {
+    console.warn('[LocalSellerAuth] deprecated — use Supabase Auth via useAuth()');
+    return false;
+  }, []);
 
   const logoutSeller = useCallback(() => {
     setCurrentSeller(null);
