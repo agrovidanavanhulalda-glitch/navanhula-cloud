@@ -318,7 +318,7 @@ const LocalSellersPage: React.FC = () => {
                   <td className="p-4">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Store className="w-4 h-4" />
-                      {getStoreName(seller.storeId)}
+                      {seller.branchName || getStoreName(seller.branchId)}
                     </div>
                   </td>
                   <td className="p-4">
