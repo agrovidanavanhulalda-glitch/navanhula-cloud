@@ -134,10 +134,19 @@ const LocalPOSPage: React.FC = () => {
       toast.error('Carrinho vazio');
       return;
     }
-    
-    
+    if (!selectedSellerId) {
+      toast.error('Selecione o vendedor responsável pela venda');
+      return;
+    }
+    const seller = eligibleSellers.find((m) => m.id === selectedSellerId);
+    const detailsWithSeller: PaymentDetails = {
+      ...paymentDetails,
+      sellerId: selectedSellerId,
+      sellerName: seller?.name,
+    };
+
     try {
-      const sale = await completeSale(paymentDetails);
+      const sale = await completeSale(detailsWithSeller);
       if (sale) {
         const changeMsg = paymentDetails.change > 0 
           ? ` | Troco: ${formatCurrency(paymentDetails.change)}`
