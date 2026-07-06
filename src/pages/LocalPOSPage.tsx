@@ -58,7 +58,21 @@ const LocalPOSPage: React.FC = () => {
   } = useLocalPOS();
   const { updateStep } = useOnboarding();
 
-  const { user, company } = useAuth();
+  const { user, company, branch } = useAuth();
+  const { activeMembers: eligibleSellers, isLoading: loadingSellers } = useTeamMembers({
+    permission: 'sales.create',
+    branchId: branch?.id ?? null,
+  });
+  const [selectedSellerId, setSelectedSellerId] = useState<string>('');
+
+  // Default to logged-in user if they appear in the eligible list
+  React.useEffect(() => {
+    if (!selectedSellerId && user?.id) {
+      const meIsEligible = eligibleSellers.some((m) => m.id === user.id);
+      if (meIsEligible) setSelectedSellerId(user.id);
+      else if (eligibleSellers.length === 1) setSelectedSellerId(eligibleSellers[0].id);
+    }
+  }, [user?.id, eligibleSellers, selectedSellerId]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showManualEntry, setShowManualEntry] = useState(false);
