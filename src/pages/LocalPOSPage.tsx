@@ -30,6 +30,9 @@ import PostSaleModal from '@/components/pos/PostSaleModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import PageTransition from '@/components/layout/PageTransition';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Users } from 'lucide-react';
 
 
 // HYBRID: Local POS data + Cloud Auth
@@ -55,7 +58,21 @@ const LocalPOSPage: React.FC = () => {
   } = useLocalPOS();
   const { updateStep } = useOnboarding();
 
-  const { user, company } = useAuth();
+  const { user, company, branch } = useAuth();
+  const { activeMembers: eligibleSellers, isLoading: loadingSellers } = useTeamMembers({
+    permission: 'sales.create',
+    branchId: branch?.id ?? null,
+  });
+  const [selectedSellerId, setSelectedSellerId] = useState<string>('');
+
+  // Default to logged-in user if they appear in the eligible list
+  React.useEffect(() => {
+    if (!selectedSellerId && user?.id) {
+      const meIsEligible = eligibleSellers.some((m) => m.id === user.id);
+      if (meIsEligible) setSelectedSellerId(user.id);
+      else if (eligibleSellers.length === 1) setSelectedSellerId(eligibleSellers[0].id);
+    }
+  }, [user?.id, eligibleSellers, selectedSellerId]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showManualEntry, setShowManualEntry] = useState(false);
@@ -117,10 +134,19 @@ const LocalPOSPage: React.FC = () => {
       toast.error('Carrinho vazio');
       return;
     }
-    
-    
+    if (!selectedSellerId) {
+      toast.error('Selecione o vendedor responsável pela venda');
+      return;
+    }
+    const seller = eligibleSellers.find((m) => m.id === selectedSellerId);
+    const detailsWithSeller: PaymentDetails = {
+      ...paymentDetails,
+      sellerId: selectedSellerId,
+      sellerName: seller?.name,
+    };
+
     try {
-      const sale = await completeSale(paymentDetails);
+      const sale = await completeSale(detailsWithSeller);
       if (sale) {
         const changeMsg = paymentDetails.change > 0 
           ? ` | Troco: ${formatCurrency(paymentDetails.change)}`
@@ -447,6 +473,49 @@ const LocalPOSPage: React.FC = () => {
 
             {/* Cart Footer - Total & Checkout */}
             <div className="p-4 md:p-6 bg-slate-50 border-t space-y-4">
+              {/* Seller selector — RBAC: sales.create @ current branch */}
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <Users className="w-3.5 h-3.5" />
+                  Vendedor Responsável
+                </label>
+                <Select
+                  value={selectedSellerId}
+                  onValueChange={setSelectedSellerId}
+                  disabled={loadingSellers || eligibleSellers.length === 0}
+                >
+                  <SelectTrigger className="w-full bg-white">
+                    <SelectValue
+                      placeholder={
+                        loadingSellers
+                          ? 'A carregar vendedores...'
+                          : eligibleSellers.length === 0
+                          ? 'Nenhum vendedor com permissão sales.create'
+                          : 'Selecionar vendedor'
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eligibleSellers.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{m.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {m.role}
+                            {m.branchName ? ` • ${m.branchName}` : ''}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!loadingSellers && eligibleSellers.length === 0 && (
+                  <p className="text-xs text-destructive">
+                    Adicione vendedores em <a href="/app/equipa" className="underline">Gestão de Equipa</a>.
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <div className="flex justify-between text-muted-foreground font-medium">
                   <span>Soma dos Itens</span>
@@ -489,7 +558,7 @@ const LocalPOSPage: React.FC = () => {
 
                 <Button 
                   className="w-full h-20 text-2xl font-black shadow-2xl rounded-2xl gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:hover:scale-100"
-                  disabled={cart.length === 0}
+                  disabled={cart.length === 0 || !selectedSellerId}
                   onClick={() => setShowPaymentModal(true)}
                   style={{ 
                     backgroundColor: cart.length > 0 ? '#10b981' : undefined,

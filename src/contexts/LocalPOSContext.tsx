@@ -43,6 +43,8 @@ export interface PaymentDetails {
     customerName?: string;
     phoneNumber?: string;
   };
+  sellerId?: string;
+  sellerName?: string;
 }
 
 export interface LocalSale {
@@ -380,13 +382,16 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const costTotal = state.cart.reduce((acc, item) => acc + (item.product.costPrice * item.quantity), 0);
     const profit = total - costTotal;
 
+    const effectiveSellerId = details.sellerId || user.id;
+    const effectiveSellerName = details.sellerName || user.full_name || user.email;
+
     if (!navigator.onLine) {
       const saleId = crypto.randomUUID();
       const saleData = {
         id: saleId,
         company_id: company?.id,
         store_id: state.currentStore.id,
-        user_id: user.id,
+        user_id: effectiveSellerId,
         cash_register_id: state.currentCashRegister?.id,
         subtotal,
         total,
@@ -395,7 +400,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         status: 'completed',
         cost_total: costTotal,
         profit,
-        seller_name: user.full_name || user.email,
+        seller_name: effectiveSellerName,
         created_at: new Date().toISOString()
       };
 
@@ -454,7 +459,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .insert({
           company_id: company?.id,
           store_id: state.currentStore.id,
-          user_id: user.id,
+          user_id: effectiveSellerId,
           cash_register_id: state.currentCashRegister?.id,
           subtotal,
           total,
@@ -463,7 +468,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           status: 'completed' as any,
           cost_total: costTotal,
           profit,
-          seller_name: user.full_name || user.email
+          seller_name: effectiveSellerName
         })
         .select()
         .single();
