@@ -712,9 +712,6 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     await loadData(true); 
   };
 
-  const addSeller = async (s: any) => { await supabase.from('profiles').insert({ ...s, company_id: company?.id }); await loadData(true); return true; };
-  const updateSeller = async (id: string, s: any) => { await supabase.from('profiles').update(s).eq('id', id); await loadData(true); };
-  const deleteSeller = async (id: string) => { await supabase.from('profiles').delete().eq('id', id); await loadData(true); };
   const cancelCompletedSale = async (id: string) => { await supabase.from('sales').update({ status: 'cancelled' }).eq('id', id); await loadData(true); return true; };
 
   const setCurrentStore = (storeId: string) => {
