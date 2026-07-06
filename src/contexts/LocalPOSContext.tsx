@@ -108,7 +108,6 @@ export interface LocalCashRegister {
 interface LocalPOSState {
   stores: LocalStore[];
   currentStore: LocalStore | null;
-  sellers: LocalSeller[];
   cashRegisters: LocalCashRegister[];
   currentCashRegister: LocalCashRegister | null;
   currentSale: LocalSale | null;
@@ -136,9 +135,6 @@ interface LocalPOSContextType extends LocalPOSState {
   addStore: (store: any) => Promise<void>;
   updateStore: (id: string, store: any) => Promise<void>;
   deleteStore: (id: string) => Promise<void>;
-  addSeller: (seller: any) => Promise<boolean>;
-  updateSeller: (id: string, seller: any) => Promise<void>;
-  deleteSeller: (id: string) => Promise<void>;
   getTotal: () => number;
   getSubtotal: () => number;
   getTotalDiscount: () => number;
