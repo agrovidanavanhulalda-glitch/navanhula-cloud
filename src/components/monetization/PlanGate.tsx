@@ -33,9 +33,13 @@ const DefaultFallback: React.FC<{ module: string }> = ({ module }) => (
   </div>
 );
 
+import { useAuth } from '@/contexts/AuthContext';
+
 const PlanGate: React.FC<PlanGateProps> = ({ module, children, fallback }) => {
   const { canAccessModule, loading } = usePlanLimits();
+  const { isFounder, isMaster } = useAuth();
 
+  if (isFounder || isMaster) return <>{children}</>;
   if (loading) return <>{children}</>;
 
   if (!canAccessModule(module)) {
