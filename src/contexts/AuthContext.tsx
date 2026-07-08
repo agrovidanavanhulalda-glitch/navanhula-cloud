@@ -29,6 +29,7 @@ const fallbackAuth: AuthContextType = {
   branch: null,
   tenant: null,
   isMaster: false,
+  isFounder: false,
   appReady: false,
   hasPerm: () => false,
   signIn: async () => {},
