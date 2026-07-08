@@ -31,6 +31,20 @@ const MODULE_ACCESS: Record<string, PlanTier[]> = {
 
 export function usePlanLimits(): PlanLimits {
   const { subscription, loading } = useSubscription();
+  const { isFounder, isMaster } = useAuth();
+
+  // FOUNDER / MASTER: unlimited MAX_ENTERPRISE access
+  if (isFounder || isMaster) {
+    return {
+      tier: 'enterprise' as PlanTier,
+      maxProducts: -1,
+      maxSellers: -1,
+      maxStores: -1,
+      canAccessModule: () => true,
+      isAtLimit: () => false,
+      loading: false,
+    };
+  }
 
   const tier: PlanTier = (subscription as any)?.plan_tier || 'pro';
   const plan = getPlanByTier(tier);
@@ -41,13 +55,13 @@ export function usePlanLimits(): PlanLimits {
 
   const canAccessModule = (module: string): boolean => {
     const allowed = MODULE_ACCESS[module];
-    if (!allowed) return true; // unknown module = allow
+    if (!allowed) return true;
     return allowed.includes(tier);
   };
 
   const isAtLimit = (resource: 'products' | 'sellers' | 'stores', current: number): boolean => {
     const limit = resource === 'products' ? maxProducts : resource === 'sellers' ? maxSellers : maxStores;
-    if (limit === -1) return false; // unlimited
+    if (limit === -1) return false;
     return current >= limit;
   };
 
