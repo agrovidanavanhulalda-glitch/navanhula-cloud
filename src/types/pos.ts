@@ -47,6 +47,8 @@ export interface Profile {
   avatar_url?: string;
   is_active: boolean;
   is_super_admin?: boolean;
+  is_founder?: boolean;
+  account_type?: string;
   onboarding_completed?: boolean;
   created_at: string;
   updated_at: string;
