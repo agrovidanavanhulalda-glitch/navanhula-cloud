@@ -25,8 +25,11 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   fallback = <DefaultFallback />,
 }) => {
   const { isMaster, hasMinimumRole, canViewModule, canCreateIn, canEditIn, canDeleteIn, canApproveIn } = usePermissions();
+  const { isFounder } = useAuth();
 
   const hasAccess = () => {
+    // FOUNDER: absolute unrestricted access
+    if (isFounder) return true;
     // Master bypass
     if (isMaster) return true;
 
