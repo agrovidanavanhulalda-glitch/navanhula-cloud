@@ -210,6 +210,7 @@ export interface AuthContextType {
   branch: { id: string; name: string; company_id: string } | null;
   tenant: { id: string; name: string; slug?: string | null } | null;
   isMaster: boolean;
+  isFounder: boolean;
   appReady: boolean;
   hasPerm: (key: string) => boolean;
   signIn: (email: string, password: string) => Promise<void>;
