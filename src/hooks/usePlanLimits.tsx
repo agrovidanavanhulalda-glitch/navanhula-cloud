@@ -1,4 +1,5 @@
 import { useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/contexts/AuthContext';
 import type { PlanTier } from '@/lib/plans';
 import { getPlanByTier } from '@/lib/plans';
 
