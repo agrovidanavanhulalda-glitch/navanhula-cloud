@@ -47,6 +47,8 @@ export interface Profile {
   avatar_url?: string;
   is_active: boolean;
   is_super_admin?: boolean;
+  is_founder?: boolean;
+  account_type?: string;
   onboarding_completed?: boolean;
   created_at: string;
   updated_at: string;
@@ -208,6 +210,7 @@ export interface AuthContextType {
   branch: { id: string; name: string; company_id: string } | null;
   tenant: { id: string; name: string; slug?: string | null } | null;
   isMaster: boolean;
+  isFounder: boolean;
   appReady: boolean;
   hasPerm: (key: string) => boolean;
   signIn: (email: string, password: string) => Promise<void>;

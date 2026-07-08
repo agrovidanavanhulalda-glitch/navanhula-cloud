@@ -29,6 +29,7 @@ const fallbackAuth: AuthContextType = {
   branch: null,
   tenant: null,
   isMaster: false,
+  isFounder: false,
   appReady: false,
   hasPerm: () => false,
   signIn: async () => {},
@@ -285,7 +286,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       user, role, store, company, loading,
       isAuthenticated, onboardingCompleted,
-      permissions, roles, branch, tenant, isMaster, appReady, hasPerm,
+      permissions, roles, branch, tenant, isMaster,
+      isFounder: !!(user as any)?.is_founder || (user as any)?.account_type === 'FOUNDER',
+      appReady, hasPerm,
       signIn, signUp, signOut, completeOnboarding, refreshUserData,
     }}>
       {children}
