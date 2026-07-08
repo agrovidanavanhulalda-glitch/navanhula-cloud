@@ -5765,6 +5765,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: string
           avatar_url: string | null
           branch_id: string | null
           commission_rate: number | null
@@ -5775,6 +5776,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean | null
+          is_founder: boolean
           is_super_admin: boolean | null
           language: string | null
           last_login: string | null
@@ -5787,6 +5789,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          account_type?: string
           avatar_url?: string | null
           branch_id?: string | null
           commission_rate?: number | null
@@ -5797,6 +5800,7 @@ export type Database = {
           full_name: string
           id: string
           is_active?: boolean | null
+          is_founder?: boolean
           is_super_admin?: boolean | null
           language?: string | null
           last_login?: string | null
@@ -5809,6 +5813,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          account_type?: string
           avatar_url?: string | null
           branch_id?: string | null
           commission_rate?: number | null
@@ -5819,6 +5824,7 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean | null
+          is_founder?: boolean
           is_super_admin?: boolean | null
           language?: string | null
           last_login?: string | null
@@ -9195,6 +9201,7 @@ export type Database = {
         Args: { p_company_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_founder: { Args: { _user_id?: string }; Returns: boolean }
       is_global_ceo: { Args: never; Returns: boolean }
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_master_ceo: { Args: never; Returns: boolean }
