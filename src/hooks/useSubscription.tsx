@@ -35,13 +35,19 @@ export interface PaymentTransaction {
 }
 
 export function useSubscription() {
-  const { store, company, isAuthenticated } = useAuth();
+  const { store, company, isAuthenticated, isFounder, isMaster } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<SubscriptionStatus>('loading');
 
   const fetchSubscription = useCallback(async () => {
+    // FOUNDER / MASTER bypass — unlimited lifetime access
+    if (isFounder || isMaster || (company as any)?.billing_exempt) {
+      setStatus('active');
+      setLoading(false);
+      return;
+    }
     if (!isValidId(store?.id) || !isAuthenticated) {
       setLoading(false);
       if (!isAuthenticated) setStatus('active'); 
