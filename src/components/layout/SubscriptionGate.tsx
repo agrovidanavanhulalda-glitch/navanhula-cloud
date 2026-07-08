@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Lock, CreditCard } from 'lucide-react';
@@ -13,6 +14,10 @@ interface SubscriptionGateProps {
 
 const SubscriptionGate: React.FC<SubscriptionGateProps> = ({ children, bypass = false }) => {
   const { status, loading, daysRemaining } = useSubscription();
+  const { isFounder, isMaster } = useAuth();
+
+  // FOUNDER / MASTER: unrestricted lifetime access
+  if (isFounder || isMaster) return <>{children}</>;
 
   if (loading || bypass) return <>{children}</>;
 
