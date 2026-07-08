@@ -92,7 +92,7 @@ export function useSubscription() {
     } finally {
       setLoading(false);
     }
-  }, [store?.id, isAuthenticated]);
+  }, [store?.id, isAuthenticated, isFounder, isMaster, company]);
 
   const fetchPayments = useCallback(async () => {
     if (!isValidId(subscription?.id)) return;
