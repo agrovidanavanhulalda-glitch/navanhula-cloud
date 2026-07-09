@@ -74,6 +74,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       title: t('common.open'),
       icon: LayoutDashboard,
       items: [
+        ...(isFounder ? [{ label: '👑 Founder', href: '/app/founder', icon: Crown }] : []),
         { label: t('nav.dashboard'), href: '/app/dashboard', icon: LayoutDashboard },
         { label: t('nav.ceoDashboard'), href: '/app/ceo', icon: TrendingUp, minRole: 'ceo' },
         { label: 'Visão Direção', href: '/app/dashboard/diretor', icon: Building2, minRole: 'ceo' },
