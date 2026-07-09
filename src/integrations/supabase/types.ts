@@ -3276,6 +3276,36 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       financial_scores: {
         Row: {
           company_id: string
@@ -3573,6 +3603,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      founder_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
       }
       impersonation_sessions: {
         Row: {
@@ -9013,6 +9073,9 @@ export type Database = {
         Args: { p_transfer_id: string }
         Returns: Json
       }
+      founder_infrastructure_stats: { Args: never; Returns: Json }
+      founder_monitoring_stats: { Args: never; Returns: Json }
+      founder_platform_stats: { Args: never; Returns: Json }
       generate_demand_forecast: {
         Args: { p_company_id: string }
         Returns: Json
