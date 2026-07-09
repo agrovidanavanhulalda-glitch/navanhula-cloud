@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import {
   Building2, Store, Users, UserCheck, CreditCard, Clock, XCircle, CheckCircle2,
-  Database, Table as TableIcon, Eye, Function as FunctionIcon, Shield, Zap, HardDrive,
+  Database, Table as TableIcon, Eye, FunctionSquare as FunctionIcon, Shield, Zap, HardDrive,
   Activity, Wifi, TrendingUp, AlertTriangle, Timer, Package,
 } from 'lucide-react';
 
