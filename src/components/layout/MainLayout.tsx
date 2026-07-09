@@ -73,11 +73,14 @@ const MainLayout: React.FC = () => {
             </div>
 
             {/* Active Company - Center */}
-            <div className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/50 border border-border/40">
-              <Building2 className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-sm text-foreground truncate max-w-[200px]">
-                {company?.name || (loading ? t('common.loading') : 'Navanhula Cloud')}
-              </span>
+            <div className="hidden md:flex items-center gap-2">
+              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/50 border border-border/40">
+                <Building2 className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-sm text-foreground truncate max-w-[200px]">
+                  {company?.name || (loading ? t('common.loading') : 'Navanhula Cloud')}
+                </span>
+              </div>
+              {isFounder && <FounderBadge />}
             </div>
 
             {/* User Profile + Logout - Right */}
