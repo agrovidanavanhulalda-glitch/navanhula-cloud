@@ -13,7 +13,7 @@ import {
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag,
   Cloud, Store, ChevronDown, 
   Building2, MessageCircle, ArrowRightLeft, Landmark, Key,
-  ShieldCheck, Database, Warehouse
+  ShieldCheck, Database, Warehouse, Crown
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -63,7 +63,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, role, hasPerm } = useAuth();
+  const { user, signOut, role, hasPerm, isFounder } = useAuth();
   const { hasMinimumRole, canViewModule, isMaster } = usePermissions();
   const { currentCashRegister } = useLocalPOS();
   const { state } = useSidebar();
@@ -74,6 +74,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
       title: t('common.open'),
       icon: LayoutDashboard,
       items: [
+        ...(isFounder ? [{ label: '👑 Founder', href: '/app/founder', icon: Crown }] : []),
         { label: t('nav.dashboard'), href: '/app/dashboard', icon: LayoutDashboard },
         { label: t('nav.ceoDashboard'), href: '/app/ceo', icon: TrendingUp, minRole: 'ceo' },
         { label: 'Visão Direção', href: '/app/dashboard/diretor', icon: Building2, minRole: 'ceo' },

@@ -39,6 +39,11 @@ const LocalReportsPage = React.lazy(() => import("./pages/LocalReportsPage"));
 const LocalSalesHistoryPage = React.lazy(() => import("./pages/LocalSalesHistoryPage"));
 const SubscriptionPage = React.lazy(() => import("./pages/SubscriptionPage"));
 const CEODashboardPage = React.lazy(() => import("./pages/CEODashboardPage"));
+const FounderLayout = React.lazy(() => import("./pages/founder/FounderLayout"));
+const FounderDashboardPage = React.lazy(() => import("./pages/founder/FounderDashboardPage"));
+const FounderFeatureFlagsPage = React.lazy(() => import("./pages/founder/FounderFeatureFlagsPage"));
+const FounderComingSoonPage = React.lazy(() => import("./pages/founder/FounderComingSoonPage"));
+const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
 const WalletPage = React.lazy(() => import("./pages/WalletPage"));
 const ManualPaymentsPage = React.lazy(() => import("./pages/ManualPaymentsPage"));
@@ -290,6 +295,17 @@ const AppRoutes = () => {
           <Route path="vendedores" element={<SubscriptionGate><LocalSellersPage /></SubscriptionGate>} />
           <Route path="assinatura" element={<SubscriptionPage />} />
           <Route path="ceo" element={<CEODashboardPage />} />
+          <Route path="founder" element={<FounderGate><FounderLayout /></FounderGate>}>
+            <Route index element={<FounderDashboardPage />} />
+            <Route path="empresas" element={<FounderComingSoonPage title="Gestão de Empresas" description="CRUD global, suspender/ativar, entrar como empresa, simulação." />} />
+            <Route path="utilizadores" element={<FounderComingSoonPage title="Gestão de Utilizadores" description="Reset password, alterar plano/role, promover a Founder, bloquear." />} />
+            <Route path="assinaturas" element={<FounderComingSoonPage title="Gestão de Assinaturas" description="Criar/alterar planos, renovar, cancelar, licença vitalícia, estender trial." />} />
+            <Route path="infraestrutura" element={<FounderComingSoonPage title="Infraestrutura Detalhada" description="Edge functions, buckets, migrations, cron jobs, backups." />} />
+            <Route path="feature-flags" element={<FounderFeatureFlagsPage />} />
+            <Route path="simulacao" element={<FounderComingSoonPage title="Modo Simulação" description="Entrar como Cliente / Loja / Empresa / Caixa / Supervisor / CEO — read-only." />} />
+            <Route path="auditoria" element={<FounderComingSoonPage title="Auditoria Global" description="Logins, alterações, exclusões, pagamentos, erros consolidados." />} />
+            <Route path="configuracoes" element={<FounderComingSoonPage title="Configurações Globais" description="Nome/logo/cores/idiomas/timezone/IVA/moeda/planos/trial." />} />
+          </Route>
           <Route path="fiscal" element={<FiscalPage />} />
           <Route path="contabilidade" element={<Navigate to="/app/financeiro-rh?tab=chart" replace />} />
           <Route path="crm" element={<SubscriptionGate><CRMPage /></SubscriptionGate>} />
