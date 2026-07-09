@@ -63,7 +63,7 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
   const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, role, hasPerm } = useAuth();
+  const { user, signOut, role, hasPerm, isFounder } = useAuth();
   const { hasMinimumRole, canViewModule, isMaster } = usePermissions();
   const { currentCashRegister } = useLocalPOS();
   const { state } = useSidebar();
