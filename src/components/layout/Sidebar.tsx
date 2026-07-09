@@ -13,7 +13,7 @@ import {
   UserCheck, Truck, PieChart, Sprout, Egg, Brain, ShoppingBag,
   Cloud, Store, ChevronDown, 
   Building2, MessageCircle, ArrowRightLeft, Landmark, Key,
-  ShieldCheck, Database, Warehouse
+  ShieldCheck, Database, Warehouse, Crown
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
