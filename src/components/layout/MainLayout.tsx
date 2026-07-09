@@ -34,7 +34,7 @@ import FounderBadge from '@/components/founder/FounderBadge';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
-  const { user, company, signOut, role, loading } = useAuth();
+  const { user, company, signOut, role, loading, isFounder } = useAuth();
   const { t } = useI18n();
 
 
