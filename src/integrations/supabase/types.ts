@@ -10068,7 +10068,16 @@ export type Database = {
         | "breakage"
         | "admin_adjustment"
         | "inventory_correction"
-      subscription_status: "active" | "warning" | "blocked" | "cancelled"
+      subscription_status:
+        | "active"
+        | "warning"
+        | "blocked"
+        | "cancelled"
+        | "trial"
+        | "past_due"
+        | "suspended"
+        | "expired"
+        | "lifetime"
       task_status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "RETRY"
       voucher_status: "pending" | "redeemed" | "expired" | "cancelled"
     }
@@ -10250,7 +10259,17 @@ export const Constants = {
         "admin_adjustment",
         "inventory_correction",
       ],
-      subscription_status: ["active", "warning", "blocked", "cancelled"],
+      subscription_status: [
+        "active",
+        "warning",
+        "blocked",
+        "cancelled",
+        "trial",
+        "past_due",
+        "suspended",
+        "expired",
+        "lifetime",
+      ],
       task_status: ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "RETRY"],
       voucher_status: ["pending", "redeemed", "expired", "cancelled"],
     },
