@@ -3634,6 +3634,45 @@ export type Database = {
         }
         Relationships: []
       }
+      founder_backups: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          kind: string
+          notes: string | null
+          size_bytes: number | null
+          status: string
+          storage_path: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          kind?: string
+          notes?: string | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          kind?: string
+          notes?: string | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+        }
+        Relationships: []
+      }
       impersonation_sessions: {
         Row: {
           actor_id: string
@@ -5179,6 +5218,60 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          created_at: string
+          currency: string
+          default_language: string
+          id: string
+          integrations: Json
+          logo_url: string | null
+          name: string
+          payments: Json
+          plans: Json
+          singleton: boolean
+          timezone: string
+          trial_days: number
+          updated_at: string
+          updated_by: string | null
+          vat_rate: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          default_language?: string
+          id?: string
+          integrations?: Json
+          logo_url?: string | null
+          name?: string
+          payments?: Json
+          plans?: Json
+          singleton?: boolean
+          timezone?: string
+          trial_days?: number
+          updated_at?: string
+          updated_by?: string | null
+          vat_rate?: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          default_language?: string
+          id?: string
+          integrations?: Json
+          logo_url?: string | null
+          name?: string
+          payments?: Json
+          plans?: Json
+          singleton?: boolean
+          timezone?: string
+          trial_days?: number
+          updated_at?: string
+          updated_by?: string | null
+          vat_rate?: number
+        }
+        Relationships: []
+      }
       poultry_batches: {
         Row: {
           avg_weight: number | null
@@ -5827,12 +5920,14 @@ export type Database = {
         Row: {
           account_type: string
           avatar_url: string | null
+          blocked_at: string | null
           branch_id: string | null
           commission_rate: number | null
           company_id: string | null
           created_at: string | null
           created_by: string | null
           email: string
+          force_logout_at: string | null
           full_name: string
           id: string
           is_active: boolean | null
@@ -5851,12 +5946,14 @@ export type Database = {
         Insert: {
           account_type?: string
           avatar_url?: string | null
+          blocked_at?: string | null
           branch_id?: string | null
           commission_rate?: number | null
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
           email: string
+          force_logout_at?: string | null
           full_name: string
           id: string
           is_active?: boolean | null
@@ -5875,12 +5972,14 @@ export type Database = {
         Update: {
           account_type?: string
           avatar_url?: string | null
+          blocked_at?: string | null
           branch_id?: string | null
           commission_rate?: number | null
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
           email?: string
+          force_logout_at?: string | null
           full_name?: string
           id?: string
           is_active?: boolean | null
@@ -8914,6 +9013,16 @@ export type Database = {
       }
     }
     Functions: {
+      _founder_audit: {
+        Args: {
+          _action: string
+          _metadata: Json
+          _target_id: string
+          _target_type: string
+        }
+        Returns: undefined
+      }
+      _founder_guard: { Args: never; Returns: undefined }
       accept_company_invitation: { Args: { p_token: string }; Returns: Json }
       accept_invite_secure: { Args: { p_token: string }; Returns: Json }
       add_community_comment: {
@@ -9073,9 +9182,157 @@ export type Database = {
         Args: { p_transfer_id: string }
         Returns: Json
       }
+      founder_audit_search: {
+        Args: {
+          _actor?: string
+          _from?: string
+          _limit?: number
+          _offset?: number
+          _source?: string
+          _to?: string
+        }
+        Returns: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          source: string
+          target: string
+        }[]
+      }
+      founder_company_stats: { Args: { _company_id: string }; Returns: Json }
+      founder_extend_trial: {
+        Args: { _company_id: string; _days: number }
+        Returns: undefined
+      }
+      founder_force_logout: { Args: { _user_id: string }; Returns: undefined }
+      founder_grant_lifetime: {
+        Args: { _company_id: string }
+        Returns: undefined
+      }
       founder_infrastructure_stats: { Args: never; Returns: Json }
+      founder_list_companies: {
+        Args: {
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _status?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          name: string
+          status: string
+          stores_count: number
+          subscription_plan: string
+          subscription_status: string
+          users_count: number
+        }[]
+      }
+      founder_list_subscriptions: {
+        Args: { _limit?: number; _offset?: number; _status?: string }
+        Returns: {
+          blocked_at: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          current_period_end: string
+          current_period_start: string
+          grace_period_days: number
+          id: string
+          max_products: number
+          max_sellers: number
+          max_stores: number
+          notes: string | null
+          plan_tier: Database["public"]["Enums"]["plan_tier"]
+          price_monthly: number
+          status: Database["public"]["Enums"]["subscription_status"]
+          store_id: string
+          trial_ends_at: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "subscriptions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      founder_list_users: {
+        Args: {
+          _blocked?: boolean
+          _company_id?: string
+          _limit?: number
+          _offset?: number
+          _role?: string
+          _search?: string
+        }
+        Returns: {
+          blocked_at: string
+          company_id: string
+          company_name: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_founder: boolean
+          roles: string[]
+        }[]
+      }
       founder_monitoring_stats: { Args: never; Returns: Json }
+      founder_platform_settings_get: {
+        Args: never
+        Returns: {
+          created_at: string
+          currency: string
+          default_language: string
+          id: string
+          integrations: Json
+          logo_url: string | null
+          name: string
+          payments: Json
+          plans: Json
+          singleton: boolean
+          timezone: string
+          trial_days: number
+          updated_at: string
+          updated_by: string | null
+          vat_rate: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "platform_settings"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      founder_platform_settings_upsert: {
+        Args: { _payload: Json }
+        Returns: undefined
+      }
       founder_platform_stats: { Args: never; Returns: Json }
+      founder_set_company_status: {
+        Args: { _company_id: string; _status: string }
+        Returns: undefined
+      }
+      founder_set_subscription: {
+        Args: {
+          _company_id: string
+          _expires_at: string
+          _plan: string
+          _status: string
+        }
+        Returns: undefined
+      }
+      founder_set_user_blocked: {
+        Args: { _blocked: boolean; _user_id: string }
+        Returns: undefined
+      }
+      founder_toggle_founder: {
+        Args: { _enabled: boolean; _user_id: string }
+        Returns: undefined
+      }
       generate_demand_forecast: {
         Args: { p_company_id: string }
         Returns: Json
