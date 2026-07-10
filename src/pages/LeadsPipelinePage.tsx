@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Users, TrendingUp, Target, ArrowRight, Phone, Mail, Building2, Search, Filter } from 'lucide-react';
+import { Plus, Users, ArrowRight, Phone, Mail, Building2, Search, Filter, UserCheck, MessageSquare, Clock, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/formatters';
 
 interface Lead {
   id: string;
