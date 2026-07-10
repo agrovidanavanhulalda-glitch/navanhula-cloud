@@ -3276,31 +3276,87 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flag_overrides: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          expires_at: string | null
+          feature_flag_id: string
+          id: string
+          reason: string | null
+          target_id: string
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          expires_at?: string | null
+          feature_flag_id: string
+          id?: string
+          reason?: string | null
+          target_id: string
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          expires_at?: string | null
+          feature_flag_id?: string
+          id?: string
+          reason?: string | null
+          target_id?: string
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flag_overrides_feature_flag_id_fkey"
+            columns: ["feature_flag_id"]
+            isOneToOne: false
+            referencedRelation: "feature_flags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
+          category: string
           created_at: string
           description: string | null
           enabled: boolean
+          environment: string
           id: string
           key: string
+          name: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
+          category?: string
           created_at?: string
           description?: string | null
           enabled?: boolean
+          environment?: string
           id?: string
           key: string
+          name?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          category?: string
           created_at?: string
           description?: string | null
           enabled?: boolean
+          environment?: string
           id?: string
           key?: string
+          name?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -9253,6 +9309,10 @@ export type Database = {
         Returns: number
       }
       evaluate_stock_alerts: { Args: { p_store_id: string }; Returns: Json }
+      feature_flag_is_enabled: {
+        Args: { p_company_id?: string; p_key: string; p_store_id?: string }
+        Returns: boolean
+      }
       force_confirm_stock_transfer: {
         Args: { p_transfer_id: string }
         Returns: Json
@@ -9356,6 +9416,37 @@ export type Database = {
       founder_extend_trial: {
         Args: { _company_id: string; _days: number }
         Returns: undefined
+      }
+      founder_feature_flag_delete: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      founder_feature_flag_override_delete: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      founder_feature_flag_override_upsert: {
+        Args: {
+          p_enabled: boolean
+          p_expires_at?: string
+          p_flag_id: string
+          p_reason?: string
+          p_target_id: string
+          p_target_type: string
+        }
+        Returns: string
+      }
+      founder_feature_flag_upsert: {
+        Args: {
+          p_category: string
+          p_description: string
+          p_enabled: boolean
+          p_environment: string
+          p_id: string
+          p_key: string
+          p_name: string
+        }
+        Returns: string
       }
       founder_force_logout: { Args: { _user_id: string }; Returns: undefined }
       founder_grant_lifetime: {
