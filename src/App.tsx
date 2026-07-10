@@ -51,6 +51,10 @@ const FounderAuditPage = React.lazy(() => import("./pages/founder/FounderAuditPa
 const FounderSettingsPage = React.lazy(() => import("./pages/founder/FounderSettingsPage"));
 const FounderBackupPage = React.lazy(() => import("./pages/founder/FounderBackupPage"));
 const FounderSimulationPage = React.lazy(() => import("./pages/founder/FounderSimulationPage"));
+const FounderHealthPage = React.lazy(() => import("./pages/founder/FounderHealthPage"));
+const FounderLogsPage = React.lazy(() => import("./pages/founder/FounderLogsPage"));
+const FounderAlertsPage = React.lazy(() => import("./pages/founder/FounderAlertsPage"));
+const FounderMetricsPage = React.lazy(() => import("./pages/founder/FounderMetricsPage"));
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
 const WalletPage = React.lazy(() => import("./pages/WalletPage"));
@@ -315,6 +319,10 @@ const AppRoutes = () => {
             <Route path="feature-flags" element={<FounderFeatureFlagsPage />} />
             <Route path="simulacao" element={<FounderSimulationPage />} />
             <Route path="auditoria" element={<FounderAuditPage />} />
+            <Route path="health" element={<FounderHealthPage />} />
+            <Route path="logs" element={<FounderLogsPage />} />
+            <Route path="alertas" element={<FounderAlertsPage />} />
+            <Route path="metricas" element={<FounderMetricsPage />} />
             <Route path="configuracoes" element={<FounderSettingsPage />} />
           </Route>
           <Route path="fiscal" element={<FiscalPage />} />
