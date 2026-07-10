@@ -56,7 +56,11 @@ const LeadsPipelinePage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [form, setForm] = useState({ name: '', business_name: '', phone: '', email: '', notes: '' });
+  const [form, setForm] = useState({ name: '', business_name: '', phone: '', email: '', notes: '', value_estimated: '', probability: '20', expected_close_at: '' });
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [activities, setActivities] = useState<LeadActivity[]>([]);
+  const [noteText, setNoteText] = useState('');
+  const [converting, setConverting] = useState(false);
 
   const fetchLeads = useCallback(async () => {
     if (!company?.id) return;
