@@ -315,6 +315,72 @@ const LeadsPipelinePage: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Lead Detail Drawer */}
+      <Dialog open={!!selectedLead} onOpenChange={o => !o && setSelectedLead(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          {selectedLead && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  {selectedLead.name}
+                  <Badge className={`text-[10px] ${STATUS_CONFIG[selectedLead.status]?.color}`}>
+                    {STATUS_CONFIG[selectedLead.status]?.label}
+                  </Badge>
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  {selectedLead.business_name && <div><span className="text-muted-foreground">Empresa: </span>{selectedLead.business_name}</div>}
+                  {selectedLead.phone && <div><span className="text-muted-foreground">Telefone: </span>{selectedLead.phone}</div>}
+                  {selectedLead.email && <div><span className="text-muted-foreground">Email: </span>{selectedLead.email}</div>}
+                  {selectedLead.expected_close_at && <div><span className="text-muted-foreground">Fecho: </span>{new Date(selectedLead.expected_close_at).toLocaleDateString('pt-PT')}</div>}
+                  <div><span className="text-muted-foreground">Valor: </span><b className="text-primary">{formatCurrency(Number(selectedLead.value_estimated || 0))}</b></div>
+                  <div><span className="text-muted-foreground">Probabilidade: </span><b>{selectedLead.probability ?? 0}%</b></div>
+                </div>
+
+                <div className="flex gap-2">
+                  {selectedLead.status !== 'converted' && (
+                    <Button onClick={() => convertLead(selectedLead)} disabled={converting} className="gap-2">
+                      <UserCheck className="w-4 h-4" /> Converter em Cliente
+                    </Button>
+                  )}
+                  <Select value={selectedLead.status} onValueChange={v => { updateStatus(selectedLead.id, v); setSelectedLead({ ...selectedLead, status: v }); }}>
+                    <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(STATUS_CONFIG).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2 border-t pt-4">
+                  <Label className="flex items-center gap-2"><MessageSquare className="w-4 h-4" /> Adicionar Nota / Interação</Label>
+                  <div className="flex gap-2">
+                    <Textarea rows={2} value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Ligação feita, resposta do cliente..." />
+                    <Button onClick={addNote} disabled={!noteText.trim()}>Registar</Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 border-t pt-4">
+                  <Label className="flex items-center gap-2"><Clock className="w-4 h-4" /> Histórico ({activities.length})</Label>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {activities.map(a => (
+                      <div key={a.id} className="text-xs p-2 rounded bg-muted/40 border border-border">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <Badge variant="outline" className="text-[10px]">{a.activity_type}</Badge>
+                          <span className="text-muted-foreground">{new Date(a.created_at).toLocaleString('pt-PT')}</span>
+                        </div>
+                        {a.content && <p className="text-foreground">{a.content}</p>}
+                      </div>
+                    ))}
+                    {activities.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">Sem interações registadas</p>}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
