@@ -55,6 +55,8 @@ const FounderHealthPage = React.lazy(() => import("./pages/founder/FounderHealth
 const FounderLogsPage = React.lazy(() => import("./pages/founder/FounderLogsPage"));
 const FounderAlertsPage = React.lazy(() => import("./pages/founder/FounderAlertsPage"));
 const FounderMetricsPage = React.lazy(() => import("./pages/founder/FounderMetricsPage"));
+const FounderRevenuePage = React.lazy(() => import("./pages/founder/FounderRevenuePage"));
+const FounderInvoicesPage = React.lazy(() => import("./pages/founder/FounderInvoicesPage"));
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
 const WalletPage = React.lazy(() => import("./pages/WalletPage"));
@@ -323,6 +325,8 @@ const AppRoutes = () => {
             <Route path="logs" element={<FounderLogsPage />} />
             <Route path="alertas" element={<FounderAlertsPage />} />
             <Route path="metricas" element={<FounderMetricsPage />} />
+            <Route path="revenue" element={<FounderRevenuePage />} />
+            <Route path="faturas" element={<FounderInvoicesPage />} />
             <Route path="configuracoes" element={<FounderSettingsPage />} />
           </Route>
           <Route path="fiscal" element={<FiscalPage />} />
