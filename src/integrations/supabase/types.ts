@@ -3634,11 +3634,56 @@ export type Database = {
         }
         Relationships: []
       }
+      founder_backup_schedules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cron_expression: string | null
+          enabled: boolean
+          frequency: string
+          hour: number
+          id: string
+          last_run_at: string | null
+          minute: number
+          next_run_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cron_expression?: string | null
+          enabled?: boolean
+          frequency: string
+          hour?: number
+          id?: string
+          last_run_at?: string | null
+          minute?: number
+          next_run_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cron_expression?: string | null
+          enabled?: boolean
+          frequency?: string
+          hour?: number
+          id?: string
+          last_run_at?: string | null
+          minute?: number
+          next_run_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       founder_backups: {
         Row: {
+          backup_type: string
+          checksum: string | null
           completed_at: string | null
           created_at: string
           created_by: string | null
+          duration_ms: number | null
           error_message: string | null
           id: string
           kind: string
@@ -3648,9 +3693,12 @@ export type Database = {
           storage_path: string | null
         }
         Insert: {
+          backup_type?: string
+          checksum?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
+          duration_ms?: number | null
           error_message?: string | null
           id?: string
           kind?: string
@@ -3660,9 +3708,12 @@ export type Database = {
           storage_path?: string | null
         }
         Update: {
+          backup_type?: string
+          checksum?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
+          duration_ms?: number | null
           error_message?: string | null
           id?: string
           kind?: string
@@ -9201,6 +9252,82 @@ export type Database = {
           target: string
         }[]
       }
+      founder_backup_delete: { Args: { p_id: string }; Returns: undefined }
+      founder_backup_list: {
+        Args: { p_limit?: number }
+        Returns: {
+          backup_type: string
+          checksum: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          kind: string
+          notes: string | null
+          size_bytes: number | null
+          status: string
+          storage_path: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "founder_backups"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      founder_backup_schedule_get: {
+        Args: never
+        Returns: {
+          created_at: string
+          created_by: string | null
+          cron_expression: string | null
+          enabled: boolean
+          frequency: string
+          hour: number
+          id: string
+          last_run_at: string | null
+          minute: number
+          next_run_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "founder_backup_schedules"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      founder_backup_schedule_upsert: {
+        Args: {
+          p_cron?: string
+          p_enabled?: boolean
+          p_frequency: string
+          p_hour?: number
+          p_minute?: number
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          cron_expression: string | null
+          enabled: boolean
+          frequency: string
+          hour: number
+          id: string
+          last_run_at: string | null
+          minute: number
+          next_run_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "founder_backup_schedules"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      founder_backup_stats: { Args: never; Returns: Json }
       founder_company_stats: { Args: { _company_id: string }; Returns: Json }
       founder_extend_trial: {
         Args: { _company_id: string; _days: number }
