@@ -48,6 +48,7 @@ const FounderUsersPage = React.lazy(() => import("./pages/founder/FounderUsersPa
 const FounderSubscriptionsPage = React.lazy(() => import("./pages/founder/FounderSubscriptionsPage"));
 const FounderAuditPage = React.lazy(() => import("./pages/founder/FounderAuditPage"));
 const FounderSettingsPage = React.lazy(() => import("./pages/founder/FounderSettingsPage"));
+const FounderBackupPage = React.lazy(() => import("./pages/founder/FounderBackupPage"));
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
 const WalletPage = React.lazy(() => import("./pages/WalletPage"));
@@ -305,7 +306,8 @@ const AppRoutes = () => {
             <Route path="empresas" element={<FounderCompaniesPage />} />
             <Route path="utilizadores" element={<FounderUsersPage />} />
             <Route path="assinaturas" element={<FounderSubscriptionsPage />} />
-            <Route path="infraestrutura" element={<FounderComingSoonPage title="Infraestrutura Detalhada" description="Edge functions, buckets, migrations, cron jobs, backups." />} />
+            <Route path="infraestrutura" element={<FounderBackupPage />} />
+            <Route path="backup" element={<FounderBackupPage />} />
             <Route path="feature-flags" element={<FounderFeatureFlagsPage />} />
             <Route path="simulacao" element={<FounderComingSoonPage title="Modo Simulação" description="Entrar como Cliente / Loja / Empresa / Caixa / Supervisor / CEO — em breve." />} />
             <Route path="auditoria" element={<FounderAuditPage />} />
