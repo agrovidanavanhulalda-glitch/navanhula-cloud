@@ -86,11 +86,47 @@ const LeadsPipelinePage: React.FC = () => {
       phone: form.phone.trim() || null,
       email: form.email.trim() || null,
       notes: form.notes.trim() || null,
+      value_estimated: form.value_estimated ? Number(form.value_estimated) : 0,
+      probability: form.probability ? Number(form.probability) : 20,
+      expected_close_at: form.expected_close_at || null,
     });
     if (error) { toast.error('Erro ao criar lead'); return; }
     toast.success('Lead adicionado!');
-    setForm({ name: '', business_name: '', phone: '', email: '', notes: '' });
+    setForm({ name: '', business_name: '', phone: '', email: '', notes: '', value_estimated: '', probability: '20', expected_close_at: '' });
     setShowForm(false);
+    fetchLeads();
+  };
+
+  const openLead = async (lead: Lead) => {
+    setSelectedLead(lead);
+    const { data } = await (supabase as any)
+      .from('lead_activities').select('*').eq('lead_id', lead.id)
+      .order('created_at', { ascending: false }).limit(50);
+    setActivities((data as LeadActivity[]) || []);
+  };
+
+  const addNote = async () => {
+    if (!selectedLead || !noteText.trim()) return;
+    await (supabase as any).from('lead_activities').insert({
+      lead_id: selectedLead.id,
+      company_id: selectedLead['company_id' as any] ?? company?.id,
+      activity_type: 'note',
+      content: noteText.trim(),
+    });
+    await (supabase as any).from('leads').update({ last_contact_at: new Date().toISOString() }).eq('id', selectedLead.id);
+    setNoteText('');
+    openLead(selectedLead);
+    fetchLeads();
+    toast.success('Nota adicionada');
+  };
+
+  const convertLead = async (lead: Lead) => {
+    setConverting(true);
+    const { data, error } = await (supabase as any).rpc('convert_lead_to_customer', { p_lead_id: lead.id });
+    setConverting(false);
+    if (error) { toast.error(error.message || 'Erro ao converter'); return; }
+    toast.success('Lead convertido em cliente!');
+    setSelectedLead(null);
     fetchLeads();
   };
 
