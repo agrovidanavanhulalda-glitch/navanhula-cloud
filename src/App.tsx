@@ -274,7 +274,9 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <LocalPOSProvider>
-                <MainLayout />
+                <SimulationProvider>
+                  <MainLayout />
+                </SimulationProvider>
               </LocalPOSProvider>
             </ProtectedRoute>
           }
