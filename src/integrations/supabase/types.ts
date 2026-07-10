@@ -4359,6 +4359,47 @@ export type Database = {
           },
         ]
       }
+      lead_activities: {
+        Row: {
+          activity_type: string
+          company_id: string
+          content: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          lead_id: string
+          metadata: Json | null
+        }
+        Insert: {
+          activity_type: string
+          company_id: string
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id: string
+          metadata?: Json | null
+        }
+        Update: {
+          activity_type?: string
+          company_id?: string
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_notes: {
         Row: {
           company_id: string | null
@@ -4413,13 +4454,18 @@ export type Database = {
           created_at: string
           created_by: string | null
           email: string | null
+          expected_close_at: string | null
           id: string
+          last_contact_at: string | null
+          lost_reason: string | null
           name: string
           notes: string | null
           phone: string | null
+          probability: number | null
           source: string | null
           status: string
           updated_at: string
+          value_estimated: number | null
         }
         Insert: {
           assigned_to?: string | null
@@ -4429,13 +4475,18 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          expected_close_at?: string | null
           id?: string
+          last_contact_at?: string | null
+          lost_reason?: string | null
           name: string
           notes?: string | null
           phone?: string | null
+          probability?: number | null
           source?: string | null
           status?: string
           updated_at?: string
+          value_estimated?: number | null
         }
         Update: {
           assigned_to?: string | null
@@ -4445,13 +4496,18 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          expected_close_at?: string | null
           id?: string
+          last_contact_at?: string | null
+          lost_reason?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
+          probability?: number | null
           source?: string | null
           status?: string
           updated_at?: string
+          value_estimated?: number | null
         }
         Relationships: [
           {
@@ -9314,6 +9370,7 @@ export type Database = {
         Returns: Json
       }
       confirm_stock_transfer: { Args: { p_transfer_id: string }; Returns: Json }
+      convert_lead_to_customer: { Args: { p_lead_id: string }; Returns: string }
       create_branch_company: {
         Args: {
           p_address?: string

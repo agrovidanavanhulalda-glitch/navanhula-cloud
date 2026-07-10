@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Users, TrendingUp, Target, ArrowRight, Phone, Mail, Building2, Search, Filter } from 'lucide-react';
+import { Plus, Users, ArrowRight, Phone, Mail, Building2, Search, Filter, UserCheck, MessageSquare, Clock, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/formatters';
 
 interface Lead {
   id: string;
@@ -22,7 +23,20 @@ interface Lead {
   status: string;
   source: string | null;
   notes: string | null;
+  value_estimated: number | null;
+  probability: number | null;
+  expected_close_at: string | null;
+  last_contact_at: string | null;
+  lost_reason: string | null;
   created_at: string;
+}
+
+interface LeadActivity {
+  id: string;
+  activity_type: string;
+  content: string | null;
+  created_at: string;
+  metadata: any;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -42,7 +56,11 @@ const LeadsPipelinePage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [form, setForm] = useState({ name: '', business_name: '', phone: '', email: '', notes: '' });
+  const [form, setForm] = useState({ name: '', business_name: '', phone: '', email: '', notes: '', value_estimated: '', probability: '20', expected_close_at: '' });
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [activities, setActivities] = useState<LeadActivity[]>([]);
+  const [noteText, setNoteText] = useState('');
+  const [converting, setConverting] = useState(false);
 
   const fetchLeads = useCallback(async () => {
     if (!company?.id) return;
@@ -68,11 +86,47 @@ const LeadsPipelinePage: React.FC = () => {
       phone: form.phone.trim() || null,
       email: form.email.trim() || null,
       notes: form.notes.trim() || null,
+      value_estimated: form.value_estimated ? Number(form.value_estimated) : 0,
+      probability: form.probability ? Number(form.probability) : 20,
+      expected_close_at: form.expected_close_at || null,
     });
     if (error) { toast.error('Erro ao criar lead'); return; }
     toast.success('Lead adicionado!');
-    setForm({ name: '', business_name: '', phone: '', email: '', notes: '' });
+    setForm({ name: '', business_name: '', phone: '', email: '', notes: '', value_estimated: '', probability: '20', expected_close_at: '' });
     setShowForm(false);
+    fetchLeads();
+  };
+
+  const openLead = async (lead: Lead) => {
+    setSelectedLead(lead);
+    const { data } = await (supabase as any)
+      .from('lead_activities').select('*').eq('lead_id', lead.id)
+      .order('created_at', { ascending: false }).limit(50);
+    setActivities((data as LeadActivity[]) || []);
+  };
+
+  const addNote = async () => {
+    if (!selectedLead || !noteText.trim()) return;
+    await (supabase as any).from('lead_activities').insert({
+      lead_id: selectedLead.id,
+      company_id: selectedLead['company_id' as any] ?? company?.id,
+      activity_type: 'note',
+      content: noteText.trim(),
+    });
+    await (supabase as any).from('leads').update({ last_contact_at: new Date().toISOString() }).eq('id', selectedLead.id);
+    setNoteText('');
+    openLead(selectedLead);
+    fetchLeads();
+    toast.success('Nota adicionada');
+  };
+
+  const convertLead = async (lead: Lead) => {
+    setConverting(true);
+    const { data, error } = await (supabase as any).rpc('convert_lead_to_customer', { p_lead_id: lead.id });
+    setConverting(false);
+    if (error) { toast.error(error.message || 'Erro ao converter'); return; }
+    toast.success('Lead convertido em cliente!');
+    setSelectedLead(null);
     fetchLeads();
   };
 
@@ -96,6 +150,9 @@ const LeadsPipelinePage: React.FC = () => {
     new: leads.filter(l => l.status === 'new').length,
     converted: leads.filter(l => l.status === 'converted').length,
     rate: leads.length ? Math.round((leads.filter(l => l.status === 'converted').length / leads.length) * 100) : 0,
+    pipeline_value: leads
+      .filter(l => l.status !== 'converted' && l.status !== 'lost')
+      .reduce((s, l) => s + Number(l.value_estimated || 0) * (Number(l.probability || 0) / 100), 0),
   };
 
   return (
@@ -119,6 +176,11 @@ const LeadsPipelinePage: React.FC = () => {
                 <div><Label>Email</Label><Input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@..." /></div>
               </div>
               <div><Label>Notas</Label><Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} /></div>
+              <div className="grid grid-cols-3 gap-3">
+                <div><Label>Valor (MT)</Label><Input type="number" value={form.value_estimated} onChange={e => setForm(f => ({ ...f, value_estimated: e.target.value }))} placeholder="0" /></div>
+                <div><Label>Prob. %</Label><Input type="number" min={0} max={100} value={form.probability} onChange={e => setForm(f => ({ ...f, probability: e.target.value }))} /></div>
+                <div><Label>Fecho previsto</Label><Input type="date" value={form.expected_close_at} onChange={e => setForm(f => ({ ...f, expected_close_at: e.target.value }))} /></div>
+              </div>
               <Button onClick={handleCreate} className="w-full" disabled={!form.name.trim()}>Adicionar Lead</Button>
             </div>
           </DialogContent>
@@ -126,11 +188,12 @@ const LeadsPipelinePage: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card className="p-4"><p className="text-xs text-muted-foreground">Total Leads</p><p className="text-2xl font-bold text-foreground">{stats.total}</p></Card>
         <Card className="p-4"><p className="text-xs text-muted-foreground">Novos</p><p className="text-2xl font-bold text-primary">{stats.new}</p></Card>
         <Card className="p-4"><p className="text-xs text-muted-foreground">Convertidos</p><p className="text-2xl font-bold text-[hsl(var(--success))]">{stats.converted}</p></Card>
         <Card className="p-4"><p className="text-xs text-muted-foreground">Taxa Conversão</p><p className="text-2xl font-bold text-foreground">{stats.rate}%</p></Card>
+        <Card className="p-4"><p className="text-xs text-muted-foreground">Pipeline Ponderado</p><p className="text-xl font-bold text-primary">{formatCurrency(stats.pipeline_value)}</p></Card>
       </div>
 
       <Tabs defaultValue="pipeline">
@@ -153,7 +216,7 @@ const LeadsPipelinePage: React.FC = () => {
                   </div>
                   <div className="space-y-2 min-h-[200px] p-2 rounded-lg bg-muted/30 border border-border">
                     {stageLeads.map(lead => (
-                      <Card key={lead.id} className="p-3 space-y-2 cursor-pointer hover:shadow-md transition-all group">
+                      <Card key={lead.id} onClick={() => openLead(lead)} className="p-3 space-y-2 cursor-pointer hover:shadow-md transition-all group">
                         <div className="flex items-start justify-between">
                           <p className="font-medium text-sm text-foreground truncate">{lead.name}</p>
                           <a 
@@ -167,8 +230,13 @@ const LeadsPipelinePage: React.FC = () => {
                         </div>
                         {lead.business_name && <p className="text-xs text-muted-foreground flex items-center gap-1"><Building2 className="w-3 h-3" />{lead.business_name}</p>}
                         {lead.phone && <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" />{lead.phone}</p>}
-                        
-                        <div className="flex gap-2 pt-1">
+                        {(lead.value_estimated ?? 0) > 0 && (
+                          <p className="text-xs font-semibold text-primary flex items-center gap-1">
+                            <DollarSign className="w-3 h-3" />{formatCurrency(Number(lead.value_estimated))} · {lead.probability ?? 0}%
+                          </p>
+                        )}
+
+                        <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
                           {stage !== 'converted' && (
                             <Button size="sm" variant="outline" className="flex-1 text-[10px] gap-1 h-6 px-1"
                               onClick={() => updateStatus(lead.id, PIPELINE_STAGES[PIPELINE_STAGES.indexOf(stage) + 1])}>
@@ -247,6 +315,72 @@ const LeadsPipelinePage: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Lead Detail Drawer */}
+      <Dialog open={!!selectedLead} onOpenChange={o => !o && setSelectedLead(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          {selectedLead && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  {selectedLead.name}
+                  <Badge className={`text-[10px] ${STATUS_CONFIG[selectedLead.status]?.color}`}>
+                    {STATUS_CONFIG[selectedLead.status]?.label}
+                  </Badge>
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  {selectedLead.business_name && <div><span className="text-muted-foreground">Empresa: </span>{selectedLead.business_name}</div>}
+                  {selectedLead.phone && <div><span className="text-muted-foreground">Telefone: </span>{selectedLead.phone}</div>}
+                  {selectedLead.email && <div><span className="text-muted-foreground">Email: </span>{selectedLead.email}</div>}
+                  {selectedLead.expected_close_at && <div><span className="text-muted-foreground">Fecho: </span>{new Date(selectedLead.expected_close_at).toLocaleDateString('pt-PT')}</div>}
+                  <div><span className="text-muted-foreground">Valor: </span><b className="text-primary">{formatCurrency(Number(selectedLead.value_estimated || 0))}</b></div>
+                  <div><span className="text-muted-foreground">Probabilidade: </span><b>{selectedLead.probability ?? 0}%</b></div>
+                </div>
+
+                <div className="flex gap-2">
+                  {selectedLead.status !== 'converted' && (
+                    <Button onClick={() => convertLead(selectedLead)} disabled={converting} className="gap-2">
+                      <UserCheck className="w-4 h-4" /> Converter em Cliente
+                    </Button>
+                  )}
+                  <Select value={selectedLead.status} onValueChange={v => { updateStatus(selectedLead.id, v); setSelectedLead({ ...selectedLead, status: v }); }}>
+                    <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(STATUS_CONFIG).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2 border-t pt-4">
+                  <Label className="flex items-center gap-2"><MessageSquare className="w-4 h-4" /> Adicionar Nota / Interação</Label>
+                  <div className="flex gap-2">
+                    <Textarea rows={2} value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Ligação feita, resposta do cliente..." />
+                    <Button onClick={addNote} disabled={!noteText.trim()}>Registar</Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 border-t pt-4">
+                  <Label className="flex items-center gap-2"><Clock className="w-4 h-4" /> Histórico ({activities.length})</Label>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {activities.map(a => (
+                      <div key={a.id} className="text-xs p-2 rounded bg-muted/40 border border-border">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <Badge variant="outline" className="text-[10px]">{a.activity_type}</Badge>
+                          <span className="text-muted-foreground">{new Date(a.created_at).toLocaleString('pt-PT')}</span>
+                        </div>
+                        {a.content && <p className="text-foreground">{a.content}</p>}
+                      </div>
+                    ))}
+                    {activities.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">Sem interações registadas</p>}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
