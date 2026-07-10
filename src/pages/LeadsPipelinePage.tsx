@@ -150,6 +150,9 @@ const LeadsPipelinePage: React.FC = () => {
     new: leads.filter(l => l.status === 'new').length,
     converted: leads.filter(l => l.status === 'converted').length,
     rate: leads.length ? Math.round((leads.filter(l => l.status === 'converted').length / leads.length) * 100) : 0,
+    pipeline_value: leads
+      .filter(l => l.status !== 'converted' && l.status !== 'lost')
+      .reduce((s, l) => s + Number(l.value_estimated || 0) * (Number(l.probability || 0) / 100), 0),
   };
 
   return (
