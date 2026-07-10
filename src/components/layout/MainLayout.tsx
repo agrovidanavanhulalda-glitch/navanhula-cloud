@@ -31,6 +31,7 @@ import BrandLogo from '@/components/brand/BrandLogo';
 import SmartOnboarding from '@/components/onboarding/SmartOnboarding';
 import WhatsAppFloat from '../public/landing/WhatsAppFloat';
 import FounderBadge from '@/components/founder/FounderBadge';
+import SimulationBanner from '@/components/founder/SimulationBanner';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
@@ -45,6 +46,7 @@ const MainLayout: React.FC = () => {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background flex flex-col w-full max-w-full overflow-x-hidden">
+        <SimulationBanner />
         <MobileHeader />
         <UpsellBanner />
 
@@ -64,6 +66,7 @@ const MainLayout: React.FC = () => {
       <div className="flex min-h-screen w-full bg-background overflow-x-hidden">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <SimulationBanner />
           {/* Enhanced top bar — Unified Header */}
           <header className="sticky top-0 z-50 flex items-center justify-between px-6 h-16 border-b border-border/60 bg-background/80 backdrop-blur-xl">
             <div className="flex items-center gap-4">

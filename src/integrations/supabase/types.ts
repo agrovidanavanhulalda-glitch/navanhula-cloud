@@ -3727,30 +3727,54 @@ export type Database = {
       impersonation_sessions: {
         Row: {
           actor_id: string
+          duration_ms: number | null
           ended_at: string | null
+          expires_at: string | null
           id: string
+          ip: string | null
           read_only: boolean
           reason: string | null
+          simulated_company_id: string | null
+          simulated_role: string | null
+          simulated_store_id: string | null
+          simulated_tenant_id: string | null
           started_at: string
           target_id: string
+          user_agent: string | null
         }
         Insert: {
           actor_id: string
+          duration_ms?: number | null
           ended_at?: string | null
+          expires_at?: string | null
           id?: string
+          ip?: string | null
           read_only?: boolean
           reason?: string | null
+          simulated_company_id?: string | null
+          simulated_role?: string | null
+          simulated_store_id?: string | null
+          simulated_tenant_id?: string | null
           started_at?: string
           target_id: string
+          user_agent?: string | null
         }
         Update: {
           actor_id?: string
+          duration_ms?: number | null
           ended_at?: string | null
+          expires_at?: string | null
           id?: string
+          ip?: string | null
           read_only?: boolean
           reason?: string | null
+          simulated_company_id?: string | null
+          simulated_role?: string | null
+          simulated_store_id?: string | null
+          simulated_tenant_id?: string | null
           started_at?: string
           target_id?: string
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -9337,6 +9361,38 @@ export type Database = {
       founder_grant_lifetime: {
         Args: { _company_id: string }
         Returns: undefined
+      }
+      founder_impersonate_current: { Args: never; Returns: Json }
+      founder_impersonate_end: { Args: never; Returns: Json }
+      founder_impersonate_history: {
+        Args: { p_limit?: number }
+        Returns: {
+          company_id: string
+          duration_ms: number
+          ended_at: string
+          id: string
+          ip: string
+          reason: string
+          role: string
+          started_at: string
+          store_id: string
+          target_email: string
+          target_id: string
+          target_name: string
+        }[]
+      }
+      founder_impersonate_start: {
+        Args: {
+          p_company_id?: string
+          p_expires_minutes?: number
+          p_ip?: string
+          p_reason?: string
+          p_role?: string
+          p_store_id?: string
+          p_target_user_id: string
+          p_user_agent?: string
+        }
+        Returns: Json
       }
       founder_infrastructure_stats: { Args: never; Returns: Json }
       founder_list_companies: {

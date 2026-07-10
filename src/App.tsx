@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
+import { SimulationProvider } from "@/contexts/SimulationContext";
 import { Loader2 } from "lucide-react";
 import EnterpriseDebugMonitor from "./components/debug/EnterpriseDebugMonitor";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ const FounderSubscriptionsPage = React.lazy(() => import("./pages/founder/Founde
 const FounderAuditPage = React.lazy(() => import("./pages/founder/FounderAuditPage"));
 const FounderSettingsPage = React.lazy(() => import("./pages/founder/FounderSettingsPage"));
 const FounderBackupPage = React.lazy(() => import("./pages/founder/FounderBackupPage"));
+const FounderSimulationPage = React.lazy(() => import("./pages/founder/FounderSimulationPage"));
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
 const WalletPage = React.lazy(() => import("./pages/WalletPage"));
@@ -273,7 +275,9 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <LocalPOSProvider>
-                <MainLayout />
+                <SimulationProvider>
+                  <MainLayout />
+                </SimulationProvider>
               </LocalPOSProvider>
             </ProtectedRoute>
           }
@@ -309,7 +313,7 @@ const AppRoutes = () => {
             <Route path="infraestrutura" element={<FounderBackupPage />} />
             <Route path="backup" element={<FounderBackupPage />} />
             <Route path="feature-flags" element={<FounderFeatureFlagsPage />} />
-            <Route path="simulacao" element={<FounderComingSoonPage title="Modo Simulação" description="Entrar como Cliente / Loja / Empresa / Caixa / Supervisor / CEO — em breve." />} />
+            <Route path="simulacao" element={<FounderSimulationPage />} />
             <Route path="auditoria" element={<FounderAuditPage />} />
             <Route path="configuracoes" element={<FounderSettingsPage />} />
           </Route>
