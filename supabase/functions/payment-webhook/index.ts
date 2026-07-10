@@ -171,6 +171,19 @@ Deno.serve(async (req) => {
         p_phone_number: tx.phone_number,
       });
 
+      // Also apply payment to matching pending invoice (idempotent)
+      try {
+        const { data: invResult } = await serviceClient.rpc("apply_payment_to_invoice", {
+          p_reference: reference_id,
+          p_amount: amount ?? tx.amount,
+          p_method: paymentMethod,
+          p_provider_tx_ref: transaction_id || reference_id,
+        });
+        console.log("apply_payment_to_invoice:", invResult);
+      } catch (e) {
+        console.error("apply_payment_to_invoice failed:", e);
+      }
+
       return new Response(
         JSON.stringify({ success: true, message: "Payment confirmed and subscription renewed" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
