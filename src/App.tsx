@@ -325,6 +325,8 @@ const AppRoutes = () => {
             <Route path="logs" element={<FounderLogsPage />} />
             <Route path="alertas" element={<FounderAlertsPage />} />
             <Route path="metricas" element={<FounderMetricsPage />} />
+            <Route path="revenue" element={<FounderRevenuePage />} />
+            <Route path="faturas" element={<FounderInvoicesPage />} />
             <Route path="configuracoes" element={<FounderSettingsPage />} />
           </Route>
           <Route path="fiscal" element={<FiscalPage />} />
