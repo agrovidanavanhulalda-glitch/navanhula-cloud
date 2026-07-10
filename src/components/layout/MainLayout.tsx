@@ -46,6 +46,7 @@ const MainLayout: React.FC = () => {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background flex flex-col w-full max-w-full overflow-x-hidden">
+        <SimulationBanner />
         <MobileHeader />
         <UpsellBanner />
 
