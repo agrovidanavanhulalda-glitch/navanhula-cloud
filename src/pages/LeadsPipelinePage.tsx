@@ -176,6 +176,11 @@ const LeadsPipelinePage: React.FC = () => {
                 <div><Label>Email</Label><Input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@..." /></div>
               </div>
               <div><Label>Notas</Label><Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} /></div>
+              <div className="grid grid-cols-3 gap-3">
+                <div><Label>Valor (MT)</Label><Input type="number" value={form.value_estimated} onChange={e => setForm(f => ({ ...f, value_estimated: e.target.value }))} placeholder="0" /></div>
+                <div><Label>Prob. %</Label><Input type="number" min={0} max={100} value={form.probability} onChange={e => setForm(f => ({ ...f, probability: e.target.value }))} /></div>
+                <div><Label>Fecho previsto</Label><Input type="date" value={form.expected_close_at} onChange={e => setForm(f => ({ ...f, expected_close_at: e.target.value }))} /></div>
+              </div>
               <Button onClick={handleCreate} className="w-full" disabled={!form.name.trim()}>Adicionar Lead</Button>
             </div>
           </DialogContent>
@@ -183,11 +188,12 @@ const LeadsPipelinePage: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card className="p-4"><p className="text-xs text-muted-foreground">Total Leads</p><p className="text-2xl font-bold text-foreground">{stats.total}</p></Card>
         <Card className="p-4"><p className="text-xs text-muted-foreground">Novos</p><p className="text-2xl font-bold text-primary">{stats.new}</p></Card>
         <Card className="p-4"><p className="text-xs text-muted-foreground">Convertidos</p><p className="text-2xl font-bold text-[hsl(var(--success))]">{stats.converted}</p></Card>
         <Card className="p-4"><p className="text-xs text-muted-foreground">Taxa Conversão</p><p className="text-2xl font-bold text-foreground">{stats.rate}%</p></Card>
+        <Card className="p-4"><p className="text-xs text-muted-foreground">Pipeline Ponderado</p><p className="text-xl font-bold text-primary">{formatCurrency(stats.pipeline_value)}</p></Card>
       </div>
 
       <Tabs defaultValue="pipeline">
