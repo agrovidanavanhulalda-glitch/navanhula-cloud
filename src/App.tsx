@@ -310,7 +310,7 @@ const AppRoutes = () => {
             <Route path="infraestrutura" element={<FounderBackupPage />} />
             <Route path="backup" element={<FounderBackupPage />} />
             <Route path="feature-flags" element={<FounderFeatureFlagsPage />} />
-            <Route path="simulacao" element={<FounderComingSoonPage title="Modo Simulação" description="Entrar como Cliente / Loja / Empresa / Caixa / Supervisor / CEO — em breve." />} />
+            <Route path="simulacao" element={<FounderSimulationPage />} />
             <Route path="auditoria" element={<FounderAuditPage />} />
             <Route path="configuracoes" element={<FounderSettingsPage />} />
           </Route>
