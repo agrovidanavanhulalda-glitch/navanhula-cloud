@@ -319,6 +319,10 @@ const AppRoutes = () => {
             <Route path="feature-flags" element={<FounderFeatureFlagsPage />} />
             <Route path="simulacao" element={<FounderSimulationPage />} />
             <Route path="auditoria" element={<FounderAuditPage />} />
+            <Route path="health" element={<FounderHealthPage />} />
+            <Route path="logs" element={<FounderLogsPage />} />
+            <Route path="alertas" element={<FounderAlertsPage />} />
+            <Route path="metricas" element={<FounderMetricsPage />} />
             <Route path="configuracoes" element={<FounderSettingsPage />} />
           </Route>
           <Route path="fiscal" element={<FiscalPage />} />
