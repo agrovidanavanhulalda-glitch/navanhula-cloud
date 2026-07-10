@@ -216,7 +216,7 @@ const LeadsPipelinePage: React.FC = () => {
                   </div>
                   <div className="space-y-2 min-h-[200px] p-2 rounded-lg bg-muted/30 border border-border">
                     {stageLeads.map(lead => (
-                      <Card key={lead.id} className="p-3 space-y-2 cursor-pointer hover:shadow-md transition-all group">
+                      <Card key={lead.id} onClick={() => openLead(lead)} className="p-3 space-y-2 cursor-pointer hover:shadow-md transition-all group">
                         <div className="flex items-start justify-between">
                           <p className="font-medium text-sm text-foreground truncate">{lead.name}</p>
                           <a 
