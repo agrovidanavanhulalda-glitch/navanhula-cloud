@@ -66,6 +66,7 @@ const MainLayout: React.FC = () => {
       <div className="flex min-h-screen w-full bg-background overflow-x-hidden">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <SimulationBanner />
           {/* Enhanced top bar — Unified Header */}
           <header className="sticky top-0 z-50 flex items-center justify-between px-6 h-16 border-b border-border/60 bg-background/80 backdrop-blur-xl">
             <div className="flex items-center gap-4">
