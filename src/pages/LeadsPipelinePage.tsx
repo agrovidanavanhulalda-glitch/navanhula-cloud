@@ -230,8 +230,13 @@ const LeadsPipelinePage: React.FC = () => {
                         </div>
                         {lead.business_name && <p className="text-xs text-muted-foreground flex items-center gap-1"><Building2 className="w-3 h-3" />{lead.business_name}</p>}
                         {lead.phone && <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" />{lead.phone}</p>}
-                        
-                        <div className="flex gap-2 pt-1">
+                        {(lead.value_estimated ?? 0) > 0 && (
+                          <p className="text-xs font-semibold text-primary flex items-center gap-1">
+                            <DollarSign className="w-3 h-3" />{formatCurrency(Number(lead.value_estimated))} · {lead.probability ?? 0}%
+                          </p>
+                        )}
+
+                        <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
                           {stage !== 'converted' && (
                             <Button size="sm" variant="outline" className="flex-1 text-[10px] gap-1 h-6 px-1"
                               onClick={() => updateStatus(lead.id, PIPELINE_STAGES[PIPELINE_STAGES.indexOf(stage) + 1])}>
