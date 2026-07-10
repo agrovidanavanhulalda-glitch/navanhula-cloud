@@ -9255,6 +9255,15 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_payment_to_invoice: {
+        Args: {
+          p_amount: number
+          p_method: string
+          p_provider_tx_ref?: string
+          p_reference: string
+        }
+        Returns: Json
+      }
       bootstrap_current_user: { Args: never; Returns: undefined }
       capture_referral_for_user: {
         Args: {
@@ -10014,6 +10023,7 @@ export type Database = {
         }
         Returns: Json
       }
+      process_subscription_renewals: { Args: never; Returns: Json }
       reconcile_bank_transactions: {
         Args: { p_bank_account_id: string }
         Returns: Json
