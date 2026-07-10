@@ -4153,6 +4153,89 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number
+          company_id: string | null
+          created_at: string
+          currency: string
+          due_date: string | null
+          id: string
+          invoice_number: string
+          issue_date: string
+          notes: string | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          pdf_url: string | null
+          period_end: string | null
+          period_start: string | null
+          plan_tier: string | null
+          status: string
+          store_id: string | null
+          subscription_id: string | null
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          company_id?: string | null
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          issue_date?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          pdf_url?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan_tier?: string | null
+          status?: string
+          store_id?: string | null
+          subscription_id?: string | null
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string | null
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          pdf_url?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan_tier?: string | null
+          status?: string
+          store_id?: string | null
+          subscription_id?: string | null
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           approved_at: string | null
@@ -9486,6 +9569,21 @@ export type Database = {
         Returns: Json
       }
       founder_infrastructure_stats: { Args: never; Returns: Json }
+      founder_invoice_create: {
+        Args: {
+          p_amount: number
+          p_notes?: string
+          p_period_end?: string
+          p_period_start?: string
+          p_subscription_id: string
+          p_tax?: number
+        }
+        Returns: string
+      }
+      founder_invoice_mark_paid: {
+        Args: { p_invoice_id: string; p_method?: string; p_reference?: string }
+        Returns: undefined
+      }
       founder_list_companies: {
         Args: {
           _limit?: number
@@ -9586,6 +9684,7 @@ export type Database = {
         Returns: undefined
       }
       founder_platform_stats: { Args: never; Returns: Json }
+      founder_revenue_stats: { Args: never; Returns: Json }
       founder_set_company_status: {
         Args: { _company_id: string; _status: string }
         Returns: undefined
@@ -9603,6 +9702,14 @@ export type Database = {
         Args: { _blocked: boolean; _user_id: string }
         Returns: undefined
       }
+      founder_subscription_transition: {
+        Args: {
+          p_new_status: string
+          p_reason?: string
+          p_subscription_id: string
+        }
+        Returns: undefined
+      }
       founder_toggle_founder: {
         Args: { _enabled: boolean; _user_id: string }
         Returns: undefined
@@ -9611,6 +9718,7 @@ export type Database = {
         Args: { p_company_id: string }
         Returns: Json
       }
+      generate_invoice_number: { Args: never; Returns: string }
       generate_nava_reference: { Args: never; Returns: string }
       generate_product_sku: { Args: never; Returns: string }
       generate_reseller_code: { Args: never; Returns: string }
