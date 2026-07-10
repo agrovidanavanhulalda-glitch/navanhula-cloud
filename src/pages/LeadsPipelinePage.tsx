@@ -23,7 +23,20 @@ interface Lead {
   status: string;
   source: string | null;
   notes: string | null;
+  value_estimated: number | null;
+  probability: number | null;
+  expected_close_at: string | null;
+  last_contact_at: string | null;
+  lost_reason: string | null;
   created_at: string;
+}
+
+interface LeadActivity {
+  id: string;
+  activity_type: string;
+  content: string | null;
+  created_at: string;
+  metadata: any;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
