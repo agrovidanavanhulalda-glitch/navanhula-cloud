@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LocalPOSProvider } from "@/contexts/LocalPOSContext";
+import { SimulationProvider } from "@/contexts/SimulationContext";
 import { Loader2 } from "lucide-react";
 import EnterpriseDebugMonitor from "./components/debug/EnterpriseDebugMonitor";
 import { Button } from "@/components/ui/button";
