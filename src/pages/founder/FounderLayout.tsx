@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Crown, LayoutDashboard, Building2, Users, CreditCard, Server, Flag, UserCog, ScrollText, Settings, DatabaseBackup } from 'lucide-react';
+import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FounderBadge from '@/components/founder/FounderBadge';
 
@@ -10,7 +10,10 @@ const navItems = [
   { to: '/app/founder/utilizadores', icon: Users, label: 'Utilizadores' },
   { to: '/app/founder/assinaturas', icon: CreditCard, label: 'Assinaturas' },
   { to: '/app/founder/backup', icon: DatabaseBackup, label: 'Backup' },
-  { to: '/app/founder/infraestrutura', icon: Server, label: 'Infraestrutura' },
+  { to: '/app/founder/health', icon: HeartPulse, label: 'System Health' },
+  { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
+  { to: '/app/founder/logs', icon: FileText, label: 'Logs' },
+  { to: '/app/founder/alertas', icon: Bell, label: 'Alertas' },
   { to: '/app/founder/feature-flags', icon: Flag, label: 'Feature Flags' },
   { to: '/app/founder/simulacao', icon: UserCog, label: 'Simulação' },
   { to: '/app/founder/auditoria', icon: ScrollText, label: 'Auditoria' },
