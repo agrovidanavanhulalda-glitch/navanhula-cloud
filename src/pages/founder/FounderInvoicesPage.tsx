@@ -14,7 +14,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, CheckCircle2, FileText, Search } from 'lucide-react';
+import { Plus, CheckCircle2, FileText, Search, Download } from 'lucide-react';
+import { downloadInvoicePdf } from '@/lib/generateInvoicePdf';
 
 interface Invoice {
   id: string;
@@ -197,17 +198,22 @@ const FounderInvoicesPage: React.FC = () => {
                       </Badge>
                     </td>
                     <td className="py-2 pr-2 text-right">
-                      {inv.status === 'pending' && (
-                        <Button size="sm" variant="outline" onClick={() => setPayOpen(inv)} className="gap-1">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Marcar Paga
+                      <div className="flex items-center justify-end gap-2">
+                        {inv.status === 'pending' && (
+                          <Button size="sm" variant="outline" onClick={() => setPayOpen(inv)} className="gap-1">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Marcar Paga
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="gap-1"
+                          onClick={() => downloadInvoicePdf(inv as any)}
+                          title="Baixar PDF"
+                        >
+                          <Download className="h-3.5 w-3.5" /> PDF
                         </Button>
-                      )}
-                      {inv.status === 'paid' && (
-                        <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          {inv.paid_at ? new Date(inv.paid_at).toLocaleDateString('pt-PT') : ''}
-                        </span>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
