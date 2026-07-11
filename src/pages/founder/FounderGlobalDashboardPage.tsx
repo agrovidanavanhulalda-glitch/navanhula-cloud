@@ -9,6 +9,8 @@ import {
   CheckCircle2, Clock, XCircle, AlertTriangle, Trophy, Receipt,
 } from 'lucide-react';
 import FounderAnalyticsCharts from '@/components/founder/FounderAnalyticsCharts';
+import GlobalFiltersBar from '@/components/filters/GlobalFiltersBar';
+import { useGlobalFilters } from '@/contexts/GlobalFiltersContext';
 
 const fmtMoney = (n: unknown) =>
   `${Number(n ?? 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MT`;
@@ -35,8 +37,9 @@ const Stat: React.FC<StatProps> = ({ icon: Icon, label, value, tone = 'default' 
 };
 
 export default function FounderGlobalDashboardPage() {
+  const { range } = useGlobalFilters();
   const { data, isLoading, error } = useQuery({
-    queryKey: ['founder-global-dashboard'],
+    queryKey: ['founder-global-dashboard', range.from?.toISOString(), range.to?.toISOString()],
     queryFn: async () => {
       const { data, error } = await (supabase.rpc as any)('founder_global_dashboard_stats');
       if (error) throw error;

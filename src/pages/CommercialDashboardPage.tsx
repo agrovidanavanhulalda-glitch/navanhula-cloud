@@ -74,6 +74,10 @@ export default function CommercialDashboardPage() {
         <p className="text-sm text-muted-foreground">Indicadores comerciais em tempo real</p>
       </header>
 
+      <GlobalFiltersBar />
+
+
+
       <section>
         <h2 className="text-xs font-bold uppercase text-muted-foreground mb-2">Leads</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
