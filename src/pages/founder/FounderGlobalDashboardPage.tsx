@@ -8,6 +8,7 @@ import {
   DollarSign, TrendingUp, Building2, Users, Activity, Target,
   CheckCircle2, Clock, XCircle, AlertTriangle, Trophy, Receipt,
 } from 'lucide-react';
+import FounderAnalyticsCharts from '@/components/founder/FounderAnalyticsCharts';
 
 const fmtMoney = (n: unknown) =>
   `${Number(n ?? 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MT`;
