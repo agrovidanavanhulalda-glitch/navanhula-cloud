@@ -11,6 +11,7 @@ import {
 import FounderAnalyticsCharts from '@/components/founder/FounderAnalyticsCharts';
 import GlobalFiltersBar from '@/components/filters/GlobalFiltersBar';
 import { useGlobalFilters } from '@/contexts/GlobalFiltersContext';
+import ExportMenu from '@/components/exports/ExportMenu';
 
 const fmtMoney = (n: unknown) =>
   `${Number(n ?? 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MT`;
