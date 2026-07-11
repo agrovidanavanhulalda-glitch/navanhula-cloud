@@ -44,12 +44,21 @@ vi.mock('@/integrations/supabase/client', () => ({
     rpc: vi.fn(),
     removeChannel: vi.fn(),
     channel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() })),
-    auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: TEST_USER_ID } } }, error: null }),
-      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+vi.mock('@/integrations/supabase/client', () => {
+  const U = '550e8400-e29b-41d4-a716-446655440001';
+  return {
+    supabase: {
+      from: vi.fn(),
+      rpc: vi.fn(),
+      removeChannel: vi.fn(),
+      channel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() })),
+      auth: {
+        getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: U } } }, error: null }),
+        onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+      },
     },
-  },
-}));
+  };
+});
 
 /** Reusable table mock */
 const buildFromMock = () => (table: string) => {
