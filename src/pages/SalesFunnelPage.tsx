@@ -9,6 +9,8 @@ import { AlertTriangle, TrendingDown, Users, DollarSign, Target } from 'lucide-r
 import {
   ResponsiveContainer, FunnelChart, Funnel, LabelList, Tooltip, Cell,
 } from 'recharts';
+import GlobalFiltersBar from '@/components/filters/GlobalFiltersBar';
+import { useGlobalFilters } from '@/contexts/GlobalFiltersContext';
 
 const STAGES: { key: string; label: string; color: string }[] = [
   { key: 'novo',        label: 'Novos Leads',    color: 'hsl(210 90% 55%)' },
@@ -27,21 +29,29 @@ interface Lead {
   status: string | null;
   value_estimated: number | null;
   probability: number | null;
+  created_at?: string | null;
+  assigned_to?: string | null;
 }
 
 export default function SalesFunnelPage() {
   const { company } = useAuth();
+  const { range, filters } = useGlobalFilters();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['sales-funnel', company?.id],
+    queryKey: ['sales-funnel', company?.id, range.from?.toISOString(), range.to?.toISOString(), filters.seller, filters.stage],
     enabled: !!company?.id,
     refetchInterval: 60_000,
     staleTime: 30_000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('leads')
-        .select('status, value_estimated, probability')
+        .select('status, value_estimated, probability, created_at, assigned_to')
         .eq('company_id', company!.id);
+      if (range.from) q = q.gte('created_at', range.from.toISOString());
+      if (range.to) q = q.lte('created_at', range.to.toISOString());
+      if (filters.seller !== 'all') q = q.eq('assigned_to', filters.seller);
+      if (filters.stage !== 'all') q = q.eq('status', filters.stage);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as Lead[];
     },
