@@ -1,9 +1,6 @@
 /**
  * offline-pos.test.tsx — Stabilization Sprint 0.2, Etapa 3.1
- *
- * Modernizado para a nova arquitetura RPC `pos_complete_sale`.
- * Testa o contrato entre LocalPOSContext.completeSale e a RPC transacional,
- * cobrindo cenário online (chama RPC) e offline (enfileira no syncManager).
+ * Modernizado para RPC `pos_complete_sale`.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
@@ -11,12 +8,6 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { LocalPOSProvider, useLocalPOS } from '@/contexts/LocalPOSContext';
 import { supabase } from '@/integrations/supabase/client';
 import { syncManager } from '@/lib/syncQueue';
-
-const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440001';
-const TEST_COMPANY_ID = '550e8400-e29b-41d4-a716-446655440002';
-const TEST_STORE_ID = '550e8400-e29b-41d4-a716-446655440003';
-const TEST_CR_ID = '550e8400-e29b-41d4-a716-446655440010';
-const TEST_PRODUCT_ID = '550e8400-e29b-41d4-a716-446655440004';
 
 vi.mock('@/contexts/AuthContext', () => {
   const U = '550e8400-e29b-41d4-a716-446655440001';
@@ -38,12 +29,6 @@ vi.mock('@/contexts/AuthContext', () => {
   };
 });
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(),
-    rpc: vi.fn(),
-    removeChannel: vi.fn(),
-    channel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() })),
 vi.mock('@/integrations/supabase/client', () => {
   const U = '550e8400-e29b-41d4-a716-446655440001';
   return {
@@ -60,19 +45,21 @@ vi.mock('@/integrations/supabase/client', () => {
   };
 });
 
-/** Reusable table mock */
+const U = '550e8400-e29b-41d4-a716-446655440001';
+const CO = '550e8400-e29b-41d4-a716-446655440002';
+const ST = '550e8400-e29b-41d4-a716-446655440003';
+const CR = '550e8400-e29b-41d4-a716-446655440010';
+const P1 = '550e8400-e29b-41d4-a716-446655440004';
+
 const buildFromMock = () => (table: string) => {
-  const stores = [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true, company_id: TEST_COMPANY_ID, address: '', phone: '' }];
-  const products = [{ id: TEST_PRODUCT_ID, name: 'Arroz', sale_price: 100, cost_price: 80, is_active: true, company_id: TEST_COMPANY_ID }];
-  const cashRegs = [{ id: TEST_CR_ID, store_id: TEST_STORE_ID, user_id: TEST_USER_ID, status: 'open', opening_amount: 1000, opened_at: new Date().toISOString(), company_id: TEST_COMPANY_ID }];
-  const stock = [{ product_id: TEST_PRODUCT_ID, quantity: 100 }];
-  const profiles = [{ id: TEST_USER_ID, full_name: 'Test User', email: 't@t.mz', company_id: TEST_COMPANY_ID }];
-
   const dataFor: Record<string, any[]> = {
-    stores, products, cash_registers: cashRegs, product_stock: stock,
-    profiles, sales: [],
+    stores: [{ id: ST, name: 'Test Store', is_active: true, company_id: CO, address: '', phone: '' }],
+    products: [{ id: P1, name: 'Arroz', sale_price: 100, cost_price: 80, is_active: true, company_id: CO }],
+    cash_registers: [{ id: CR, store_id: ST, user_id: U, status: 'open', opening_amount: 1000, opened_at: new Date().toISOString(), company_id: CO }],
+    product_stock: [{ product_id: P1, quantity: 100 }],
+    profiles: [{ id: U, full_name: 'Test User', email: 't@t.mz', company_id: CO }],
+    sales: [],
   };
-
   const chain: any = {
     select: vi.fn(() => chain),
     eq: vi.fn(() => chain),
@@ -85,6 +72,15 @@ const buildFromMock = () => (table: string) => {
 
 const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   React.createElement(LocalPOSProvider, null, children);
+
+const waitForReady = async (result: any) => {
+  await waitFor(() => {
+    expect(result.current.loading).toBe(false);
+    expect(result.current.currentStore?.id).toBe(ST);
+    expect(result.current.currentCashRegister?.status).toBe('open');
+    expect(result.current.products.length).toBeGreaterThan(0);
+  }, { timeout: 5000 });
+};
 
 describe('POS — pos_complete_sale RPC integration (Sprint 0.2 Etapa 3.1)', () => {
   beforeEach(() => {
@@ -102,32 +98,21 @@ describe('POS — pos_complete_sale RPC integration (Sprint 0.2 Etapa 3.1)', () 
 
   afterEach(() => { vi.clearAllMocks(); });
 
-  const waitForReady = async (result: any) => {
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-      expect(result.current.currentStore?.id).toBe(TEST_STORE_ID);
-      expect(result.current.currentCashRegister?.status).toBe('open');
-      expect(result.current.products.length).toBeGreaterThan(0);
-    }, { timeout: 5000 });
-  };
-
   it('online: calls pos_complete_sale RPC with correct payload for cash sale', async () => {
     const { result } = renderHook(() => useLocalPOS(), { wrapper });
     await waitForReady(result);
-
     act(() => { result.current.addToCart(result.current.products[0]); });
     await act(async () => {
       await result.current.completeSale({ method: 'cash', amountReceived: 100, change: 0 });
     });
-
     expect(supabase.rpc).toHaveBeenCalledWith('pos_complete_sale', expect.objectContaining({
-      p_store_id: TEST_STORE_ID,
-      p_cash_register_id: TEST_CR_ID,
+      p_store_id: ST,
+      p_cash_register_id: CR,
       p_payment_method: 'cash',
       p_subtotal: 100,
       p_total: 100,
       p_items: expect.arrayContaining([
-        expect.objectContaining({ product_id: TEST_PRODUCT_ID, quantity: 1, unit_price: 100 }),
+        expect.objectContaining({ product_id: P1, quantity: 1, unit_price: 100 }),
       ]),
     }));
   });
@@ -136,12 +121,10 @@ describe('POS — pos_complete_sale RPC integration (Sprint 0.2 Etapa 3.1)', () 
     (navigator as any).onLine = false;
     const { result } = renderHook(() => useLocalPOS(), { wrapper });
     await waitForReady(result);
-
     act(() => { result.current.addToCart(result.current.products[0]); });
     await act(async () => {
       await result.current.completeSale({ method: 'cash', amountReceived: 100, change: 0 });
     });
-
     expect(supabase.rpc).not.toHaveBeenCalledWith('pos_complete_sale', expect.anything());
     expect(syncManager.getQueueStatus().pending).toBe(1);
   });
@@ -151,16 +134,13 @@ describe('POS — pos_complete_sale RPC integration (Sprint 0.2 Etapa 3.1)', () 
       data: null,
       error: { message: 'STOCK_INSUFFICIENT: stock insuficiente para produto' },
     });
-
     const { result } = renderHook(() => useLocalPOS(), { wrapper });
     await waitForReady(result);
-
     act(() => { result.current.addToCart(result.current.products[0]); });
     let sale: any;
     await act(async () => {
       sale = await result.current.completeSale({ method: 'cash', amountReceived: 100, change: 0 });
     });
-
     expect(sale).toBeNull();
     expect(supabase.rpc).toHaveBeenCalledTimes(1);
   });
