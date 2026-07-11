@@ -183,7 +183,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         const r = { success: false, error: 'not_found', message: 'Voucher não encontrado' };
         setVoucherResult(r); toast.error(r.message); return;
       }
-      if (data.status !== 'active') {
+      if (data.status !== 'pending') {
         const r = { success: false, error: 'already_redeemed', message: 'Voucher já utilizado ou inativo' };
         setVoucherResult(r); toast.error(r.message); return;
       }
