@@ -172,17 +172,36 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     setVoucherValidating(true);
     setVoucherResult(null);
     try {
-      const { data, error } = await supabase.rpc('validate_and_redeem_voucher', {
-        p_code: voucherCode.trim(),
-      });
+      // Validação read-only: o resgate acontece dentro de pos_complete_sale
+      const { data, error } = await supabase
+        .from('payment_vouchers')
+        .select('id, code, amount, payment_method, customer_name, phone_number, status, expires_at')
+        .eq('code', voucherCode.trim())
+        .maybeSingle();
       if (error) throw error;
-      const result = data as any;
-      setVoucherResult(result);
-      if (result.success) {
-        toast.success(result.message);
-      } else {
-        toast.error(result.message);
+      if (!data) {
+        const r = { success: false, error: 'not_found', message: 'Voucher não encontrado' };
+        setVoucherResult(r); toast.error(r.message); return;
       }
+      if (data.status !== 'pending') {
+        const r = { success: false, error: 'already_redeemed', message: 'Voucher já utilizado ou inativo' };
+        setVoucherResult(r); toast.error(r.message); return;
+      }
+      if (new Date(data.expires_at) < new Date()) {
+        const r = { success: false, error: 'expired', message: 'Voucher expirado' };
+        setVoucherResult(r); toast.error(r.message); return;
+      }
+      const result = {
+        success: true,
+        voucher_id: data.id,
+        amount: Number(data.amount),
+        payment_method: data.payment_method,
+        customer_name: data.customer_name,
+        phone_number: data.phone_number,
+        message: 'Voucher válido — será resgatado ao concluir a venda',
+      };
+      setVoucherResult(result);
+      toast.success(result.message);
     } catch (err: any) {
       toast.error('Erro ao validar voucher');
       setVoucherResult({ success: false, error: 'system_error', message: 'Erro de sistema' });

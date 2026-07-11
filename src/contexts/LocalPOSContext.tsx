@@ -442,51 +442,56 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     try {
-      // 1. Create Sale
-      const { data: sale, error: saleError } = await supabase
-        .from('sales')
-        .insert({
-          company_id: company?.id,
-          store_id: state.currentStore.id,
-          user_id: effectiveSellerId,
-          cash_register_id: state.currentCashRegister?.id,
-          subtotal,
-          total,
-          discount_amount: discount,
-          payment_method: details.method as any,
-          status: 'completed' as any,
-          cost_total: costTotal,
-          profit,
-          seller_name: effectiveSellerName
-        })
-        .select()
-        .single();
-
-      if (saleError) throw saleError;
-
-      // 2. Create Sale Items
-      const itemsData = state.cart.map(item => ({
-        company_id: company?.id,
-        sale_id: sale.id,
-        product_id: item.product.id,
+      // ✅ RPC atômica única — persistência transacional (venda + itens + stock + financeiro + caixa + auditoria + voucher)
+      const itemsPayload = state.cart.map(item => ({
+        product_id: item.product.id || null,
         product_name: item.product.name,
         quantity: item.quantity,
         unit_price: item.product.salePrice,
         cost_price: item.product.costPrice,
+        discount_amount: item.discount || 0,
         total: item.total,
-        profit: item.total - (item.product.costPrice * item.quantity),
-        created_by: user.id
       }));
 
-      const { error: itemsError } = await supabase.from('sale_items').insert(itemsData);
-      if (itemsError) throw itemsError;
+      const { data, error } = await supabase.rpc('pos_complete_sale', {
+        p_store_id: state.currentStore.id,
+        p_cash_register_id: state.currentCashRegister?.id ?? null,
+        p_payment_method: details.method,
+        p_items: itemsPayload as any,
+        p_subtotal: subtotal,
+        p_discount_amount: discount,
+        p_discount_percent: 0,
+        p_total: total,
+        p_customer_name: (details as any).customerName ?? null,
+        p_customer_phone: (details as any).customerPhone ?? null,
+        p_seller_name: effectiveSellerName,
+        p_notes: (details as any).notes ?? null,
+        p_voucher_code: details.voucherDetails?.code ?? null,
+        p_ip_address: null,
+      });
+
+      if (error) throw error;
+      const result = data as any;
+      if (!result?.success) throw new Error(result?.error || 'Falha ao concluir venda');
 
       toast.success('Venda concluída com sucesso');
       const completedSale = {
-        ...sale,
+        id: result.sale_id,
+        company_id: company?.id,
+        store_id: state.currentStore.id,
+        user_id: effectiveSellerId,
+        cash_register_id: state.currentCashRegister?.id,
+        subtotal,
+        total: result.total,
+        discount_amount: discount,
+        payment_method: details.method,
+        status: 'completed',
+        cost_total: costTotal,
+        profit: result.profit,
+        seller_name: effectiveSellerName,
         items: [...state.cart],
-        createdAt: new Date(sale.created_at),
-        synced: true
+        createdAt: new Date(),
+        synced: true,
       } as any;
 
       setState(prev => ({
@@ -499,7 +504,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return completedSale;
     } catch (error: any) {
       console.error('Error completing sale:', error);
-      toast.error('Erro ao processar venda: ' + error.message);
+      const msg = error?.message || 'Erro desconhecido';
+      toast.error('Erro ao processar venda: ' + msg);
       return null;
     }
   };
