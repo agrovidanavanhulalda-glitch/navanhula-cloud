@@ -20,6 +20,7 @@ import PageTransition from "./components/layout/PageTransition";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import { GlobalFallback } from "./components/error/GlobalFallback";
 import { supabase } from "@/integrations/supabase/client";
+import { GlobalFiltersProvider } from "@/contexts/GlobalFiltersContext";
 
 // Public site — eagerly loaded (landing page)
 import MainLayout from "./components/layout/MainLayout";
@@ -429,9 +430,11 @@ const App = () => {
       <TooltipProvider>
         <I18nProvider>
           <AuthProvider>
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
+            <GlobalFiltersProvider>
+              <BrowserRouter>
+                <AppRoutes />
+              </BrowserRouter>
+            </GlobalFiltersProvider>
           </AuthProvider>
         </I18nProvider>
         <Toaster />
