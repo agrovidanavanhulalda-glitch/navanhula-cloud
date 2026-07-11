@@ -6,6 +6,7 @@ import FounderBadge from '@/components/founder/FounderBadge';
 
 const navItems = [
   { to: '/app/founder', end: true, icon: LayoutDashboard, label: 'Dashboard Global' },
+  { to: '/app/founder/dashboard-global', icon: TrendingUp, label: 'Analytics Global' },
   { to: '/app/founder/empresas', icon: Building2, label: 'Empresas' },
   { to: '/app/founder/utilizadores', icon: Users, label: 'Utilizadores' },
   { to: '/app/founder/assinaturas', icon: CreditCard, label: 'Assinaturas' },
