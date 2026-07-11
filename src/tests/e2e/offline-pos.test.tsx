@@ -1,198 +1,153 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+/**
+ * offline-pos.test.tsx — Stabilization Sprint 0.2, Etapa 3.1
+ *
+ * Modernizado para a nova arquitetura RPC `pos_complete_sale`.
+ * Testa o contrato entre LocalPOSContext.completeSale e a RPC transacional,
+ * cobrindo cenário online (chama RPC) e offline (enfileira no syncManager).
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
-import LocalPOSPage from '@/pages/LocalPOSPage';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { LocalPOSProvider } from '@/contexts/LocalPOSContext';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter } from 'react-router-dom';
+import { renderHook, act, waitFor } from '@testing-library/react';
+import { LocalPOSProvider, useLocalPOS } from '@/contexts/LocalPOSContext';
 import { supabase } from '@/integrations/supabase/client';
 import { syncManager } from '@/lib/syncQueue';
-import { Toaster } from '@/components/ui/sonner';
 
-// Test IDs
 const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440001';
 const TEST_COMPANY_ID = '550e8400-e29b-41d4-a716-446655440002';
 const TEST_STORE_ID = '550e8400-e29b-41d4-a716-446655440003';
+const TEST_CR_ID = '550e8400-e29b-41d4-a716-446655440010';
 const TEST_PRODUCT_ID = '550e8400-e29b-41d4-a716-446655440004';
 
-// Mock Supabase
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: TEST_USER_ID, store_id: TEST_STORE_ID, company_id: TEST_COMPANY_ID, full_name: 'Test User', email: 't@t.mz' },
+    company: { id: TEST_COMPANY_ID, name: 'Test Co', country: 'MZ' },
+    store: { id: TEST_STORE_ID, name: 'Test Store', company_id: TEST_COMPANY_ID },
+    role: 'admin', permissions: [], roles: ['admin'],
+    branch: null, tenant: null, isMaster: false, isFounder: false,
+    loading: false, appReady: true, isAuthenticated: true, onboardingCompleted: true,
+    hasPerm: () => true,
+    signIn: async () => {}, signUp: async () => {}, signOut: async () => {},
+    completeOnboarding: async () => {}, refreshUserData: async () => {},
+  }),
+  AuthProvider: ({ children }: any) => children,
+}));
+
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(),
     rpc: vi.fn(),
-    removeChannel: vi.fn().mockResolvedValue({}),
+    removeChannel: vi.fn(),
+    channel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() })),
     auth: {
-      getSession: vi.fn().mockResolvedValue({ 
-        data: { session: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } } }, 
-        error: null 
-      }),
+      getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: TEST_USER_ID } } }, error: null }),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
-      signInWithPassword: vi.fn().mockResolvedValue({ 
-        data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, 
-        error: null 
-      }),
-      signUp: vi.fn().mockResolvedValue({ 
-        data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, 
-        error: null 
-      }),
-      signOut: vi.fn().mockResolvedValue({ error: null }),
-      updateUser: vi.fn().mockResolvedValue({ data: {}, error: null }),
     },
-    channel: vi.fn(() => ({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn(),
-    })),
   },
 }));
 
-const queryClient = new QueryClient({
-  defaultOptions: { 
-    queries: { 
-      retry: false,
-      gcTime: 0
-    } 
-  },
-});
+/** Reusable table mock */
+const buildFromMock = () => (table: string) => {
+  const stores = [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true, company_id: TEST_COMPANY_ID, address: '', phone: '' }];
+  const products = [{ id: TEST_PRODUCT_ID, name: 'Arroz', sale_price: 100, cost_price: 80, is_active: true, company_id: TEST_COMPANY_ID }];
+  const cashRegs = [{ id: TEST_CR_ID, store_id: TEST_STORE_ID, user_id: TEST_USER_ID, status: 'open', opening_amount: 1000, opened_at: new Date().toISOString(), company_id: TEST_COMPANY_ID }];
+  const stock = [{ product_id: TEST_PRODUCT_ID, quantity: 100 }];
+  const profiles = [{ id: TEST_USER_ID, full_name: 'Test User', email: 't@t.mz', company_id: TEST_COMPANY_ID }];
 
-const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <BrowserRouter>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <LocalPOSProvider>
-          {children}
-        </LocalPOSProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-    <Toaster />
-  </BrowserRouter>
-);
+  const dataFor: Record<string, any[]> = {
+    stores, products, cash_registers: cashRegs, product_stock: stock,
+    profiles, sales: [],
+  };
 
-describe('POS Offline & Sync E2E', () => {
-  const insertMock = vi.fn().mockImplementation(() => {
-    const builder: any = {
-      select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockReturnThis(),
-      then: (cb: any) => Promise.resolve(cb({ data: [], error: null }))
-    };
-    return builder;
-  });
+  const chain: any = {
+    select: vi.fn(() => chain),
+    eq: vi.fn(() => chain),
+    order: vi.fn(() => chain),
+    limit: vi.fn(() => Promise.resolve({ data: dataFor[table] ?? [], error: null })),
+    then: (cb: any) => Promise.resolve({ data: dataFor[table] ?? [], error: null }).then(cb),
+  };
+  return chain;
+};
 
+const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
+  React.createElement(LocalPOSProvider, null, children);
+
+describe('POS — pos_complete_sale RPC integration (Sprint 0.2 Etapa 3.1)', () => {
   beforeEach(() => {
-    vi.resetAllMocks();
     vi.clearAllMocks();
     localStorage.clear();
     syncManager.clearQueue();
     syncManager.forceSetProcessing(false);
-    
-    // Default online
-    Object.defineProperty(navigator, 'onLine', {
-      configurable: true,
-      get() { return this._val ?? true; },
-      set(v) { this._val = v; }
+    (supabase.from as any).mockImplementation(buildFromMock());
+    (supabase.rpc as any).mockResolvedValue({
+      data: { success: true, sale_id: 'sale-new-1', total: 100, profit: 20, voucher_redeemed: false },
+      error: null,
     });
-    (navigator as any).onLine = true;
-
-    (supabase.from as any).mockImplementation((table: string) => ({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockImplementation(() => {
-        if (table === 'profiles') return Promise.resolve({ data: { id: TEST_USER_ID, company_id: TEST_COMPANY_ID, store_id: TEST_STORE_ID, full_name: 'Test User' }, error: null });
-        if (table === 'companies') return Promise.resolve({ data: { id: TEST_COMPANY_ID, name: 'Test Company', country: 'MZ', nif: '123456789' }, error: null });
-        if (table === 'user_roles') return Promise.resolve({ data: { role: 'admin' }, error: null });
-        if (table === 'stores') return Promise.resolve({ data: { id: TEST_STORE_ID, name: 'Test Store' }, error: null });
-        if (table === 'cash_registers') return Promise.resolve({ data: { id: 'cr-1', status: 'open', user_id: TEST_USER_ID, store_id: TEST_STORE_ID, opening_amount: 1000, opened_at: new Date().toISOString() }, error: null });
-        if (table === 'onboarding_progress') return Promise.resolve({ data: { user_id: TEST_USER_ID, step: 'completed' }, error: null });
-        return Promise.resolve({ data: null, error: null });
-      }),
-      single: vi.fn().mockReturnValue(Promise.resolve({ data: { id: 'new-id' }, error: null })),
-      insert: vi.fn().mockImplementation((payload) => {
-        return insertMock(payload);
-      }),
-      update: vi.fn().mockReturnThis(),
-      match: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      then: vi.fn().mockImplementation((cb) => {
-        if (table === 'stores') return Promise.resolve(cb({ data: [{ id: TEST_STORE_ID, name: 'Test Store', is_active: true, company_id: TEST_COMPANY_ID }], error: null }));
-        if (table === 'products') return Promise.resolve(cb({ data: [{ id: TEST_PRODUCT_ID, name: 'Arroz', sale_price: 100, cost_price: 80, is_active: true, company_id: TEST_COMPANY_ID }], error: null }));
-        if (table === 'cash_registers') return Promise.resolve(cb({ data: [{ id: 'cr-1', status: 'open', user_id: TEST_USER_ID, store_id: TEST_STORE_ID, opening_amount: 1000, opened_at: new Date().toISOString() }], error: null }));
-        if (table === 'profiles') return Promise.resolve(cb({ data: [{ id: TEST_USER_ID, full_name: 'Test User', store_id: TEST_STORE_ID, company_id: TEST_COMPANY_ID }], error: null }));
-        if (table === 'companies') return Promise.resolve(cb({ data: [{ id: TEST_COMPANY_ID, name: 'Test Company', country: 'MZ', nif: '123456789' }], error: null }));
-        if (table === 'user_roles') return Promise.resolve(cb({ data: [{ user_id: TEST_USER_ID, role: 'admin' }], error: null }));
-        if (table === 'product_stock') return Promise.resolve(cb({ data: [{ product_id: TEST_PRODUCT_ID, store_id: TEST_STORE_ID, quantity: 100 }], error: null }));
-        if (table === 'onboarding_progress') return Promise.resolve(cb({ data: [{ user_id: TEST_USER_ID, step: 'completed' }], error: null }));
-        return Promise.resolve(cb({ data: [], error: null }));
-      }),
-    }));
-
-    (supabase.rpc as any).mockResolvedValue({ data: { success: true }, error: null });
-    
-    // Explicitly mock getSession to fix [Auth] Init error
-    (supabase.auth.getSession as any).mockResolvedValue({ 
-      data: { session: { user: { id: TEST_USER_ID } } }, 
-      error: null 
-    });
+    Object.defineProperty(navigator, 'onLine', { configurable: true, writable: true, value: true });
   });
 
-  const selectProduct = async () => {
-    const arrozItems = await screen.findAllByText(/Arroz/i);
-    const gridItem = arrozItems.find(el => el.tagName === 'H3');
-    if (!gridItem) throw new Error('Grid product not found');
-    fireEvent.click(gridItem);
+  afterEach(() => { vi.clearAllMocks(); });
+
+  const waitForReady = async (result: any) => {
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.currentStore?.id).toBe(TEST_STORE_ID);
+      expect(result.current.currentCashRegister?.status).toBe('open');
+      expect(result.current.products.length).toBeGreaterThan(0);
+    }, { timeout: 5000 });
   };
 
-  it('queues a sale when offline and syncs when online', { timeout: 45000 }, async () => {
-    (navigator as any).onLine = false;
-    render(<AllProviders><LocalPOSPage /></AllProviders>);
-    
-    await screen.findByText(/Arroz/i);
-    await selectProduct();
-    fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
-    fireEvent.click(await screen.findByText(/Dinheiro/i, {}, { timeout: 10000 }));
-    fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
-    
-    // Wait for the cart to be cleared
-    await screen.findByText(/Nenhum produto selecionado/i);
-    
-    (navigator as any).onLine = true;
-    fireEvent(window, new Event('online'));
+  it('online: calls pos_complete_sale RPC with correct payload for cash sale', async () => {
+    const { result } = renderHook(() => useLocalPOS(), { wrapper });
+    await waitForReady(result);
 
-    await waitFor(() => {
-      expect(insertMock).toHaveBeenCalled();
-      expect(syncManager.getQueueStatus().pending).toBe(0);
-    }, { timeout: 25000 });
+    act(() => { result.current.addToCart(result.current.products[0]); });
+    await act(async () => {
+      await result.current.completeSale({ method: 'cash', amountReceived: 100, change: 0 });
+    });
+
+    expect(supabase.rpc).toHaveBeenCalledWith('pos_complete_sale', expect.objectContaining({
+      p_store_id: TEST_STORE_ID,
+      p_cash_register_id: TEST_CR_ID,
+      p_payment_method: 'cash',
+      p_subtotal: 100,
+      p_total: 100,
+      p_items: expect.arrayContaining([
+        expect.objectContaining({ product_id: TEST_PRODUCT_ID, quantity: 1, unit_price: 100 }),
+      ]),
+    }));
   });
 
-  it('displays digital receipt offline and remains consistent after sync', { timeout: 45000 }, async () => {
+  it('offline: enqueues sale in syncManager and does NOT call RPC', async () => {
     (navigator as any).onLine = false;
-    render(<AllProviders><LocalPOSPage /></AllProviders>);
-    
-    await screen.findByText(/Arroz/i);
-    await selectProduct();
-    fireEvent.click(screen.getByText(/RECEBER PAGAMENTO/i));
-    fireEvent.click(await screen.findByText(/Dinheiro/i));
-    fireEvent.click(screen.getByText(/Confirmar Pagamento/i));
-    
-    await screen.findByText(/Nenhum produto selecionado/i);
-    await screen.findByText(/100,00 MT/i);
-    
-    fireEvent.click(screen.getByText(/Imprimir Recibo/i));
-    
-    await screen.findByText(/Recibo de Venda/i);
-    await screen.findByText(/TOTAL:/i);
-    const totalElements = await screen.findAllByText(/100,00 MT/i);
-    expect(totalElements.length).toBeGreaterThan(0);
-    
-    fireEvent.click(screen.getByRole('button', { name: /X/i }));
-    
-    (navigator as any).onLine = true;
-    fireEvent(window, new Event('online'));
-    
-    await waitFor(() => {
-      expect(syncManager.getQueueStatus().pending).toBe(0);
-      expect(insertMock).toHaveBeenCalled();
-    }, { timeout: 25000 });
+    const { result } = renderHook(() => useLocalPOS(), { wrapper });
+    await waitForReady(result);
+
+    act(() => { result.current.addToCart(result.current.products[0]); });
+    await act(async () => {
+      await result.current.completeSale({ method: 'cash', amountReceived: 100, change: 0 });
+    });
+
+    expect(supabase.rpc).not.toHaveBeenCalledWith('pos_complete_sale', expect.anything());
+    expect(syncManager.getQueueStatus().pending).toBe(1);
+  });
+
+  it('rejects sale when RPC returns STOCK_INSUFFICIENT (rollback contract)', async () => {
+    (supabase.rpc as any).mockResolvedValue({
+      data: null,
+      error: { message: 'STOCK_INSUFFICIENT: stock insuficiente para produto' },
+    });
+
+    const { result } = renderHook(() => useLocalPOS(), { wrapper });
+    await waitForReady(result);
+
+    act(() => { result.current.addToCart(result.current.products[0]); });
+    let sale: any;
+    await act(async () => {
+      sale = await result.current.completeSale({ method: 'cash', amountReceived: 100, change: 0 });
+    });
+
+    expect(sale).toBeNull();
+    expect(supabase.rpc).toHaveBeenCalledTimes(1);
   });
 });
