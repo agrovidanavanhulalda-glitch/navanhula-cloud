@@ -109,6 +109,10 @@ export default function SalesFunnelPage() {
         <p className="text-sm text-muted-foreground">Visualização das etapas do processo comercial</p>
       </header>
 
+      <GlobalFiltersBar showStage stages={STAGES.map(s => ({ key: s.key, label: s.label }))} />
+
+
+
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="p-4">
           <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary mb-3"><Users className="h-4 w-4" /></div>
