@@ -21,33 +21,48 @@ const CR = '550e8400-e29b-41d4-a716-446655440010';
 const P1 = '550e8400-e29b-41d4-a716-446655440004';
 const P2 = '550e8400-e29b-41d4-a716-446655440005';
 
-vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({
-    user: { id: U, store_id: ST, company_id: CO, full_name: 'Test', email: 't@t.mz' },
-    company: { id: CO, name: 'Co', country: 'MZ' },
-    store: { id: ST, name: 'Store', company_id: CO },
-    role: 'admin', permissions: [], roles: ['admin'],
-    branch: null, tenant: null, isMaster: false, isFounder: false,
-    loading: false, appReady: true, isAuthenticated: true, onboardingCompleted: true,
-    hasPerm: () => true,
-    signIn: async () => {}, signUp: async () => {}, signOut: async () => {},
-    completeOnboarding: async () => {}, refreshUserData: async () => {},
-  }),
-  AuthProvider: ({ children }: any) => children,
-}));
+vi.mock('@/contexts/AuthContext', () => {
+  const U = '550e8400-e29b-41d4-a716-446655440001';
+  const CO = '550e8400-e29b-41d4-a716-446655440002';
+  const ST = '550e8400-e29b-41d4-a716-446655440003';
+  return {
+    useAuth: () => ({
+      user: { id: U, store_id: ST, company_id: CO, full_name: 'Test', email: 't@t.mz' },
+      company: { id: CO, name: 'Co', country: 'MZ' },
+      store: { id: ST, name: 'Store', company_id: CO },
+      role: 'admin', permissions: [], roles: ['admin'],
+      branch: null, tenant: null, isMaster: false, isFounder: false,
+      loading: false, appReady: true, isAuthenticated: true, onboardingCompleted: true,
+      hasPerm: () => true,
+      signIn: async () => {}, signUp: async () => {}, signOut: async () => {},
+      completeOnboarding: async () => {}, refreshUserData: async () => {},
+    }),
+    AuthProvider: ({ children }: any) => children,
+  };
+});
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(),
-    rpc: vi.fn(),
-    removeChannel: vi.fn(),
-    channel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() })),
-    auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: U } } }, error: null }),
-      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+vi.mock('@/integrations/supabase/client', () => {
+  const U = '550e8400-e29b-41d4-a716-446655440001';
+  return {
+    supabase: {
+      from: vi.fn(),
+      rpc: vi.fn(),
+      removeChannel: vi.fn(),
+      channel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() })),
+      auth: {
+        getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: U } } }, error: null }),
+        onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+      },
     },
-  },
-}));
+  };
+});
+
+const U = '550e8400-e29b-41d4-a716-446655440001';
+const CO = '550e8400-e29b-41d4-a716-446655440002';
+const ST = '550e8400-e29b-41d4-a716-446655440003';
+const CR = '550e8400-e29b-41d4-a716-446655440010';
+const P1 = '550e8400-e29b-41d4-a716-446655440004';
+const P2 = '550e8400-e29b-41d4-a716-446655440005';
 
 const buildFromMock = () => (table: string) => {
   const dataFor: Record<string, any[]> = {
