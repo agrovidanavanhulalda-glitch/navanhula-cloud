@@ -9,6 +9,8 @@ import {
   Users, TrendingUp, Target, DollarSign, Trophy, Phone,
   Mail, MessageSquare, CalendarCheck, StickyNote, AlertTriangle,
 } from 'lucide-react';
+import GlobalFiltersBar from '@/components/filters/GlobalFiltersBar';
+import { useGlobalFilters } from '@/contexts/GlobalFiltersContext';
 
 const fmtMoney = (n: unknown) =>
   `${Number(n ?? 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MT`;
@@ -36,8 +38,9 @@ const Stat: React.FC<StatProps> = ({ icon: Icon, label, value, tone = 'default' 
 
 export default function CommercialDashboardPage() {
   const { company } = useAuth();
+  const { range } = useGlobalFilters();
   const { data, isLoading, error } = useQuery({
-    queryKey: ['commercial-dashboard', company?.id],
+    queryKey: ['commercial-dashboard', company?.id, range.from?.toISOString(), range.to?.toISOString()],
     queryFn: async () => {
       const { data, error } = await (supabase.rpc as any)('commercial_dashboard_stats', { p_company_id: company!.id });
       if (error) throw error;
@@ -70,6 +73,10 @@ export default function CommercialDashboardPage() {
         <h1 className="text-2xl font-black">Dashboard Comercial</h1>
         <p className="text-sm text-muted-foreground">Indicadores comerciais em tempo real</p>
       </header>
+
+      <GlobalFiltersBar />
+
+
 
       <section>
         <h2 className="text-xs font-bold uppercase text-muted-foreground mb-2">Leads</h2>
