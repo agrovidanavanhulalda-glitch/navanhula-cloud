@@ -9651,6 +9651,7 @@ export type Database = {
         }
       }
       founder_backup_stats: { Args: never; Returns: Json }
+      founder_business_analytics: { Args: { p_months?: number }; Returns: Json }
       founder_company_stats: { Args: { _company_id: string }; Returns: Json }
       founder_extend_trial: {
         Args: { _company_id: string; _days: number }
