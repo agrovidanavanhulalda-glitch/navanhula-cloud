@@ -364,6 +364,7 @@ const AppRoutes = () => {
           <Route path="automacao" element={<SubscriptionGate><AutomationRulesPage /></SubscriptionGate>} />
           <Route path="api-keys" element={<SubscriptionGate><ApiKeysPage /></SubscriptionGate>} />
           <Route path="leads" element={<SubscriptionGate><LeadsPipelinePage /></SubscriptionGate>} />
+          <Route path="tarefas" element={<SubscriptionGate><CrmTasksPage /></SubscriptionGate>} />
           <Route path="crescimento" element={<SubscriptionGate><GrowthDashboardPage /></SubscriptionGate>} />
           <Route path="indicacoes" element={<ReferralPage />} />
           <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
