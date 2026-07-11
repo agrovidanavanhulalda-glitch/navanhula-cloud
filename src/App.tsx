@@ -106,6 +106,7 @@ const GovernancePage = React.lazy(() => import("./pages/GovernancePage"));
 const AutomationRulesPage = React.lazy(() => import("./pages/AutomationRulesPage"));
 const InviteAcceptPage = React.lazy(() => import("./pages/InviteAcceptPage"));
 const LeadsPipelinePage = React.lazy(() => import("./pages/LeadsPipelinePage"));
+const CrmTasksPage = React.lazy(() => import("./pages/CrmTasksPage"));
 const GrowthDashboardPage = React.lazy(() => import("./pages/GrowthDashboardPage"));
 const ReferralPage = React.lazy(() => import("./pages/ReferralPage"));
 const WMSDashboard = React.lazy(() => import("./pages/WMSDashboard"));
