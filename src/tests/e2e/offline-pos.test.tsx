@@ -18,20 +18,25 @@ const TEST_STORE_ID = '550e8400-e29b-41d4-a716-446655440003';
 const TEST_CR_ID = '550e8400-e29b-41d4-a716-446655440010';
 const TEST_PRODUCT_ID = '550e8400-e29b-41d4-a716-446655440004';
 
-vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({
-    user: { id: TEST_USER_ID, store_id: TEST_STORE_ID, company_id: TEST_COMPANY_ID, full_name: 'Test User', email: 't@t.mz' },
-    company: { id: TEST_COMPANY_ID, name: 'Test Co', country: 'MZ' },
-    store: { id: TEST_STORE_ID, name: 'Test Store', company_id: TEST_COMPANY_ID },
-    role: 'admin', permissions: [], roles: ['admin'],
-    branch: null, tenant: null, isMaster: false, isFounder: false,
-    loading: false, appReady: true, isAuthenticated: true, onboardingCompleted: true,
-    hasPerm: () => true,
-    signIn: async () => {}, signUp: async () => {}, signOut: async () => {},
-    completeOnboarding: async () => {}, refreshUserData: async () => {},
-  }),
-  AuthProvider: ({ children }: any) => children,
-}));
+vi.mock('@/contexts/AuthContext', () => {
+  const U = '550e8400-e29b-41d4-a716-446655440001';
+  const CO = '550e8400-e29b-41d4-a716-446655440002';
+  const ST = '550e8400-e29b-41d4-a716-446655440003';
+  return {
+    useAuth: () => ({
+      user: { id: U, store_id: ST, company_id: CO, full_name: 'Test User', email: 't@t.mz' },
+      company: { id: CO, name: 'Test Co', country: 'MZ' },
+      store: { id: ST, name: 'Test Store', company_id: CO },
+      role: 'admin', permissions: [], roles: ['admin'],
+      branch: null, tenant: null, isMaster: false, isFounder: false,
+      loading: false, appReady: true, isAuthenticated: true, onboardingCompleted: true,
+      hasPerm: () => true,
+      signIn: async () => {}, signUp: async () => {}, signOut: async () => {},
+      completeOnboarding: async () => {}, refreshUserData: async () => {},
+    }),
+    AuthProvider: ({ children }: any) => children,
+  };
+});
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
