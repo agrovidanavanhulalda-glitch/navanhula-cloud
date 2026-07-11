@@ -316,6 +316,7 @@ const AppRoutes = () => {
           <Route path="ceo" element={<CEODashboardPage />} />
           <Route path="founder" element={<FounderGate><FounderLayout /></FounderGate>}>
             <Route index element={<FounderDashboardPage />} />
+            <Route path="dashboard-global" element={<FounderGlobalDashboardPage />} />
             <Route path="empresas" element={<FounderCompaniesPage />} />
             <Route path="utilizadores" element={<FounderUsersPage />} />
             <Route path="assinaturas" element={<FounderSubscriptionsPage />} />
