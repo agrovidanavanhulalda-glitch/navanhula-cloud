@@ -14,12 +14,6 @@ import { LocalPOSProvider, useLocalPOS } from '@/contexts/LocalPOSContext';
 import { supabase } from '@/integrations/supabase/client';
 import { syncManager } from '@/lib/syncQueue';
 
-const U = '550e8400-e29b-41d4-a716-446655440001';
-const CO = '550e8400-e29b-41d4-a716-446655440002';
-const ST = '550e8400-e29b-41d4-a716-446655440003';
-const CR = '550e8400-e29b-41d4-a716-446655440010';
-const P1 = '550e8400-e29b-41d4-a716-446655440004';
-const P2 = '550e8400-e29b-41d4-a716-446655440005';
 
 vi.mock('@/contexts/AuthContext', () => {
   const U = '550e8400-e29b-41d4-a716-446655440001';
