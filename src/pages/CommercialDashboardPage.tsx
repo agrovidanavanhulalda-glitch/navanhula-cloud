@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import GlobalFiltersBar from '@/components/filters/GlobalFiltersBar';
 import { useGlobalFilters } from '@/contexts/GlobalFiltersContext';
+import ExportMenu from '@/components/exports/ExportMenu';
 
 const fmtMoney = (n: unknown) =>
   `${Number(n ?? 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MT`;
@@ -67,11 +68,25 @@ export default function CommercialDashboardPage() {
   const leads = d.leads ?? {}; const pipe = d.pipeline ?? {}; const conv = d.conversao ?? {};
   const acts = d.atividades ?? {}; const tops = (d.top_sellers ?? []) as any[];
 
+  const rows = () => {
+    const out: any[] = [];
+    const push = (secao: string, kpi: string, valor: any) => out.push({ Seção: secao, KPI: kpi, Valor: valor });
+    Object.entries(leads).forEach(([k, v]) => push('Leads', k, v));
+    Object.entries(pipe).forEach(([k, v]) => push('Pipeline', k, v));
+    Object.entries(conv).forEach(([k, v]) => push('Conversão', k, v));
+    Object.entries(acts).forEach(([k, v]) => push('Atividades', k, v));
+    tops.forEach((t, i) => push('Top Vendedores', `#${i+1} ${t.name ?? '—'}`, `${t.conversoes} conv. / ${t.valor}`));
+    return out;
+  };
+
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-black">Dashboard Comercial</h1>
-        <p className="text-sm text-muted-foreground">Indicadores comerciais em tempo real</p>
+      <header className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-black">Dashboard Comercial</h1>
+          <p className="text-sm text-muted-foreground">Indicadores comerciais em tempo real</p>
+        </div>
+        <ExportMenu filename="dashboard-comercial" title="Dashboard Comercial" sheetName="KPIs" getRows={rows} />
       </header>
 
       <GlobalFiltersBar />
