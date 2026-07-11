@@ -67,11 +67,27 @@ export default function FounderGlobalDashboardPage() {
   const crm = d.crm ?? {}; const fin = d.financeiro ?? {}; const tops = (d.top_empresas ?? []) as any[];
   const revByPlan = (fin.receita_por_plano ?? {}) as Record<string, number>;
 
+  const rows = () => {
+    const out: any[] = [];
+    const push = (secao: string, kpi: string, valor: any) => out.push({ Seção: secao, KPI: kpi, Valor: valor });
+    Object.entries(r).forEach(([k, v]) => push('Receita', k, v));
+    Object.entries(c).forEach(([k, v]) => push('Empresas', k, v));
+    Object.entries(u).forEach(([k, v]) => push('Utilizadores', k, v));
+    Object.entries(crm).forEach(([k, v]) => push('CRM', k, v));
+    Object.entries(fin).forEach(([k, v]) => { if (typeof v !== 'object') push('Financeiro', k, v); });
+    Object.entries(revByPlan).forEach(([k, v]) => push('Receita por Plano', k, v));
+    tops.forEach((t, i) => push('Top Empresas', `#${i+1} ${t.name}`, t.receita));
+    return out;
+  };
+
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-black">Dashboard Global do Founder</h1>
-        <p className="text-sm text-muted-foreground">Visão consolidada da plataforma em tempo real</p>
+      <header className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-black">Dashboard Global do Founder</h1>
+          <p className="text-sm text-muted-foreground">Visão consolidada da plataforma em tempo real</p>
+        </div>
+        <ExportMenu filename="dashboard-founder" title="Dashboard Global" sheetName="KPIs" getRows={rows} />
       </header>
 
       <GlobalFiltersBar />
