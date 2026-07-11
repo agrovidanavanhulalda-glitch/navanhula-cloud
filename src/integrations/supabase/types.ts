@@ -9320,6 +9320,57 @@ export type Database = {
       }
     }
     Views: {
+      billing_dashboard_metrics_mv: {
+        Row: {
+          company_id: string | null
+          generated_at: string | null
+          invoices_paid: number | null
+          invoices_pending: number | null
+          invoices_total: number | null
+          paid_amount: number | null
+          pending_amount: number | null
+        }
+        Relationships: []
+      }
+      ceo_dashboard_metrics_mv: {
+        Row: {
+          company_id: string | null
+          generated_at: string | null
+          profit_total: number | null
+          revenue_total: number | null
+          sales_count: number | null
+          stores_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_dashboard_metrics_mv: {
+        Row: {
+          company_id: string | null
+          generated_at: string | null
+          leads_lost: number | null
+          leads_open: number | null
+          leads_total: number | null
+          leads_won: number | null
+          won_value: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers_safe: {
         Row: {
           address: string | null
@@ -9363,6 +9414,56 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      founder_dashboard_metrics_mv: {
+        Row: {
+          companies_active: number | null
+          generated_at: string | null
+          mrr: number | null
+          stores_total: number | null
+          subs_active: number | null
+          users_total: number | null
+        }
+        Relationships: []
+      }
+      inventory_dashboard_metrics_mv: {
+        Row: {
+          company_id: string | null
+          generated_at: string | null
+          products_active: number | null
+          products_total: number | null
+          stock_low: number | null
+          stock_negative: number | null
+          stock_total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_dashboard_metrics_mv: {
+        Row: {
+          avg_ticket_30d: number | null
+          company_id: string | null
+          generated_at: string | null
+          profit_30d: number | null
+          revenue_30d: number | null
+          sales_30d: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -9868,6 +9969,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      founder_system_audit: { Args: never; Returns: Json }
       founder_toggle_founder: {
         Args: { _enabled: boolean; _user_id: string }
         Returns: undefined
@@ -10195,6 +10297,7 @@ export type Database = {
         Args: { p_device?: string; p_ip?: string; p_user_agent?: string }
         Returns: string
       }
+      refresh_dashboard_mvs: { Args: never; Returns: undefined }
       reject_manual_payment: {
         Args: { p_payment_id: string; p_reason?: string; p_rejected_by: string }
         Returns: Json
