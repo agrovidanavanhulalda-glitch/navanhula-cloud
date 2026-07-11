@@ -138,6 +138,11 @@ export default function FounderGlobalDashboardPage() {
       </section>
 
       <section>
+        <h2 className="text-xs font-bold uppercase text-muted-foreground mb-2">Business Analytics</h2>
+        <FounderAnalyticsCharts />
+      </section>
+
+      <section>
         <h2 className="text-xs font-bold uppercase text-muted-foreground mb-2 flex items-center gap-2">
           <Trophy className="h-4 w-4" /> Top 10 Empresas por Receita
         </h2>
