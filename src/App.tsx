@@ -106,6 +106,7 @@ const GovernancePage = React.lazy(() => import("./pages/GovernancePage"));
 const AutomationRulesPage = React.lazy(() => import("./pages/AutomationRulesPage"));
 const InviteAcceptPage = React.lazy(() => import("./pages/InviteAcceptPage"));
 const LeadsPipelinePage = React.lazy(() => import("./pages/LeadsPipelinePage"));
+const CrmTasksPage = React.lazy(() => import("./pages/CrmTasksPage"));
 const GrowthDashboardPage = React.lazy(() => import("./pages/GrowthDashboardPage"));
 const ReferralPage = React.lazy(() => import("./pages/ReferralPage"));
 const WMSDashboard = React.lazy(() => import("./pages/WMSDashboard"));
@@ -363,6 +364,7 @@ const AppRoutes = () => {
           <Route path="automacao" element={<SubscriptionGate><AutomationRulesPage /></SubscriptionGate>} />
           <Route path="api-keys" element={<SubscriptionGate><ApiKeysPage /></SubscriptionGate>} />
           <Route path="leads" element={<SubscriptionGate><LeadsPipelinePage /></SubscriptionGate>} />
+          <Route path="tarefas" element={<SubscriptionGate><CrmTasksPage /></SubscriptionGate>} />
           <Route path="crescimento" element={<SubscriptionGate><GrowthDashboardPage /></SubscriptionGate>} />
           <Route path="indicacoes" element={<ReferralPage />} />
           <Route path="revendedores" element={<Navigate to="/app/revendedores/dashboard" replace />} />
