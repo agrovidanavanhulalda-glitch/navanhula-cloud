@@ -1,25 +1,26 @@
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, Loader2, ImageIcon } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Upload, Loader2, ImageIcon, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface ProductImageUploadProps {
   currentUrl: string | null;
   productId?: string;
   onUploaded: (url: string) => void;
-  label?: string;
+  label?: React.ReactNode;
   compact?: boolean;
 }
 
-const ProductImageUpload: React.FC<ProductImageUploadProps> = ({ 
-  currentUrl, 
-  productId, 
+const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
+  currentUrl,
+  productId,
   onUploaded,
   label,
-  compact
+  compact,
 }) => {
+  const { company } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentUrl);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -32,13 +33,15 @@ const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
       toast.error('Selecione uma imagem válida');
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Imagem deve ter no máximo 5MB');
       return;
     }
+    if (!company?.id) {
+      toast.error('Empresa não identificada.');
+      return;
+    }
 
-    // Show preview immediately for better UX
     const localUrl = URL.createObjectURL(file);
     if (!compact) setPreview(localUrl);
 
@@ -47,12 +50,12 @@ const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
       const ext = file.name.split('.').pop();
       const id = productId || crypto.randomUUID();
       const filename = `${id}-${Date.now()}.${ext}`;
-      const path = `products/${filename}`;
+      // Sprint 2.1: storage policy requires {company_id}/... as first segment
+      const path = `${company.id}/products/${filename}`;
 
       const { error } = await supabase.storage
         .from('product-images')
         .upload(path, file, { upsert: true });
-
       if (error) throw error;
 
       const { data: { publicUrl } } = supabase.storage
@@ -61,7 +64,7 @@ const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
 
       onUploaded(publicUrl);
       if (!compact) setPreview(publicUrl);
-      else setPreview(null); // Reset for compact mode (gallery addition)
+      else setPreview(null);
     } catch (err: any) {
       toast.error('Erro ao enviar: ' + err.message);
       setPreview(currentUrl);
@@ -72,11 +75,11 @@ const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
 
   if (compact) {
     return (
-      <div 
+      <div
         className="border-2 border-dashed rounded-lg h-20 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
         onClick={() => fileRef.current?.click()}
       >
-        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : (label || <Plus className="w-4 h-4" />)}
+        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : (label ?? <Plus className="w-4 h-4" />)}
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
       </div>
     );
@@ -100,21 +103,5 @@ const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
     </div>
   );
 };
-
-const Plus: React.FC<{ className?: string }> = ({ className }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M5 12h14"/><path d="M12 5v14"/>
-  </svg>
-);
 
 export default ProductImageUpload;
