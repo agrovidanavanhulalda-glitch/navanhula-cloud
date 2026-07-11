@@ -73,6 +73,10 @@ export default function FounderGlobalDashboardPage() {
         <p className="text-sm text-muted-foreground">Visão consolidada da plataforma em tempo real</p>
       </header>
 
+      <GlobalFiltersBar />
+
+
+
       <section>
         <h2 className="text-xs font-bold uppercase text-muted-foreground mb-2">Receita</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
