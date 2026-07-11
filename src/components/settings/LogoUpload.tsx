@@ -33,7 +33,8 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ currentUrl, companyId, onUpload
     setUploading(true);
     try {
       const ext = file.name.split('.').pop();
-      const path = `logos/${companyId}/logo.${ext}`;
+      // Sprint 2.1: storage policy requires {company_id}/... as first segment
+      const path = `${companyId}/logos/logo.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('company_assets')
