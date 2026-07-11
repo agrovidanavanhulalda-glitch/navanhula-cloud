@@ -10,6 +10,7 @@ import {
   ResponsiveContainer, FunnelChart, Funnel, LabelList, Tooltip, Cell,
 } from 'recharts';
 import GlobalFiltersBar from '@/components/filters/GlobalFiltersBar';
+import ExportMenu from '@/components/exports/ExportMenu';
 import { useGlobalFilters } from '@/contexts/GlobalFiltersContext';
 
 const STAGES: { key: string; label: string; color: string }[] = [
@@ -104,9 +105,19 @@ export default function SalesFunnelPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-black">Funil de Vendas</h1>
-        <p className="text-sm text-muted-foreground">Visualização das etapas do processo comercial</p>
+      <header className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-black">Funil de Vendas</h1>
+          <p className="text-sm text-muted-foreground">Visualização das etapas do processo comercial</p>
+        </div>
+        <ExportMenu
+          filename="funil-vendas"
+          title="Funil de Vendas"
+          sheetName="Funil"
+          getRows={() => funnel.map((f: any) => ({
+            Etapa: f.label, Leads: f.count, Valor: f.valor, 'Taxa (%)': Number(f.taxa?.toFixed(1) ?? 0),
+          }))}
+        />
       </header>
 
       <GlobalFiltersBar showStage stages={STAGES.map(s => ({ key: s.key, label: s.label }))} />
