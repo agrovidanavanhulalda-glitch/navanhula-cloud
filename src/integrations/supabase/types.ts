@@ -10030,6 +10030,10 @@ export type Database = {
           last_sale_date: string
         }[]
       }
+      get_dashboard_metrics: {
+        Args: { p_company_id?: string; p_scope: string }
+        Returns: Json[]
+      }
       get_dashboard_stats: {
         Args: { p_company_id: string; p_store_id?: string }
         Returns: Json
