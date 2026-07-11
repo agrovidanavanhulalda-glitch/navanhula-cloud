@@ -9438,6 +9438,10 @@ export type Database = {
         Returns: boolean
       }
       collect_ml_features: { Args: { p_batch_id: string }; Returns: undefined }
+      commercial_dashboard_stats: {
+        Args: { p_company_id: string }
+        Returns: Json
+      }
       complete_onboarding: {
         Args: {
           p_company_address?: string
@@ -9684,6 +9688,7 @@ export type Database = {
         Returns: string
       }
       founder_force_logout: { Args: { _user_id: string }; Returns: undefined }
+      founder_global_dashboard_stats: { Args: never; Returns: Json }
       founder_grant_lifetime: {
         Args: { _company_id: string }
         Returns: undefined
