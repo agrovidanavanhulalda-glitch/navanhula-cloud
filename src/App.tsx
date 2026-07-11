@@ -108,6 +108,7 @@ const InviteAcceptPage = React.lazy(() => import("./pages/InviteAcceptPage"));
 const LeadsPipelinePage = React.lazy(() => import("./pages/LeadsPipelinePage"));
 const CrmTasksPage = React.lazy(() => import("./pages/CrmTasksPage"));
 const CommercialDashboardPage = React.lazy(() => import("./pages/CommercialDashboardPage"));
+const SalesFunnelPage = React.lazy(() => import("./pages/SalesFunnelPage"));
 const FounderGlobalDashboardPage = React.lazy(() => import("./pages/founder/FounderGlobalDashboardPage"));
 const GrowthDashboardPage = React.lazy(() => import("./pages/GrowthDashboardPage"));
 const ReferralPage = React.lazy(() => import("./pages/ReferralPage"));
