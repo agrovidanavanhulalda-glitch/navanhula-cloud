@@ -338,6 +338,10 @@ const AppRoutes = () => {
             <Route path="faturas" element={<FounderInvoicesPage />} />
             <Route path="configuracoes" element={<FounderSettingsPage />} />
           </Route>
+            <Route path="fiscal-dashboard" element={<FounderFiscalDashboardPage />} />
+            <Route path="fiscal-dlq" element={<FounderFiscalDLQPage />} />
+            <Route path="fiscal-alertas" element={<FounderFiscalAlertsPage />} />
+          </Route>
           <Route path="fiscal" element={<FiscalPage />} />
           <Route path="contabilidade" element={<Navigate to="/app/financeiro-rh?tab=chart" replace />} />
           <Route path="crm" element={<SubscriptionGate><CRMPage /></SubscriptionGate>} />
