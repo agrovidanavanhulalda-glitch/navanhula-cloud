@@ -12,6 +12,10 @@ export interface SyncTask {
 }
 
 const STORAGE_KEY = 'navanhula_sync_queue';
+const QUEUE_SCHEMA_VERSION_KEY = 'navanhula_sync_queue_version';
+// Bump whenever the canonical payload shape changes. Pre-fiscal Quality Gate
+// (Sprint 0.2 / Etapa 3): SALE tasks MUST carry rpcPayload.p_client_sale_id.
+const QUEUE_SCHEMA_VERSION = 2;
 const MAX_RETRIES = 5;
 const BACKOFF_FACTOR = 2000; // 2s base
 
@@ -42,14 +46,36 @@ class SyncManager {
   }
 
   private loadQueue() {
+    const savedVersion = Number(localStorage.getItem(QUEUE_SCHEMA_VERSION_KEY) ?? '0');
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        this.queue = JSON.parse(saved);
+        const parsed: SyncTask[] = JSON.parse(saved);
+        if (savedVersion < QUEUE_SCHEMA_VERSION) {
+          // Official strategy: INVALIDATE any legacy tasks. Pre-Etapa-5 SALE payloads
+          // bypassed pos_complete_sale and would break idempotency / double-post
+          // financial rows. Never let old formats coexist.
+          const dropped = parsed.filter(t =>
+            t.type === 'SALE' && !t?.payload?.rpcPayload?.p_client_sale_id
+          );
+          if (dropped.length > 0) {
+            console.warn(`[Sync] Invalidating ${dropped.length} legacy SALE task(s) (schema < v${QUEUE_SCHEMA_VERSION}).`);
+          }
+          this.queue = parsed.filter(t =>
+            !(t.type === 'SALE' && !t?.payload?.rpcPayload?.p_client_sale_id)
+          );
+          localStorage.setItem(QUEUE_SCHEMA_VERSION_KEY, String(QUEUE_SCHEMA_VERSION));
+          this.saveQueue();
+        } else {
+          this.queue = parsed;
+        }
       } catch (e) {
         console.error('[Sync] Error parsing queue', e);
         this.queue = [];
+        localStorage.setItem(QUEUE_SCHEMA_VERSION_KEY, String(QUEUE_SCHEMA_VERSION));
       }
+    } else {
+      localStorage.setItem(QUEUE_SCHEMA_VERSION_KEY, String(QUEUE_SCHEMA_VERSION));
     }
   }
 
