@@ -1,10 +1,128 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { crc32 } from "https://deno.land/x/crc32@v0.2.2/mod.ts"
+import { Md5 } from "https://deno.land/std@0.168.0/hash/md5.ts"
+import { PDFDocument, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1"
+import QRCode from "https://esm.sh/qrcode@1.5.3"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// ============ Artifact generation & storage pipeline ============
+
+async function sha256Hex(bytes: Uint8Array): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", bytes)
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("")
+}
+
+function md5Hex(bytes: Uint8Array): string {
+  return new Md5().update(bytes).toString()
+}
+
+function crc32Hex(bytes: Uint8Array): string {
+  return crc32(bytes)
+}
+
+async function safeUpload(
+  supabase: any, path: string, bytes: Uint8Array, contentType: string
+): Promise<{ path: string; sha256: string; md5: string; crc32: string; size: number }> {
+  const [sha, md5, crc] = [await sha256Hex(bytes), md5Hex(bytes), crc32Hex(bytes)]
+  const { error } = await supabase.storage.from('fiscal-documents').upload(path, bytes, {
+    contentType, upsert: true,
+  })
+  if (error) throw new Error(`STORAGE_UPLOAD_FAILED:${path}:${error.message}`)
+  return { path, sha256: sha, md5, crc32: crc, size: bytes.length }
+}
+
+async function generateArtifacts(supabase: any, docId: string, companyId: string, docNumber: string) {
+  const now = new Date()
+  const yyyy = String(now.getUTCFullYear())
+  const mm = String(now.getUTCMonth() + 1).padStart(2, '0')
+  const base = `${companyId}/fiscal/${yyyy}/${mm}/${docId}`
+
+  const { data: canonical, error: canErr } = await supabase.rpc('fiscal_document_canonical', { p_document_id: docId })
+  if (canErr) throw new Error(`CANONICAL_FAILED:${canErr.message}`)
+
+  const artifacts: Record<string, any> = { storage_paths: {} }
+  const errors: string[] = []
+  const encoder = new TextEncoder()
+
+  // JSON (always)
+  try {
+    const jsonBytes = encoder.encode(JSON.stringify(canonical, null, 2))
+    const r = await safeUpload(supabase, `${base}/document.json`, jsonBytes, 'application/json')
+    artifacts.json_path = r.path
+    artifacts.storage_paths.json = r
+    artifacts.sha256 = r.sha256; artifacts.md5 = r.md5; artifacts.crc32 = r.crc32
+    artifacts.file_size_bytes = r.size
+  } catch (e: any) { errors.push(`JSON:${e.message}`) }
+
+  // QR Code
+  try {
+    const qrPayload = JSON.stringify({ doc: docNumber, id: docId })
+    const qrDataUrl: string = await QRCode.toDataURL(qrPayload, { type: 'image/png', width: 256 })
+    const qrB64 = qrDataUrl.split(',')[1]
+    const qrBytes = Uint8Array.from(atob(qrB64), c => c.charCodeAt(0))
+    const r = await safeUpload(supabase, `${base}/qr.png`, qrBytes, 'image/png')
+    artifacts.qr_path = r.path; artifacts.storage_paths.qr = r
+  } catch (e: any) { errors.push(`QR:${e.message}`) }
+
+  // PDF
+  try {
+    const pdf = await PDFDocument.create()
+    const page = pdf.addPage([595, 842])
+    const font = await pdf.embedFont(StandardFonts.Helvetica)
+    const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
+    let y = 800
+    page.drawText('DOCUMENTO FISCAL', { x: 50, y, size: 18, font: bold }); y -= 30
+    page.drawText(`Nº ${docNumber}`, { x: 50, y, size: 12, font: bold }); y -= 20
+    page.drawText(`Documento ID: ${docId}`, { x: 50, y, size: 9, font }); y -= 14
+    page.drawText(`Emitido em: ${now.toISOString()}`, { x: 50, y, size: 9, font }); y -= 20
+    const lines = JSON.stringify(canonical, null, 2).split('\n').slice(0, 60)
+    for (const line of lines) {
+      if (y < 40) break
+      page.drawText(line.slice(0, 95), { x: 50, y, size: 7, font })
+      y -= 10
+    }
+    const pdfBytes = await pdf.save()
+    const r = await safeUpload(supabase, `${base}/document.pdf`, pdfBytes, 'application/pdf')
+    artifacts.pdf_path = r.path; artifacts.storage_paths.pdf = r
+  } catch (e: any) { errors.push(`PDF:${e.message}`) }
+
+  // XML
+  try {
+    const esc = (s: any) => String(s ?? '').replace(/[<>&'"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;' }[c]!))
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<FiscalDocument>\n  <Number>${esc(docNumber)}</Number>\n  <Id>${esc(docId)}</Id>\n  <IssuedAt>${now.toISOString()}</IssuedAt>\n  <Payload><![CDATA[${JSON.stringify(canonical)}]]></Payload>\n</FiscalDocument>`
+    const r = await safeUpload(supabase, `${base}/document.xml`, encoder.encode(xml), 'application/xml')
+    artifacts.xml_path = r.path; artifacts.storage_paths.xml = r
+  } catch (e: any) { errors.push(`XML:${e.message}`) }
+
+  // Metadata
+  try {
+    const meta = {
+      document_id: docId, document_number: docNumber, company_id: companyId,
+      generated_at: now.toISOString(), artifacts: artifacts.storage_paths, errors,
+    }
+    const r = await safeUpload(supabase, `${base}/metadata.json`, encoder.encode(JSON.stringify(meta, null, 2)), 'application/json')
+    artifacts.metadata_path = r.path; artifacts.storage_paths.metadata = r
+    artifacts.metadata = meta
+  } catch (e: any) { errors.push(`META:${e.message}`) }
+
+  // Checksums files (sidecar)
+  try {
+    const sums = Object.entries(artifacts.storage_paths).map(([k, v]: any) => `${v.sha256}  ${k}\n`).join('')
+    const r = await safeUpload(supabase, `${base}/checksums.sha256`, encoder.encode(sums), 'text/plain')
+    artifacts.checksum_sha256_path = r.path
+  } catch (e: any) { errors.push(`SHA_SIDECAR:${e.message}`) }
+
+  const hasCore = artifacts.json_path && artifacts.metadata_path
+  artifacts.integrity_status = hasCore && errors.length === 0 ? 'verified' : (hasCore ? 'partial' : 'failed')
+  return { artifacts, errors }
+}
+
+
 
 async function handleFiscalIssuance(supabase: any, task: any) {
   const payload = task.payload || {}
@@ -114,28 +232,75 @@ async function handleFiscalIssuance(supabase: any, task: any) {
     throw new Error(`FISCAL_RPC_ERROR: ${r?.error || 'unknown'}`)
   }
 
-  // Compute hash/checksum & mark document integrity
-  let hashOut: string | null = null
-  try {
-    const { data: verifyRes } = await supabase.rpc('verify_fiscal_document_integrity', {
-      p_document_id: r.document_id,
+  // ===== Artifact pipeline (idempotent, resilient) =====
+  let artifactResult: any = null
+  const { data: existingDoc } = await supabase
+    .from('fiscal_documents').select('pdf_path, integrity_status').eq('id', r.document_id).maybeSingle()
+
+  if (existingDoc?.pdf_path) {
+    await supabase.from('fiscal_audit_log').insert({
+      ...auditBase, status: 'SKIPPED_ARTIFACTS',
+      fiscal_document_id: r.document_id, document_number: r.document_number,
+      result: { skipped: true, reason: 'ARTIFACTS_EXIST' },
+      finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
     })
-    hashOut = (verifyRes as any)?.hash || null
-  } catch (e) {
-    console.warn('integrity check failed:', (e as any)?.message)
+  } else {
+    try {
+      artifactResult = await generateArtifacts(supabase, r.document_id, sale.company_id, r.document_number)
+      const { error: regErr } = await supabase.rpc('fiscal_document_register_artifacts', {
+        p_document_id: r.document_id, p_artifacts: artifactResult.artifacts,
+      })
+      if (regErr) throw new Error(`REGISTER_FAILED:${regErr.message}`)
+
+      await supabase.from('fiscal_audit_log').insert({
+        ...auditBase, status: 'ARTIFACTS_STORED',
+        fiscal_document_id: r.document_id, document_number: r.document_number,
+        hash: artifactResult.artifacts.sha256,
+        checksum: artifactResult.artifacts.crc32,
+        result: { paths: artifactResult.artifacts.storage_paths, errors: artifactResult.errors, integrity: artifactResult.artifacts.integrity_status },
+        error_code: artifactResult.errors.length ? 'PARTIAL_ARTIFACTS' : null,
+        finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
+      })
+
+      if (artifactResult.errors.length > 0) {
+        await supabase.from('system_alerts').insert({
+          type: 'fiscal_storage_error',
+          message: `Documento ${r.document_number}: ${artifactResult.errors.length} artefacto(s) falharam (${artifactResult.artifacts.integrity_status})`,
+          status: 'open', company_id: sale.company_id,
+        })
+      }
+    } catch (e: any) {
+      console.error('artifact pipeline error:', e.message)
+      await supabase.from('fiscal_audit_log').insert({
+        ...auditBase, status: 'ARTIFACTS_FAILED',
+        fiscal_document_id: r.document_id, document_number: r.document_number,
+        error_code: 'ARTIFACT_PIPELINE_FAILED', error_stack: String(e.message).slice(0, 500),
+        finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
+      })
+      await supabase.from('system_alerts').insert({
+        type: 'fiscal_storage_error',
+        message: `Pipeline de artefactos falhou para ${r.document_number}: ${e.message}`,
+        status: 'open', company_id: sale.company_id,
+      })
+    }
   }
 
-  const finishedAt = new Date()
+  // Integrity verification against stored artefacts
+  let hashOut: string | null = artifactResult?.artifacts?.sha256 ?? null
+  try {
+    const { data: verifyRes } = await supabase.rpc('verify_fiscal_document_integrity', { p_document_id: r.document_id })
+    hashOut = (verifyRes as any)?.hash || hashOut
+  } catch (e) { console.warn('integrity check failed:', (e as any)?.message) }
+
   await supabase.from('fiscal_audit_log').insert({
     ...auditBase, status: 'SUCCESS',
     fiscal_document_id: r.document_id, document_number: r.document_number,
     hash: hashOut,
-    result: { document_id: r.document_id, document_number: r.document_number },
-    finished_at: finishedAt.toISOString(),
-    duration_ms: Math.round(performance.now() - t0),
+    result: { document_id: r.document_id, document_number: r.document_number, artifacts: artifactResult?.artifacts?.storage_paths ?? null },
+    finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
   })
 
-  return { document_id: r.document_id, document_number: r.document_number }
+  return { document_id: r.document_id, document_number: r.document_number, artifacts: artifactResult?.artifacts?.storage_paths ?? null }
 }
 
 

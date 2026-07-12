@@ -9646,6 +9646,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_fiscal_health: { Args: never; Returns: Json }
       check_is_master: { Args: { user_uuid: string }; Returns: boolean }
       check_sod_for_user: {
         Args: { _user_id: string }
@@ -9786,6 +9787,10 @@ export type Database = {
       fiscal_document_canonical: {
         Args: { p_document_id: string }
         Returns: string
+      }
+      fiscal_document_register_artifacts: {
+        Args: { p_artifacts: Json; p_document_id: string }
+        Returns: Json
       }
       fiscal_document_request_regeneration: {
         Args: { p_document_id: string }
@@ -9932,6 +9937,22 @@ export type Database = {
         }
         Returns: string
       }
+      founder_fiscal_archive: { Args: { p_task_id: string }; Returns: Json }
+      founder_fiscal_cancel: {
+        Args: { p_reason?: string; p_task_id: string }
+        Returns: Json
+      }
+      founder_fiscal_dlq: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
+      founder_fiscal_metrics: { Args: { p_hours?: number }; Returns: Json }
+      founder_fiscal_reprocess: { Args: { p_task_id: string }; Returns: Json }
       founder_force_logout: { Args: { _user_id: string }; Returns: undefined }
       founder_global_dashboard_stats: { Args: never; Returns: Json }
       founder_grant_lifetime: {
@@ -10640,7 +10661,14 @@ export type Database = {
         | "suspended"
         | "expired"
         | "lifetime"
-      task_status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "RETRY"
+      task_status:
+        | "PENDING"
+        | "PROCESSING"
+        | "COMPLETED"
+        | "FAILED"
+        | "RETRY"
+        | "CANCELLED"
+        | "ARCHIVED"
       voucher_status: "pending" | "redeemed" | "expired" | "cancelled"
     }
     CompositeTypes: {
@@ -10832,7 +10860,15 @@ export const Constants = {
         "expired",
         "lifetime",
       ],
-      task_status: ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "RETRY"],
+      task_status: [
+        "PENDING",
+        "PROCESSING",
+        "COMPLETED",
+        "FAILED",
+        "RETRY",
+        "CANCELLED",
+        "ARCHIVED",
+      ],
       voucher_status: ["pending", "redeemed", "expired", "cancelled"],
     },
   },

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt } from 'lucide-react';
+import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FounderBadge from '@/components/founder/FounderBadge';
 
@@ -12,6 +12,9 @@ const navItems = [
   { to: '/app/founder/assinaturas', icon: CreditCard, label: 'Assinaturas' },
   { to: '/app/founder/revenue', icon: DollarSign, label: 'Revenue' },
   { to: '/app/founder/faturas', icon: Receipt, label: 'Faturas' },
+  { to: '/app/founder/fiscal-dashboard', icon: Receipt, label: 'Fiscal' },
+  { to: '/app/founder/fiscal-dlq', icon: AlertOctagon, label: 'DLQ Fiscal' },
+  { to: '/app/founder/fiscal-alertas', icon: BellRing, label: 'Alertas Fiscais' },
   { to: '/app/founder/backup', icon: DatabaseBackup, label: 'Backup' },
   { to: '/app/founder/health', icon: HeartPulse, label: 'System Health' },
   { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
