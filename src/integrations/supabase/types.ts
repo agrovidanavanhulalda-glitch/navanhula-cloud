@@ -3712,6 +3712,8 @@ export type Database = {
       fiscal_documents: {
         Row: {
           checksum: string | null
+          checksum_md5_path: string | null
+          checksum_sha256_path: string | null
           company_id: string
           content_hash: string | null
           created_at: string
@@ -3725,15 +3727,26 @@ export type Database = {
           discount_amount: number
           document_number: string
           document_type: Database["public"]["Enums"]["fiscal_document_type"]
+          file_size_bytes: number | null
           id: string
           integrity_checked_at: string | null
           integrity_status: string
           issue_date: string
           issued_by: string
+          json_path: string | null
+          md5_hash: string | null
+          metadata_json: Json | null
+          metadata_path: string | null
+          mime_type: string | null
           notes: string | null
           number: number
+          pdf_path: string | null
+          qr_path: string | null
+          retention_until: string | null
           series_id: string | null
           status: string
+          storage_paths: Json
+          storage_version: number
           store_id: string | null
           subtotal: number
           tax_amount: number
@@ -3741,9 +3754,12 @@ export type Database = {
           total: number
           updated_at: string
           valid_until: string | null
+          xml_path: string | null
         }
         Insert: {
           checksum?: string | null
+          checksum_md5_path?: string | null
+          checksum_sha256_path?: string | null
           company_id: string
           content_hash?: string | null
           created_at?: string
@@ -3757,15 +3773,26 @@ export type Database = {
           discount_amount?: number
           document_number: string
           document_type: Database["public"]["Enums"]["fiscal_document_type"]
+          file_size_bytes?: number | null
           id?: string
           integrity_checked_at?: string | null
           integrity_status?: string
           issue_date?: string
           issued_by: string
+          json_path?: string | null
+          md5_hash?: string | null
+          metadata_json?: Json | null
+          metadata_path?: string | null
+          mime_type?: string | null
           notes?: string | null
           number?: number
+          pdf_path?: string | null
+          qr_path?: string | null
+          retention_until?: string | null
           series_id?: string | null
           status?: string
+          storage_paths?: Json
+          storage_version?: number
           store_id?: string | null
           subtotal?: number
           tax_amount?: number
@@ -3773,9 +3800,12 @@ export type Database = {
           total?: number
           updated_at?: string
           valid_until?: string | null
+          xml_path?: string | null
         }
         Update: {
           checksum?: string | null
+          checksum_md5_path?: string | null
+          checksum_sha256_path?: string | null
           company_id?: string
           content_hash?: string | null
           created_at?: string
@@ -3789,15 +3819,26 @@ export type Database = {
           discount_amount?: number
           document_number?: string
           document_type?: Database["public"]["Enums"]["fiscal_document_type"]
+          file_size_bytes?: number | null
           id?: string
           integrity_checked_at?: string | null
           integrity_status?: string
           issue_date?: string
           issued_by?: string
+          json_path?: string | null
+          md5_hash?: string | null
+          metadata_json?: Json | null
+          metadata_path?: string | null
+          mime_type?: string | null
           notes?: string | null
           number?: number
+          pdf_path?: string | null
+          qr_path?: string | null
+          retention_until?: string | null
           series_id?: string | null
           status?: string
+          storage_paths?: Json
+          storage_version?: number
           store_id?: string | null
           subtotal?: number
           tax_amount?: number
@@ -3805,6 +3846,7 @@ export type Database = {
           total?: number
           updated_at?: string
           valid_until?: string | null
+          xml_path?: string | null
         }
         Relationships: [
           {
@@ -9745,6 +9787,15 @@ export type Database = {
         Args: { p_document_id: string }
         Returns: string
       }
+      fiscal_document_request_regeneration: {
+        Args: { p_document_id: string }
+        Returns: Json
+      }
+      fiscal_document_storage_prefix: {
+        Args: { p_document_id: string }
+        Returns: string
+      }
+      fiscal_is_founder: { Args: { _user_id: string }; Returns: boolean }
       force_confirm_stock_transfer: {
         Args: { p_transfer_id: string }
         Returns: Json
@@ -10130,6 +10181,10 @@ export type Database = {
         Args: { p_company_id: string; p_store_id?: string }
         Returns: Json
       }
+      get_fiscal_document_url: {
+        Args: { p_document_id: string; p_expires_in?: number; p_kind?: string }
+        Returns: Json
+      }
       get_global_low_stock: {
         Args: never
         Returns: {
@@ -10392,6 +10447,10 @@ export type Database = {
         Returns: Json
       }
       process_subscription_renewals: { Args: never; Returns: Json }
+      rebuild_fiscal_document_metadata: {
+        Args: { p_document_id: string }
+        Returns: Json
+      }
       reconcile_bank_transactions: {
         Args: { p_bank_account_id: string }
         Returns: Json
@@ -10416,6 +10475,10 @@ export type Database = {
       refresh_dashboard_mvs: { Args: never; Returns: undefined }
       reject_manual_payment: {
         Args: { p_payment_id: string; p_reason?: string; p_rejected_by: string }
+        Returns: Json
+      }
+      repair_fiscal_document_metadata: {
+        Args: { p_document_id: string }
         Returns: Json
       }
       request_payout: {
@@ -10491,6 +10554,10 @@ export type Database = {
       }
       validate_and_redeem_voucher: {
         Args: { p_code: string; p_store_id?: string }
+        Returns: Json
+      }
+      verify_fiscal_document_checksum: {
+        Args: { p_document_id: string }
         Returns: Json
       }
       verify_fiscal_document_integrity: {
