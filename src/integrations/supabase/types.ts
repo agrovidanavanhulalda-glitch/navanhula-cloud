@@ -3583,6 +3583,78 @@ export type Database = {
           },
         ]
       }
+      fiscal_audit_log: {
+        Row: {
+          actor_id: string | null
+          checksum: string | null
+          company_id: string | null
+          created_at: string
+          document_number: string | null
+          duration_ms: number | null
+          error_code: string | null
+          error_stack: string | null
+          finished_at: string | null
+          fiscal_document_id: string | null
+          hash: string | null
+          id: string
+          job_id: string | null
+          result: Json | null
+          retry_count: number
+          sale_id: string | null
+          source: string
+          started_at: string
+          status: string
+          store_id: string | null
+          worker: string
+        }
+        Insert: {
+          actor_id?: string | null
+          checksum?: string | null
+          company_id?: string | null
+          created_at?: string
+          document_number?: string | null
+          duration_ms?: number | null
+          error_code?: string | null
+          error_stack?: string | null
+          finished_at?: string | null
+          fiscal_document_id?: string | null
+          hash?: string | null
+          id?: string
+          job_id?: string | null
+          result?: Json | null
+          retry_count?: number
+          sale_id?: string | null
+          source?: string
+          started_at?: string
+          status: string
+          store_id?: string | null
+          worker?: string
+        }
+        Update: {
+          actor_id?: string | null
+          checksum?: string | null
+          company_id?: string | null
+          created_at?: string
+          document_number?: string | null
+          duration_ms?: number | null
+          error_code?: string | null
+          error_stack?: string | null
+          finished_at?: string | null
+          fiscal_document_id?: string | null
+          hash?: string | null
+          id?: string
+          job_id?: string | null
+          result?: Json | null
+          retry_count?: number
+          sale_id?: string | null
+          source?: string
+          started_at?: string
+          status?: string
+          store_id?: string | null
+          worker?: string
+        }
+        Relationships: []
+      }
       fiscal_document_items: {
         Row: {
           company_id: string | null
@@ -3639,7 +3711,9 @@ export type Database = {
       }
       fiscal_documents: {
         Row: {
+          checksum: string | null
           company_id: string
+          content_hash: string | null
           created_at: string
           created_by: string | null
           currency: string
@@ -3652,6 +3726,8 @@ export type Database = {
           document_number: string
           document_type: Database["public"]["Enums"]["fiscal_document_type"]
           id: string
+          integrity_checked_at: string | null
+          integrity_status: string
           issue_date: string
           issued_by: string
           notes: string | null
@@ -3667,7 +3743,9 @@ export type Database = {
           valid_until: string | null
         }
         Insert: {
+          checksum?: string | null
           company_id: string
+          content_hash?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -3680,6 +3758,8 @@ export type Database = {
           document_number: string
           document_type: Database["public"]["Enums"]["fiscal_document_type"]
           id?: string
+          integrity_checked_at?: string | null
+          integrity_status?: string
           issue_date?: string
           issued_by: string
           notes?: string | null
@@ -3695,7 +3775,9 @@ export type Database = {
           valid_until?: string | null
         }
         Update: {
+          checksum?: string | null
           company_id?: string
+          content_hash?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -3708,6 +3790,8 @@ export type Database = {
           document_number?: string
           document_type?: Database["public"]["Enums"]["fiscal_document_type"]
           id?: string
+          integrity_checked_at?: string | null
+          integrity_status?: string
           issue_date?: string
           issued_by?: string
           notes?: string | null
@@ -9657,6 +9741,10 @@ export type Database = {
         Args: { p_company_id?: string; p_key: string; p_store_id?: string }
         Returns: boolean
       }
+      fiscal_document_canonical: {
+        Args: { p_document_id: string }
+        Returns: string
+      }
       force_confirm_stock_transfer: {
         Args: { p_transfer_id: string }
         Returns: Json
@@ -10387,6 +10475,10 @@ export type Database = {
         Args: { p_company_id: string; p_new_role: string; p_user_id: string }
         Returns: Json
       }
+      user_has_company_access: {
+        Args: { _company_id: string }
+        Returns: boolean
+      }
       user_has_permission: {
         Args: {
           _branch_id?: string
@@ -10399,6 +10491,10 @@ export type Database = {
       }
       validate_and_redeem_voucher: {
         Args: { p_code: string; p_store_id?: string }
+        Returns: Json
+      }
+      verify_fiscal_document_integrity: {
+        Args: { p_document_id: string }
         Returns: Json
       }
       view_team_members: {
