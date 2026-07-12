@@ -482,11 +482,13 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }));
 
       // 🧾 Fiscal Sprint 1.0 — enqueue fiscal issuance ASYNC (non-blocking, never fails the sale)
-      supabase.rpc('enqueue_fiscal_job' as any, { p_sale_id: result.sale_id })
-        .then(({ error: fjErr }: any) => {
-          if (fjErr) console.warn('[Fiscal] enqueue_fiscal_job failed (sale still ok):', fjErr.message);
-        })
-        .catch((e: any) => console.warn('[Fiscal] enqueue exception (sale still ok):', e?.message));
+      try {
+        const { error: fjErr } = await (supabase.rpc as any)('enqueue_fiscal_job', { p_sale_id: result.sale_id });
+        if (fjErr) console.warn('[Fiscal] enqueue_fiscal_job failed (sale still ok):', fjErr.message);
+      } catch (e: any) {
+        console.warn('[Fiscal] enqueue exception (sale still ok):', e?.message);
+      }
+
 
       await loadData(true);
       return completedSale;
