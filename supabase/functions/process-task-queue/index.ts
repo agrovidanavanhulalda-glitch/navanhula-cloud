@@ -6,6 +6,69 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+async function handleFiscalIssuance(supabase: any, payload: any) {
+  const saleId = payload?.sale_id
+  if (!saleId) throw new Error('MISSING_SALE_ID')
+
+  // Idempotency: skip if already issued
+  const { data: existingDoc } = await supabase
+    .from('fiscal_documents')
+    .select('id, document_number')
+    .eq('notes', null) // placeholder - we search by notes pattern below
+    .limit(1)
+
+  // Load sale + items + store
+  const { data: sale, error: saleErr } = await supabase
+    .from('sales')
+    .select('id, store_id, company_id, subtotal, discount_amount, total, payment_method, status, customer_name, customer_phone, sale_items(product_name, quantity, unit_price)')
+    .eq('id', saleId)
+    .maybeSingle()
+
+  if (saleErr) throw new Error(`SALE_LOAD_FAILED: ${saleErr.message}`)
+  if (!sale) throw new Error('SALE_NOT_FOUND')
+  if (sale.status !== 'completed') throw new Error(`SALE_NOT_COMPLETED: ${sale.status}`)
+
+  const notesTag = `Venda PDV #${String(sale.id).slice(0, 8)}`
+
+  // Idempotency by notes tag
+  const { data: dup } = await supabase
+    .from('fiscal_documents')
+    .select('id, document_number')
+    .ilike('notes', `%${notesTag}%`)
+    .limit(1)
+  if (dup && dup.length > 0) {
+    return { document_id: dup[0].id, document_number: dup[0].document_number, skipped: true }
+  }
+
+  const items = (sale.sale_items || []).map((it: any) => ({
+    description: it.product_name || 'Item',
+    quantity: Number(it.quantity),
+    unit_price: Number(it.unit_price),
+    tax_rate: 0,
+  }))
+
+  const { data: rpcRes, error: rpcErr } = await supabase.rpc('issue_fiscal_document', {
+    p_document_type: 'invoice_receipt',
+    p_customer_name: sale.customer_name || 'Consumidor Final',
+    p_items: items,
+    p_store_id: sale.store_id,
+    p_customer_phone: sale.customer_phone || null,
+    p_customer_email: null,
+    p_customer_nuit: null,
+    p_customer_address: null,
+    p_valid_until: null,
+    p_notes: `${notesTag} | ${sale.payment_method}`,
+    p_tax_rate: 0,
+    p_discount_amount: Number(sale.discount_amount || 0),
+  })
+
+  if (rpcErr) throw new Error(`FISCAL_RPC_FAILED: ${rpcErr.message}`)
+  const r = rpcRes as any
+  if (!r?.success) throw new Error(`FISCAL_RPC_ERROR: ${r?.error || 'unknown'}`)
+
+  return { document_id: r.document_id, document_number: r.document_number }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -17,13 +80,12 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Get tasks to process (PENDING or RETRY and due)
     const { data: tasks, error: fetchError } = await supabase
       .from('background_tasks')
       .select('*')
       .in('status', ['PENDING', 'RETRY'])
       .lte('next_retry_at', new Date().toISOString())
-      .limit(10)
+      .limit(20)
       .order('created_at', { ascending: true })
 
     if (fetchError) throw fetchError
@@ -35,68 +97,63 @@ serve(async (req) => {
       })
     }
 
-    const results = []
+    const results: any[] = []
 
     for (const task of tasks) {
-      // 2. Mark as PROCESSING
       await supabase
         .from('background_tasks')
-        .update({ 
-          status: 'PROCESSING', 
+        .update({
+          status: 'PROCESSING',
           started_at: new Date().toISOString(),
-          attempts: task.attempts + 1 
+          attempts: task.attempts + 1,
         })
         .eq('id', task.id)
 
       try {
-        console.log(`Processing task ${task.id} (${task.task_type})`)
-        
-        // 3. Execute task logic based on type
-        // This is a placeholder for actual task processing logic
-        // For now, we simulate success or specific built-in types
-        let success = true;
-        
+        console.log(`Processing task ${task.id} (${task.task_type}) attempt=${task.attempts + 1}`)
+        let output: any = null
+
         switch (task.task_type) {
+          case 'ISSUE_FISCAL_DOCUMENT':
+            output = await handleFiscalIssuance(supabase, task.payload)
+            break
           case 'test':
             console.log('Test task payload:', task.payload)
-            break;
+            break
           default:
             console.warn(`Unknown task type: ${task.task_type}`)
         }
 
-        if (success) {
-          // 4. Mark as COMPLETED
-          await supabase
-            .from('background_tasks')
-            .update({ 
-              status: 'COMPLETED', 
-              completed_at: new Date().toISOString() 
-            })
-            .eq('id', task.id)
-          
-          results.push({ id: task.id, status: 'COMPLETED' })
-        }
-      } catch (error) {
-        console.error(`Error processing task ${task.id}:`, error)
-        
-        const isRetryable = task.attempts + 1 < task.max_attempts
-        const nextStatus = isRetryable ? 'RETRY' : 'FAILED'
-        
-        // Exponential backoff: 2^attempts * 30 seconds
-        const backoffSeconds = Math.pow(2, task.attempts) * 30
+        await supabase
+          .from('background_tasks')
+          .update({
+            status: 'COMPLETED',
+            completed_at: new Date().toISOString(),
+            last_error: null,
+            payload: { ...task.payload, result: output },
+          })
+          .eq('id', task.id)
+
+        results.push({ id: task.id, status: 'COMPLETED', output })
+      } catch (error: any) {
+        console.error(`Task ${task.id} failed:`, error?.message)
+        const attempts = task.attempts + 1
+        const isRetryable = attempts < task.max_attempts
+        const nextStatus = isRetryable ? 'RETRY' : 'FAILED' // FAILED = Dead Letter Queue
+        const backoffSeconds = Math.pow(2, attempts) * 30
         const nextRetry = new Date()
         nextRetry.setSeconds(nextRetry.getSeconds() + backoffSeconds)
 
         await supabase
           .from('background_tasks')
-          .update({ 
-            status: nextStatus, 
-            last_error: error.message,
-            next_retry_at: isRetryable ? nextRetry.toISOString() : null
+          .update({
+            status: nextStatus,
+            last_error: String(error?.message || error).slice(0, 500),
+            next_retry_at: isRetryable ? nextRetry.toISOString() : null,
           })
           .eq('id', task.id)
-          
-        results.push({ id: task.id, status: nextStatus, error: error.message })
+
+        results.push({ id: task.id, status: nextStatus, error: error?.message })
       }
     }
 
@@ -104,9 +161,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
-
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: error?.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })

@@ -9638,6 +9638,7 @@ export type Database = {
         Args: { p_product_id: string; p_quantity: number; p_store_id: string }
         Returns: undefined
       }
+      enqueue_fiscal_job: { Args: { p_sale_id: string }; Returns: string }
       evaluate_automation_rules: {
         Args: { p_company_id: string }
         Returns: Json
