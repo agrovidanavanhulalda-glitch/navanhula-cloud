@@ -185,7 +185,7 @@ serve(async (req) => {
 
         switch (task.task_type) {
           case 'ISSUE_FISCAL_DOCUMENT':
-            output = await handleFiscalIssuance(supabase, task.payload)
+            output = await handleFiscalIssuance(supabase, task)
             break
           case 'test':
             console.log('Test task payload:', task.payload)
