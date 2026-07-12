@@ -7245,6 +7245,7 @@ export type Database = {
       sales: {
         Row: {
           cash_register_id: string | null
+          client_sale_id: string | null
           company_id: string | null
           cost_total: number
           created_at: string | null
@@ -7268,6 +7269,7 @@ export type Database = {
         }
         Insert: {
           cash_register_id?: string | null
+          client_sale_id?: string | null
           company_id?: string | null
           cost_total?: number
           created_at?: string | null
@@ -7291,6 +7293,7 @@ export type Database = {
         }
         Update: {
           cash_register_id?: string | null
+          client_sale_id?: string | null
           company_id?: string | null
           cost_total?: number
           created_at?: string | null
@@ -10254,25 +10257,46 @@ export type Database = {
         }
         Returns: Json
       }
-      pos_complete_sale: {
-        Args: {
-          p_cash_register_id: string
-          p_customer_name?: string
-          p_customer_phone?: string
-          p_discount_amount?: number
-          p_discount_percent?: number
-          p_ip_address?: string
-          p_items: Json
-          p_notes?: string
-          p_payment_method: string
-          p_seller_name?: string
-          p_store_id: string
-          p_subtotal: number
-          p_total?: number
-          p_voucher_code?: string
-        }
-        Returns: Json
-      }
+      pos_complete_sale:
+        | {
+            Args: {
+              p_cash_register_id: string
+              p_customer_name?: string
+              p_customer_phone?: string
+              p_discount_amount?: number
+              p_discount_percent?: number
+              p_ip_address?: string
+              p_items: Json
+              p_notes?: string
+              p_payment_method: string
+              p_seller_name?: string
+              p_store_id: string
+              p_subtotal: number
+              p_total?: number
+              p_voucher_code?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_cash_register_id: string
+              p_client_sale_id?: string
+              p_customer_name?: string
+              p_customer_phone?: string
+              p_discount_amount?: number
+              p_discount_percent?: number
+              p_ip_address?: string
+              p_items: Json
+              p_notes?: string
+              p_payment_method: string
+              p_seller_name?: string
+              p_store_id: string
+              p_subtotal: number
+              p_total?: number
+              p_voucher_code?: string
+            }
+            Returns: Json
+          }
       process_lead_followups: { Args: never; Returns: Json }
       process_nava_payment: {
         Args: {
