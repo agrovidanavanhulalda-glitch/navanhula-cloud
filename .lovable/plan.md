@@ -1,97 +1,72 @@
-# 👑 FASE 2 — FOUNDER CONTROL CENTER
+# FISCAL SPRINT 1.1 — Plano de Execução
 
-Painel exclusivo acima do Dashboard CEO, visível **apenas** para contas com `is_founder = true` ou `account_type = 'FOUNDER'`. Construído sobre a Fase 1 (já entregou `profiles.is_founder`, `is_founder()`, gates bypass, `useAuth().isFounder`).
-
-Dado o escopo (13 subseções + backend), proponho entregar em 4 marcos incrementais. Cada marco fecha 100% funcional (nada de placeholders vazios). Confirme antes de começarmos, ou diga "vai" para eu executar os 4 marcos em sequência.
+Escopo enorme (10 fases). Para preservar a estabilidade das Sprints 0.1/0.2 e permitir revisão incremental, proponho executar em **4 entregas sequenciais**, cada uma com aprovação sua entre elas. Nenhuma tocará em `pos_complete_sale`, triggers financeiras, syncManager, Billing, Founder Mode ou Multi-Tenant.
 
 ---
 
-## Marco 1 — Fundação, Rota e Guarda
+## Entrega A — Fundação (Fases 1 + 3 + 9 parcial)
+**Auditoria Fiscal + Integridade + RLS**
 
-**Backend (1 migration)**
-- View `founder_platform_stats` — counts globais (empresas, lojas, users, clientes, subs ativas, trials, bloqueadas, MRR/receita total).
-- View `founder_infrastructure_stats` — count de tables/views/functions/policies/buckets/triggers/cron via `information_schema` + `pg_catalog`.
-- RPCs `SECURITY DEFINER` que retornam essas views **apenas se `is_founder(auth.uid())`** — caso contrário `RAISE EXCEPTION 'forbidden'`. Grants para `authenticated`.
-- Tabela `feature_flags` (key, enabled, description, updated_by, updated_at) + RLS: SELECT authenticated, WRITE só founder. Seed: `pos, erp, crm, hr, finance, fiscal, ecommerce, marketplace, ai, public_api`.
-- Tabela `founder_audit_log` (actor_id, action, target_type, target_id, metadata jsonb, created_at) + RLS founder-only.
+Nova tabela `fiscal_audit_log`:
+- `job_id, sale_id, company_id, store_id, fiscal_document_id, document_number, worker, started_at, finished_at, duration_ms, retry_count, status, result, error_code, error_stack, checksum, hash, actor_id, source`
+- RLS: `company_id` isolation + Founder full access
+- GRANTs completos (authenticated + service_role)
+- Índices: `(company_id, started_at DESC)`, `(status)`, `(sale_id)`, `(fiscal_document_id)`
 
-**Frontend**
-- `src/components/auth/FounderGate.tsx` — redireciona não-founders para `/app`.
-- Rota `/app/founder/*` em `App.tsx` protegida por `FounderGate`.
-- `src/pages/founder/FounderLayout.tsx` — sub-nav (Dashboard, Empresas, Utilizadores, Assinaturas, Infra, Feature Flags, Simulação, Auditoria, Configurações).
-- Item de menu 👑 **Founder** no `Sidebar.tsx` — renderizado **antes** do "Dashboard CEO" e **só quando `isFounder`**.
-- Badge dourado permanente no header do `MainLayout` quando `isFounder`: `👑 FOUNDER · MAX ENTERPRISE · LIFETIME` (gradient dourado semântico via token `--founder`).
+Colunas em `fiscal_documents`: `content_hash TEXT`, `checksum TEXT`, `integrity_status TEXT DEFAULT 'unverified'`, `integrity_checked_at TIMESTAMPTZ`.
 
----
+Worker `process-task-queue` estendido:
+- Gera SHA-256 do payload fiscal ao emitir
+- Escreve linha em `fiscal_audit_log` em cada tentativa (sucesso/erro/retry)
+- Preenche `content_hash`/`checksum` em `fiscal_documents`
 
-## Marco 2 — Dashboard Global (4 abas)
-
-Página `FounderDashboardPage.tsx` com Tabs:
-
-1. **Plataforma** — cards com KPIs de `founder_platform_stats` (Empresas, Lojas, Users, Clientes, Assinaturas, MRR, Receita Total, Trial Ativos/Expirados, Bloqueadas, Ativas).
-2. **Infraestrutura** — DB size (`pg_database_size`), tables/views/rpcs/policies/buckets/triggers/cron, edge functions (lista estática do repo + status via RPC).
-3. **Sistema** — Versão (`package.json`), Build (`import.meta.env`), Ambiente, Deploy time (build timestamp), Status/Uptime/Latência (ping ao Supabase mede RTT).
-4. **Monitorização** — Sessões ativas (contagem em `user_sessions` últimos 5min), Users online, Empresas online, API calls (agrega `api_request_logs` últimos 60min). CPU/RAM/Storage marcados como "n/d em serverless" com explicação — não inventamos números.
-
-Realtime: `useQuery` com `refetchInterval: 10s`.
+RPC `verify_fiscal_document_integrity(p_document_id)` — recalcula hash e atualiza `integrity_status` (`valid` | `corrupted`); em corrupção, cria alerta em `system_alerts` para Founder.
 
 ---
 
-## Marco 3 — Gestão (Empresas, Utilizadores, Assinaturas, Feature Flags)
+## Entrega B — Storage Fiscal (Fase 2)
+Bucket privado `fiscal-documents` (via tool), path `{company_id}/{yyyy}/{mm}/{document_id}/{pdf|xml|json|qr}.ext`.
 
-- **`FounderCompaniesPage`** — DataTable de `companies`: ver/editar/suspender (`status`)/ativar/excluir (soft delete)/**Entrar como** (impersonation via `impersonation_sessions` já existente).
-- **`FounderUsersPage`** — DataTable global de `profiles`+`user_roles`: editar, reset password (edge function `admin-reset-password`), alterar plano/role, **Tornar/Remover Founder** (chama RPC que respeita o trigger `trg_protect_founder_flag` da Fase 1), bloquear/desbloquear.
-- **`FounderSubscriptionsPage`** — CRUD sobre `subscriptions`: criar/alterar plano, renovar, cancelar, **Licença Vitalícia** (`expires_at = null, plan = 'MAX_ENTERPRISE'`), liberar/estender trial.
-- **`FounderFeatureFlagsPage`** — toggles sobre `feature_flags` + hook `useFeatureFlag(key)` para consumo global. Inclui toggle **Developer Mode**.
+- RLS em `storage.objects`: apenas membros da company + Founder
+- Coluna `storage_paths JSONB` em `fiscal_documents` guardando `{pdf, xml, json, qr, version}`
+- Signed URLs (60s) via RPC `get_fiscal_document_url(p_document_id, p_kind)`
+- Worker faz upload do PDF/QR já gerados; XML/JSON como stubs versionáveis
 
-Toda mutação escreve em `founder_audit_log`.
-
-**Edge functions novas**
-- `founder-admin` — endpoint único, valida `is_founder`, roteia ações sensíveis (reset password via `auth.admin`, impersonation, delete empresa em cascata).
+Retenção: coluna `retention_until` (default `now() + interval '10 years'` — Moçambique fiscal).
 
 ---
 
-## Marco 4 — Simulação, Auditoria, Backup, Configurações, APIs
+## Entrega C — Dashboard + Dead Letter Center (Fases 4 + 5 + 7)
 
-- **`FounderSimulationPage`** — dropdown "Simular como" (Cliente/Loja/Empresa/Caixa/Supervisor/CEO). Usa `impersonation_sessions` + banner persistente "🎭 Modo Simulação — sair". Read-only enforcement por flag na sessão (writes bloqueados em edge functions quando `x-simulation: true`).
-- **`FounderAuditPage`** — consolidação de `audit_logs`, `auth_event_logs`, `payment_logs`, `founder_audit_log`, `system_errors`. Filtros por tipo/data/usuário.
-- **`FounderBackupPage`** — Backup manual (edge function → `pg_dump` via RPC lógico export por tabelas, salva em bucket `founder-backups`), listagem, restaurar (com dupla confirmação). Backup automático: cron `pg_cron` diário.
-- **`FounderEdgeFunctionsPage`** — lista funções do repo + status (health-check) + link para logs.
-- **`FounderApisPage`** — agrega `api_request_logs`: total, latência média, falhas, top endpoints.
-- **`FounderSettingsPage`** — edita config global (nova tabela `platform_settings` singleton: nome, logo, cores, idioma default, timezone, IVA, moeda, planos disponíveis, duração trial). Founder-only RW.
+RPC `founder_fiscal_metrics(p_hours int)` retornando JSON com todos os KPIs (emitidos, pendentes, retries, failed/DLQ, p50/p95/p99, throughput, backlog, storage bytes, success/failure/retry rate).
 
----
+Novas páginas Founder (usando tokens semânticos, dark-mode-safe):
+- `src/pages/founder/FounderFiscalDashboardPage.tsx` — KPIs + charts (recharts)
+- `src/pages/founder/FounderFiscalDLQPage.tsx` — tabela de `background_tasks` com `task_type='ISSUE_FISCAL_DOCUMENT'` e `status='FAILED'`; ações: reprocessar (RPC `fiscal_requeue_job`), cancelar, arquivar, ver stack, download logs — tudo escreve em `fiscal_audit_log`.
 
-## Segurança (transversal)
-
-- Toda RPC/edge usada pelo painel valida `public.is_founder(auth.uid())` no primeiro statement. Falha = `403 forbidden`.
-- Todas as tabelas novas: RLS ON + policies founder-only + GRANTs corretos (`authenticated` SELECT quando aplicável, `service_role` ALL).
-- Rotas `/app/founder/*` duplamente protegidas: `FounderGate` no frontend + validação no backend (defense in depth).
+Rotas adicionadas em `FounderLayout` + `App.tsx` sob `FounderGate`.
 
 ---
 
-## Critérios de aceitação mapeados
+## Entrega D — Notificações + Resiliência + Perf (Fases 6 + 8 + 10)
 
-| Requisito | Marco |
-|---|---|
-| Menu 👑 Founder antes do CEO | 1 |
-| Badge dourado permanente | 1 |
-| Dashboard exclusivo (4 abas) | 2 |
-| Controle Global / Empresas / Assinaturas | 3 |
-| Feature Flags + Developer Mode | 3 |
-| Infraestrutura / Monitorização | 2 |
-| Simulação de utilizadores | 4 |
-| Auditoria / Logs | 4 |
-| Backup manual/automático | 4 |
-| Segurança `is_founder` obrigatória | Todos |
+Fase 6: após sucesso, enfileirar `SEND_FISCAL_NOTIFICATION` (email/whatsapp/portal). Falha fiscal → `system_alerts` para Founder/Admin. **Sem bloquear a venda.**
+
+Fase 8: suíte `src/tests/e2e/fiscal-resilience.test.tsx` cobrindo worker off, timeout, storage down, PDF/QR fail, retry, DLQ, reprocessamento, duplicação (idempotência por `sale_id`).
+
+Fase 10: coletar métricas via `pg_stat_statements` + timing no worker, expor em `founder_fiscal_metrics`.
 
 ---
 
-## Detalhes técnicos
+## Detalhes técnicos-chave
 
-- Design tokens novos em `index.css`: `--founder-gold`, `--founder-gold-glow` (HSL). Nada de `bg-yellow-500` hard-coded.
-- Query keys namespacadas: `['founder', 'stats']`, `['founder', 'companies']`, etc.
-- Todas as páginas com `ErrorBoundary` local e skeleton loaders.
-- i18n: strings em `pt` (default do projeto) — não bloqueia demais idiomas nesta fase.
+- Toda emissão fiscal permanece **assíncrona** e desacoplada de `pos_complete_sale` (mantido de Sprint 1.0)
+- Idempotência: `background_tasks.payload->>'sale_id'` + índice único parcial evita duplicação
+- Hash: `encode(digest(canonical_json, 'sha256'), 'hex')` via `pgcrypto`
+- Sem alteração em `sales`, `sale_items`, triggers `trg_financial_tx_*`, `syncQueue`
 
-**Confirma para eu executar? Posso ir marco a marco (aguardando validação entre eles) ou executar tudo em sequência — diga a preferência.**
+## Recomendação
+
+Começar por **Entrega A** (menor risco, fundação obrigatória para B/C/D). Peça aprovação antes de cada próxima entrega.
+
+Confirma que devo iniciar pela **Entrega A**?
