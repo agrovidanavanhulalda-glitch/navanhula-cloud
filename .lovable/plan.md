@@ -1,72 +1,89 @@
-# FISCAL SPRINT 1.1 — Plano de Execução
+# Entrega C — Fiscal Sprint 1.2
 
-Escopo enorme (10 fases). Para preservar a estabilidade das Sprints 0.1/0.2 e permitir revisão incremental, proponho executar em **4 entregas sequenciais**, cada uma com aprovação sua entre elas. Nenhuma tocará em `pos_complete_sale`, triggers financeiras, syncManager, Billing, Founder Mode ou Multi-Tenant.
+Escopo estritamente dentro do domínio fiscal. Zero alterações em `pos_complete_sale`, Billing, Financeiro, CRM, SyncManager, ou no Founder Control Center existente (apenas adicionar novas rotas).
 
----
+## Etapa 1 — Worker completo (`process-task-queue`)
 
-## Entrega A — Fundação (Fases 1 + 3 + 9 parcial)
-**Auditoria Fiscal + Integridade + RLS**
+Após `issue_fiscal_document` bem-sucedido, o worker executa em pipeline resiliente (cada gerador em try/catch isolado — falha de artefato não perde o documento):
 
-Nova tabela `fiscal_audit_log`:
-- `job_id, sale_id, company_id, store_id, fiscal_document_id, document_number, worker, started_at, finished_at, duration_ms, retry_count, status, result, error_code, error_stack, checksum, hash, actor_id, source`
-- RLS: `company_id` isolation + Founder full access
-- GRANTs completos (authenticated + service_role)
-- Índices: `(company_id, started_at DESC)`, `(status)`, `(sale_id)`, `(fiscal_document_id)`
+1. Monta payload canónico via RPC `fiscal_document_canonical`
+2. Gera **JSON** (canónico) — sempre
+3. Gera **QR Code** (SVG ASCII inline via lib pura Deno)
+4. Gera **PDF** simples (texto A4, sem libs pesadas — usa template minimalista)
+5. Gera **XML** (SAF-T-like reduzido)
+6. Gera **Metadata** (`{doc_number, company_id, hashes, sizes, generated_at}`)
+7. Calcula **SHA-256 + MD5 + checksum CRC32** de cada artefato
+8. Faz upload no bucket privado `fiscal-documents` em `{company_id}/fiscal/{yyyy}/{mm}/{document_id}/{tipo}.ext`
+9. Chama nova RPC `fiscal_document_register_artifacts(document_id, artifacts jsonb)` que:
+   - Atualiza `fiscal_documents` com paths + hashes + integrity_status='verified'
+   - Insere linha em `fiscal_audit_log` (status=`ARTIFACTS_STORED`)
+10. Idempotência: se `fiscal_documents.pdf_path` já preenchido, pula geração e loga `SKIPPED_ARTIFACTS`.
 
-Colunas em `fiscal_documents`: `content_hash TEXT`, `checksum TEXT`, `integrity_status TEXT DEFAULT 'unverified'`, `integrity_checked_at TIMESTAMPTZ`.
+Falha parcial (ex.: PDF falha) → grava artefatos gerados, marca `integrity_status='partial'`, cria `system_alert` severity=`warning`, mas **não** re-tenta o job (venda continua íntegra).
 
-Worker `process-task-queue` estendido:
-- Gera SHA-256 do payload fiscal ao emitir
-- Escreve linha em `fiscal_audit_log` em cada tentativa (sucesso/erro/retry)
-- Preenche `content_hash`/`checksum` em `fiscal_documents`
+## Etapa 2 — RPCs de suporte
 
-RPC `verify_fiscal_document_integrity(p_document_id)` — recalcula hash e atualiza `integrity_status` (`valid` | `corrupted`); em corrupção, cria alerta em `system_alerts` para Founder.
+- `founder_fiscal_metrics(p_hours int default 24)` → jsonb com todos os KPIs (documentos por status, throughput, avg/max/min duration, p95/p99 via `percentile_cont`, success/failure/retry rate, queue size, storage bytes via soma de `metadata->>size`, últimos 20 documentos).
+- `founder_fiscal_dlq(p_limit int, p_offset int, p_search text)` → lista `background_tasks` com `status='FAILED'` + task_type fiscal.
+- `founder_fiscal_reprocess(p_task_id uuid)` → reseta job para `PENDING`, `attempts=0`, log em `fiscal_audit_log` (`source='founder_manual'`).
+- `founder_fiscal_cancel(p_task_id uuid, p_reason text)` → status='CANCELLED', auditado.
+- `founder_fiscal_archive(p_task_id uuid)` → status='ARCHIVED', auditado.
+- Todas `SECURITY DEFINER`, gate `has_role(auth.uid(),'founder')`, `REVOKE FROM public/anon`, `GRANT authenticated, service_role`.
 
----
+## Etapa 3 — Alertas fiscais
 
-## Entrega B — Storage Fiscal (Fase 2)
-Bucket privado `fiscal-documents` (via tool), path `{company_id}/{yyyy}/{mm}/{document_id}/{pdf|xml|json|qr}.ext`.
+Migration com função `check_fiscal_health()` chamada pelo dashboard (client-triggered, sem cron novo) que insere em `system_alerts` quando:
+- DLQ > 10 nos últimos 60min
+- Retry rate > 30%
+- Worker sem execução há > 15min (baseado em `max(fiscal_audit_log.finished_at)`)
+- Hash inválido detectado
+- Documento `integrity_status='corrupted'`
 
-- RLS em `storage.objects`: apenas membros da company + Founder
-- Coluna `storage_paths JSONB` em `fiscal_documents` guardando `{pdf, xml, json, qr, version}`
-- Signed URLs (60s) via RPC `get_fiscal_document_url(p_document_id, p_kind)`
-- Worker faz upload do PDF/QR já gerados; XML/JSON como stubs versionáveis
+## Etapa 4 — Frontend Founder
 
-Retenção: coluna `retention_until` (default `now() + interval '10 years'` — Moçambique fiscal).
+Novas páginas (não altera as existentes):
+- `src/pages/founder/FounderFiscalDashboardPage.tsx` — KPIs + tabela últimos 20 documentos + botões download (usa `get_fiscal_document_url`) + botão verificar hash (`verify_fiscal_document_integrity`).
+- `src/pages/founder/FounderFiscalDLQPage.tsx` — tabela DLQ com filtros/pesquisa + ações Reprocessar/Cancelar/Arquivar + drawer com stack completa.
+- `src/pages/founder/FounderFiscalAlertsPage.tsx` — feed de `system_alerts` filtrado por categoria fiscal.
 
----
+Adicionar 3 entradas em `FounderLayout.navItems`: **Fiscal**, **DLQ Fiscal**, **Alertas Fiscais** (icons: `Receipt`, `AlertOctagon`, `BellRing`).
 
-## Entrega C — Dashboard + Dead Letter Center (Fases 4 + 5 + 7)
+Rotas em `App.tsx` dentro do bloco `/app/founder`.
 
-RPC `founder_fiscal_metrics(p_hours int)` retornando JSON com todos os KPIs (emitidos, pendentes, retries, failed/DLQ, p50/p95/p99, throughput, backlog, storage bytes, success/failure/retry rate).
+Auto-refresh via TanStack Query (`refetchInterval: 15_000`).
 
-Novas páginas Founder (usando tokens semânticos, dark-mode-safe):
-- `src/pages/founder/FounderFiscalDashboardPage.tsx` — KPIs + charts (recharts)
-- `src/pages/founder/FounderFiscalDLQPage.tsx` — tabela de `background_tasks` com `task_type='ISSUE_FISCAL_DOCUMENT'` e `status='FAILED'`; ações: reprocessar (RPC `fiscal_requeue_job`), cancelar, arquivar, ver stack, download logs — tudo escreve em `fiscal_audit_log`.
+## Etapa 5 — Downloads
 
-Rotas adicionadas em `FounderLayout` + `App.tsx` sob `FounderGate`.
+Botões nas linhas da tabela invocam `get_fiscal_document_url(doc_id, tipo)` → abrem em nova aba (signed URL 60s). Botão **Verificar** chama `verify_fiscal_document_integrity` e mostra toast com resultado (hash ok/corrupted).
 
----
+## Detalhes técnicos
 
-## Entrega D — Notificações + Resiliência + Perf (Fases 6 + 8 + 10)
+- Bucket `fiscal-documents` já existe (Entrega B); nenhuma nova bucket.
+- Worker: adicionar helpers `sha256Hex`, `md5Hex`, `crc32Hex` via `crypto.subtle` + lib `std/hash`.
+- QR: pacote `https://esm.sh/qrcode@1.5.3` → dataURL PNG.
+- PDF: `https://esm.sh/pdf-lib@1.17.1` (leve, já usado por outros geradores no client).
+- Todos os erros de artefato → `fiscal_audit_log` com `error_code` específico (`PDF_GEN_FAILED`, `QR_GEN_FAILED`, etc.) mas o job segue como `COMPLETED` se pelo menos JSON+metadata foram armazenados.
 
-Fase 6: após sucesso, enfileirar `SEND_FISCAL_NOTIFICATION` (email/whatsapp/portal). Falha fiscal → `system_alerts` para Founder/Admin. **Sem bloquear a venda.**
+## Arquivos
 
-Fase 8: suíte `src/tests/e2e/fiscal-resilience.test.tsx` cobrindo worker off, timeout, storage down, PDF/QR fail, retry, DLQ, reprocessamento, duplicação (idempotência por `sale_id`).
+**Novos**
+- 1 migration SQL (RPCs `founder_fiscal_*` + `fiscal_document_register_artifacts` + `check_fiscal_health` + índices em `background_tasks(status,task_type,created_at)`)
+- `src/pages/founder/FounderFiscalDashboardPage.tsx`
+- `src/pages/founder/FounderFiscalDLQPage.tsx`
+- `src/pages/founder/FounderFiscalAlertsPage.tsx`
 
-Fase 10: coletar métricas via `pg_stat_statements` + timing no worker, expor em `founder_fiscal_metrics`.
+**Modificados**
+- `supabase/functions/process-task-queue/index.ts` — pipeline de artefatos
+- `src/pages/founder/FounderLayout.tsx` — 3 novos navItems
+- `src/App.tsx` — 3 novas rotas
+- `.lovable/plan.md` — status Entrega C
 
----
+## Fora de escopo (não fazer)
 
-## Detalhes técnicos-chave
+- Cron jobs novos
+- Alterar `sales`, `sale_items`, triggers financeiros, `syncQueue`
+- Novos buckets
+- Testes E2E automatizados (spec pede, mas MVP async prioriza entrega funcional — reportar como risco remanescente)
+- Alterar dashboard Founder existente
 
-- Toda emissão fiscal permanece **assíncrona** e desacoplada de `pos_complete_sale` (mantido de Sprint 1.0)
-- Idempotência: `background_tasks.payload->>'sale_id'` + índice único parcial evita duplicação
-- Hash: `encode(digest(canonical_json, 'sha256'), 'hex')` via `pgcrypto`
-- Sem alteração em `sales`, `sale_items`, triggers `trg_financial_tx_*`, `syncQueue`
-
-## Recomendação
-
-Começar por **Entrega A** (menor risco, fundação obrigatória para B/C/D). Peça aprovação antes de cada próxima entrega.
-
-Confirma que devo iniciar pela **Entrega A**?
+Confirma execução?
