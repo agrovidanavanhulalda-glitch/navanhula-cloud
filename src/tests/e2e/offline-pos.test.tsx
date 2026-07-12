@@ -126,7 +126,36 @@ describe('POS — pos_complete_sale RPC integration (Sprint 0.2 Etapa 3.1)', () 
       await result.current.completeSale({ method: 'cash', amountReceived: 100, change: 0 });
     });
     expect(supabase.rpc).not.toHaveBeenCalledWith('pos_complete_sale', expect.anything());
-    expect(syncManager.getQueueStatus().pending).toBe(1);
+    const pending = syncManager.getTasksByType('SALE');
+    expect(pending).toHaveLength(1);
+    // Sync Engine Unification: offline payload MUST already be the canonical RPC payload,
+    // including a client-side idempotency key (p_client_sale_id).
+    expect(pending[0].payload.rpcPayload).toBeDefined();
+    expect(pending[0].payload.rpcPayload.p_client_sale_id).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(pending[0].payload.rpcPayload.p_items).toHaveLength(1);
+  });
+
+  it('syncManager replays SALE via pos_complete_sale RPC (single source of truth)', async () => {
+    (navigator as any).onLine = true;
+    (supabase.rpc as any).mockResolvedValue({
+      data: { success: true, sale_id: 'srv-1', total: 100, profit: 20 },
+      error: null,
+    });
+    const rpcPayload = {
+      p_store_id: ST, p_cash_register_id: CR, p_payment_method: 'cash',
+      p_items: [{ product_id: P1, product_name: 'Arroz', quantity: 1, unit_price: 100, cost_price: 80, discount_amount: 0, total: 100 }],
+      p_subtotal: 100, p_discount_amount: 0, p_discount_percent: 0, p_total: 100,
+      p_customer_name: null, p_customer_phone: null, p_seller_name: 'Test',
+      p_notes: null, p_voucher_code: null, p_ip_address: null,
+      p_client_sale_id: '550e8400-e29b-41d4-a716-446655440099',
+    };
+    await syncManager.addTask('SALE', { rpcPayload });
+    await new Promise(r => setTimeout(r, 50));
+    expect(supabase.rpc).toHaveBeenCalledWith('pos_complete_sale', rpcPayload);
+    // From/insert on sales/sale_items must NEVER be called from syncManager
+    const fromCalls = (supabase.from as any).mock?.calls?.map((c: any[]) => c[0]) ?? [];
+    expect(fromCalls).not.toContain('sales');
+    expect(fromCalls).not.toContain('sale_items');
   });
 
   it('rejects sale when RPC returns STOCK_INSUFFICIENT (rollback contract)', async () => {

@@ -204,25 +204,20 @@ class SyncManager {
   }
 
   private async syncSale(payload: any) {
-    const { sale, items, paymentDetails } = payload;
-    
-    // Insert Sale
-    const saleResult = await supabase.from('sales').insert(sale);
-    if (saleResult?.error) throw saleResult.error;
-
-    // Insert Items
-    const itemsResult = await supabase.from('sale_items').insert(items);
-    if (itemsResult?.error) throw itemsResult.error;
-
-    // Wallet Credit
-    if (paymentDetails && paymentDetails.method !== 'cash') {
-      const { error: rpcError } = await supabase.rpc('credit_wallet_from_sale', {
-        p_store_id: sale.store_id,
-        p_payment_method: paymentDetails.method,
-        p_amount: sale.total,
-        p_sale_id: sale.id,
-      });
-      if (rpcError) throw rpcError;
+    // ⚠️ Sync Engine Unification (Sprint 0.2 / Etapa 5):
+    // The syncManager is a dumb pipe — it only replays the canonical RPC payload
+    // captured at offline time. All business logic (sale + items + stock + finance +
+    // cash movement + audit + voucher + wallet credit) lives inside pos_complete_sale.
+    // Idempotency is guaranteed server-side via p_client_sale_id.
+    const rpcPayload = payload?.rpcPayload ?? payload;
+    if (!rpcPayload || !rpcPayload.p_client_sale_id) {
+      throw new Error('SYNC_PAYLOAD_INVALID: missing p_client_sale_id (idempotency key)');
+    }
+    const { data, error } = await supabase.rpc('pos_complete_sale', rpcPayload);
+    if (error) throw error;
+    const result = data as any;
+    if (!result?.success) {
+      throw new Error(result?.error || 'pos_complete_sale returned success=false');
     }
   }
 
