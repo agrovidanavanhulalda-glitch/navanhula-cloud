@@ -6,27 +6,55 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-async function handleFiscalIssuance(supabase: any, payload: any) {
+async function handleFiscalIssuance(supabase: any, task: any) {
+  const payload = task.payload || {}
   const saleId = payload?.sale_id
-  if (!saleId) throw new Error('MISSING_SALE_ID')
+  const startedAt = new Date()
+  const t0 = performance.now()
 
-  // Idempotency: skip if already issued
-  const { data: existingDoc } = await supabase
-    .from('fiscal_documents')
-    .select('id, document_number')
-    .eq('notes', null) // placeholder - we search by notes pattern below
-    .limit(1)
+  const auditBase: Record<string, any> = {
+    job_id: task.id,
+    sale_id: saleId,
+    worker: 'process-task-queue',
+    started_at: startedAt.toISOString(),
+    retry_count: task.attempts,
+    source: 'worker',
+  }
 
-  // Load sale + items + store
+  if (!saleId) {
+    await supabase.from('fiscal_audit_log').insert({
+      ...auditBase, status: 'FAILED', error_code: 'MISSING_SALE_ID',
+      finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
+    })
+    throw new Error('MISSING_SALE_ID')
+  }
+
   const { data: sale, error: saleErr } = await supabase
     .from('sales')
     .select('id, store_id, company_id, subtotal, discount_amount, total, payment_method, status, customer_name, customer_phone, sale_items(product_name, quantity, unit_price)')
     .eq('id', saleId)
     .maybeSingle()
 
-  if (saleErr) throw new Error(`SALE_LOAD_FAILED: ${saleErr.message}`)
-  if (!sale) throw new Error('SALE_NOT_FOUND')
-  if (sale.status !== 'completed') throw new Error(`SALE_NOT_COMPLETED: ${sale.status}`)
+  if (saleErr || !sale) {
+    await supabase.from('fiscal_audit_log').insert({
+      ...auditBase, status: 'FAILED',
+      error_code: saleErr ? 'SALE_LOAD_FAILED' : 'SALE_NOT_FOUND',
+      error_stack: saleErr?.message || null,
+      finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
+    })
+    throw new Error(saleErr ? `SALE_LOAD_FAILED: ${saleErr.message}` : 'SALE_NOT_FOUND')
+  }
+  auditBase.company_id = sale.company_id
+  auditBase.store_id = sale.store_id
+
+  if (sale.status !== 'completed') {
+    await supabase.from('fiscal_audit_log').insert({
+      ...auditBase, status: 'SKIPPED', error_code: 'SALE_NOT_COMPLETED',
+      result: { sale_status: sale.status },
+      finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
+    })
+    throw new Error(`SALE_NOT_COMPLETED: ${sale.status}`)
+  }
 
   const notesTag = `Venda PDV #${String(sale.id).slice(0, 8)}`
 
@@ -37,6 +65,12 @@ async function handleFiscalIssuance(supabase: any, payload: any) {
     .ilike('notes', `%${notesTag}%`)
     .limit(1)
   if (dup && dup.length > 0) {
+    await supabase.from('fiscal_audit_log').insert({
+      ...auditBase, status: 'SKIPPED',
+      fiscal_document_id: dup[0].id, document_number: dup[0].document_number,
+      result: { skipped: true, reason: 'ALREADY_ISSUED' },
+      finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
+    })
     return { document_id: dup[0].id, document_number: dup[0].document_number, skipped: true }
   }
 
@@ -62,12 +96,48 @@ async function handleFiscalIssuance(supabase: any, payload: any) {
     p_discount_amount: Number(sale.discount_amount || 0),
   })
 
-  if (rpcErr) throw new Error(`FISCAL_RPC_FAILED: ${rpcErr.message}`)
+  if (rpcErr) {
+    await supabase.from('fiscal_audit_log').insert({
+      ...auditBase, status: 'FAILED', error_code: 'FISCAL_RPC_FAILED',
+      error_stack: rpcErr.message,
+      finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
+    })
+    throw new Error(`FISCAL_RPC_FAILED: ${rpcErr.message}`)
+  }
   const r = rpcRes as any
-  if (!r?.success) throw new Error(`FISCAL_RPC_ERROR: ${r?.error || 'unknown'}`)
+  if (!r?.success) {
+    await supabase.from('fiscal_audit_log').insert({
+      ...auditBase, status: 'FAILED', error_code: 'FISCAL_RPC_ERROR',
+      error_stack: r?.error || 'unknown',
+      finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
+    })
+    throw new Error(`FISCAL_RPC_ERROR: ${r?.error || 'unknown'}`)
+  }
+
+  // Compute hash/checksum & mark document integrity
+  let hashOut: string | null = null
+  try {
+    const { data: verifyRes } = await supabase.rpc('verify_fiscal_document_integrity', {
+      p_document_id: r.document_id,
+    })
+    hashOut = (verifyRes as any)?.hash || null
+  } catch (e) {
+    console.warn('integrity check failed:', (e as any)?.message)
+  }
+
+  const finishedAt = new Date()
+  await supabase.from('fiscal_audit_log').insert({
+    ...auditBase, status: 'SUCCESS',
+    fiscal_document_id: r.document_id, document_number: r.document_number,
+    hash: hashOut,
+    result: { document_id: r.document_id, document_number: r.document_number },
+    finished_at: finishedAt.toISOString(),
+    duration_ms: Math.round(performance.now() - t0),
+  })
 
   return { document_id: r.document_id, document_number: r.document_number }
 }
+
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
