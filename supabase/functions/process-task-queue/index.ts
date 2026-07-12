@@ -232,28 +232,75 @@ async function handleFiscalIssuance(supabase: any, task: any) {
     throw new Error(`FISCAL_RPC_ERROR: ${r?.error || 'unknown'}`)
   }
 
-  // Compute hash/checksum & mark document integrity
-  let hashOut: string | null = null
-  try {
-    const { data: verifyRes } = await supabase.rpc('verify_fiscal_document_integrity', {
-      p_document_id: r.document_id,
+  // ===== Artifact pipeline (idempotent, resilient) =====
+  let artifactResult: any = null
+  const { data: existingDoc } = await supabase
+    .from('fiscal_documents').select('pdf_path, integrity_status').eq('id', r.document_id).maybeSingle()
+
+  if (existingDoc?.pdf_path) {
+    await supabase.from('fiscal_audit_log').insert({
+      ...auditBase, status: 'SKIPPED_ARTIFACTS',
+      fiscal_document_id: r.document_id, document_number: r.document_number,
+      result: { skipped: true, reason: 'ARTIFACTS_EXIST' },
+      finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
     })
-    hashOut = (verifyRes as any)?.hash || null
-  } catch (e) {
-    console.warn('integrity check failed:', (e as any)?.message)
+  } else {
+    try {
+      artifactResult = await generateArtifacts(supabase, r.document_id, sale.company_id, r.document_number)
+      const { error: regErr } = await supabase.rpc('fiscal_document_register_artifacts', {
+        p_document_id: r.document_id, p_artifacts: artifactResult.artifacts,
+      })
+      if (regErr) throw new Error(`REGISTER_FAILED:${regErr.message}`)
+
+      await supabase.from('fiscal_audit_log').insert({
+        ...auditBase, status: 'ARTIFACTS_STORED',
+        fiscal_document_id: r.document_id, document_number: r.document_number,
+        hash: artifactResult.artifacts.sha256,
+        checksum: artifactResult.artifacts.crc32,
+        result: { paths: artifactResult.artifacts.storage_paths, errors: artifactResult.errors, integrity: artifactResult.artifacts.integrity_status },
+        error_code: artifactResult.errors.length ? 'PARTIAL_ARTIFACTS' : null,
+        finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
+      })
+
+      if (artifactResult.errors.length > 0) {
+        await supabase.from('system_alerts').insert({
+          type: 'fiscal_storage_error',
+          message: `Documento ${r.document_number}: ${artifactResult.errors.length} artefacto(s) falharam (${artifactResult.artifacts.integrity_status})`,
+          status: 'open', company_id: sale.company_id,
+        })
+      }
+    } catch (e: any) {
+      console.error('artifact pipeline error:', e.message)
+      await supabase.from('fiscal_audit_log').insert({
+        ...auditBase, status: 'ARTIFACTS_FAILED',
+        fiscal_document_id: r.document_id, document_number: r.document_number,
+        error_code: 'ARTIFACT_PIPELINE_FAILED', error_stack: String(e.message).slice(0, 500),
+        finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
+      })
+      await supabase.from('system_alerts').insert({
+        type: 'fiscal_storage_error',
+        message: `Pipeline de artefactos falhou para ${r.document_number}: ${e.message}`,
+        status: 'open', company_id: sale.company_id,
+      })
+    }
   }
 
-  const finishedAt = new Date()
+  // Integrity verification against stored artefacts
+  let hashOut: string | null = artifactResult?.artifacts?.sha256 ?? null
+  try {
+    const { data: verifyRes } = await supabase.rpc('verify_fiscal_document_integrity', { p_document_id: r.document_id })
+    hashOut = (verifyRes as any)?.hash || hashOut
+  } catch (e) { console.warn('integrity check failed:', (e as any)?.message) }
+
   await supabase.from('fiscal_audit_log').insert({
     ...auditBase, status: 'SUCCESS',
     fiscal_document_id: r.document_id, document_number: r.document_number,
     hash: hashOut,
-    result: { document_id: r.document_id, document_number: r.document_number },
-    finished_at: finishedAt.toISOString(),
-    duration_ms: Math.round(performance.now() - t0),
+    result: { document_id: r.document_id, document_number: r.document_number, artifacts: artifactResult?.artifacts?.storage_paths ?? null },
+    finished_at: new Date().toISOString(), duration_ms: Math.round(performance.now() - t0),
   })
 
-  return { document_id: r.document_id, document_number: r.document_number }
+  return { document_id: r.document_id, document_number: r.document_number, artifacts: artifactResult?.artifacts?.storage_paths ?? null }
 }
 
 
