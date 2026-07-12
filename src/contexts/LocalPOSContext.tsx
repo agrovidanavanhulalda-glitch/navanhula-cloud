@@ -448,33 +448,8 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     try {
-      // ✅ RPC atômica única — persistência transacional (venda + itens + stock + financeiro + caixa + auditoria + voucher)
-      const itemsPayload = state.cart.map(item => ({
-        product_id: item.product.id || null,
-        product_name: item.product.name,
-        quantity: item.quantity,
-        unit_price: item.product.salePrice,
-        cost_price: item.product.costPrice,
-        discount_amount: item.discount || 0,
-        total: item.total,
-      }));
-
-      const { data, error } = await supabase.rpc('pos_complete_sale', {
-        p_store_id: state.currentStore.id,
-        p_cash_register_id: state.currentCashRegister?.id ?? null,
-        p_payment_method: details.method,
-        p_items: itemsPayload as any,
-        p_subtotal: subtotal,
-        p_discount_amount: discount,
-        p_discount_percent: 0,
-        p_total: total,
-        p_customer_name: (details as any).customerName ?? null,
-        p_customer_phone: (details as any).customerPhone ?? null,
-        p_seller_name: effectiveSellerName,
-        p_notes: (details as any).notes ?? null,
-        p_voucher_code: details.voucherDetails?.code ?? null,
-        p_ip_address: null,
-      });
+      // ✅ RPC atômica única — persistência transacional (venda + itens + stock + financeiro + caixa + auditoria + voucher + carteira)
+      const { data, error } = await supabase.rpc('pos_complete_sale', rpcPayload as any);
 
       if (error) throw error;
       const result = data as any;
