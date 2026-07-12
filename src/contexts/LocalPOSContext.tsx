@@ -374,10 +374,44 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const effectiveSellerId = details.sellerId || user.id;
     const effectiveSellerName = details.sellerName || user.full_name || user.email;
 
+    // Build canonical RPC payload — single source of truth for both online and offline flows.
+    const itemsPayload = state.cart.map(item => ({
+      product_id: item.product.id || null,
+      product_name: item.product.name,
+      quantity: item.quantity,
+      unit_price: item.product.salePrice,
+      cost_price: item.product.costPrice,
+      discount_amount: item.discount || 0,
+      total: item.total,
+    }));
+
+    const clientSaleId = crypto.randomUUID();
+    const rpcPayload = {
+      p_store_id: state.currentStore.id,
+      p_cash_register_id: state.currentCashRegister?.id ?? null,
+      p_payment_method: details.method,
+      p_items: itemsPayload as any,
+      p_subtotal: subtotal,
+      p_discount_amount: discount,
+      p_discount_percent: 0,
+      p_total: total,
+      p_customer_name: (details as any).customerName ?? null,
+      p_customer_phone: (details as any).customerPhone ?? null,
+      p_seller_name: effectiveSellerName,
+      p_notes: (details as any).notes ?? null,
+      p_voucher_code: details.voucherDetails?.code ?? null,
+      p_ip_address: null,
+      p_client_sale_id: clientSaleId,
+    };
+
     if (!navigator.onLine) {
-      const saleId = crypto.randomUUID();
-      const saleData = {
-        id: saleId,
+      // Offline: enqueue the exact same RPC payload — syncManager will replay it verbatim.
+      await syncManager.addTask('SALE', { rpcPayload });
+
+      toast.success('Venda registada offline — será sincronizada assim que a conexão for restabelecida');
+
+      const localSale: LocalSale = {
+        id: clientSaleId,
         company_id: company?.id,
         store_id: state.currentStore.id,
         user_id: effectiveSellerId,
@@ -390,41 +424,13 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         cost_total: costTotal,
         profit,
         seller_name: effectiveSellerName,
-        created_at: new Date().toISOString()
-      };
-
-      const itemsData = state.cart.map(item => ({
-        id: crypto.randomUUID(),
-        company_id: company?.id,
-        sale_id: saleId,
-        product_id: item.product.id,
-        product_name: item.product.name,
-        quantity: item.quantity,
-        unit_price: item.product.salePrice,
-        cost_price: item.product.costPrice,
-        total: item.total,
-        profit: item.total - (item.product.costPrice * item.quantity),
-        created_by: user.id,
-        created_at: new Date().toISOString()
-      }));
-
-      await syncManager.addTask('SALE', { 
-        sale: saleData, 
-        items: itemsData, 
-        paymentDetails: details 
-      });
-
-      toast.success('Venda concluída com sucesso');
-      
-      const localSale: LocalSale = {
-        ...saleData,
+        created_at: new Date().toISOString(),
         items: [...state.cart],
         createdAt: new Date(),
         isOffline: true,
-        synced: false
+        synced: false,
       } as any;
 
-      // Optimistic state update: reduce local stock and clear cart
       setState(prev => ({
         ...prev,
         cart: [],
