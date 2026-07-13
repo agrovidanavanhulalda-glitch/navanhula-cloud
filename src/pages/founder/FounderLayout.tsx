@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing, LifeBuoy } from 'lucide-react';
+import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing, LifeBuoy, Gauge, ShieldCheck, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FounderBadge from '@/components/founder/FounderBadge';
 import { installServerTelemetrySink } from '@/lib/telemetry/serverSink';
@@ -19,6 +19,11 @@ const navItems = [
   { to: '/app/founder/backup', icon: DatabaseBackup, label: 'Backup' },
   { to: '/app/founder/health', icon: HeartPulse, label: 'System Health' },
   { to: '/app/founder/operations', icon: LifeBuoy, label: 'Operations Center' },
+  { to: '/app/founder/capacity', icon: Gauge, label: 'Capacity' },
+  { to: '/app/founder/finops', icon: DollarSign, label: 'FinOps' },
+  { to: '/app/founder/predictive', icon: TrendingUp, label: 'Predictive' },
+  { to: '/app/founder/sre', icon: ShieldCheck, label: 'SRE' },
+  { to: '/app/founder/auto-healing', icon: Wrench, label: 'Auto-Healing' },
   { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
   { to: '/app/founder/logs', icon: FileText, label: 'Logs' },
   { to: '/app/founder/alertas', icon: Bell, label: 'Alertas' },

@@ -62,6 +62,11 @@ const FounderFiscalDashboardPage = React.lazy(() => import("./pages/founder/Foun
 const FounderFiscalDLQPage = React.lazy(() => import("./pages/founder/FounderFiscalDLQPage"));
 const FounderFiscalAlertsPage = React.lazy(() => import("./pages/founder/FounderFiscalAlertsPage"));
 const FounderOperationsPage = React.lazy(() => import("./pages/founder/FounderOperationsPage"));
+const FounderCapacityCenterPage = React.lazy(() => import("./pages/founder/FounderCapacityCenterPage"));
+const FounderFinOpsCenterPage = React.lazy(() => import("./pages/founder/FounderFinOpsCenterPage"));
+const FounderPredictiveCenterPage = React.lazy(() => import("./pages/founder/FounderPredictiveCenterPage"));
+const FounderSRECenterPage = React.lazy(() => import("./pages/founder/FounderSRECenterPage"));
+const FounderAutoHealingCenterPage = React.lazy(() => import("./pages/founder/FounderAutoHealingCenterPage"));
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
 const WalletPage = React.lazy(() => import("./pages/WalletPage"));
@@ -342,6 +347,11 @@ const AppRoutes = () => {
             <Route path="fiscal-dlq" element={<FounderFiscalDLQPage />} />
             <Route path="fiscal-alertas" element={<FounderFiscalAlertsPage />} />
             <Route path="operations" element={<FounderOperationsPage />} />
+            <Route path="capacity" element={<FounderCapacityCenterPage />} />
+            <Route path="finops" element={<FounderFinOpsCenterPage />} />
+            <Route path="predictive" element={<FounderPredictiveCenterPage />} />
+            <Route path="sre" element={<FounderSRECenterPage />} />
+            <Route path="auto-healing" element={<FounderAutoHealingCenterPage />} />
           </Route>
           <Route path="fiscal" element={<FiscalPage />} />
           <Route path="contabilidade" element={<Navigate to="/app/financeiro-rh?tab=chart" replace />} />
