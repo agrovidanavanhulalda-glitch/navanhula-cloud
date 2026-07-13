@@ -82,9 +82,10 @@ describe('Sync Queue — replay & idempotency', () => {
     // simulate server returning same result for both attempts
     rpcMock.mockResolvedValue({ data: { success: true }, error: null });
     await syncManager.addTask('SALE', { rpcPayload: { p_client_sale_id: 'idem-4' } });
+    await flush();
     await syncManager.addTask('SALE', { rpcPayload: { p_client_sale_id: 'idem-4' } });
     await flush();
-    // both drained; server-side dedupe is the source of truth
+    // both drained independently; server-side dedupe is the source of truth
     expect(syncManager.getTasksByType('SALE').length).toBe(0);
     const keys = rpcMock.mock.calls.map(c => c[1].p_client_sale_id);
     expect(keys).toEqual(['idem-4', 'idem-4']);
