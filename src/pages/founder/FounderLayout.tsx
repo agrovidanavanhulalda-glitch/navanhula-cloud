@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing, LifeBuoy, Gauge, ShieldCheck, Wrench } from 'lucide-react';
+import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing, LifeBuoy, Gauge, ShieldCheck, Wrench, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FounderBadge from '@/components/founder/FounderBadge';
 import { installServerTelemetrySink } from '@/lib/telemetry/serverSink';
