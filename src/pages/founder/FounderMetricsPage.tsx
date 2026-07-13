@@ -27,7 +27,7 @@ export const FounderMetricsPage: React.FC = () => {
   const platform = useQuery({
     queryKey: ['founder', 'platform-metrics'],
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('founder_platform_stats');
+      const { data, error } = await rpcWithMetrics<Record<string, number>>('founder_platform_stats');
       if (error) throw error;
       return (data ?? {}) as Record<string, number>;
     },
