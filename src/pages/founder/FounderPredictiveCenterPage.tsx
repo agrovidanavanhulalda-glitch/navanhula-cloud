@@ -16,8 +16,8 @@ export const FounderPredictiveCenterPage: React.FC = () => {
   const storage = useStorageMetrics();
   const live = useLiveOpsMetrics();
 
-  const totalStorage = storage.data?.metrics.reduce((a, b) => a + Number(b.bytes ?? 0), 0) ?? 0;
-  const storage7d = storage.data?.metrics.reduce((a, b) => a + Number(b.bytes7d ?? 0), 0) ?? 0;
+  const totalStorage = storage.data?.buckets.reduce((a, b) => a + Number(b.bytes ?? 0), 0) ?? 0;
+  const storage7d = storage.data?.buckets.reduce((a, b) => a + Number(b.bytes7d ?? 0), 0) ?? 0;
   const storageF = forecast({ current: totalStorage, deltaLastNDays: storage7d, daysWindow: 7 });
   const dbF = forecast({ current: totalStorage * 0.3, deltaLastNDays: storage7d * 0.3, daysWindow: 7 });
 

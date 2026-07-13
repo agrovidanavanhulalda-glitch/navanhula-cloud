@@ -36,8 +36,8 @@ export const FounderCapacityCenterPage: React.FC = () => {
   const storage = useStorageMetrics();
   const live = useLiveOpsMetrics();
 
-  const totalStorage = storage.data?.metrics.reduce((a, b) => a + Number(b.bytes ?? 0), 0) ?? 0;
-  const storage7d = storage.data?.metrics.reduce((a, b) => a + Number(b.bytes7d ?? 0), 0) ?? 0;
+  const totalStorage = storage.data?.buckets.reduce((a, b) => a + Number(b.bytes ?? 0), 0) ?? 0;
+  const storage7d = storage.data?.buckets.reduce((a, b) => a + Number(b.bytes7d ?? 0), 0) ?? 0;
   const tasksPerDay = (live.data?.queue.completed ?? 0);
   const rpcPerDay = (live.data?.rpc.total ?? 0) * (1440 / 15);
 

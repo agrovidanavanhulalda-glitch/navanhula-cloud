@@ -15,8 +15,8 @@ export const FounderAutoHealingCenterPage: React.FC = () => {
   const live = useLiveOpsMetrics();
   const storage = useStorageMetrics();
 
-  const totalBytes = storage.data?.metrics.reduce((a, b) => a + Number(b.bytes ?? 0), 0) ?? 0;
-  const bytes7d = storage.data?.metrics.reduce((a, b) => a + Number(b.bytes7d ?? 0), 0) ?? 0;
+  const totalBytes = storage.data?.buckets.reduce((a, b) => a + Number(b.bytes ?? 0), 0) ?? 0;
+  const bytes7d = storage.data?.buckets.reduce((a, b) => a + Number(b.bytes7d ?? 0), 0) ?? 0;
   const quota = 100 * 1024 ** 3;
 
   const recs = recommend({

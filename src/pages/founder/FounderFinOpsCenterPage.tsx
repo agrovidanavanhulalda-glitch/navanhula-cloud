@@ -12,7 +12,7 @@ export const FounderFinOpsCenterPage: React.FC = () => {
   const storage = useStorageMetrics();
   const live = useLiveOpsMetrics();
 
-  const storageGb = (storage.data?.metrics.reduce((a, b) => a + Number(b.bytes ?? 0), 0) ?? 0) / 1024 ** 3;
+  const storageGb = (storage.data?.buckets.reduce((a, b) => a + Number(b.bytes ?? 0), 0) ?? 0) / 1024 ** 3;
   const rpcPerMonth = (live.data?.rpc.total ?? 0) * (1440 / 15) * 30;
   const workerRunsMonth = (live.data?.queue.completed ?? 0) * 30;
 
