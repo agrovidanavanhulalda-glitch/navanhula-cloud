@@ -66,7 +66,7 @@ function useRpcStats(fn: 'founder_platform_stats' | 'founder_infrastructure_stat
   return useQuery({
     queryKey: ['founder', fn],
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)(fn);
+      const { data, error } = await rpcWithMetrics<Stats>(fn);
       if (error) throw error;
       return (data ?? {}) as Stats;
     },
