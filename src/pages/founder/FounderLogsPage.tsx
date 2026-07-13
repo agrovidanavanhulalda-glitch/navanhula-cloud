@@ -34,7 +34,7 @@ export const FounderLogsPage: React.FC = () => {
     queryKey: ['founder', 'logs', source],
     queryFn: async () => {
       const [audit, sysErr, apiLogs] = await Promise.all([
-        (supabase.rpc as any)('founder_audit_search', {
+        rpcWithMetrics<any>('founder_audit_search', {
           _source: source === 'all' || ['system', 'api'].includes(source) ? null : source,
           _from: null, _to: null, _actor: null, _limit: 300, _offset: 0,
         }),
