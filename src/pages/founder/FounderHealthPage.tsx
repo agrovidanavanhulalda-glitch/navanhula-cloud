@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { rpcWithMetrics } from '@/lib/telemetry/rpcWithMetrics';
 import { TelemetryObservabilityWidget } from '@/components/founder/TelemetryObservabilityWidget';
+import { TelemetryServerKPIs } from '@/components/founder/TelemetryServerKPIs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -130,6 +131,10 @@ export const FounderHealthPage: React.FC = () => {
 
       {/* Sprint 2.5 · Passive telemetry (opt-in, read-only) */}
       <TelemetryObservabilityWidget />
+
+      {/* Sprint 2.6 · Server-side telemetry KPIs + Health Alerts (Founder-only) */}
+      <TelemetryServerKPIs />
+
 
       {(monitoring.error || infra.error) && (
         <Card className="border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive flex items-center gap-2">

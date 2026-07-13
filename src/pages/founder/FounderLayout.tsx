@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FounderBadge from '@/components/founder/FounderBadge';
+import { installServerTelemetrySink } from '@/lib/telemetry/serverSink';
 
 const navItems = [
   { to: '/app/founder', end: true, icon: LayoutDashboard, label: 'Dashboard Global' },
@@ -27,6 +28,7 @@ const navItems = [
 ];
 
 export const FounderLayout: React.FC = () => {
+  React.useEffect(() => { installServerTelemetrySink(); }, []);
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold/30 bg-gradient-to-br from-primary/5 via-background to-accent/5 p-5">
