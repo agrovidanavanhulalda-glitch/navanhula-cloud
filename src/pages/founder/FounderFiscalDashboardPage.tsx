@@ -43,7 +43,7 @@ export const FounderFiscalDashboardPage: React.FC = () => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['founder_fiscal_metrics'],
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('founder_fiscal_metrics', { p_hours: 24 });
+      const { data, error } = await rpcWithMetrics<any>('founder_fiscal_metrics', { p_hours: 24 });
       if (error) throw error;
       return data as any;
     },
