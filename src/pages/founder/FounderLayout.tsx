@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FounderBadge from '@/components/founder/FounderBadge';
+import { installServerTelemetrySink } from '@/lib/telemetry/serverSink';
 
 const navItems = [
   { to: '/app/founder', end: true, icon: LayoutDashboard, label: 'Dashboard Global' },
