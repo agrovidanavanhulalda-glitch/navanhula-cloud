@@ -13,6 +13,7 @@ import { RUNBOOKS } from '@/lib/ops/runbooks';
 import { READINESS_MATRIX } from '@/lib/ops/disasterReadiness';
 import { SloStatus } from '@/lib/ops/slo';
 import LiveOpsPanel from '@/components/founder/LiveOpsPanel';
+import StorageOpsPanel from '@/components/founder/StorageOpsPanel';
 import { useLiveOpsMetrics } from '@/lib/ops/useLiveOpsMetrics';
 
 // Pull events from the same passive buffer used elsewhere without touching it.
@@ -52,6 +53,7 @@ export const OperationsCenter: React.FC = () => {
   return (
     <div className="space-y-6">
       <LiveOpsPanel />
+      <StorageOpsPanel />
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
