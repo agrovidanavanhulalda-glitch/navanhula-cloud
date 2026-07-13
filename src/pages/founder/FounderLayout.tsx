@@ -24,6 +24,7 @@ const navItems = [
   { to: '/app/founder/predictive', icon: TrendingUp, label: 'Predictive' },
   { to: '/app/founder/sre', icon: ShieldCheck, label: 'SRE' },
   { to: '/app/founder/auto-healing', icon: Wrench, label: 'Auto-Healing' },
+  { to: '/app/founder/executive-analytics', icon: Activity, label: 'Executive Analytics' },
   { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
   { to: '/app/founder/logs', icon: FileText, label: 'Logs' },
   { to: '/app/founder/alertas', icon: Bell, label: 'Alertas' },
