@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { rpcWithMetrics } from '@/lib/telemetry/rpcWithMetrics';
 import { TelemetryObservabilityWidget } from '@/components/founder/TelemetryObservabilityWidget';
+import { TelemetryServerKPIs } from '@/components/founder/TelemetryServerKPIs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
