@@ -3,15 +3,21 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck } from 'lucide-react';
 import { useLiveOpsMetrics } from '@/lib/ops/useLiveOpsMetrics';
+import { useLiveEnterpriseMetrics } from '@/lib/ops/useLiveEnterpriseMetrics';
 import { computeScoreV2 } from '@/lib/ops/enterpriseScoreV2';
+import LiveSourceBadge from '@/components/founder/LiveSourceBadge';
 
 export const FounderSRECenterPage: React.FC = () => {
   const live = useLiveOpsMetrics();
+  const ent = useLiveEnterpriseMetrics();
   const rpc = live.data?.rpc;
   const queue = live.data?.queue;
   const errRate = rpc?.errorRate ?? 0;
   const p95 = rpc?.p95 ?? 0;
   const workerOk = (queue?.successRate ?? 1) * 100;
+  const timeoutRate = (rpc?.timeoutRate ?? 0) * 100;
+  const retryRate = queue && queue.completed + queue.failed > 0
+    ? (queue.retry / (queue.completed + queue.failed + queue.retry)) * 100 : 0;
 
   const score = computeScoreV2({
     availability: 100 - errRate * 100,
