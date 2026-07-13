@@ -55,7 +55,7 @@ export const FounderHealthPage: React.FC = () => {
   const monitoring = useQuery({
     queryKey: ['founder', 'health-monitoring'],
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('founder_monitoring_stats');
+      const { data, error } = await rpcWithMetrics<Record<string, number>>('founder_monitoring_stats');
       if (error) throw error;
       return (data ?? {}) as Record<string, number>;
     },
