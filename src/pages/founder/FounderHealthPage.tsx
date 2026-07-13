@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { rpcWithMetrics } from '@/lib/telemetry/rpcWithMetrics';
+import { TelemetryObservabilityWidget } from '@/components/founder/TelemetryObservabilityWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -54,7 +56,7 @@ export const FounderHealthPage: React.FC = () => {
   const monitoring = useQuery({
     queryKey: ['founder', 'health-monitoring'],
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('founder_monitoring_stats');
+      const { data, error } = await rpcWithMetrics<Record<string, number>>('founder_monitoring_stats');
       if (error) throw error;
       return (data ?? {}) as Record<string, number>;
     },
@@ -64,7 +66,7 @@ export const FounderHealthPage: React.FC = () => {
   const infra = useQuery({
     queryKey: ['founder', 'health-infra'],
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('founder_infrastructure_stats');
+      const { data, error } = await rpcWithMetrics<Record<string, number>>('founder_infrastructure_stats');
       if (error) throw error;
       return (data ?? {}) as Record<string, number>;
     },
@@ -125,6 +127,9 @@ export const FounderHealthPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Sprint 2.5 · Passive telemetry (opt-in, read-only) */}
+      <TelemetryObservabilityWidget />
 
       {(monitoring.error || infra.error) && (
         <Card className="border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive flex items-center gap-2">

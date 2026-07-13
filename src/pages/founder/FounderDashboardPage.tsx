@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { rpcWithMetrics } from '@/lib/telemetry/rpcWithMetrics';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -65,7 +66,7 @@ function useRpcStats(fn: 'founder_platform_stats' | 'founder_infrastructure_stat
   return useQuery({
     queryKey: ['founder', fn],
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)(fn);
+      const { data, error } = await rpcWithMetrics<Stats>(fn);
       if (error) throw error;
       return (data ?? {}) as Stats;
     },

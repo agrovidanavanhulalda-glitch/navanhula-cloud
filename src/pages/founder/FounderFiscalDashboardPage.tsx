@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { rpcWithMetrics } from '@/lib/telemetry/rpcWithMetrics';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +43,7 @@ export const FounderFiscalDashboardPage: React.FC = () => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['founder_fiscal_metrics'],
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('founder_fiscal_metrics', { p_hours: 24 });
+      const { data, error } = await rpcWithMetrics<any>('founder_fiscal_metrics', { p_hours: 24 });
       if (error) throw error;
       return data as any;
     },

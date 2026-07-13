@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { rpcWithMetrics } from '@/lib/telemetry/rpcWithMetrics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ export const FounderLogsPage: React.FC = () => {
     queryKey: ['founder', 'logs', source],
     queryFn: async () => {
       const [audit, sysErr, apiLogs] = await Promise.all([
-        (supabase.rpc as any)('founder_audit_search', {
+        rpcWithMetrics<any>('founder_audit_search', {
           _source: source === 'all' || ['system', 'api'].includes(source) ? null : source,
           _from: null, _to: null, _actor: null, _limit: 300, _offset: 0,
         }),
