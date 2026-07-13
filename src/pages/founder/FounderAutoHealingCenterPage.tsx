@@ -4,7 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Wrench } from 'lucide-react';
 import { useStorageMetrics } from '@/lib/ops/useStorageMetrics';
 import { useLiveOpsMetrics } from '@/lib/ops/useLiveOpsMetrics';
+import { useLiveEnterpriseMetrics } from '@/lib/ops/useLiveEnterpriseMetrics';
 import { recommend } from '@/lib/ops/autoHealingEngine';
+import LiveSourceBadge from '@/components/founder/LiveSourceBadge';
 
 const sevTone = (s: string) =>
   s === 'CRITICAL' ? 'border-destructive/40 bg-destructive/5'
@@ -14,6 +16,7 @@ const sevTone = (s: string) =>
 export const FounderAutoHealingCenterPage: React.FC = () => {
   const live = useLiveOpsMetrics();
   const storage = useStorageMetrics();
+  const ent = useLiveEnterpriseMetrics();
 
   const totalBytes = storage.data?.buckets.reduce((a, b) => a + Number(b.bytes ?? 0), 0) ?? 0;
   const bytes7d = storage.data?.buckets.reduce((a, b) => a + Number(b.bytes7d ?? 0), 0) ?? 0;
@@ -33,10 +36,11 @@ export const FounderAutoHealingCenterPage: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <header className="flex items-center gap-2">
+      <header className="flex flex-wrap items-center gap-2">
         <Wrench className="h-5 w-5 text-primary" />
         <h2 className="text-lg font-black">Auto-Healing Center</h2>
-        <Badge variant="outline" className="ml-auto">Somente recomendações</Badge>
+        <Badge variant="outline">Somente recomendações</Badge>
+        <LiveSourceBadge source={ent.data?.source ?? 'offline'} fetchedAt={ent.data?.fetchedAt} className="ml-auto" />
       </header>
       {recs.length === 0 ? (
         <Card className="p-6 text-center text-sm text-muted-foreground">Nenhuma recomendação ativa.</Card>

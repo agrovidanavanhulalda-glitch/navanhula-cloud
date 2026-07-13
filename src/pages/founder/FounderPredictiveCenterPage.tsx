@@ -4,8 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp } from 'lucide-react';
 import { useStorageMetrics } from '@/lib/ops/useStorageMetrics';
 import { useLiveOpsMetrics } from '@/lib/ops/useLiveOpsMetrics';
+import { useLiveEnterpriseMetrics } from '@/lib/ops/useLiveEnterpriseMetrics';
 import { forecast } from '@/lib/ops/capacityEngine';
 import { predict } from '@/lib/ops/predictiveEngine';
+import LiveSourceBadge from '@/components/founder/LiveSourceBadge';
 
 const sevTone = (s: string) =>
   s === 'CRITICAL' ? 'bg-destructive/15 text-destructive border-destructive/40'
@@ -15,6 +17,7 @@ const sevTone = (s: string) =>
 export const FounderPredictiveCenterPage: React.FC = () => {
   const storage = useStorageMetrics();
   const live = useLiveOpsMetrics();
+  const ent = useLiveEnterpriseMetrics();
 
   const totalStorage = storage.data?.buckets.reduce((a, b) => a + Number(b.bytes ?? 0), 0) ?? 0;
   const storage7d = storage.data?.buckets.reduce((a, b) => a + Number(b.bytes7d ?? 0), 0) ?? 0;
@@ -32,10 +35,11 @@ export const FounderPredictiveCenterPage: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <header className="flex items-center gap-2">
+      <header className="flex flex-wrap items-center gap-2">
         <TrendingUp className="h-5 w-5 text-primary" />
         <h2 className="text-lg font-black">Predictive Center</h2>
-        <Badge variant="outline" className="ml-auto">{alerts.length} alertas</Badge>
+        <Badge variant="outline">{alerts.length} alertas</Badge>
+        <LiveSourceBadge source={ent.data?.source ?? 'offline'} fetchedAt={ent.data?.fetchedAt} className="ml-auto" />
       </header>
       {alerts.length === 0 ? (
         <Card className="p-6 text-center text-sm text-muted-foreground">Sem previsões críticas no horizonte.</Card>
