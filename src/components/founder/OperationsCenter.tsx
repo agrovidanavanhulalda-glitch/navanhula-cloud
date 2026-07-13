@@ -12,6 +12,8 @@ import { reconcileIncidents, Incident, summarize } from '@/lib/ops/incidentEngin
 import { RUNBOOKS } from '@/lib/ops/runbooks';
 import { READINESS_MATRIX } from '@/lib/ops/disasterReadiness';
 import { SloStatus } from '@/lib/ops/slo';
+import LiveOpsPanel from '@/components/founder/LiveOpsPanel';
+import { useLiveOpsMetrics } from '@/lib/ops/useLiveOpsMetrics';
 
 // Pull events from the same passive buffer used elsewhere without touching it.
 import * as buffer from '@/lib/telemetry/buffer';
@@ -30,6 +32,7 @@ function useTick(ms: number) {
 export const OperationsCenter: React.FC = () => {
   useTick(15_000);
   const incidentsRef = React.useRef<Incident[]>([]);
+  const live = useLiveOpsMetrics();
 
   // Best-effort read: telemetry buffer keeps events in a private array;
   // we snapshot by triggering aggregate() with an empty proxy fallback.
@@ -37,9 +40,9 @@ export const OperationsCenter: React.FC = () => {
   const snapshot = computeHealth({
     events,
     dbPingP95Ms: null,
-    dlqCount: 0,
-    queueDepth: 0,
-    workerSuccessRate: 1,
+    dlqCount: live.data?.queue.dlq ?? 0,
+    queueDepth: live.data?.queue.depth ?? 0,
+    workerSuccessRate: live.data?.queue.successRate ?? 1,
     storageAvailability: 1,
     realtimeAvailability: 1,
   });
@@ -48,6 +51,7 @@ export const OperationsCenter: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <LiveOpsPanel />
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
