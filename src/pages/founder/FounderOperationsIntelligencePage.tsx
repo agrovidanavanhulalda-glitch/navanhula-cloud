@@ -27,8 +27,9 @@ export const FounderOperationsIntelligencePage: React.FC = () => {
   const queue = live.data?.queue;
   const counts = ent.data?.counts;
   const perDay = ent.data?.perDay;
-  const storagePct = storage.data?.usagePct ?? null;
-  const storageGrowth = storage.data?.growthGbPerDay ?? 0;
+  const STORAGE_SOFT_BYTES = 20 * 1024 ** 3; // 20 GB reference
+  const storagePct = storage.data ? Math.min(100, (storage.data.totals.bytes / STORAGE_SOFT_BYTES) * 100) : null;
+  const storageGrowth = storage.data ? storage.data.forecast.dailyBytes / 1024 ** 3 : 0;
 
   const rcInputs = {
     rpcP95Ms: rpc?.p95 ?? null,
