@@ -28,6 +28,7 @@ const navItems = [
 ];
 
 export const FounderLayout: React.FC = () => {
+  React.useEffect(() => { installServerTelemetrySink(); }, []);
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold/30 bg-gradient-to-br from-primary/5 via-background to-accent/5 p-5">
