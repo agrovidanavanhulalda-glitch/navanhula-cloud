@@ -12,6 +12,8 @@ import { reconcileIncidents, Incident, summarize } from '@/lib/ops/incidentEngin
 import { RUNBOOKS } from '@/lib/ops/runbooks';
 import { READINESS_MATRIX } from '@/lib/ops/disasterReadiness';
 import { SloStatus } from '@/lib/ops/slo';
+import LiveOpsPanel from '@/components/founder/LiveOpsPanel';
+import { useLiveOpsMetrics } from '@/lib/ops/useLiveOpsMetrics';
 
 // Pull events from the same passive buffer used elsewhere without touching it.
 import * as buffer from '@/lib/telemetry/buffer';
