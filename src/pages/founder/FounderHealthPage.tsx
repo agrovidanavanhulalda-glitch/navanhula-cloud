@@ -132,6 +132,10 @@ export const FounderHealthPage: React.FC = () => {
       {/* Sprint 2.5 · Passive telemetry (opt-in, read-only) */}
       <TelemetryObservabilityWidget />
 
+      {/* Sprint 2.6 · Server-side telemetry KPIs + Health Alerts (Founder-only) */}
+      <TelemetryServerKPIs />
+
+
       {(monitoring.error || infra.error) && (
         <Card className="border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive flex items-center gap-2">
           <AlertTriangle className="h-4 w-4" /> Falha ao carregar algumas métricas.
