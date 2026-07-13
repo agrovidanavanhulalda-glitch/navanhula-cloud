@@ -8808,6 +8808,60 @@ export type Database = {
           },
         ]
       }
+      telemetry_events: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          duration_ms: number
+          error_code: string | null
+          event_ts: string
+          id: string
+          kind: string
+          name: string
+          payload_size: number | null
+          request_id: string | null
+          response_size: number | null
+          retries: number | null
+          success: boolean
+          timeout: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          duration_ms?: number
+          error_code?: string | null
+          event_ts?: string
+          id?: string
+          kind: string
+          name: string
+          payload_size?: number | null
+          request_id?: string | null
+          response_size?: number | null
+          retries?: number | null
+          success?: boolean
+          timeout?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          duration_ms?: number
+          error_code?: string | null
+          event_ts?: string
+          id?: string
+          kind?: string
+          name?: string
+          payload_size?: number | null
+          request_id?: string | null
+          response_size?: number | null
+          retries?: number | null
+          success?: boolean
+          timeout?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           created_at: string
