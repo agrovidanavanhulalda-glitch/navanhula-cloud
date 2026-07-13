@@ -10179,6 +10179,19 @@ export type Database = {
         Args: { _blocked: boolean; _user_id: string }
         Returns: undefined
       }
+      founder_storage_metrics: {
+        Args: never
+        Returns: {
+          bucket_id: string
+          bytes: number
+          bytes_last_24h: number
+          bytes_last_30d: number
+          bytes_last_7d: number
+          first_upload: string
+          last_upload: string
+          objects: number
+        }[]
+      }
       founder_subscription_transition: {
         Args: {
           p_new_status: string
