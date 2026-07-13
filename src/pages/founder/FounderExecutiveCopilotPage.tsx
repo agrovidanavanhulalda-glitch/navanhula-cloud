@@ -98,10 +98,10 @@ export const FounderExecutiveCopilotPage: React.FC = () => {
             <p className="text-sm text-muted-foreground">Análise executiva automática baseada em métricas reais (read-only)</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <LiveSourceBadge source={live.data?.source ?? 'offline'} label="Ops" />
-          <LiveSourceBadge source={enterprise.data?.source ?? 'offline'} label="Enterprise" />
-          <LiveSourceBadge source={storage.data?.source ?? 'offline'} label="Storage" />
+        <div className="flex flex-wrap gap-2">
+          <LiveSourceBadge source={live.data?.source ?? 'offline'} />
+          <LiveSourceBadge source={enterprise.data?.source ?? 'offline'} />
+          <LiveSourceBadge source={storage.data?.source ?? 'offline'} />
         </div>
       </header>
 
