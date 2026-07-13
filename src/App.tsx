@@ -61,6 +61,7 @@ const FounderInvoicesPage = React.lazy(() => import("./pages/founder/FounderInvo
 const FounderFiscalDashboardPage = React.lazy(() => import("./pages/founder/FounderFiscalDashboardPage"));
 const FounderFiscalDLQPage = React.lazy(() => import("./pages/founder/FounderFiscalDLQPage"));
 const FounderFiscalAlertsPage = React.lazy(() => import("./pages/founder/FounderFiscalAlertsPage"));
+const FounderOperationsPage = React.lazy(() => import("./pages/founder/FounderOperationsPage"));
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
 const WalletPage = React.lazy(() => import("./pages/WalletPage"));
@@ -340,6 +341,7 @@ const AppRoutes = () => {
             <Route path="fiscal-dashboard" element={<FounderFiscalDashboardPage />} />
             <Route path="fiscal-dlq" element={<FounderFiscalDLQPage />} />
             <Route path="fiscal-alertas" element={<FounderFiscalAlertsPage />} />
+            <Route path="operations" element={<FounderOperationsPage />} />
           </Route>
           <Route path="fiscal" element={<FiscalPage />} />
           <Route path="contabilidade" element={<Navigate to="/app/financeiro-rh?tab=chart" replace />} />
