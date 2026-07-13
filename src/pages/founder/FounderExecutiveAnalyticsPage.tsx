@@ -50,7 +50,7 @@ export const FounderExecutiveAnalyticsPage: React.FC = () => {
   const capacityMatrix = computeCapacityMatrix(salesPerDay, Math.max(1, companies));
 
   const risks = computeRisks({
-    storageUsedPct: storage.data ? storage.data.totalBytes / (20 * 1024 ** 3) : 0,
+    storageUsedPct: storage.data ? storage.data.totals.bytes / (20 * 1024 ** 3) : 0,
     dbGrowthPerDay: (slices?.telemetry.byWindow['30d'] ?? 0) / 30 + salesPerDay,
     queueDepth: ops.data?.queue.depth ?? 0,
     workerSuccessRate: ops.data?.queue.successRate ?? 1,
@@ -63,7 +63,7 @@ export const FounderExecutiveAnalyticsPage: React.FC = () => {
   const bench = computeBenchmark({
     latencyP95Ms: ops.data?.rpc.p95 ?? 0,
     availabilityPct: 99.9 - Math.min(0.9, (ops.data?.errors24h ?? 0) / 1000),
-    storageUsedGb: (storage.data?.totalBytes ?? 0) / 1024 ** 3,
+    storageUsedGb: (storage.data?.totals.bytes ?? 0) / 1024 ** 3,
     growthPerDay: (slices?.companies.byWindow['30d'] ?? 0) / 30,
     workerSuccessRate: ops.data?.queue.successRate ?? 1,
     recoveryHoursAgo: 12,
