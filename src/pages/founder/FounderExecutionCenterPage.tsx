@@ -24,28 +24,33 @@ const riskColor: Record<string, string> = {
 };
 
 export const FounderExecutionCenterPage: React.FC = () => {
-  const ops = useLiveOpsMetrics();
-  const storage = useStorageMetrics();
-  const enterprise = useLiveEnterpriseMetrics();
+  const opsQuery = useLiveOpsMetrics();
+  const storageHook = useStorageMetrics();
+  const enterpriseQuery = useLiveEnterpriseMetrics();
 
   const executions: ExecutionPlan[] = useMemo(() => {
+    const ops = opsQuery.data;
+    const storage = storageHook.data;
+    const enterprise = enterpriseQuery.data;
+    const totalBytes = storage?.totals.bytes ?? 0;
+    const softLimit = 5 * 1024 * 1024 * 1024;
     const metrics = {
-      storagePct: storage?.usedPct ?? null,
-      storageGrowthGbPerDay: storage?.growthGbPerDay ?? 0,
-      workerSuccessRate: ops?.workerSuccessRate ?? null,
-      queueDepth: ops?.queueDepth ?? 0,
-      dlq: ops?.dlqCount ?? 0,
-      rpcP95Ms: enterprise?.rpcP95Ms ?? null,
-      liveSourceOk: 1,
+      storagePct: totalBytes > 0 ? Math.min(100, (totalBytes / softLimit) * 100) : null,
+      storageGrowthGbPerDay: (storage?.forecast.dailyBytes ?? 0) / (1024 * 1024 * 1024),
+      workerSuccessRate: ops?.queue.successRate ?? null,
+      queueDepth: ops?.queue.depth ?? 0,
+      dlq: ops?.queue.dlq ?? 0,
+      rpcP95Ms: null as number | null,
+      liveSourceOk: enterprise?.source === 'live' ? 1 : 0.5,
     };
     const proposals = proposeAll(metrics, {
       isFounder: true,
-      env: 'prod',
+      isSuperAdmin: true,
       quietHours: false,
       changeFreezeActive: false,
-    });
+    } as unknown as Parameters<typeof proposeAll>[1]);
     return proposals.map((p) => buildExecutionPlan(p.plan));
-  }, [ops, storage, enterprise]);
+  }, [opsQuery.data, storageHook.data, enterpriseQuery.data]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = executions.find((e) => e.planId === selectedId) ?? executions[0] ?? null;

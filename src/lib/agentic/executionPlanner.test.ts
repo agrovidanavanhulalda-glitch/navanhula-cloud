@@ -41,7 +41,6 @@ describe('agentic execution layer', () => {
   });
 
   it('estimator handles NaN/Infinity/null gracefully', () => {
-    // @ts-expect-error -- deliberately pass invalid input
     expect(estimateExecution(null).minMinutes).toBe(0);
     const plan = buildPlan(problem(), 0.5);
     plan.tasks.runbook[0].estimatedMinutes = Number.NaN;
