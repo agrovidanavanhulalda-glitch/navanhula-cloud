@@ -304,6 +304,69 @@ export type Database = {
           },
         ]
       }
+      agentic_audit_log: {
+        Row: {
+          company_id: string | null
+          confidence: number
+          created_at: string
+          created_by: string | null
+          decision_id: string | null
+          decision_type: string
+          evidence_json: Json
+          id: string
+          impact_score: number
+          metadata_json: Json
+          recommendation: string | null
+          risk_score: number
+          rollback_plan: string | null
+          session_id: string | null
+          severity: string
+          status: string
+          updated_at: string
+          workflow_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          confidence?: number
+          created_at?: string
+          created_by?: string | null
+          decision_id?: string | null
+          decision_type: string
+          evidence_json?: Json
+          id?: string
+          impact_score?: number
+          metadata_json?: Json
+          recommendation?: string | null
+          risk_score?: number
+          rollback_plan?: string | null
+          session_id?: string | null
+          severity: string
+          status?: string
+          updated_at?: string
+          workflow_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          confidence?: number
+          created_at?: string
+          created_by?: string | null
+          decision_id?: string | null
+          decision_type?: string
+          evidence_json?: Json
+          id?: string
+          impact_score?: number
+          metadata_json?: Json
+          recommendation?: string | null
+          risk_score?: number
+          rollback_plan?: string | null
+          session_id?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+          workflow_id?: string | null
+        }
+        Relationships: []
+      }
       agro_inputs: {
         Row: {
           company_id: string | null
@@ -10403,6 +10466,7 @@ export type Database = {
         Returns: boolean
       }
       is_founder: { Args: { _user_id?: string }; Returns: boolean }
+      is_founder_user: { Args: { _uid: string }; Returns: boolean }
       is_global_ceo: { Args: never; Returns: boolean }
       is_manager_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_master_ceo: { Args: never; Returns: boolean }
