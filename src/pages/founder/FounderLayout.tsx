@@ -28,6 +28,7 @@ const navItems = [
   { to: '/app/founder/operations-intelligence', icon: Activity, label: 'Ops Intelligence' },
   { to: '/app/founder/executive-copilot', icon: Brain, label: 'Executive Copilot' },
   { to: '/app/founder/agent-center', icon: Bot, label: 'Agent Center' },
+  { to: '/app/founder/agent-audit', icon: ClipboardList, label: 'Agent Audit' },
   { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
   { to: '/app/founder/logs', icon: FileText, label: 'Logs' },
   { to: '/app/founder/alertas', icon: Bell, label: 'Alertas' },
