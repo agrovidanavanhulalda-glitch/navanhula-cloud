@@ -70,6 +70,7 @@ const FounderAutoHealingCenterPage = React.lazy(() => import("./pages/founder/Fo
 const FounderExecutiveAnalyticsPage = React.lazy(() => import("./pages/founder/FounderExecutiveAnalyticsPage"));
 const FounderOperationsIntelligencePage = React.lazy(() => import("./pages/founder/FounderOperationsIntelligencePage"));
 const FounderExecutiveCopilotPage = React.lazy(() => import("./pages/founder/FounderExecutiveCopilotPage"));
+const FounderAgentCenterPage = React.lazy(() => import("./pages/founder/FounderAgentCenterPage"));
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
 const WalletPage = React.lazy(() => import("./pages/WalletPage"));
@@ -358,6 +359,7 @@ const AppRoutes = () => {
             <Route path="executive-analytics" element={<FounderExecutiveAnalyticsPage />} />
             <Route path="operations-intelligence" element={<FounderOperationsIntelligencePage />} />
             <Route path="executive-copilot" element={<FounderExecutiveCopilotPage />} />
+            <Route path="agent-center" element={<FounderAgentCenterPage />} />
           </Route>
           <Route path="fiscal" element={<FiscalPage />} />
           <Route path="contabilidade" element={<Navigate to="/app/financeiro-rh?tab=chart" replace />} />
