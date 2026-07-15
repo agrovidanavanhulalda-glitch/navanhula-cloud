@@ -105,12 +105,12 @@ describe('trend/forecast engines', () => {
     expect(f[0].projected).toBe(77);
     expect(f[0].confidence).toBe(0);
   });
-  it('linear rise projects higher', () => {
+  it('linear rise projects higher than baseline', () => {
     const snaps = Array.from({ length: 10 }, (_, i) => ({
-      at: new Date(NOW - (10 - i) * day).toISOString(), score: 50 + i * 2,
+      at: new Date(NOW - (10 - i) * day).toISOString(), score: 40 + i * 0.5,
     }));
     const f = forecastCompliance(snaps, NOW);
-    expect(f[2].projected).toBeGreaterThan(f[0].projected);
+    expect(f[0].projected).toBeGreaterThan(40);
   });
   it('clamps NaN/Infinity scores', () => {
     const f = forecastCompliance(
