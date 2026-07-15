@@ -25,8 +25,12 @@ export interface ScenarioInput {
   confidence: number;
 }
 
-const clamp = (n: number, lo = 0, hi = 100): number =>
-  Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : lo;
+const clamp = (n: number, lo = 0, hi = 100): number => {
+  if (Number.isNaN(n) || n === undefined || n === null) return lo;
+  if (n === Infinity) return hi;
+  if (n === -Infinity) return lo;
+  return Math.max(lo, Math.min(hi, n));
+};
 
 const safe = (n: number, fallback = 0): number => (Number.isFinite(n) ? n : fallback);
 
