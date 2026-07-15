@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing, LifeBuoy, Gauge, ShieldCheck, Wrench, Activity, Brain, Bot, ClipboardList, Rocket, ClipboardCheck, Lightbulb, FlaskConical, Gavel, Compass } from 'lucide-react';
+import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing, LifeBuoy, Gauge, ShieldCheck, Wrench, Activity, Brain, Bot, ClipboardList, Rocket, ClipboardCheck, Lightbulb, FlaskConical, Gavel, Compass, Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FounderBadge from '@/components/founder/FounderBadge';
 import { installServerTelemetrySink } from '@/lib/telemetry/serverSink';
@@ -35,6 +35,7 @@ const navItems = [
   { to: '/app/founder/simulation-lab', icon: FlaskConical, label: 'Simulation Lab' },
   { to: '/app/founder/policy-center', icon: Gavel, label: 'Policy Center' },
   { to: '/app/founder/strategy-center', icon: Compass, label: 'Strategy Center' },
+  { to: '/app/founder/governance-center', icon: Landmark, label: 'Governance Center' },
   { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
   { to: '/app/founder/logs', icon: FileText, label: 'Logs' },
   { to: '/app/founder/alertas', icon: Bell, label: 'Alertas' },
