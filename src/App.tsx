@@ -82,6 +82,7 @@ const FounderGovernanceCenterPage = React.lazy(() => import("./pages/founder/Fou
 const FounderDecisionCenterPage = React.lazy(() => import("./pages/founder/FounderDecisionCenterPage"));
 const FounderArchitectureCenterPage = React.lazy(() => import("./pages/founder/FounderArchitectureCenterPage"));
 const FounderTransformationCenterPage = React.lazy(() => import("./pages/founder/FounderTransformationCenterPage"));
+const FounderRiskCenterPage = React.lazy(() => import("./pages/founder/FounderRiskCenterPage"));
 
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
@@ -383,6 +384,7 @@ const AppRoutes = () => {
             <Route path="decision-center" element={<FounderDecisionCenterPage />} />
             <Route path="architecture-center" element={<FounderArchitectureCenterPage />} />
             <Route path="transformation-center" element={<FounderTransformationCenterPage />} />
+            <Route path="risk-center" element={<FounderRiskCenterPage />} />
           </Route>
 
           <Route path="fiscal" element={<FiscalPage />} />
