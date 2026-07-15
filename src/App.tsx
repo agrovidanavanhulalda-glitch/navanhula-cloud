@@ -375,6 +375,7 @@ const AppRoutes = () => {
             <Route path="simulation-lab" element={<FounderSimulationLabPage />} />
             <Route path="policy-center" element={<FounderPolicyCenterPage />} />
             <Route path="strategy-center" element={<FounderStrategyCenterPage />} />
+            <Route path="governance-center" element={<FounderGovernanceCenterPage />} />
           </Route>
           <Route path="fiscal" element={<FiscalPage />} />
           <Route path="contabilidade" element={<Navigate to="/app/financeiro-rh?tab=chart" replace />} />
