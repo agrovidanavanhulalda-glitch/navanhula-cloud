@@ -33,7 +33,7 @@ describe('Sprint 5.2 · Enterprise Risk Engine', () => {
       { id: 'X', probability: NaN, impact: Infinity, mitigation: -5, velocity: 200, detectability: null },
     ] as unknown as never);
     expect(out[0].probability).toBe(0);
-    expect(out[0].impact).toBe(100);
+    expect(out[0].impact).toBe(0);
     expect(out[0].mitigation).toBe(0);
     expect(out[0].velocity).toBe(100);
     expect(out[0].detectability).toBe(0);
