@@ -39,13 +39,11 @@ describe('Sprint 5.0 · Enterprise Architecture', () => {
   });
 
   it('sanitizes NaN, Infinity, undefined, null', () => {
-    const bad: CapabilityInput[] = [
+    const bad = [
       { id: 'X', maturity: NaN, health: Infinity, risk: -50, criticality: 999, dependsOn: undefined },
-      // @ts-expect-error deliberate
       null,
-      // @ts-expect-error deliberate
       { id: undefined },
-    ];
+    ] as unknown as CapabilityInput[];
     const list = normalizeCapabilities(bad);
     expect(list).toHaveLength(1);
     expect(list[0].maturity).toBe(0);
