@@ -104,6 +104,7 @@ describe('backups + readiness + score', () => {
       { rows: [], score: 0, staleCount: 0 },
       { rows: [], score: 0, untestedCount: 0 },
     ).score).toBe(0);
+  });
   it('full recovery yields high readiness', () => {
     const r = computeRecoveryReadiness(
       { rows: [{ id: 'p', name: 'p', tier: 'TIER_1', rtoHours: 0.5, rpoHours: 0.1 }], averageRtoHours: 0.5, averageRpoHours: 0.1 },
@@ -116,7 +117,6 @@ describe('backups + readiness + score', () => {
     const s = computeContinuityScore({ readiness: 20, resilience: 20, availability: 20, backups: 0, scenarios: 80 });
     expect(s.status).toBe('AT_RISK');
   });
-});
   it('score min/max bounded', () => {
     const min = computeContinuityScore({ readiness: 0, resilience: 0, availability: 0, backups: 0, scenarios: 100 });
     const max = computeContinuityScore({ readiness: 100, resilience: 100, availability: 100, backups: 100, scenarios: 0 });
