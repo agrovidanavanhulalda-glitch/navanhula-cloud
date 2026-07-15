@@ -78,6 +78,7 @@ const FounderKnowledgeCenterPage = React.lazy(() => import("./pages/founder/Foun
 const FounderSimulationLabPage = React.lazy(() => import("./pages/founder/FounderSimulationLabPage"));
 const FounderPolicyCenterPage = React.lazy(() => import("./pages/founder/FounderPolicyCenterPage"));
 const FounderStrategyCenterPage = React.lazy(() => import("./pages/founder/FounderStrategyCenterPage"));
+const FounderGovernanceCenterPage = React.lazy(() => import("./pages/founder/FounderGovernanceCenterPage"));
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
 const WalletPage = React.lazy(() => import("./pages/WalletPage"));
