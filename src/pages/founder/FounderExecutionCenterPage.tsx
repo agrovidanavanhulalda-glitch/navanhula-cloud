@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,9 @@ import { useLiveEnterpriseMetrics } from '@/lib/ops/useLiveEnterpriseMetrics';
 import { proposeAll } from '@/lib/agentic/agentEngine';
 import { buildExecutionPlan, type ExecutionPlan } from '@/lib/agentic/executionPlanner';
 import { summarizeExecution } from '@/lib/agentic/executionSummary';
+import { submitForApproval } from '@/lib/agentic/approvalWorkflow';
+import { persistAgenticDecision } from '@/lib/agentic/agenticAuditService';
+import { toast } from '@/hooks/use-toast';
 
 const readinessColor: Record<string, string> = {
   READY: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
