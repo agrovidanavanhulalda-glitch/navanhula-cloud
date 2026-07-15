@@ -24,8 +24,8 @@ describe('BIA', () => {
     expect(analyzeBusinessImpact(undefined)).toEqual([]);
   });
   it('single item deterministic', () => {
-    const a = analyzeBusinessImpact([{ id: 'p1', name: 'POS', criticality: 100, revenueImpact: 90 }]);
-    const b = analyzeBusinessImpact([{ id: 'p1', name: 'POS', criticality: 100, revenueImpact: 90 }]);
+    const a = analyzeBusinessImpact([{ id: 'p1', name: 'POS', criticality: 100, revenueImpact: 100, customerImpact: 100, regulatoryImpact: 100 }]);
+    const b = analyzeBusinessImpact([{ id: 'p1', name: 'POS', criticality: 100, revenueImpact: 100, customerImpact: 100, regulatoryImpact: 100 }]);
     expect(a).toEqual(b);
     expect(a[0].tier).toBe('TIER_1');
   });
@@ -117,7 +117,10 @@ describe('backups + readiness + score', () => {
 
 describe('plan + integration', () => {
   it('plan prioritizes P1 before P3', () => {
-    const bia = analyzeBusinessImpact([{ id: 'x', criticality: 100 }, { id: 'y', criticality: 5 }]);
+    const bia = analyzeBusinessImpact([
+      { id: 'x', criticality: 100, revenueImpact: 100, customerImpact: 100, regulatoryImpact: 100 },
+      { id: 'y', criticality: 5 },
+    ]);
     const plan = buildContinuityPlan(bia, computeDependencyImpact([]));
     expect(plan.actions[0].priority).toBe('P1');
   });
