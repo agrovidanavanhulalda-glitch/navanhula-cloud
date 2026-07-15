@@ -27,10 +27,8 @@ describe('decisionIntelligence — normalize', () => {
     expect(r.map(x => x.id)).toEqual(['a','b']);
   });
   it('undefined/null tolerant', () => {
-    // @ts-expect-error
-    expect(normalizeDecisions(undefined)).toEqual([]);
-    // @ts-expect-error
-    expect(normalizeDecisions(null)).toEqual([]);
+    expect(normalizeDecisions(undefined as unknown as DecisionCandidateInput[])).toEqual([]);
+    expect(normalizeDecisions(null as unknown as DecisionCandidateInput[])).toEqual([]);
   });
   it('NaN/Infinity clamped', () => {
     const r = normalizeDecisions([mk('a', { impact: NaN, risk: Infinity, cost: -50 })]);
@@ -39,9 +37,10 @@ describe('decisionIntelligence — normalize', () => {
     expect(r[0].cost).toBe(0);
   });
   it('skips invalid ids', () => {
-    // @ts-expect-error
-    expect(normalizeDecisions([{ id: '' }, { id: null }, mk('ok')])).toHaveLength(1);
+    const bad = [{ id: '' }, { id: null as unknown as string }, mk('ok')] as DecisionCandidateInput[];
+    expect(normalizeDecisions(bad)).toHaveLength(1);
   });
+
 });
 
 describe('decisionIntelligence — score & priority', () => {
