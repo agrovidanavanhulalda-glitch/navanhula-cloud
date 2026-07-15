@@ -255,8 +255,12 @@ export const FounderExecutionCenterPage: React.FC = () => {
               )}
 
               <div className="flex justify-end">
-                <Button variant="outline" disabled title="Execução manual desabilitada — Founder approval na próxima sprint">
-                  Encaminhar para aprovação (em breve)
+                <Button
+                  onClick={() => handleSubmit(selected)}
+                  disabled={submittingId === selected.planId || selected.readiness === 'BLOCKED'}
+                  title={selected.readiness === 'BLOCKED' ? 'Plano bloqueado — corrigir issues antes de enviar' : 'Enviar plano para aprovação do Founder'}
+                >
+                  {submittingId === selected.planId ? 'Enviando…' : 'Enviar para aprovação'}
                 </Button>
               </div>
             </div>
