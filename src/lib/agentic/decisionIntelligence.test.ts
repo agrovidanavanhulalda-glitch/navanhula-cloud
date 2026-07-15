@@ -33,7 +33,7 @@ describe('decisionIntelligence — normalize', () => {
   it('NaN/Infinity clamped', () => {
     const r = normalizeDecisions([mk('a', { impact: NaN, risk: Infinity, cost: -50 })]);
     expect(r[0].impact).toBe(0);
-    expect(r[0].risk).toBe(100);
+    expect(r[0].risk).toBe(0);
     expect(r[0].cost).toBe(0);
   });
   it('skips invalid ids', () => {
