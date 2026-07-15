@@ -35,6 +35,7 @@ const navItems = [
   { to: '/app/founder/simulation-lab', icon: FlaskConical, label: 'Simulation Lab' },
   { to: '/app/founder/policy-center', icon: Gavel, label: 'Policy Center' },
   { to: '/app/founder/strategy-center', icon: Compass, label: 'Strategy Center' },
+  { to: '/app/founder/governance-center', icon: Landmark, label: 'Governance Center' },
   { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
   { to: '/app/founder/logs', icon: FileText, label: 'Logs' },
   { to: '/app/founder/alertas', icon: Bell, label: 'Alertas' },
