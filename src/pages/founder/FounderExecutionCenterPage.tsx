@@ -28,9 +28,39 @@ const riskColor: Record<string, string> = {
 };
 
 export const FounderExecutionCenterPage: React.FC = () => {
+  const navigate = useNavigate();
   const opsQuery = useLiveOpsMetrics();
   const storageHook = useStorageMetrics();
   const enterpriseQuery = useLiveEnterpriseMetrics();
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+
+  const handleSubmit = async (plan: ExecutionPlan) => {
+    setSubmittingId(plan.planId);
+    try {
+      const severity = plan.risk.level === 'CRITICAL' ? 'CRITICAL' : plan.risk.level === 'HIGH' ? 'HIGH' : plan.risk.level === 'MEDIUM' ? 'MEDIUM' : 'LOW';
+      const audit = await persistAgenticDecision({
+        decision_type: `EXECUTION_PLAN_${plan.source.problem.kind}`,
+        severity,
+        confidence: plan.estimate.confidence,
+        risk_score: plan.risk.score,
+        impact_score: plan.source.score.impact,
+        status: 'PENDING',
+        recommendation: `${plan.source.problem.title} — readiness ${plan.readiness}`,
+        rollback_plan: `${plan.rollback.readiness} · ${plan.rollback.steps.length} passos`,
+        workflow_id: `wf-${plan.planId}`,
+        decision_id: plan.planId,
+        evidence_json: { criticalPath: plan.graph.criticalPath, evidence: plan.source.problem.evidence },
+        metadata_json: { readiness: plan.readiness, riskLevel: plan.risk.level, avgMinutes: plan.estimate.avgMinutes },
+      });
+      submitForApproval(plan, audit?.id ?? null);
+      toast({ title: 'Enviado para aprovação', description: plan.source.problem.title });
+      navigate('/app/founder/approval-center');
+    } catch (e) {
+      toast({ title: 'Falha ao enviar', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setSubmittingId(null);
+    }
+  };
 
   const executions: ExecutionPlan[] = useMemo(() => {
     const ops = opsQuery.data;
