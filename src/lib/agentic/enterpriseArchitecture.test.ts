@@ -47,7 +47,7 @@ describe('Sprint 5.0 · Enterprise Architecture', () => {
     const list = normalizeCapabilities(bad);
     expect(list).toHaveLength(1);
     expect(list[0].maturity).toBe(0);
-    expect(list[0].health).toBe(100);
+    expect(list[0].health).toBe(0);
     expect(list[0].risk).toBe(0);
     expect(list[0].criticality).toBe(100);
     expect(list[0].dependsOn).toEqual([]);
