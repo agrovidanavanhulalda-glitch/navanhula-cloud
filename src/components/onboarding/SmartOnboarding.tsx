@@ -144,7 +144,7 @@ const SmartOnboarding: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-foreground">Configuração Rápida</h3>
-                <p className="text-[10px] text-muted-foreground">Complete para liberar todas as funções</p>
+                <p className="text-xs text-muted-foreground">Complete para liberar todas as funções</p>
               </div>
             </div>
             <button 
