@@ -176,7 +176,7 @@ const SmartOnboarding: React.FC = () => {
                   <div className={`mb-2 ${step.done ? 'text-success' : 'text-muted-foreground'}`}>
                     {step.done ? <CheckCircle2 className="w-4 h-4" /> : step.icon}
                   </div>
-                  <span className={`text-[9px] font-semibold text-center leading-tight ${step.done ? 'text-success' : 'text-foreground'}`}>
+                  <span className={`text-xs font-semibold text-center leading-tight ${step.done ? 'text-success' : 'text-foreground'}`}>
                     {step.title.split(' ').pop()}
                   </span>
                 </div>
