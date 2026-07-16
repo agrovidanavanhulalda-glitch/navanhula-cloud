@@ -538,65 +538,64 @@ const LocalPOSPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-muted-foreground font-medium">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_20px_-8px_rgba(11,31,58,0.08)] space-y-2.5">
+                <div className="flex justify-between text-sm text-slate-500 font-medium">
                   <span>Soma dos Itens</span>
                   <span className="tabular-nums">{formatCurrency(getSubtotal())}</span>
                 </div>
                 {getTotalDiscount() > 0 && (
-                  <div className="flex justify-between text-green-600 font-medium">
+                  <div className="flex justify-between text-sm text-emerald-600 font-medium">
                     <span>Desconto Aplicado</span>
                     <span className="tabular-nums">-{formatCurrency(getTotalDiscount())}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-end pt-2 border-t border-slate-200">
-                  <span className="text-lg font-bold text-[#0B1F3A]">VALOR A COBRAR</span>
+                <div className="flex justify-between items-end pt-3 border-t border-dashed border-slate-200">
+                  <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-slate-500">Total a cobrar</span>
                   <motion.div
                     key={getTotal()}
-                    initial={{ scale: 1.1, color: '#2563eb' }}
-                    animate={{ scale: 1, color: '#0B1F3A' }}
-                    className="text-4xl font-black tracking-tighter tabular-nums text-[#0B1F3A]"
+                    initial={{ scale: 1.08, opacity: 0.7 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="text-[2rem] leading-none font-black tracking-tight tabular-nums text-[#0B1F3A]"
                   >
                     {formatCurrency(getTotal())}
                   </motion.div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 pt-2">
+              <div className="flex flex-col gap-3 pt-1">
                 {cart.length > 0 && (
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="text-muted-foreground hover:text-destructive gap-2 self-end"
+                    className="text-slate-500 hover:text-destructive gap-2 self-end h-8"
                     onClick={() => {
                       clearCart();
                       toast.success('Carrinho limpo');
                     }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                     Limpar tudo
                   </Button>
                 )}
 
                 <Button 
-                  className="w-full h-20 text-2xl font-black shadow-2xl rounded-2xl gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:hover:scale-100"
+                  className="group w-full h-16 text-lg font-bold rounded-2xl gap-3 tracking-tight text-white bg-gradient-to-br from-[#0B1F3A] via-[#12315C] to-[#0B1F3A] hover:from-[#0F2A50] hover:via-[#173C6E] hover:to-[#0F2A50] shadow-[0_16px_40px_-16px_rgba(11,31,58,0.6)] hover:shadow-[0_20px_50px_-16px_rgba(11,31,58,0.75)] ring-1 ring-inset ring-white/10 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:grayscale disabled:hover:scale-100"
                   disabled={cart.length === 0 || !selectedSellerId}
                   onClick={() => setShowPaymentModal(true)}
-                  style={{ 
-                    backgroundColor: cart.length > 0 ? '#10b981' : undefined,
-                    boxShadow: cart.length > 0 ? '0 10px 30px -10px rgba(16, 185, 129, 0.5)' : 'none'
-                  }}
                 >
-                  <CreditCard className="w-8 h-8" />
-                  RECEBER PAGAMENTO
+                  <span className="w-9 h-9 rounded-full bg-[#D4A94C]/15 flex items-center justify-center ring-1 ring-[#D4A94C]/30 group-hover:bg-[#D4A94C]/25 transition-colors">
+                    <CreditCard className="w-5 h-5 text-[#D4A94C]" />
+                  </span>
+                  <span>RECEBER PAGAMENTO</span>
                 </Button>
-                
+
                 {cart.length === 0 && (
-                  <p className="text-center text-sm font-medium text-muted-foreground animate-pulse">
-                    Escolha os produtos para finalizar
+                  <p className="text-center text-xs font-medium text-slate-400">
+                    Escolha os produtos para finalizar a venda
                   </p>
                 )}
               </div>
+
 
               {/* Quick Actions Footer */}
               <div className="flex items-center gap-2 pt-2">
