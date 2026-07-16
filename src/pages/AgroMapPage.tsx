@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Loader2, MapPin, Phone, ShoppingCart, Plus, Egg, Search, AlertTriangle, ClipboardList, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 
 const AgroMapView = lazy(() => import('@/components/agro/AgroMapView'));
 
