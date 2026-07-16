@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
+// OnboardingChecklist import removed (Sprint 6.1.1 P1-#1) — canonical is SmartOnboarding in MainLayout.
 import AppContextWidget from '@/components/debug/AppContextWidget';
 import { useNavigate } from 'react-router-dom';
 import PageTransition from '@/components/layout/PageTransition';
