@@ -17,9 +17,11 @@ export const useOnboarding = () => {
     first_sale_completed: false,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchProgress = async () => {
     if (!user?.id) return;
+    setError(null);
 
     try {
       const { data, error } = await supabase
@@ -38,16 +40,17 @@ export const useOnboarding = () => {
         });
       } else {
         // Create initial progress if it doesn't exist
-        const { data: newData, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from('onboarding_progress')
           .insert({ user_id: user.id })
           .select()
           .single();
-        
-        if (insertError) console.error('Error creating onboarding progress:', insertError);
+
+        if (insertError) throw insertError;
       }
-    } catch (error) {
-      console.error('Error fetching onboarding progress:', error);
+    } catch (err: any) {
+      console.error('Error fetching onboarding progress:', err);
+      setError(err?.message || 'Não foi possível carregar o progresso.');
     } finally {
       setLoading(false);
     }
