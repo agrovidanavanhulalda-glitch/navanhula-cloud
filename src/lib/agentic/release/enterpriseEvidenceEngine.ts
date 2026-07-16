@@ -14,8 +14,10 @@ export interface EvidenceReport {
 }
 
 const clamp = (n: unknown): number => {
-  const x = typeof n === 'number' && Number.isFinite(n) ? n : 0;
-  return Math.max(0, Math.min(100, x));
+  if (typeof n !== 'number' || Number.isNaN(n)) return 0;
+  if (n === Infinity) return 100;
+  if (n === -Infinity) return 0;
+  return Math.max(0, Math.min(100, n));
 };
 
 export function normalizeEvidence(input: EvidenceInput = {}): EvidenceReport {
