@@ -8,12 +8,14 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const SmartOnboarding: React.FC = () => {
-  const { 
-    first_product_added, 
-    first_cash_opened, 
-    first_sale_completed, 
-    completionPct, 
-    loading 
+  const {
+    first_product_added,
+    first_cash_opened,
+    first_sale_completed,
+    completionPct,
+    loading,
+    error,
+    retry,
   } = useOnboarding();
   
   const navigate = useNavigate();
@@ -29,7 +31,23 @@ const SmartOnboarding: React.FC = () => {
     }
   }, [loading, first_product_added, first_cash_opened, first_sale_completed]);
 
-  if (loading || dismissed || completionPct === 100) return null;
+  if (loading || dismissed) return null;
+
+  // P1-#3: surface silent fetch failures with a retry affordance
+  if (error) {
+    return (
+      <Card className="p-3 mb-6 border-destructive/30 bg-destructive/5 flex items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          Não foi possível carregar o progresso de configuração.
+        </p>
+        <Button size="sm" variant="outline" onClick={() => retry()}>
+          Tentar novamente
+        </Button>
+      </Card>
+    );
+  }
+
+  if (completionPct === 100) return null;
 
   const steps = [
     {

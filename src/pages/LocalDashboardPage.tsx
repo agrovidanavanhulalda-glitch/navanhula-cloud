@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
+// OnboardingChecklist import removed (Sprint 6.1.1 P1-#1) — canonical is SmartOnboarding in MainLayout.
 import AppContextWidget from '@/components/debug/AppContextWidget';
 import { useNavigate } from 'react-router-dom';
 import PageTransition from '@/components/layout/PageTransition';
@@ -345,8 +345,8 @@ const LocalDashboardPage: React.FC = () => {
       {/* Smart Alert Banner */}
       <SmartAlertBanner alerts={smartAlerts} />
 
-      {/* Onboarding Checklist */}
-      <OnboardingChecklist />
+      {/* Onboarding: canonical mount is <SmartOnboarding /> in MainLayout.
+          OnboardingChecklist mount removed here to avoid UX duplication (Sprint 6.1.1 P1-#1). */}
 
       {/* RBAC Phase 2 — temporary debug widget */}
       <AppContextWidget />
