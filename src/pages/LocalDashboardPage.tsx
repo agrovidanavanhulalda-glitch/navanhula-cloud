@@ -149,6 +149,7 @@ const LocalDashboardPage: React.FC = () => {
   const [chartPeriod, setChartPeriod] = useState<'today' | 'week' | 'month'>('week');
 
   const { data: stats, isLoading: statsLoading } = useDashboardStats(store?.id);
+  const { completionPct: onboardingPct } = useOnboarding();
 
   // Guard against crash on initial mount before POS data is loaded
   const isReady = useMemo(() => {
