@@ -39,13 +39,15 @@ describe('Auth Flow E2E Tests', () => {
   });
 
   it('Flow: Should create manager without email', async () => {
-    const body = buildCreateUserBody({ full_name: 'Novo Gerente', role: 'admin' });
+    const body = buildCreateUserBody({ full_name: 'Novo Gerente', email: undefined, role: 'admin' });
     await invokeMock('manage-team-member', { body });
     expect(invokeMock).toHaveBeenCalledWith(
       'manage-team-member',
-      expect.objectContaining({ body: expect.objectContaining({ full_name: 'Novo Gerente', role: 'admin', email: undefined }) }),
+      expect.objectContaining({ body: expect.objectContaining({ full_name: 'Novo Gerente', role: 'admin' }) }),
     );
+    expect(body.email).toBeUndefined();
   });
+
 
   it('Flow: Should create user with temporary password', async () => {
     const body = buildCreateUserBody({ full_name: 'Novo Operador', email: 'operador@test.com', role: 'seller', password: 'Temp@1234' });
