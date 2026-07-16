@@ -189,8 +189,12 @@ const LocalReportsPage: React.FC = () => {
   }, [isAdmin]);
 
   const saveToHistory = async (type: 'PDF' | 'XLSX', status: 'success' | 'error', filters: any, errorMsg?: string) => {
-    const { user } = (await supabase.auth.getSession()).data.session || {};
+    const sessionPromise = supabase.auth?.getSession?.();
+    const sessionRes = sessionPromise ? await Promise.resolve(sessionPromise).catch(() => null) : null;
+    const user = sessionRes?.data?.session?.user;
     if (!user || !targetCompanyId) return;
+
+
 
     const entry = {
       id: crypto.randomUUID(), // Local ID
