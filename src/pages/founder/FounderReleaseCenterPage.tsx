@@ -4,6 +4,7 @@ import type { PlatformSignals } from '@/lib/agentic/release/gaEvidenceEngine';
 import { certifyEnterpriseFinal } from '@/lib/agentic/release/enterpriseFinalCertification';
 import { buildEnterpriseReleaseReport } from '@/lib/agentic/release/enterpriseReleaseReport';
 import { summarizeFinal } from '@/lib/agentic/release/releaseFinalSummary';
+import { generateCertificationReport } from '@/lib/agentic/release/enterpriseCertificationReport';
 
 /**
  * Sprint 5.6.3 · Founder Enterprise Release Center — GA FINAL.
@@ -58,9 +59,30 @@ const FounderReleaseCenterPage: React.FC = () => {
   );
   const flat = React.useMemo(() => buildEnterpriseReleaseReport(final), [final]);
   const summary = React.useMemo(() => summarizeFinal(final), [final]);
+  const cert = React.useMemo(() => generateCertificationReport(RAW_SIGNALS), []);
+  const certBanner =
+    cert.decision.state === 'GA' ? 'border-emerald-500/40 text-emerald-500'
+    : cert.decision.state === 'RC' ? 'border-amber-500/40 text-amber-500'
+    : 'border-destructive/40 text-destructive';
+
+
 
   return (
     <div className="space-y-6">
+      <div className={`rounded-2xl border ${certBanner} bg-card/40 p-5`}>
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">Sprint 5.6.4 · GA Evidence Completion</div>
+        <div className="mt-1 text-2xl font-black">{cert.decision.label}</div>
+        <p className="mt-1 text-xs text-muted-foreground">{cert.decision.reason}</p>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          <Badge variant="outline" className="border-border">Matriz PASS {cert.matrix.passCount}/{cert.matrix.total}</Badge>
+          <Badge variant="outline" className="border-border">WARN {cert.matrix.warnCount}</Badge>
+          <Badge variant="outline" className="border-border">FAIL {cert.matrix.failCount}</Badge>
+          <Badge variant="outline" className="border-border">Cobertura {cert.aggregate.completeness}%</Badge>
+          <Badge variant="outline" className="border-border">Deploy {cert.decision.deployment}</Badge>
+        </div>
+      </div>
+
+
       <header className="rounded-2xl border border-border/60 bg-card/50 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
