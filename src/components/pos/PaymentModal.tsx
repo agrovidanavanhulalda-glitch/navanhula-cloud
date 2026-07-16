@@ -232,38 +232,71 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   const canConfirmSplit = splitTotal >= total;
 
+  const methodCardBase =
+    'group relative flex flex-col items-center justify-center h-20 rounded-xl border transition-all duration-200 press-scale focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60';
+  const methodCardActive =
+    'bg-gradient-premium text-primary-foreground border-accent/60 shadow-[0_0_0_1px_hsl(var(--accent)/0.35),0_8px_24px_-8px_hsl(var(--primary)/0.45)]';
+  const methodCardIdle =
+    'bg-card text-foreground border-border hover:border-accent/40 hover:shadow-card-hover';
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Calculator className="w-5 h-5" />
-            Finalizar Pagamento
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-lg p-0 overflow-hidden border-border/60">
+        {/* Premium header */}
+        <div className="relative bg-gradient-premium px-6 pt-6 pb-5 text-primary-foreground">
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight text-primary-foreground">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 backdrop-blur-sm ring-1 ring-white/15">
+                <Calculator className="w-4 h-4 text-accent" />
+              </span>
+              Finalizar Pagamento
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* Total Display */}
-        <div className="bg-primary/10 rounded-lg p-4 text-center">
-          <p className="text-sm text-muted-foreground">Total a Pagar</p>
-          <p className="text-4xl font-bold text-primary">{formatCurrency(total)}</p>
+          {/* Total display — premium */}
+          <div className="mt-4 text-center">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-primary-foreground/70">
+              Total a Pagar
+            </p>
+            <p className="mt-1 text-5xl font-extrabold tabular-nums text-gradient-gold drop-shadow-[0_2px_12px_rgba(212,169,60,0.25)]">
+              {formatCurrency(total)}
+            </p>
+          </div>
+
+          {/* Progress steps */}
+          <div className="mt-5 flex items-center justify-between text-[10px] uppercase tracking-wider text-primary-foreground/60">
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Venda
+            </div>
+            <div className="flex-1 mx-2 h-px bg-gradient-to-r from-accent via-accent/60 to-white/10" />
+            <div className="flex items-center gap-1.5 text-primary-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" /> Pagamento
+            </div>
+            <div className="flex-1 mx-2 h-px bg-white/10" />
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-white/25" /> Finalização
+            </div>
+          </div>
         </div>
 
+        <div className="px-6 pb-6 pt-4 space-y-4 max-h-[70vh] overflow-y-auto">
         {/* Payment Type Tabs */}
         <Tabs value={paymentType} onValueChange={(v) => setPaymentType(v as 'single' | 'split' | 'voucher' | 'qrcode')}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="single" className="flex items-center gap-1 text-xs">
+          <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-xl">
+            <TabsTrigger value="single" className="flex items-center gap-1 text-xs rounded-lg data-[state=active]:shadow-sm">
               <Banknote className="w-3 h-3" />
               Único
             </TabsTrigger>
-            <TabsTrigger value="split" className="flex items-center gap-1 text-xs">
+            <TabsTrigger value="split" className="flex items-center gap-1 text-xs rounded-lg data-[state=active]:shadow-sm">
               <Split className="w-3 h-3" />
               Dividir
             </TabsTrigger>
-            <TabsTrigger value="voucher" className="flex items-center gap-1 text-xs">
+            <TabsTrigger value="voucher" className="flex items-center gap-1 text-xs rounded-lg data-[state=active]:shadow-sm">
               <Ticket className="w-3 h-3" />
               Voucher
             </TabsTrigger>
-            <TabsTrigger value="qrcode" className="flex items-center gap-1 text-xs">
+            <TabsTrigger value="qrcode" className="flex items-center gap-1 text-xs rounded-lg data-[state=active]:shadow-sm">
               <QrCode className="w-3 h-3" />
               QR Code
             </TabsTrigger>
@@ -271,40 +304,48 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
           {/* Single Payment */}
           <TabsContent value="single" className="space-y-4">
-            {/* Payment Method Selection */}
+            {/* Payment Method Selection — premium cards */}
             <div className="grid grid-cols-4 gap-2">
-              <Button
-                variant={selectedMethod === 'cash' ? 'default' : 'outline'}
-                className="flex flex-col h-16"
+              <button
+                type="button"
+                aria-pressed={selectedMethod === 'cash'}
+                className={`${methodCardBase} ${selectedMethod === 'cash' ? methodCardActive : methodCardIdle}`}
                 onClick={() => setSelectedMethod('cash')}
               >
-                <Banknote className="w-5 h-5 mb-1" />
-                <span className="text-xs">Dinheiro</span>
-              </Button>
-              <Button
-                variant={selectedMethod === 'mpesa' ? 'default' : 'outline'}
-                className="flex flex-col h-16"
+                <Banknote className={`w-5 h-5 mb-1 transition-transform group-hover:scale-110 ${selectedMethod === 'cash' ? 'text-accent' : ''}`} />
+                <span className="text-[11px] font-medium">Dinheiro</span>
+                {selectedMethod === 'cash' && <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-accent" />}
+              </button>
+              <button
+                type="button"
+                aria-pressed={selectedMethod === 'mpesa'}
+                className={`${methodCardBase} ${selectedMethod === 'mpesa' ? methodCardActive : methodCardIdle}`}
                 onClick={() => setSelectedMethod('mpesa')}
               >
-                <Smartphone className="w-5 h-5 mb-1" />
-                <span className="text-xs">M-Pesa</span>
-              </Button>
-              <Button
-                variant={selectedMethod === 'emola' ? 'default' : 'outline'}
-                className="flex flex-col h-16"
+                <Smartphone className={`w-5 h-5 mb-1 transition-transform group-hover:scale-110 ${selectedMethod === 'mpesa' ? 'text-accent' : ''}`} />
+                <span className="text-[11px] font-medium">M-Pesa</span>
+                {selectedMethod === 'mpesa' && <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-accent" />}
+              </button>
+              <button
+                type="button"
+                aria-pressed={selectedMethod === 'emola'}
+                className={`${methodCardBase} ${selectedMethod === 'emola' ? methodCardActive : methodCardIdle}`}
                 onClick={() => setSelectedMethod('emola')}
               >
-                <Smartphone className="w-5 h-5 mb-1" />
-                <span className="text-xs">E-Mola</span>
-              </Button>
-              <Button
-                variant={selectedMethod === 'card' ? 'default' : 'outline'}
-                className="flex flex-col h-16"
+                <Smartphone className={`w-5 h-5 mb-1 transition-transform group-hover:scale-110 ${selectedMethod === 'emola' ? 'text-accent' : ''}`} />
+                <span className="text-[11px] font-medium">e-Mola</span>
+                {selectedMethod === 'emola' && <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-accent" />}
+              </button>
+              <button
+                type="button"
+                aria-pressed={selectedMethod === 'card'}
+                className={`${methodCardBase} ${selectedMethod === 'card' ? methodCardActive : methodCardIdle}`}
                 onClick={() => setSelectedMethod('card')}
               >
-                <CreditCard className="w-5 h-5 mb-1" />
-                <span className="text-xs">Cartão</span>
-              </Button>
+                <CreditCard className={`w-5 h-5 mb-1 transition-transform group-hover:scale-110 ${selectedMethod === 'card' ? 'text-accent' : ''}`} />
+                <span className="text-[11px] font-medium">Cartão</span>
+                {selectedMethod === 'card' && <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-accent" />}
+              </button>
             </div>
 
             {/* Cash Amount Input */}
