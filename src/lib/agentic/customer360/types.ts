@@ -23,9 +23,9 @@ export interface Customer360Input {
 }
 
 export interface Customer360Buckets {
-  readonly CRITICAL: number;
-  readonly AT_RISK: number;
-  readonly STABLE: number;
-  readonly HEALTHY: number;
-  readonly CHAMPION: number;
+  CRITICAL: number;
+  AT_RISK: number;
+  STABLE: number;
+  HEALTHY: number;
+  CHAMPION: number;
 }
