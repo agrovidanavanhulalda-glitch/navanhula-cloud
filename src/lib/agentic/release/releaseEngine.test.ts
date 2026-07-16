@@ -7,8 +7,8 @@ import { generateReleaseNotes } from './releaseNotesEngine';
 
 describe('Sprint 5.6 · Release Engine (pure)', () => {
   it('handles empty input deterministically', () => {
-    const a = computeRelease();
-    const b = computeRelease();
+    const a = computeRelease({ now: 0 });
+    const b = computeRelease({ now: 0 });
     expect(a).toEqual(b);
     expect(a.score.overall).toBe(0);
     expect(a.status).toBe('ALPHA');
