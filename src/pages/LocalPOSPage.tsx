@@ -443,64 +443,62 @@ const LocalPOSPage: React.FC = () => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     >
-                      <Card className="p-3 border-2 hover:border-primary/30 transition-colors shadow-sm overflow-hidden group">
+                      <div className="px-3.5 py-3 rounded-xl border border-slate-200/60 bg-white hover:border-[#0B1F3A]/20 hover:shadow-[0_4px_14px_-6px_rgba(11,31,58,0.15)] transition-all group">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-[#0B1F3A] truncate">{item.product.name}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {formatCurrency(item.product.salePrice)} x {item.quantity}
+                            <h4 className="font-semibold text-[14px] text-[#0B1F3A] truncate tracking-tight">{item.product.name}</h4>
+                            <p className="text-[12px] text-slate-500 mt-0.5 tabular-nums">
+                              {formatCurrency(item.product.salePrice)} × {item.quantity}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-12 w-12 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                          <button
+                            type="button"
+                            aria-label="Remover item"
+                            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0 opacity-60 group-hover:opacity-100"
                             onClick={() => removeFromCart(item.product.id)}
                           >
-                            <Trash2 className="w-6 h-6" />
-                          </Button>
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                        
-                        <div className="flex flex-col gap-2 mt-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1.5">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
-                                onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                              >
-                                <Minus className="w-4 h-4" />
-                              </Button>
-                              <span className="w-8 text-center font-black text-lg tabular-nums">{item.quantity}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
-                                onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                              >
-                                <Plus className="w-4 h-4" />
-                              </Button>
-                            </div>
-                            <span className="font-bold text-lg text-[#0B1F3A] tabular-nums">
-                              {formatCurrency(item.total)}
-                            </span>
+
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center gap-1 bg-slate-100/70 rounded-lg p-1">
+                            <button
+                              type="button"
+                              aria-label="Diminuir quantidade"
+                              className="h-7 w-7 rounded-md flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-sm hover:text-[#0B1F3A] transition-all"
+                              onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                            >
+                              <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            </button>
+                            <span className="w-7 text-center font-semibold text-[13px] tabular-nums text-[#0B1F3A]">{item.quantity}</span>
+                            <button
+                              type="button"
+                              aria-label="Aumentar quantidade"
+                              className="h-7 w-7 rounded-md flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-sm hover:text-[#0B1F3A] transition-all"
+                              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                            >
+                              <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            </button>
                           </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground font-medium">Desconto:</span>
-                            <Input
-                              type="number"
-                              value={item.discount || ''}
-                              onChange={(e) => updateDiscount(item.product.id, parseFloat(e.target.value) || 0)}
-                              placeholder="0.00"
-                              className="h-8 text-xs w-24"
-                              aria-label={`Desconto para ${item.product.name}`}
-                            />
-                            <span className="text-xs text-muted-foreground">MT</span>
-                          </div>
+                          <span className="font-bold text-[15px] text-[#0B1F3A] tabular-nums tracking-tight">
+                            {formatCurrency(item.total)}
+                          </span>
                         </div>
-                      </Card>
+
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-dashed border-slate-200/70">
+                          <span className="text-[11px] text-slate-500 font-medium">Desconto</span>
+                          <Input
+                            type="number"
+                            value={item.discount || ''}
+                            onChange={(e) => updateDiscount(item.product.id, parseFloat(e.target.value) || 0)}
+                            placeholder="0,00"
+                            className="h-7 text-[12px] w-20 px-2 border-slate-200/70 focus-visible:ring-1 focus-visible:ring-[#0B1F3A]/20 rounded-md tabular-nums"
+                            aria-label={`Desconto para ${item.product.name}`}
+                          />
+                          <span className="text-[11px] text-slate-400">MT</span>
+                        </div>
+                      </div>
                     </motion.div>
                   ))
                 )}
