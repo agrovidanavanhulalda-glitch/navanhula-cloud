@@ -143,7 +143,7 @@ describe('capacity', () => {
 describe('queue & score', () => {
   it('queue health CHAMPION on clean set', () => {
     const q = evaluateQueueHealth([
-      t({ status: 'resolved', firstResponseAt: iso(-100), resolvedAt: iso(-30), createdAt: iso(-200) }),
+      t({ status: 'resolved', createdAt: iso(-200), firstResponseAt: iso(-190), resolvedAt: iso(-100), slaResponseMinutes: 60, slaResolutionMinutes: 480 }),
     ], NOW);
     expect(q.band === 'CHAMPION' || q.band === 'HEALTHY').toBe(true);
   });
