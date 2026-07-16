@@ -117,9 +117,9 @@ const SmartOnboarding: React.FC = () => {
                   Vamos configurar sua empresa em menos de 2 minutos. Siga os passos guiados para começar a operar.
                 </p>
                 
-                <Button 
-                  className="w-full h-12 text-lg font-medium group" 
-                  onClick={() => setShowWelcome(false)}
+                <Button
+                  className="w-full h-12 text-lg font-medium group"
+                  onClick={dismissWelcome}
                 >
                   Começar Agora
                   <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
