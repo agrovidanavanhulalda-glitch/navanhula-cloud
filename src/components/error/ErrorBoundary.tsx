@@ -1,10 +1,12 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { ShieldAlert, RefreshCw, Home, Terminal } from 'lucide-react';
+import { ShieldAlert, RefreshCw, Home, Terminal, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   children: ReactNode;
+  /** When provided, renders the compact inline fallback (legacy API). */
+  fallbackTitle?: string;
 }
 
 interface State {
