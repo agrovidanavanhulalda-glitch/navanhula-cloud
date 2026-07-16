@@ -332,41 +332,45 @@ const LocalPOSPage: React.FC = () => {
                       whileTap={{ scale: 0.95 }}
                     >
                       <Card
-                        className={`group relative overflow-hidden h-full flex flex-col border-2 hover:border-primary transition-all cursor-pointer ${
-                          product.stock <= 0 ? 'opacity-50 grayscale' : 'shadow-sm'
+                        className={`group relative overflow-hidden h-full flex flex-col border border-slate-200/70 rounded-2xl bg-white transition-all duration-300 cursor-pointer hover:border-[#0B1F3A]/40 hover:shadow-[0_20px_40px_-20px_rgba(11,31,58,0.25)] ${
+                          product.stock <= 0 ? 'opacity-50 grayscale' : 'shadow-[0_2px_8px_-2px_rgba(15,31,58,0.06)]'
                         }`}
                         onClick={() => product.stock > 0 && handleAddToCart(product)}
                       >
-                        <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                        <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center overflow-hidden relative">
                           {product.imageUrl ? (
                             <img 
                               src={product.imageUrl} 
                               alt={product.name} 
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                             />
                           ) : (
-                            <ShoppingCart className="w-10 h-10 text-muted-foreground opacity-20" />
+                            <ShoppingCart className="w-10 h-10 text-slate-300" />
                           )}
-                          <div className="absolute top-2 right-2">
-                            <Badge variant={product.stock <= 5 ? 'destructive' : 'secondary'} className="font-mono">
+                          <div className="absolute top-2.5 right-2.5">
+                            <Badge
+                              variant={product.stock <= 5 ? 'destructive' : 'secondary'}
+                              className="font-mono text-[10px] tracking-wide backdrop-blur bg-white/90 text-slate-700 border border-slate-200 shadow-sm"
+                            >
                               {product.stock} un
                             </Badge>
                           </div>
                         </div>
-                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
-                          <h3 className="font-bold text-base text-[#0B1F3A] leading-tight line-clamp-2">
+                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2 bg-white">
+                          <h3 className="font-semibold text-[15px] text-[#0B1F3A] leading-snug line-clamp-2 tracking-tight">
                             {product.name}
                           </h3>
-                          <div className="flex items-center justify-between mt-auto">
-                            <p className="text-xl font-black text-primary tabular-nums">
+                          <div className="flex items-center justify-between mt-auto pt-1">
+                            <p className="text-lg font-black text-[#0B1F3A] tabular-nums tracking-tight">
                               {formatCurrency(product.salePrice)}
                             </p>
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                              <Plus className="w-5 h-5" />
+                            <div className="w-9 h-9 rounded-full bg-[#0B1F3A]/5 flex items-center justify-center text-[#0B1F3A] group-hover:bg-[#0B1F3A] group-hover:text-[#D4A94C] transition-colors shadow-sm">
+                              <Plus className="w-4 h-4" />
                             </div>
                           </div>
                         </div>
                       </Card>
+
                     </motion.div>
                   ))}
                 </div>
