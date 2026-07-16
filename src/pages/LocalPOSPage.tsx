@@ -246,9 +246,10 @@ const LocalPOSPage: React.FC = () => {
       ) : (
         <>
           {/* Products Grid - Left Side */}
-          <div className="flex-1 flex flex-col min-w-0 bg-slate-50/30">
-            {/* Top Search Bar - Large & Prominent */}
-            <div className="p-4 md:p-6 bg-white border-b shadow-sm sticky top-0 z-10">
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Top Search Bar - Premium Enterprise */}
+            <div className="p-4 md:p-6 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 shadow-[0_1px_0_0_rgba(15,31,58,0.04)] sticky top-0 z-10">
+
               <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-6 h-6 group-focus-within:text-primary transition-colors" />
