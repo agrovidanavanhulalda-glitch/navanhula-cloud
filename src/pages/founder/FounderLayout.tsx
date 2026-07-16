@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing, LifeBuoy, Gauge, ShieldCheck, Wrench, Activity, Brain, Bot, ClipboardList, Rocket, ClipboardCheck, Lightbulb, FlaskConical, Gavel, Compass, Landmark, Sparkles, Network, Zap, ShieldAlert, FileCheck, LifeBuoy as LifeBuoyBcm, Shield, Layers, Trophy, Smile, Route, MessageCircle, RefreshCcw, Globe2 } from 'lucide-react';
+import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing, LifeBuoy, Gauge, ShieldCheck, Wrench, Activity, Brain, Bot, ClipboardList, Rocket, ClipboardCheck, Lightbulb, FlaskConical, Gavel, Compass, Landmark, Sparkles, Network, Zap, ShieldAlert, FileCheck, LifeBuoy as LifeBuoyBcm, Shield, Layers, Trophy, Smile, Route, MessageCircle, RefreshCcw, Globe2, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FounderBadge from '@/components/founder/FounderBadge';
 import { installServerTelemetrySink } from '@/lib/telemetry/serverSink';
@@ -50,6 +50,7 @@ const navItems = [
   { to: '/app/founder/renewal-center', icon: RefreshCcw, label: 'Renewal Center' },
   { to: '/app/founder/support-center', icon: LifeBuoy, label: 'Support Center' },
   { to: '/app/founder/customer-360', icon: Globe2, label: 'Customer 360°' },
+  { to: '/app/founder/customer-release', icon: Award, label: 'Customer Release' },
   { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
   { to: '/app/founder/logs', icon: FileText, label: 'Logs' },
   { to: '/app/founder/alertas', icon: Bell, label: 'Alertas' },
