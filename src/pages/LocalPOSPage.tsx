@@ -320,65 +320,79 @@ const LocalPOSPage: React.FC = () => {
             </div>
 
             {/* Products Scrolling Area */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="flex-1 overflow-y-auto px-5 md:px-8 py-6">
               {filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                  {filteredProducts.map((product, i) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+                  {filteredProducts.map((product, i) => {
+                    const outOfStock = product.stock <= 0;
+                    const lowStock = product.stock > 0 && product.stock <= 5;
+                    return (
                     <motion.div
                       key={product.id}
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: Math.min(i * 0.03, 0.4) }}
-                      whileHover={{ y: -5 }}
-                      whileTap={{ scale: 0.95 }}
+                      transition={{ delay: Math.min(i * 0.02, 0.3), ease: [0.16, 1, 0.3, 1] }}
+                      whileHover={{ y: -3 }}
+                      whileTap={{ scale: 0.97 }}
                     >
                       <Card
-                        className={`group relative overflow-hidden h-full flex flex-col border border-slate-200/70 rounded-2xl bg-white transition-all duration-300 cursor-pointer hover:border-[#0B1F3A]/40 hover:shadow-[0_20px_40px_-20px_rgba(11,31,58,0.25)] ${
-                          product.stock <= 0 ? 'opacity-50 grayscale' : 'shadow-[0_2px_8px_-2px_rgba(15,31,58,0.06)]'
+                        className={`group relative overflow-hidden h-full flex flex-col border border-slate-200/60 rounded-2xl bg-white transition-all duration-300 cursor-pointer hover:border-[#0B1F3A]/30 hover:shadow-[0_12px_32px_-16px_rgba(11,31,58,0.25)] ${
+                          outOfStock ? 'opacity-60 grayscale' : 'shadow-[0_1px_3px_rgba(15,31,58,0.05)]'
                         }`}
-                        onClick={() => product.stock > 0 && handleAddToCart(product)}
+                        onClick={() => !outOfStock && handleAddToCart(product)}
                       >
-                        <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center overflow-hidden relative">
+                        <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100/70 flex items-center justify-center overflow-hidden relative">
                           {product.imageUrl ? (
-                            <img 
-                              src={product.imageUrl} 
-                              alt={product.name} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                            <img
+                              src={product.imageUrl}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500 ease-out"
                             />
                           ) : (
-                            <ShoppingCart className="w-10 h-10 text-slate-300" />
+                            <ShoppingCart className="w-9 h-9 text-slate-300" strokeWidth={1.5} />
                           )}
+                          {outOfStock ? (
+                            <div className="absolute top-2.5 left-2.5">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-slate-900/85 text-white backdrop-blur">
+                                Sem stock
+                              </span>
+                            </div>
+                          ) : lowStock ? (
+                            <div className="absolute top-2.5 left-2.5">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#D4A94C]/95 text-[#0B1F3A] shadow-sm">
+                                Baixo stock
+                              </span>
+                            </div>
+                          ) : null}
                           <div className="absolute top-2.5 right-2.5">
-                            <Badge
-                              variant={product.stock <= 5 ? 'destructive' : 'secondary'}
-                              className="font-mono text-[10px] tracking-wide backdrop-blur bg-white/90 text-slate-700 border border-slate-200 shadow-sm"
-                            >
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wide bg-white/90 backdrop-blur text-slate-600 border border-slate-200/70 shadow-sm">
                               {product.stock} un
-                            </Badge>
+                            </span>
                           </div>
                         </div>
-                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2 bg-white">
-                          <h3 className="font-semibold text-[15px] text-[#0B1F3A] leading-snug line-clamp-2 tracking-tight">
+                        <div className="p-3.5 flex-1 flex flex-col justify-between gap-2 bg-white">
+                          <h3 className="font-semibold text-[14px] text-[#0B1F3A] leading-snug line-clamp-2 tracking-tight">
                             {product.name}
                           </h3>
-                          <div className="flex items-center justify-between mt-auto pt-1">
-                            <p className="text-lg font-black text-[#0B1F3A] tabular-nums tracking-tight">
+                          <div className="flex items-center justify-between mt-auto">
+                            <p className="text-[17px] font-bold text-[#0B1F3A] tabular-nums tracking-tight">
                               {formatCurrency(product.salePrice)}
                             </p>
-                            <div className="w-9 h-9 rounded-full bg-[#0B1F3A]/5 flex items-center justify-center text-[#0B1F3A] group-hover:bg-[#0B1F3A] group-hover:text-[#D4A94C] transition-colors shadow-sm">
-                              <Plus className="w-4 h-4" />
+                            <div className="w-8 h-8 rounded-full bg-[#0B1F3A]/[0.06] flex items-center justify-center text-[#0B1F3A] group-hover:bg-[#0B1F3A] group-hover:text-[#D4A94C] transition-all duration-200">
+                              <Plus className="w-4 h-4" strokeWidth={2.5} />
                             </div>
                           </div>
                         </div>
                       </Card>
 
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                  <Search className="w-12 h-12 mb-4 opacity-20" />
-                  <p className="text-lg">Nenhum produto encontrado para "{searchTerm}"</p>
+                <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                  <Search className="w-10 h-10 mb-3 opacity-30" strokeWidth={1.5} />
+                  <p className="text-sm font-medium">Nenhum produto encontrado para "{searchTerm}"</p>
                 </div>
               )}
             </div>
