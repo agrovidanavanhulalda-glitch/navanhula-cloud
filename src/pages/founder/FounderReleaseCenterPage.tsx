@@ -1,19 +1,13 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { deriveEvidence, type PlatformSignals } from '@/lib/agentic/release/gaEvidenceEngine';
-import { computeEnterpriseScoreV3 } from '@/lib/agentic/release/enterpriseScoreV3';
-import { evaluateReleaseReadinessV2 } from '@/lib/agentic/release/releaseReadinessV2';
-import { certifyV2 } from '@/lib/agentic/release/enterpriseCertificationV2';
-import { evaluateQualityGate } from '@/lib/agentic/release/qualityGateEngine';
-import { decideDeployment } from '@/lib/agentic/release/deploymentDecision';
-import { decideRelease } from '@/lib/agentic/release/releaseDecisionEngine';
-import { auditRelease } from '@/lib/agentic/release/releaseAuditEngine';
-import { recommendReleaseActions } from '@/lib/agentic/release/releaseRecommendationEngine';
-import { buildExecutiveSummary } from '@/lib/agentic/release/releaseExecutiveSummary';
+import type { PlatformSignals } from '@/lib/agentic/release/gaEvidenceEngine';
+import { certifyEnterpriseFinal } from '@/lib/agentic/release/enterpriseFinalCertification';
+import { buildEnterpriseReleaseReport } from '@/lib/agentic/release/enterpriseReleaseReport';
+import { summarizeFinal } from '@/lib/agentic/release/releaseFinalSummary';
 
 /**
- * Sprint 5.6.2 · Founder Enterprise Release Center — 100% evidence-driven.
- * Raw platform signals feed pure engines. No hardcoded thresholds, no writes.
+ * Sprint 5.6.3 · Founder Enterprise Release Center — GA FINAL.
+ * Consumes only pure engines from raw evidence. No writes, no thresholds hardcoded.
  */
 const RAW_SIGNALS: PlatformSignals = {
   typecheck: { ok: true },
@@ -46,73 +40,69 @@ const GATE = {
   backwardCompatible: true, protectedModulesUntouched: true, consultiveOnly: true,
 };
 
-const gradeColor = (g: string): string =>
-  g === 'A+' ? 'border-emerald-500/40 text-emerald-500'
-  : g === 'A' ? 'border-primary/40 text-primary'
-  : g === 'B' ? 'border-amber-500/40 text-amber-500'
+const statusColor = (s: string): string =>
+  s === 'GA_CERTIFIED' ? 'border-emerald-500/40 text-emerald-500'
+  : s === 'RC' ? 'border-primary/40 text-primary'
   : 'border-destructive/40 text-destructive';
 
-const stageColor = (s: string): string =>
-  s === 'Enterprise GA' ? 'border-emerald-500/40 text-emerald-500'
-  : s.startsWith('RC') ? 'border-primary/40 text-primary'
-  : s === 'Conditional GO' ? 'border-amber-500/40 text-amber-500'
-  : 'border-destructive/40 text-destructive';
-
-const priColor = (p: string): string =>
-  p === 'CRITICAL' ? 'border-destructive/40 text-destructive'
-  : p === 'HIGH' ? 'border-amber-500/40 text-amber-500'
-  : p === 'MEDIUM' ? 'border-primary/40 text-primary'
-  : 'border-border text-muted-foreground';
+const rowStatusColor = (s: string): string =>
+  s === 'STRONG' ? 'text-emerald-500'
+  : s === 'OK' ? 'text-primary'
+  : s === 'WEAK' ? 'text-amber-500'
+  : 'text-destructive';
 
 const FounderReleaseCenterPage: React.FC = () => {
-  const report = React.useMemo(() => {
-    const evidence = deriveEvidence(RAW_SIGNALS);
-    const score = computeEnterpriseScoreV3(evidence);
-    const readiness = evaluateReleaseReadinessV2(score);
-    const gate = evaluateQualityGate(GATE);
-    const deployment = decideDeployment(readiness, gate);
-    const decision = decideRelease(score, readiness, deployment);
-    const cert = certifyV2(score.enterpriseScore, readiness.gaEligible);
-    const audit = auditRelease(score, readiness);
-    const recs = recommendReleaseActions(readiness);
-    const summary = buildExecutiveSummary(score, readiness, deployment, decision, cert);
-    return { score, readiness, gate, deployment, decision, cert, audit, recs, summary };
-  }, []);
-
-  const { score, readiness, gate, deployment, decision, cert, audit, recs, summary } = report;
+  const final = React.useMemo(
+    () => certifyEnterpriseFinal({ signals: RAW_SIGNALS, gate: GATE }),
+    [],
+  );
+  const flat = React.useMemo(() => buildEnterpriseReleaseReport(final), [final]);
+  const summary = React.useMemo(() => summarizeFinal(final), [final]);
 
   return (
     <div className="space-y-6">
       <header className="rounded-2xl border border-border/60 bg-card/50 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black tracking-tight">Enterprise Release Center</h1>
+            <h1 className="text-2xl font-black tracking-tight">Enterprise Release Center · GA Final</h1>
             <p className="text-sm text-muted-foreground">
-              Certificação 100% derivada de evidências reais — somente leitura.
+              Certificação 100% dirigida por evidências reais — somente leitura.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className={stageColor(readiness.stage)}>Stage · {readiness.stage}</Badge>
-            <Badge variant="outline" className={gradeColor(cert.grade)}>Grade · {cert.grade}</Badge>
-            <Badge variant="outline" className={stageColor(cert.certification)}>Cert · {cert.certification}</Badge>
-            <Badge variant="outline" className={stageColor(decision.verdict === 'GO' ? 'Enterprise GA' : decision.verdict === 'CONDITIONAL_GO' ? 'Conditional GO' : 'NOT READY')}>
-              {decision.verdict}
-            </Badge>
+            <Badge variant="outline" className={statusColor(flat.status)}>Status · {flat.status}</Badge>
+            <Badge variant="outline" className={statusColor(flat.status)}>Deploy · {flat.deployment}</Badge>
+            <Badge variant="outline" className="border-border">Grade · {flat.grade}</Badge>
+            <Badge variant="outline" className="border-border">Maturity · {flat.maturity}</Badge>
           </div>
         </div>
+        <p className="mt-3 text-sm font-semibold">{final.certification.label}</p>
+        <p className="text-xs text-muted-foreground">{final.certification.issuedFor}</p>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Enterprise Score', value: score.enterpriseScore },
-          { label: 'GA Score', value: score.gaScore },
-          { label: 'Production Readiness', value: score.productionReadiness },
-          { label: 'Release Readiness', value: score.releaseReadiness },
+          { label: 'Enterprise', value: flat.scores.enterprise },
+          { label: 'GA', value: flat.scores.ga },
+          { label: 'Production', value: flat.scores.production },
+          { label: 'Release', value: flat.scores.release },
+          { label: 'Architecture', value: flat.scores.architecture },
+          { label: 'Security', value: flat.scores.security },
+          { label: 'Testing', value: flat.scores.testing },
+          { label: 'Performance', value: flat.scores.performance },
+          { label: 'Recovery', value: flat.scores.recovery },
+          { label: 'Governance', value: flat.scores.governance },
+          { label: 'Compliance', value: flat.scores.compliance },
+          { label: 'Operations', value: flat.scores.operations },
+          { label: 'Agentic', value: flat.scores.agentic },
+          { label: 'Digital Twin', value: flat.scores.digitalTwin },
+          { label: 'Continuity', value: flat.scores.businessContinuity },
+          { label: 'Transformation', value: flat.scores.transformation },
         ].map((k) => (
-          <div key={k.label} className="rounded-xl border border-border/60 bg-card/40 p-4">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">{k.label}</div>
-            <div className="mt-1 text-3xl font-black">
-              {k.value}<span className="text-base text-muted-foreground">/100</span>
+          <div key={k.label} className="rounded-xl border border-border/60 bg-card/40 p-3">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{k.label}</div>
+            <div className="mt-1 text-2xl font-black">
+              {k.value}<span className="text-xs text-muted-foreground">/100</span>
             </div>
           </div>
         ))}
@@ -121,14 +111,14 @@ const FounderReleaseCenterPage: React.FC = () => {
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-border/60 bg-card/40 p-5">
           <h2 className="mb-3 text-base font-bold">
-            Dynamic Criteria · threshold {readiness.threshold} ({readiness.passedCount}/{readiness.totalCount})
+            GA Checklist ({flat.checklistPassed}/{flat.checklistTotal})
           </h2>
           <ul className="grid gap-1 text-sm">
-            {readiness.criteria.map((c) => (
+            {final.checklist.items.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">{c.label}</span>
                 <span className="flex items-center gap-2">
-                  <span className="font-mono tabular-nums text-xs">{c.value} / {c.threshold}</span>
+                  <span className="font-mono tabular-nums text-xs">{c.value}/{c.threshold}</span>
                   <span className={c.passed ? 'text-emerald-500' : 'text-destructive'}>
                     {c.passed ? '✓' : '✗'}
                   </span>
@@ -139,9 +129,11 @@ const FounderReleaseCenterPage: React.FC = () => {
         </div>
 
         <div className="rounded-xl border border-border/60 bg-card/40 p-5">
-          <h2 className="mb-3 text-base font-bold">Quality Gate ({gate.passedCount}/{gate.totalCount})</h2>
+          <h2 className="mb-3 text-base font-bold">
+            Quality Gate ({flat.gatePassed}/{flat.gateTotal})
+          </h2>
           <ul className="grid gap-1 text-sm">
-            {gate.checks.map((c) => (
+            {final.gate.checks.map((c) => (
               <li key={c.id} className="flex items-center justify-between">
                 <span className="text-muted-foreground">{c.label}</span>
                 <span className={c.passed ? 'text-emerald-500' : 'text-destructive'}>
@@ -154,66 +146,33 @@ const FounderReleaseCenterPage: React.FC = () => {
       </section>
 
       <section className="rounded-xl border border-border/60 bg-card/40 p-5">
-        <h2 className="mb-3 text-base font-bold">Evidence Audit ({audit.rows.length} sinais)</h2>
+        <h2 className="mb-3 text-base font-bold">Quality Matrix</h2>
         <div className="grid gap-1 text-sm md:grid-cols-2">
-          {audit.rows.map((r) => (
+          {final.matrix.rows.map((r) => (
             <div key={r.key} className="flex items-center justify-between rounded border border-border/50 bg-background/40 px-2 py-1">
-              <span className="text-muted-foreground">{r.key}</span>
-              <span className="font-mono tabular-nums text-xs">
-                {r.value} · +{r.contribution.toFixed(2)}
+              <span className="text-muted-foreground">{r.key} <span className="text-[10px]">·w{r.weight}</span></span>
+              <span className="flex items-center gap-2">
+                <span className="font-mono tabular-nums text-xs">{r.score}</span>
+                <span className={`text-xs font-semibold ${rowStatusColor(r.status)}`}>{r.status}</span>
               </span>
             </div>
           ))}
         </div>
-        <div className="mt-3 text-xs text-muted-foreground">
-          Contribuição total ponderada: {audit.totalContribution.toFixed(2)} · threshold dinâmico {audit.threshold}.
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-border/60 bg-card/40 p-5">
-        <h2 className="mb-3 text-base font-bold">Recommendations</h2>
-        {recs.length === 0 ? (
-          <p className="text-sm text-emerald-500">Nenhuma recomendação pendente.</p>
-        ) : (
-          <ul className="grid gap-2 text-sm">
-            {recs.map((r) => (
-              <li key={r.id} className="flex items-start gap-2">
-                <Badge variant="outline" className={priColor(r.priority)}>{r.priority}</Badge>
-                <span className="text-muted-foreground">{r.action}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="rounded-xl border border-border/60 bg-card/40 p-5">
-        <h2 className="mb-2 text-base font-bold">Deployment Decision</h2>
-        <p className="text-sm">
-          {deployment.deployable ? '✅' : '⛔'} {deployment.reason}
-        </p>
-        {deployment.blockers.length > 0 && (
-          <ul className="mt-2 grid gap-1 text-sm text-destructive">
-            {deployment.blockers.map((b) => <li key={b}>• {b}</li>)}
-          </ul>
-        )}
-        <p className="mt-2 text-xs text-muted-foreground">
-          {decision.rationale} · confiança {decision.confidence}%.
-        </p>
       </section>
 
       <section className="rounded-xl border border-border/60 bg-card/40 p-5">
         <h2 className="mb-2 text-base font-bold">Executive Summary</h2>
-        <p className="text-sm">{summary.headline}</p>
+        <p className="text-sm font-semibold">{summary.headline}</p>
         <ul className="mt-2 grid gap-1 text-sm text-muted-foreground">
-          {summary.highlights.map((h) => <li key={h}>• {h}</li>)}
+          {summary.bullets.map((b) => <li key={b}>• {b}</li>)}
         </ul>
         <div className="mt-3">
           <Badge
             variant="outline"
             className={
-              summary.verdict === 'GO' ? 'border-emerald-500/40 text-emerald-500'
-              : summary.verdict === 'CONDITIONAL_GO' ? 'border-amber-500/40 text-amber-500'
-              : 'border-destructive/40 text-destructive'
+              summary.verdict === 'GO'
+                ? 'border-emerald-500/40 text-emerald-500'
+                : 'border-amber-500/40 text-amber-500'
             }
           >
             Parecer Executivo · {summary.verdict}
