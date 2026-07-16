@@ -193,7 +193,7 @@ const LocalPOSPage: React.FC = () => {
   return (
     <PageTransition>
 
-    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row w-full bg-background overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Three Clear States Logic */}
       {!cashRegisterOpen ? (
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-6 bg-slate-50/50">
