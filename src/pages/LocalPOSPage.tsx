@@ -384,17 +384,24 @@ const LocalPOSPage: React.FC = () => {
           </div>
 
           {/* Cart Section - Right Side */}
-          <div className="w-full md:w-[380px] lg:w-[420px] bg-white border-l shadow-2xl flex flex-col z-20">
-            {/* Cart Header */}
-            <div className="p-5 md:p-6 border-b flex items-center justify-between bg-[#0B1F3A] text-white">
+          <div className="w-full md:w-[380px] lg:w-[440px] bg-white border-l border-slate-200 shadow-[-20px_0_50px_-20px_rgba(11,31,58,0.15)] flex flex-col z-20">
+            {/* Cart Header — Navy + Gold */}
+            <div className="relative p-5 md:p-6 border-b flex items-center justify-between bg-gradient-to-br from-[#0B1F3A] via-[#0F2A50] to-[#0B1F3A] text-white overflow-hidden">
+              <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4A94C] to-transparent" />
               <div className="flex items-center gap-3">
-                <ShoppingCart className="w-7 h-7" />
-                <h2 className="text-2xl font-black tracking-tight uppercase">Itens da Venda</h2>
+                <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center ring-1 ring-white/15">
+                  <ShoppingCart className="w-5 h-5 text-[#D4A94C]" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/50 font-semibold">Venda em curso</p>
+                  <h2 className="text-lg font-bold tracking-tight">Itens da Venda</h2>
+                </div>
               </div>
-              <Badge variant="outline" className="text-white border-white/30 text-xl py-1.5 px-4 font-black">
-                {cart.length} {cart.length === 1 ? 'ITEM' : 'ITENS'}
+              <Badge variant="outline" className="text-white border-white/20 bg-white/5 text-sm py-1 px-3 font-bold tabular-nums">
+                {cart.length} {cart.length === 1 ? 'item' : 'itens'}
               </Badge>
             </div>
+
 
             {/* Cart Items - Scrollable */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
