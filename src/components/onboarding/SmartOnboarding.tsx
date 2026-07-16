@@ -8,12 +8,14 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const SmartOnboarding: React.FC = () => {
-  const { 
-    first_product_added, 
-    first_cash_opened, 
-    first_sale_completed, 
-    completionPct, 
-    loading 
+  const {
+    first_product_added,
+    first_cash_opened,
+    first_sale_completed,
+    completionPct,
+    loading,
+    error,
+    retry,
   } = useOnboarding();
   
   const navigate = useNavigate();
