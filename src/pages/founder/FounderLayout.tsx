@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing, LifeBuoy, Gauge, ShieldCheck, Wrench, Activity, Brain, Bot, ClipboardList, Rocket, ClipboardCheck, Lightbulb, FlaskConical, Gavel, Compass, Landmark, Sparkles, Network, Zap, ShieldAlert, FileCheck, LifeBuoy as LifeBuoyBcm, Shield, Layers, Trophy, Smile } from 'lucide-react';
+import { Crown, LayoutDashboard, Building2, Users, CreditCard, Flag, UserCog, ScrollText, Settings, DatabaseBackup, HeartPulse, FileText, Bell, TrendingUp, DollarSign, Receipt, AlertOctagon, BellRing, LifeBuoy, Gauge, ShieldCheck, Wrench, Activity, Brain, Bot, ClipboardList, Rocket, ClipboardCheck, Lightbulb, FlaskConical, Gavel, Compass, Landmark, Sparkles, Network, Zap, ShieldAlert, FileCheck, LifeBuoy as LifeBuoyBcm, Shield, Layers, Trophy, Smile, Route } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FounderBadge from '@/components/founder/FounderBadge';
 import { installServerTelemetrySink } from '@/lib/telemetry/serverSink';
@@ -45,6 +45,7 @@ const navItems = [
   { to: '/app/founder/digital-twin', icon: Layers, label: 'Enterprise Digital Twin' },
   { to: '/app/founder/release-center', icon: Trophy, label: 'Release Center' },
   { to: '/app/founder/customer-success', icon: Smile, label: 'Customer Success' },
+  { to: '/app/founder/customer-journey', icon: Route, label: 'Customer Journey' },
   { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
   { to: '/app/founder/logs', icon: FileText, label: 'Logs' },
   { to: '/app/founder/alertas', icon: Bell, label: 'Alertas' },
