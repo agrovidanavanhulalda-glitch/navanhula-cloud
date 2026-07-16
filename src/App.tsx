@@ -396,6 +396,7 @@ const AppRoutes = () => {
             <Route path="digital-twin" element={<FounderDigitalTwinCenterPage />} />
             <Route path="release-center" element={<FounderReleaseCenterPage />} />
             <Route path="customer-success" element={<FounderCustomerSuccessPage />} />
+            <Route path="customer-journey" element={<FounderCustomerJourneyPage />} />
           </Route>
 
           <Route path="fiscal" element={<FiscalPage />} />
