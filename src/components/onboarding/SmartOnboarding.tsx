@@ -184,15 +184,27 @@ const SmartOnboarding: React.FC = () => {
             </div>
 
             {completionPct === 100 && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="mt-4 p-2 bg-success/10 border border-success/20 rounded-lg text-center"
               >
-                <p className="text-[11px] font-bold text-success">
+                <p className="text-xs font-bold text-success">
                   🎉 Sistema pronto. Você já pode operar normalmente.
                 </p>
               </motion.div>
+            )}
+
+            {completionPct < 100 && welcomeKey && (
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={reopenWelcome}
+                  className="text-xs text-muted-foreground hover:text-primary underline underline-offset-2 transition-colors"
+                >
+                  Mostrar boas-vindas novamente
+                </button>
+              </div>
             )}
           </div>
         </Card>
