@@ -493,9 +493,10 @@ const LocalPOSPage: React.FC = () => {
             </div>
 
             {/* Cart Footer - Total & Checkout */}
-            <div className="p-4 md:p-6 bg-slate-50 border-t space-y-4">
+            <div className="p-4 md:p-6 bg-gradient-to-b from-white to-slate-50 border-t border-slate-200 space-y-4">
               {/* Seller selector — RBAC: sales.create @ current branch */}
               <div className="space-y-1.5">
+
                 <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <Users className="w-3.5 h-3.5" />
                   Vendedor Responsável
