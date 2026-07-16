@@ -193,7 +193,7 @@ const LocalPOSPage: React.FC = () => {
   return (
     <PageTransition>
 
-    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,_rgba(11,31,58,0.04),_transparent_60%)] bg-slate-50/60">
       {/* Three Clear States Logic */}
       {!cashRegisterOpen ? (
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-6 bg-slate-50/50">
@@ -248,34 +248,35 @@ const LocalPOSPage: React.FC = () => {
           {/* Products Grid - Left Side */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Top Search Bar - Premium Enterprise */}
-            <div className="p-4 md:p-6 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 shadow-[0_1px_0_0_rgba(15,31,58,0.04)] sticky top-0 z-10">
+            <div className="px-5 md:px-8 py-4 md:py-5 bg-white/70 backdrop-blur-2xl border-b border-slate-200/60 sticky top-0 z-10">
 
-              <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-3">
+              <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-2.5">
                 <div className="relative flex-1 group">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-6 h-6 group-focus-within:text-primary transition-colors" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-[#0B1F3A] transition-colors" />
                   <Input
-                    placeholder="Procure um produto ou use o leitor de código..."
+                    placeholder="Pesquisar produto, código ou SKU…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-16 text-xl border-2 focus-visible:ring-primary shadow-sm rounded-xl"
+                    className="pl-12 pr-4 h-14 text-[15px] bg-white/80 backdrop-blur border border-slate-200/80 focus-visible:ring-2 focus-visible:ring-[#0B1F3A]/20 focus-visible:border-[#0B1F3A]/40 shadow-[0_1px_2px_rgba(15,31,58,0.04)] rounded-xl placeholder:text-slate-400 placeholder:font-normal font-medium text-slate-800 transition-all"
                     autoFocus
                   />
                 </div>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    className="h-16 w-16 flex-shrink-0 border-2 hover:bg-primary/5 hover:text-primary transition-colors rounded-xl"
+                    className="h-14 w-14 flex-shrink-0 bg-white border border-slate-200/80 hover:bg-[#0B1F3A]/5 hover:border-[#0B1F3A]/30 hover:text-[#0B1F3A] transition-all rounded-xl shadow-[0_1px_2px_rgba(15,31,58,0.04)]"
                     onClick={() => setShowBarcodeScanner(true)}
+                    aria-label="Scanner de código"
                   >
-                    <ScanLine className="w-8 h-8" />
+                    <ScanLine className="w-5 h-5" />
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-16 px-6 flex-1 sm:flex-none border-2 gap-2 font-bold text-lg rounded-xl"
+                    className="h-14 px-5 flex-1 sm:flex-none bg-white border border-slate-200/80 hover:bg-[#0B1F3A]/5 hover:border-[#0B1F3A]/30 hover:text-[#0B1F3A] gap-2 font-semibold text-sm tracking-tight rounded-xl shadow-[0_1px_2px_rgba(15,31,58,0.04)]"
                     onClick={() => setShowManualEntry(!showManualEntry)}
                   >
-                    <Plus className="w-6 h-6" />
-                    ITEM SEM CÓDIGO
+                    <Plus className="w-4 h-4" />
+                    Item avulso
                   </Button>
                 </div>
               </div>
@@ -319,65 +320,79 @@ const LocalPOSPage: React.FC = () => {
             </div>
 
             {/* Products Scrolling Area */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="flex-1 overflow-y-auto px-5 md:px-8 py-6">
               {filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                  {filteredProducts.map((product, i) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+                  {filteredProducts.map((product, i) => {
+                    const outOfStock = product.stock <= 0;
+                    const lowStock = product.stock > 0 && product.stock <= 5;
+                    return (
                     <motion.div
                       key={product.id}
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: Math.min(i * 0.03, 0.4) }}
-                      whileHover={{ y: -5 }}
-                      whileTap={{ scale: 0.95 }}
+                      transition={{ delay: Math.min(i * 0.02, 0.3), ease: [0.16, 1, 0.3, 1] }}
+                      whileHover={{ y: -3 }}
+                      whileTap={{ scale: 0.97 }}
                     >
                       <Card
-                        className={`group relative overflow-hidden h-full flex flex-col border border-slate-200/70 rounded-2xl bg-white transition-all duration-300 cursor-pointer hover:border-[#0B1F3A]/40 hover:shadow-[0_20px_40px_-20px_rgba(11,31,58,0.25)] ${
-                          product.stock <= 0 ? 'opacity-50 grayscale' : 'shadow-[0_2px_8px_-2px_rgba(15,31,58,0.06)]'
+                        className={`group relative overflow-hidden h-full flex flex-col border border-slate-200/60 rounded-2xl bg-white transition-all duration-300 cursor-pointer hover:border-[#0B1F3A]/30 hover:shadow-[0_12px_32px_-16px_rgba(11,31,58,0.25)] ${
+                          outOfStock ? 'opacity-60 grayscale' : 'shadow-[0_1px_3px_rgba(15,31,58,0.05)]'
                         }`}
-                        onClick={() => product.stock > 0 && handleAddToCart(product)}
+                        onClick={() => !outOfStock && handleAddToCart(product)}
                       >
-                        <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center overflow-hidden relative">
+                        <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100/70 flex items-center justify-center overflow-hidden relative">
                           {product.imageUrl ? (
-                            <img 
-                              src={product.imageUrl} 
-                              alt={product.name} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                            <img
+                              src={product.imageUrl}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500 ease-out"
                             />
                           ) : (
-                            <ShoppingCart className="w-10 h-10 text-slate-300" />
+                            <ShoppingCart className="w-9 h-9 text-slate-300" strokeWidth={1.5} />
                           )}
+                          {outOfStock ? (
+                            <div className="absolute top-2.5 left-2.5">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-slate-900/85 text-white backdrop-blur">
+                                Sem stock
+                              </span>
+                            </div>
+                          ) : lowStock ? (
+                            <div className="absolute top-2.5 left-2.5">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#D4A94C]/95 text-[#0B1F3A] shadow-sm">
+                                Baixo stock
+                              </span>
+                            </div>
+                          ) : null}
                           <div className="absolute top-2.5 right-2.5">
-                            <Badge
-                              variant={product.stock <= 5 ? 'destructive' : 'secondary'}
-                              className="font-mono text-[10px] tracking-wide backdrop-blur bg-white/90 text-slate-700 border border-slate-200 shadow-sm"
-                            >
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wide bg-white/90 backdrop-blur text-slate-600 border border-slate-200/70 shadow-sm">
                               {product.stock} un
-                            </Badge>
+                            </span>
                           </div>
                         </div>
-                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2 bg-white">
-                          <h3 className="font-semibold text-[15px] text-[#0B1F3A] leading-snug line-clamp-2 tracking-tight">
+                        <div className="p-3.5 flex-1 flex flex-col justify-between gap-2 bg-white">
+                          <h3 className="font-semibold text-[14px] text-[#0B1F3A] leading-snug line-clamp-2 tracking-tight">
                             {product.name}
                           </h3>
-                          <div className="flex items-center justify-between mt-auto pt-1">
-                            <p className="text-lg font-black text-[#0B1F3A] tabular-nums tracking-tight">
+                          <div className="flex items-center justify-between mt-auto">
+                            <p className="text-[17px] font-bold text-[#0B1F3A] tabular-nums tracking-tight">
                               {formatCurrency(product.salePrice)}
                             </p>
-                            <div className="w-9 h-9 rounded-full bg-[#0B1F3A]/5 flex items-center justify-center text-[#0B1F3A] group-hover:bg-[#0B1F3A] group-hover:text-[#D4A94C] transition-colors shadow-sm">
-                              <Plus className="w-4 h-4" />
+                            <div className="w-8 h-8 rounded-full bg-[#0B1F3A]/[0.06] flex items-center justify-center text-[#0B1F3A] group-hover:bg-[#0B1F3A] group-hover:text-[#D4A94C] transition-all duration-200">
+                              <Plus className="w-4 h-4" strokeWidth={2.5} />
                             </div>
                           </div>
                         </div>
                       </Card>
 
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                  <Search className="w-12 h-12 mb-4 opacity-20" />
-                  <p className="text-lg">Nenhum produto encontrado para "{searchTerm}"</p>
+                <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                  <Search className="w-10 h-10 mb-3 opacity-30" strokeWidth={1.5} />
+                  <p className="text-sm font-medium">Nenhum produto encontrado para "{searchTerm}"</p>
                 </div>
               )}
             </div>
@@ -428,64 +443,62 @@ const LocalPOSPage: React.FC = () => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     >
-                      <Card className="p-3 border-2 hover:border-primary/30 transition-colors shadow-sm overflow-hidden group">
+                      <div className="px-3.5 py-3 rounded-xl border border-slate-200/60 bg-white hover:border-[#0B1F3A]/20 hover:shadow-[0_4px_14px_-6px_rgba(11,31,58,0.15)] transition-all group">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-[#0B1F3A] truncate">{item.product.name}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {formatCurrency(item.product.salePrice)} x {item.quantity}
+                            <h4 className="font-semibold text-[14px] text-[#0B1F3A] truncate tracking-tight">{item.product.name}</h4>
+                            <p className="text-[12px] text-slate-500 mt-0.5 tabular-nums">
+                              {formatCurrency(item.product.salePrice)} × {item.quantity}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-12 w-12 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                          <button
+                            type="button"
+                            aria-label="Remover item"
+                            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0 opacity-60 group-hover:opacity-100"
                             onClick={() => removeFromCart(item.product.id)}
                           >
-                            <Trash2 className="w-6 h-6" />
-                          </Button>
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                        
-                        <div className="flex flex-col gap-2 mt-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1.5">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
-                                onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                              >
-                                <Minus className="w-4 h-4" />
-                              </Button>
-                              <span className="w-8 text-center font-black text-lg tabular-nums">{item.quantity}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10 rounded-lg hover:bg-white hover:shadow-sm flex-shrink-0"
-                                onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                              >
-                                <Plus className="w-4 h-4" />
-                              </Button>
-                            </div>
-                            <span className="font-bold text-lg text-[#0B1F3A] tabular-nums">
-                              {formatCurrency(item.total)}
-                            </span>
+
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center gap-1 bg-slate-100/70 rounded-lg p-1">
+                            <button
+                              type="button"
+                              aria-label="Diminuir quantidade"
+                              className="h-7 w-7 rounded-md flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-sm hover:text-[#0B1F3A] transition-all"
+                              onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                            >
+                              <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            </button>
+                            <span className="w-7 text-center font-semibold text-[13px] tabular-nums text-[#0B1F3A]">{item.quantity}</span>
+                            <button
+                              type="button"
+                              aria-label="Aumentar quantidade"
+                              className="h-7 w-7 rounded-md flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-sm hover:text-[#0B1F3A] transition-all"
+                              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                            >
+                              <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            </button>
                           </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground font-medium">Desconto:</span>
-                            <Input
-                              type="number"
-                              value={item.discount || ''}
-                              onChange={(e) => updateDiscount(item.product.id, parseFloat(e.target.value) || 0)}
-                              placeholder="0.00"
-                              className="h-8 text-xs w-24"
-                              aria-label={`Desconto para ${item.product.name}`}
-                            />
-                            <span className="text-xs text-muted-foreground">MT</span>
-                          </div>
+                          <span className="font-bold text-[15px] text-[#0B1F3A] tabular-nums tracking-tight">
+                            {formatCurrency(item.total)}
+                          </span>
                         </div>
-                      </Card>
+
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-dashed border-slate-200/70">
+                          <span className="text-[11px] text-slate-500 font-medium">Desconto</span>
+                          <Input
+                            type="number"
+                            value={item.discount || ''}
+                            onChange={(e) => updateDiscount(item.product.id, parseFloat(e.target.value) || 0)}
+                            placeholder="0,00"
+                            className="h-7 text-[12px] w-20 px-2 border-slate-200/70 focus-visible:ring-1 focus-visible:ring-[#0B1F3A]/20 rounded-md tabular-nums"
+                            aria-label={`Desconto para ${item.product.name}`}
+                          />
+                          <span className="text-[11px] text-slate-400">MT</span>
+                        </div>
+                      </div>
                     </motion.div>
                   ))
                 )}
@@ -538,55 +551,59 @@ const LocalPOSPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_20px_-8px_rgba(11,31,58,0.08)] space-y-2.5">
-                <div className="flex justify-between text-sm text-slate-500 font-medium">
-                  <span>Soma dos Itens</span>
-                  <span className="tabular-nums">{formatCurrency(getSubtotal())}</span>
+              <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_3px_rgba(15,31,58,0.04)] space-y-3">
+                <div className="flex justify-between text-[13px] text-slate-500 font-medium">
+                  <span>Subtotal</span>
+                  <span className="tabular-nums text-slate-700">{formatCurrency(getSubtotal())}</span>
                 </div>
                 {getTotalDiscount() > 0 && (
-                  <div className="flex justify-between text-sm text-emerald-600 font-medium">
-                    <span>Desconto Aplicado</span>
-                    <span className="tabular-nums">-{formatCurrency(getTotalDiscount())}</span>
+                  <div className="flex justify-between text-[13px] text-emerald-600 font-medium">
+                    <span>Desconto</span>
+                    <span className="tabular-nums">−{formatCurrency(getTotalDiscount())}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-end pt-3 border-t border-dashed border-slate-200">
-                  <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-slate-500">Total a cobrar</span>
-                  <motion.div
-                    key={getTotal()}
-                    initial={{ scale: 1.08, opacity: 0.7 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="text-[2rem] leading-none font-black tracking-tight tabular-nums text-[#0B1F3A]"
-                  >
-                    {formatCurrency(getTotal())}
-                  </motion.div>
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-slate-400">Total</span>
+                    <motion.div
+                      key={getTotal()}
+                      initial={{ scale: 1.06, opacity: 0.7 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      className="text-[2.25rem] leading-none font-bold tracking-tight tabular-nums text-[#0B1F3A]"
+                    >
+                      {formatCurrency(getTotal())}
+                    </motion.div>
+                  </div>
                 </div>
               </div>
 
               <div className="flex flex-col gap-3 pt-1">
                 {cart.length > 0 && (
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
-                    className="text-slate-500 hover:text-destructive gap-2 self-end h-8"
+                    className="text-slate-400 hover:text-destructive hover:bg-destructive/5 gap-1.5 self-end h-8 text-[12px] font-medium"
                     onClick={() => {
                       clearCart();
                       toast.success('Carrinho limpo');
                     }}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    Limpar tudo
+                    Limpar
                   </Button>
                 )}
 
-                <Button 
-                  className="group w-full h-16 text-lg font-bold rounded-2xl gap-3 tracking-tight text-white bg-gradient-to-br from-[#0B1F3A] via-[#12315C] to-[#0B1F3A] hover:from-[#0F2A50] hover:via-[#173C6E] hover:to-[#0F2A50] shadow-[0_16px_40px_-16px_rgba(11,31,58,0.6)] hover:shadow-[0_20px_50px_-16px_rgba(11,31,58,0.75)] ring-1 ring-inset ring-white/10 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:grayscale disabled:hover:scale-100"
+                <Button
+                  className="group relative w-full h-[60px] text-[15px] font-semibold rounded-2xl gap-3 tracking-tight text-white bg-gradient-to-br from-[#0B1F3A] via-[#12315C] to-[#0B1F3A] hover:from-[#0F2A50] hover:via-[#173C6E] hover:to-[#0F2A50] shadow-[0_10px_30px_-12px_rgba(11,31,58,0.55)] hover:shadow-[0_16px_40px_-14px_rgba(11,31,58,0.7)] ring-1 ring-inset ring-white/10 transition-all duration-200 hover:-translate-y-[1px] active:translate-y-0 active:scale-[0.995] disabled:opacity-40 disabled:grayscale disabled:hover:translate-y-0 disabled:hover:shadow-none overflow-hidden"
                   disabled={cart.length === 0 || !selectedSellerId}
                   onClick={() => setShowPaymentModal(true)}
                 >
-                  <span className="w-9 h-9 rounded-full bg-[#D4A94C]/15 flex items-center justify-center ring-1 ring-[#D4A94C]/30 group-hover:bg-[#D4A94C]/25 transition-colors">
-                    <CreditCard className="w-5 h-5 text-[#D4A94C]" />
+                  <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4A94C]/40 to-transparent" />
+                  <span className="w-8 h-8 rounded-full bg-[#D4A94C]/15 flex items-center justify-center ring-1 ring-[#D4A94C]/25 group-hover:bg-[#D4A94C]/25 transition-colors">
+                    <CreditCard className="w-4 h-4 text-[#D4A94C]" strokeWidth={2.25} />
                   </span>
-                  <span>RECEBER PAGAMENTO</span>
+                  <span>Receber pagamento</span>
                 </Button>
 
                 {cart.length === 0 && (
