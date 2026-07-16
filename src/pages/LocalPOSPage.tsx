@@ -193,7 +193,7 @@ const LocalPOSPage: React.FC = () => {
   return (
     <PageTransition>
 
-    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row w-full bg-background overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] flex flex-col md:flex-row w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Three Clear States Logic */}
       {!cashRegisterOpen ? (
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-6 bg-slate-50/50">
@@ -246,9 +246,10 @@ const LocalPOSPage: React.FC = () => {
       ) : (
         <>
           {/* Products Grid - Left Side */}
-          <div className="flex-1 flex flex-col min-w-0 bg-slate-50/30">
-            {/* Top Search Bar - Large & Prominent */}
-            <div className="p-4 md:p-6 bg-white border-b shadow-sm sticky top-0 z-10">
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Top Search Bar - Premium Enterprise */}
+            <div className="p-4 md:p-6 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 shadow-[0_1px_0_0_rgba(15,31,58,0.04)] sticky top-0 z-10">
+
               <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-6 h-6 group-focus-within:text-primary transition-colors" />
@@ -331,41 +332,45 @@ const LocalPOSPage: React.FC = () => {
                       whileTap={{ scale: 0.95 }}
                     >
                       <Card
-                        className={`group relative overflow-hidden h-full flex flex-col border-2 hover:border-primary transition-all cursor-pointer ${
-                          product.stock <= 0 ? 'opacity-50 grayscale' : 'shadow-sm'
+                        className={`group relative overflow-hidden h-full flex flex-col border border-slate-200/70 rounded-2xl bg-white transition-all duration-300 cursor-pointer hover:border-[#0B1F3A]/40 hover:shadow-[0_20px_40px_-20px_rgba(11,31,58,0.25)] ${
+                          product.stock <= 0 ? 'opacity-50 grayscale' : 'shadow-[0_2px_8px_-2px_rgba(15,31,58,0.06)]'
                         }`}
                         onClick={() => product.stock > 0 && handleAddToCart(product)}
                       >
-                        <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                        <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center overflow-hidden relative">
                           {product.imageUrl ? (
                             <img 
                               src={product.imageUrl} 
                               alt={product.name} 
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                             />
                           ) : (
-                            <ShoppingCart className="w-10 h-10 text-muted-foreground opacity-20" />
+                            <ShoppingCart className="w-10 h-10 text-slate-300" />
                           )}
-                          <div className="absolute top-2 right-2">
-                            <Badge variant={product.stock <= 5 ? 'destructive' : 'secondary'} className="font-mono">
+                          <div className="absolute top-2.5 right-2.5">
+                            <Badge
+                              variant={product.stock <= 5 ? 'destructive' : 'secondary'}
+                              className="font-mono text-[10px] tracking-wide backdrop-blur bg-white/90 text-slate-700 border border-slate-200 shadow-sm"
+                            >
                               {product.stock} un
                             </Badge>
                           </div>
                         </div>
-                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
-                          <h3 className="font-bold text-base text-[#0B1F3A] leading-tight line-clamp-2">
+                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2 bg-white">
+                          <h3 className="font-semibold text-[15px] text-[#0B1F3A] leading-snug line-clamp-2 tracking-tight">
                             {product.name}
                           </h3>
-                          <div className="flex items-center justify-between mt-auto">
-                            <p className="text-xl font-black text-primary tabular-nums">
+                          <div className="flex items-center justify-between mt-auto pt-1">
+                            <p className="text-lg font-black text-[#0B1F3A] tabular-nums tracking-tight">
                               {formatCurrency(product.salePrice)}
                             </p>
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                              <Plus className="w-5 h-5" />
+                            <div className="w-9 h-9 rounded-full bg-[#0B1F3A]/5 flex items-center justify-center text-[#0B1F3A] group-hover:bg-[#0B1F3A] group-hover:text-[#D4A94C] transition-colors shadow-sm">
+                              <Plus className="w-4 h-4" />
                             </div>
                           </div>
                         </div>
                       </Card>
+
                     </motion.div>
                   ))}
                 </div>
@@ -379,17 +384,24 @@ const LocalPOSPage: React.FC = () => {
           </div>
 
           {/* Cart Section - Right Side */}
-          <div className="w-full md:w-[380px] lg:w-[420px] bg-white border-l shadow-2xl flex flex-col z-20">
-            {/* Cart Header */}
-            <div className="p-5 md:p-6 border-b flex items-center justify-between bg-[#0B1F3A] text-white">
+          <div className="w-full md:w-[380px] lg:w-[440px] bg-white border-l border-slate-200 shadow-[-20px_0_50px_-20px_rgba(11,31,58,0.15)] flex flex-col z-20">
+            {/* Cart Header — Navy + Gold */}
+            <div className="relative p-5 md:p-6 border-b flex items-center justify-between bg-gradient-to-br from-[#0B1F3A] via-[#0F2A50] to-[#0B1F3A] text-white overflow-hidden">
+              <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4A94C] to-transparent" />
               <div className="flex items-center gap-3">
-                <ShoppingCart className="w-7 h-7" />
-                <h2 className="text-2xl font-black tracking-tight uppercase">Itens da Venda</h2>
+                <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center ring-1 ring-white/15">
+                  <ShoppingCart className="w-5 h-5 text-[#D4A94C]" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/50 font-semibold">Venda em curso</p>
+                  <h2 className="text-lg font-bold tracking-tight">Itens da Venda</h2>
+                </div>
               </div>
-              <Badge variant="outline" className="text-white border-white/30 text-xl py-1.5 px-4 font-black">
-                {cart.length} {cart.length === 1 ? 'ITEM' : 'ITENS'}
+              <Badge variant="outline" className="text-white border-white/20 bg-white/5 text-sm py-1 px-3 font-bold tabular-nums">
+                {cart.length} {cart.length === 1 ? 'item' : 'itens'}
               </Badge>
             </div>
+
 
             {/* Cart Items - Scrollable */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -481,9 +493,10 @@ const LocalPOSPage: React.FC = () => {
             </div>
 
             {/* Cart Footer - Total & Checkout */}
-            <div className="p-4 md:p-6 bg-slate-50 border-t space-y-4">
+            <div className="p-4 md:p-6 bg-gradient-to-b from-white to-slate-50 border-t border-slate-200 space-y-4">
               {/* Seller selector — RBAC: sales.create @ current branch */}
               <div className="space-y-1.5">
+
                 <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <Users className="w-3.5 h-3.5" />
                   Vendedor Responsável
@@ -525,65 +538,64 @@ const LocalPOSPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-muted-foreground font-medium">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_20px_-8px_rgba(11,31,58,0.08)] space-y-2.5">
+                <div className="flex justify-between text-sm text-slate-500 font-medium">
                   <span>Soma dos Itens</span>
                   <span className="tabular-nums">{formatCurrency(getSubtotal())}</span>
                 </div>
                 {getTotalDiscount() > 0 && (
-                  <div className="flex justify-between text-green-600 font-medium">
+                  <div className="flex justify-between text-sm text-emerald-600 font-medium">
                     <span>Desconto Aplicado</span>
                     <span className="tabular-nums">-{formatCurrency(getTotalDiscount())}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-end pt-2 border-t border-slate-200">
-                  <span className="text-lg font-bold text-[#0B1F3A]">VALOR A COBRAR</span>
+                <div className="flex justify-between items-end pt-3 border-t border-dashed border-slate-200">
+                  <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-slate-500">Total a cobrar</span>
                   <motion.div
                     key={getTotal()}
-                    initial={{ scale: 1.1, color: '#2563eb' }}
-                    animate={{ scale: 1, color: '#0B1F3A' }}
-                    className="text-4xl font-black tracking-tighter tabular-nums text-[#0B1F3A]"
+                    initial={{ scale: 1.08, opacity: 0.7 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="text-[2rem] leading-none font-black tracking-tight tabular-nums text-[#0B1F3A]"
                   >
                     {formatCurrency(getTotal())}
                   </motion.div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 pt-2">
+              <div className="flex flex-col gap-3 pt-1">
                 {cart.length > 0 && (
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="text-muted-foreground hover:text-destructive gap-2 self-end"
+                    className="text-slate-500 hover:text-destructive gap-2 self-end h-8"
                     onClick={() => {
                       clearCart();
                       toast.success('Carrinho limpo');
                     }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                     Limpar tudo
                   </Button>
                 )}
 
                 <Button 
-                  className="w-full h-20 text-2xl font-black shadow-2xl rounded-2xl gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:hover:scale-100"
+                  className="group w-full h-16 text-lg font-bold rounded-2xl gap-3 tracking-tight text-white bg-gradient-to-br from-[#0B1F3A] via-[#12315C] to-[#0B1F3A] hover:from-[#0F2A50] hover:via-[#173C6E] hover:to-[#0F2A50] shadow-[0_16px_40px_-16px_rgba(11,31,58,0.6)] hover:shadow-[0_20px_50px_-16px_rgba(11,31,58,0.75)] ring-1 ring-inset ring-white/10 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:grayscale disabled:hover:scale-100"
                   disabled={cart.length === 0 || !selectedSellerId}
                   onClick={() => setShowPaymentModal(true)}
-                  style={{ 
-                    backgroundColor: cart.length > 0 ? '#10b981' : undefined,
-                    boxShadow: cart.length > 0 ? '0 10px 30px -10px rgba(16, 185, 129, 0.5)' : 'none'
-                  }}
                 >
-                  <CreditCard className="w-8 h-8" />
-                  RECEBER PAGAMENTO
+                  <span className="w-9 h-9 rounded-full bg-[#D4A94C]/15 flex items-center justify-center ring-1 ring-[#D4A94C]/30 group-hover:bg-[#D4A94C]/25 transition-colors">
+                    <CreditCard className="w-5 h-5 text-[#D4A94C]" />
+                  </span>
+                  <span>RECEBER PAGAMENTO</span>
                 </Button>
-                
+
                 {cart.length === 0 && (
-                  <p className="text-center text-sm font-medium text-muted-foreground animate-pulse">
-                    Escolha os produtos para finalizar
+                  <p className="text-center text-xs font-medium text-slate-400">
+                    Escolha os produtos para finalizar a venda
                   </p>
                 )}
               </div>
+
 
               {/* Quick Actions Footer */}
               <div className="flex items-center gap-2 pt-2">
