@@ -9,6 +9,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { isValidId } from '@/lib/uuid';
 
 import { Button } from '@/components/ui/button';
@@ -148,6 +149,7 @@ const LocalDashboardPage: React.FC = () => {
   const [chartPeriod, setChartPeriod] = useState<'today' | 'week' | 'month'>('week');
 
   const { data: stats, isLoading: statsLoading } = useDashboardStats(store?.id);
+  const { completionPct: onboardingPct } = useOnboarding();
 
   // Guard against crash on initial mount before POS data is loaded
   const isReady = useMemo(() => {
@@ -408,31 +410,42 @@ const LocalDashboardPage: React.FC = () => {
         </motion.div>
       )}
 
-      {/* 4 Core KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          index={0} icon={DollarSign} label="Receita Hoje"
-          value={formatCurrency(totalRevenue || 0)}
-          trend={`Mês: ${formatCurrency(monthRevenue || 0)}`}
-        />
-        <KPICard
-          index={1} icon={ShoppingCart} label="Vendas Efetuadas"
-          value={todaySales.length || 0}
-          trend={`${monthSales.length || 0} este mês`}
-        />
-        <KPICard
-          index={2} icon={Users} label="Performance Equipa"
-          value={todaySales.length > 0 ? `${(totalRevenue / todaySales.length).toFixed(0)} MT/venda` : "0 MT/venda"}
-          trend="Média por vendedor"
-        />
-        <KPICard
-          index={3} icon={AlertTriangle} label="Stock Crítico"
-          value={lowStockCount || 0}
-          trend={lowStockCount > 0 ? 'Produtos precisam reposição' : 'Tudo em ordem'}
-          trendUp={lowStockCount === 0 ? true : false}
-        />
-
-      </div>
+      {/* 4 Core KPIs — hidden while onboarding is incomplete AND no real activity yet (P2-3).
+          Never affects calculations; purely presentational. */}
+      {(() => {
+        const hasAnyActivity =
+          (totalRevenue || 0) > 0 ||
+          (monthRevenue || 0) > 0 ||
+          todaySales.length > 0 ||
+          monthSales.length > 0 ||
+          (lowStockCount || 0) > 0;
+        if (onboardingPct < 100 && !hasAnyActivity) return null;
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPICard
+              index={0} icon={DollarSign} label="Receita Hoje"
+              value={formatCurrency(totalRevenue || 0)}
+              trend={`Mês: ${formatCurrency(monthRevenue || 0)}`}
+            />
+            <KPICard
+              index={1} icon={ShoppingCart} label="Vendas Efetuadas"
+              value={todaySales.length || 0}
+              trend={`${monthSales.length || 0} este mês`}
+            />
+            <KPICard
+              index={2} icon={Users} label="Performance Equipa"
+              value={todaySales.length > 0 ? `${(totalRevenue / todaySales.length).toFixed(0)} MT/venda` : "0 MT/venda"}
+              trend="Média por vendedor"
+            />
+            <KPICard
+              index={3} icon={AlertTriangle} label="Stock Crítico"
+              value={lowStockCount || 0}
+              trend={lowStockCount > 0 ? 'Produtos precisam reposição' : 'Tudo em ordem'}
+              trendUp={lowStockCount === 0 ? true : false}
+            />
+          </div>
+        );
+      })()}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -17,19 +18,32 @@ const SmartOnboarding: React.FC = () => {
     error,
     retry,
   } = useOnboarding();
-  
+
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const welcomeKey = user?.id ? `onboarding_seen_${user.id}` : null;
   const [showWelcome, setShowWelcome] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Show welcome if nothing is done yet and it hasn't been shown this session
-    const hasBeenShown = sessionStorage.getItem('onboarding_welcome_shown');
+    // P2-4: persist welcome dismissal per-user via localStorage so it survives new sessions.
+    if (!welcomeKey) return;
+    const hasBeenShown = localStorage.getItem(welcomeKey);
     if (!loading && !first_product_added && !first_cash_opened && !first_sale_completed && !hasBeenShown) {
       setShowWelcome(true);
-      sessionStorage.setItem('onboarding_welcome_shown', 'true');
     }
-  }, [loading, first_product_added, first_cash_opened, first_sale_completed]);
+  }, [loading, first_product_added, first_cash_opened, first_sale_completed, welcomeKey]);
+
+  const dismissWelcome = () => {
+    setShowWelcome(false);
+    if (welcomeKey) localStorage.setItem(welcomeKey, '1');
+  };
+
+  const reopenWelcome = () => {
+    if (welcomeKey) localStorage.removeItem(welcomeKey);
+    setShowWelcome(true);
+  };
+
 
   if (loading || dismissed) return null;
 
@@ -103,9 +117,9 @@ const SmartOnboarding: React.FC = () => {
                   Vamos configurar sua empresa em menos de 2 minutos. Siga os passos guiados para começar a operar.
                 </p>
                 
-                <Button 
-                  className="w-full h-12 text-lg font-medium group" 
-                  onClick={() => setShowWelcome(false)}
+                <Button
+                  className="w-full h-12 text-lg font-medium group"
+                  onClick={dismissWelcome}
                 >
                   Começar Agora
                   <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
@@ -130,7 +144,7 @@ const SmartOnboarding: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-foreground">Configuração Rápida</h3>
-                <p className="text-[10px] text-muted-foreground">Complete para liberar todas as funções</p>
+                <p className="text-xs text-muted-foreground">Complete para liberar todas as funções</p>
               </div>
             </div>
             <button 
@@ -142,7 +156,7 @@ const SmartOnboarding: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            <div className="flex justify-between text-[11px] font-medium mb-1">
+            <div className="flex justify-between text-xs font-medium mb-1">
               <span className="text-muted-foreground">Progresso</span>
               <span className="text-primary">{Math.round(completionPct)}%</span>
             </div>
@@ -162,7 +176,7 @@ const SmartOnboarding: React.FC = () => {
                   <div className={`mb-2 ${step.done ? 'text-success' : 'text-muted-foreground'}`}>
                     {step.done ? <CheckCircle2 className="w-4 h-4" /> : step.icon}
                   </div>
-                  <span className={`text-[9px] font-semibold text-center leading-tight ${step.done ? 'text-success' : 'text-foreground'}`}>
+                  <span className={`text-xs font-semibold text-center leading-tight ${step.done ? 'text-success' : 'text-foreground'}`}>
                     {step.title.split(' ').pop()}
                   </span>
                 </div>
@@ -170,15 +184,27 @@ const SmartOnboarding: React.FC = () => {
             </div>
 
             {completionPct === 100 && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="mt-4 p-2 bg-success/10 border border-success/20 rounded-lg text-center"
               >
-                <p className="text-[11px] font-bold text-success">
+                <p className="text-xs font-bold text-success">
                   🎉 Sistema pronto. Você já pode operar normalmente.
                 </p>
               </motion.div>
+            )}
+
+            {completionPct < 100 && welcomeKey && (
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={reopenWelcome}
+                  className="text-xs text-muted-foreground hover:text-primary underline underline-offset-2 transition-colors"
+                >
+                  Mostrar boas-vindas novamente
+                </button>
+              </div>
             )}
           </div>
         </Card>

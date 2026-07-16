@@ -1,10 +1,12 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { ShieldAlert, RefreshCw, Home, Terminal } from 'lucide-react';
+import { ShieldAlert, RefreshCw, Home, Terminal, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   children: ReactNode;
+  /** When provided, renders the compact inline fallback (legacy API). */
+  fallbackTitle?: string;
 }
 
 interface State {
@@ -56,6 +58,21 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      // Compact inline fallback (legacy API — used inside widgets/maps).
+      if (this.props.fallbackTitle) {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-[300px] p-8 text-center">
+            <AlertTriangle className="w-12 h-12 text-destructive mb-4" />
+            <h2 className="text-lg font-semibold text-foreground mb-2">
+              {this.props.fallbackTitle}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              {this.state.error?.message || 'Ocorreu um erro inesperado.'}
+            </p>
+            <Button onClick={this.handleReset}>Recarregar</Button>
+          </div>
+        );
+      }
       return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-background select-none">
           <div className="w-20 h-20 rounded-2xl bg-destructive/10 flex items-center justify-center mb-8 rotate-3 hover:rotate-0 transition-transform duration-500">
