@@ -45,6 +45,7 @@ const navItems = [
   { to: '/app/founder/digital-twin', icon: Layers, label: 'Enterprise Digital Twin' },
   { to: '/app/founder/release-center', icon: Trophy, label: 'Release Center' },
   { to: '/app/founder/customer-success', icon: Smile, label: 'Customer Success' },
+  { to: '/app/founder/customer-journey', icon: Route, label: 'Customer Journey' },
   { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
   { to: '/app/founder/logs', icon: FileText, label: 'Logs' },
   { to: '/app/founder/alertas', icon: Bell, label: 'Alertas' },
