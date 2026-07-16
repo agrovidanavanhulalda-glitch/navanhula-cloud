@@ -92,6 +92,7 @@ const FounderCustomerJourneyPage = React.lazy(() => import("./pages/founder/Foun
 const FounderCustomerFeedbackPage = React.lazy(() => import("./pages/founder/FounderCustomerFeedbackPage"));
 const FounderRenewalCenterPage = React.lazy(() => import("./pages/founder/FounderRenewalCenterPage"));
 const FounderSupportCenterPage = React.lazy(() => import("./pages/founder/FounderSupportCenterPage"));
+const FounderCustomer360Page = React.lazy(() => import("./pages/founder/FounderCustomer360Page"));
 
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
@@ -403,6 +404,7 @@ const AppRoutes = () => {
             <Route path="customer-feedback" element={<FounderCustomerFeedbackPage />} />
             <Route path="renewal-center" element={<FounderRenewalCenterPage />} />
             <Route path="support-center" element={<FounderSupportCenterPage />} />
+            <Route path="customer-360" element={<FounderCustomer360Page />} />
           </Route>
 
           <Route path="fiscal" element={<FiscalPage />} />
