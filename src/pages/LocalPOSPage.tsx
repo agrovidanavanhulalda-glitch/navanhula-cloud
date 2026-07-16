@@ -551,55 +551,59 @@ const LocalPOSPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_20px_-8px_rgba(11,31,58,0.08)] space-y-2.5">
-                <div className="flex justify-between text-sm text-slate-500 font-medium">
-                  <span>Soma dos Itens</span>
-                  <span className="tabular-nums">{formatCurrency(getSubtotal())}</span>
+              <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_3px_rgba(15,31,58,0.04)] space-y-3">
+                <div className="flex justify-between text-[13px] text-slate-500 font-medium">
+                  <span>Subtotal</span>
+                  <span className="tabular-nums text-slate-700">{formatCurrency(getSubtotal())}</span>
                 </div>
                 {getTotalDiscount() > 0 && (
-                  <div className="flex justify-between text-sm text-emerald-600 font-medium">
-                    <span>Desconto Aplicado</span>
-                    <span className="tabular-nums">-{formatCurrency(getTotalDiscount())}</span>
+                  <div className="flex justify-between text-[13px] text-emerald-600 font-medium">
+                    <span>Desconto</span>
+                    <span className="tabular-nums">−{formatCurrency(getTotalDiscount())}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-end pt-3 border-t border-dashed border-slate-200">
-                  <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-slate-500">Total a cobrar</span>
-                  <motion.div
-                    key={getTotal()}
-                    initial={{ scale: 1.08, opacity: 0.7 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="text-[2rem] leading-none font-black tracking-tight tabular-nums text-[#0B1F3A]"
-                  >
-                    {formatCurrency(getTotal())}
-                  </motion.div>
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-slate-400">Total</span>
+                    <motion.div
+                      key={getTotal()}
+                      initial={{ scale: 1.06, opacity: 0.7 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      className="text-[2.25rem] leading-none font-bold tracking-tight tabular-nums text-[#0B1F3A]"
+                    >
+                      {formatCurrency(getTotal())}
+                    </motion.div>
+                  </div>
                 </div>
               </div>
 
               <div className="flex flex-col gap-3 pt-1">
                 {cart.length > 0 && (
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
-                    className="text-slate-500 hover:text-destructive gap-2 self-end h-8"
+                    className="text-slate-400 hover:text-destructive hover:bg-destructive/5 gap-1.5 self-end h-8 text-[12px] font-medium"
                     onClick={() => {
                       clearCart();
                       toast.success('Carrinho limpo');
                     }}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    Limpar tudo
+                    Limpar
                   </Button>
                 )}
 
-                <Button 
-                  className="group w-full h-16 text-lg font-bold rounded-2xl gap-3 tracking-tight text-white bg-gradient-to-br from-[#0B1F3A] via-[#12315C] to-[#0B1F3A] hover:from-[#0F2A50] hover:via-[#173C6E] hover:to-[#0F2A50] shadow-[0_16px_40px_-16px_rgba(11,31,58,0.6)] hover:shadow-[0_20px_50px_-16px_rgba(11,31,58,0.75)] ring-1 ring-inset ring-white/10 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:grayscale disabled:hover:scale-100"
+                <Button
+                  className="group relative w-full h-[60px] text-[15px] font-semibold rounded-2xl gap-3 tracking-tight text-white bg-gradient-to-br from-[#0B1F3A] via-[#12315C] to-[#0B1F3A] hover:from-[#0F2A50] hover:via-[#173C6E] hover:to-[#0F2A50] shadow-[0_10px_30px_-12px_rgba(11,31,58,0.55)] hover:shadow-[0_16px_40px_-14px_rgba(11,31,58,0.7)] ring-1 ring-inset ring-white/10 transition-all duration-200 hover:-translate-y-[1px] active:translate-y-0 active:scale-[0.995] disabled:opacity-40 disabled:grayscale disabled:hover:translate-y-0 disabled:hover:shadow-none overflow-hidden"
                   disabled={cart.length === 0 || !selectedSellerId}
                   onClick={() => setShowPaymentModal(true)}
                 >
-                  <span className="w-9 h-9 rounded-full bg-[#D4A94C]/15 flex items-center justify-center ring-1 ring-[#D4A94C]/30 group-hover:bg-[#D4A94C]/25 transition-colors">
-                    <CreditCard className="w-5 h-5 text-[#D4A94C]" />
+                  <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4A94C]/40 to-transparent" />
+                  <span className="w-8 h-8 rounded-full bg-[#D4A94C]/15 flex items-center justify-center ring-1 ring-[#D4A94C]/25 group-hover:bg-[#D4A94C]/25 transition-colors">
+                    <CreditCard className="w-4 h-4 text-[#D4A94C]" strokeWidth={2.25} />
                   </span>
-                  <span>RECEBER PAGAMENTO</span>
+                  <span>Receber pagamento</span>
                 </Button>
 
                 {cart.length === 0 && (
