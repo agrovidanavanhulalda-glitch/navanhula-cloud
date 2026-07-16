@@ -156,7 +156,7 @@ const SmartOnboarding: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            <div className="flex justify-between text-[11px] font-medium mb-1">
+            <div className="flex justify-between text-xs font-medium mb-1">
               <span className="text-muted-foreground">Progresso</span>
               <span className="text-primary">{Math.round(completionPct)}%</span>
             </div>
