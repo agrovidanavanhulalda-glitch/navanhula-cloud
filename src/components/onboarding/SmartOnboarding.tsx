@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
