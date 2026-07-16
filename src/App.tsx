@@ -88,6 +88,7 @@ const FounderBusinessContinuityCenterPage = React.lazy(() => import("./pages/fou
 const FounderDigitalTwinCenterPage = React.lazy(() => import("./pages/founder/FounderDigitalTwinCenterPage"));
 const FounderReleaseCenterPage = React.lazy(() => import("./pages/founder/FounderReleaseCenterPage"));
 const FounderCustomerSuccessPage = React.lazy(() => import("./pages/founder/FounderCustomerSuccessPage"));
+const FounderCustomerJourneyPage = React.lazy(() => import("./pages/founder/FounderCustomerJourneyPage"));
 
 const FounderGate = React.lazy(() => import("./components/auth/FounderGate"));
 const FiscalPage = React.lazy(() => import("./pages/FiscalPage"));
