@@ -248,34 +248,35 @@ const LocalPOSPage: React.FC = () => {
           {/* Products Grid - Left Side */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Top Search Bar - Premium Enterprise */}
-            <div className="p-4 md:p-6 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 shadow-[0_1px_0_0_rgba(15,31,58,0.04)] sticky top-0 z-10">
+            <div className="px-5 md:px-8 py-4 md:py-5 bg-white/70 backdrop-blur-2xl border-b border-slate-200/60 sticky top-0 z-10">
 
-              <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-3">
+              <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-2.5">
                 <div className="relative flex-1 group">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-6 h-6 group-focus-within:text-primary transition-colors" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-[#0B1F3A] transition-colors" />
                   <Input
-                    placeholder="Procure um produto ou use o leitor de código..."
+                    placeholder="Pesquisar produto, código ou SKU…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-16 text-xl border-2 focus-visible:ring-primary shadow-sm rounded-xl"
+                    className="pl-12 pr-4 h-14 text-[15px] bg-white/80 backdrop-blur border border-slate-200/80 focus-visible:ring-2 focus-visible:ring-[#0B1F3A]/20 focus-visible:border-[#0B1F3A]/40 shadow-[0_1px_2px_rgba(15,31,58,0.04)] rounded-xl placeholder:text-slate-400 placeholder:font-normal font-medium text-slate-800 transition-all"
                     autoFocus
                   />
                 </div>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    className="h-16 w-16 flex-shrink-0 border-2 hover:bg-primary/5 hover:text-primary transition-colors rounded-xl"
+                    className="h-14 w-14 flex-shrink-0 bg-white border border-slate-200/80 hover:bg-[#0B1F3A]/5 hover:border-[#0B1F3A]/30 hover:text-[#0B1F3A] transition-all rounded-xl shadow-[0_1px_2px_rgba(15,31,58,0.04)]"
                     onClick={() => setShowBarcodeScanner(true)}
+                    aria-label="Scanner de código"
                   >
-                    <ScanLine className="w-8 h-8" />
+                    <ScanLine className="w-5 h-5" />
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-16 px-6 flex-1 sm:flex-none border-2 gap-2 font-bold text-lg rounded-xl"
+                    className="h-14 px-5 flex-1 sm:flex-none bg-white border border-slate-200/80 hover:bg-[#0B1F3A]/5 hover:border-[#0B1F3A]/30 hover:text-[#0B1F3A] gap-2 font-semibold text-sm tracking-tight rounded-xl shadow-[0_1px_2px_rgba(15,31,58,0.04)]"
                     onClick={() => setShowManualEntry(!showManualEntry)}
                   >
-                    <Plus className="w-6 h-6" />
-                    ITEM SEM CÓDIGO
+                    <Plus className="w-4 h-4" />
+                    Item avulso
                   </Button>
                 </div>
               </div>
