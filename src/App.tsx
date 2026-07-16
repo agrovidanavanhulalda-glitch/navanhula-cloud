@@ -402,6 +402,7 @@ const AppRoutes = () => {
             <Route path="customer-journey" element={<FounderCustomerJourneyPage />} />
             <Route path="customer-feedback" element={<FounderCustomerFeedbackPage />} />
             <Route path="renewal-center" element={<FounderRenewalCenterPage />} />
+            <Route path="support-center" element={<FounderSupportCenterPage />} />
           </Route>
 
           <Route path="fiscal" element={<FiscalPage />} />

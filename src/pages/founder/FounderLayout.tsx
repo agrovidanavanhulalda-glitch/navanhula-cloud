@@ -48,6 +48,7 @@ const navItems = [
   { to: '/app/founder/customer-journey', icon: Route, label: 'Customer Journey' },
   { to: '/app/founder/customer-feedback', icon: MessageCircle, label: 'Customer Feedback' },
   { to: '/app/founder/renewal-center', icon: RefreshCcw, label: 'Renewal Center' },
+  { to: '/app/founder/support-center', icon: LifeBuoy, label: 'Support Center' },
   { to: '/app/founder/metricas', icon: TrendingUp, label: 'Métricas' },
   { to: '/app/founder/logs', icon: FileText, label: 'Logs' },
   { to: '/app/founder/alertas', icon: Bell, label: 'Alertas' },
