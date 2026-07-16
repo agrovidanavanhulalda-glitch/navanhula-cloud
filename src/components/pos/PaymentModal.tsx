@@ -704,6 +704,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             />
           </TabsContent>
         </Tabs>
+        </div>
       </DialogContent>
     </Dialog>
   );
