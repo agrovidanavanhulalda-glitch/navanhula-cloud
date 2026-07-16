@@ -189,9 +189,11 @@ const LocalReportsPage: React.FC = () => {
   }, [isAdmin]);
 
   const saveToHistory = async (type: 'PDF' | 'XLSX', status: 'success' | 'error', filters: any, errorMsg?: string) => {
-    const sessionRes = await supabase.auth.getSession().catch(() => null);
+    const sessionPromise = supabase.auth?.getSession?.();
+    const sessionRes = sessionPromise ? await Promise.resolve(sessionPromise).catch(() => null) : null;
     const user = sessionRes?.data?.session?.user;
     if (!user || !targetCompanyId) return;
+
 
 
     const entry = {
