@@ -9,6 +9,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { isValidId } from '@/lib/uuid';
 
 import { Button } from '@/components/ui/button';
