@@ -17,19 +17,32 @@ const SmartOnboarding: React.FC = () => {
     error,
     retry,
   } = useOnboarding();
-  
+
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const welcomeKey = user?.id ? `onboarding_seen_${user.id}` : null;
   const [showWelcome, setShowWelcome] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Show welcome if nothing is done yet and it hasn't been shown this session
-    const hasBeenShown = sessionStorage.getItem('onboarding_welcome_shown');
+    // P2-4: persist welcome dismissal per-user via localStorage so it survives new sessions.
+    if (!welcomeKey) return;
+    const hasBeenShown = localStorage.getItem(welcomeKey);
     if (!loading && !first_product_added && !first_cash_opened && !first_sale_completed && !hasBeenShown) {
       setShowWelcome(true);
-      sessionStorage.setItem('onboarding_welcome_shown', 'true');
     }
-  }, [loading, first_product_added, first_cash_opened, first_sale_completed]);
+  }, [loading, first_product_added, first_cash_opened, first_sale_completed, welcomeKey]);
+
+  const dismissWelcome = () => {
+    setShowWelcome(false);
+    if (welcomeKey) localStorage.setItem(welcomeKey, '1');
+  };
+
+  const reopenWelcome = () => {
+    if (welcomeKey) localStorage.removeItem(welcomeKey);
+    setShowWelcome(true);
+  };
+
 
   if (loading || dismissed) return null;
 
