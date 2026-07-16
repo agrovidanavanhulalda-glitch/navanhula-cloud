@@ -33,8 +33,7 @@ describe('Digital Twin Engine', () => {
     const r = computeDigitalTwin({
       processes: [
         { id: 'x', name: 'X', load: NaN, health: Infinity, revenueImpact: -50 },
-        // @ts-expect-error – runtime resilience
-        { id: 'y', name: 'Y', load: null, health: undefined },
+        { id: 'y', name: 'Y', load: null as unknown as number, health: undefined as unknown as number },
       ],
       resources: [{ id: 'r', name: 'R', used: NaN, capacity: 0 }],
       growthPerDay: Infinity,
