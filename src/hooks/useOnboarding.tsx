@@ -100,8 +100,10 @@ export const useOnboarding = () => {
   return {
     ...state,
     loading,
+    error,
     completionPct,
     updateStep,
     refresh: fetchProgress,
+    retry: fetchProgress,
   };
 };
