@@ -22,7 +22,7 @@ export function decideRelease(
   const confidence = Math.round((passRatio * 0.6 + (score.enterpriseScore / 100) * 0.4) * 100);
   const verdict: ReleaseVerdict =
     deployment.deployable && readiness.gaEligible ? 'GO' :
-    score.enterpriseScore >= score.avgSignal && passRatio >= 0.7 ? 'CONDITIONAL_GO' : 'NO_GO';
+    score.enterpriseScore >= 40 && passRatio >= 0.7 ? 'CONDITIONAL_GO' : 'NO_GO';
   const rationale =
     verdict === 'GO' ? `Deploy liberado. Score ${score.enterpriseScore}, threshold ${readiness.threshold}.` :
     verdict === 'CONDITIONAL_GO' ? `Deploy condicional. ${readiness.passedCount}/${readiness.totalCount} critérios.` :
