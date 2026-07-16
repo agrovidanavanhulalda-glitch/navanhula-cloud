@@ -2,7 +2,7 @@ import React, { Suspense, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 
 const AgroMapViewLazy = React.lazy(() => import('./CriadoresMap'));
 
