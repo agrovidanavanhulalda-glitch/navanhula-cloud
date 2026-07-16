@@ -16,6 +16,9 @@ export interface FeedbackScore {
 }
 
 export function computeFeedbackScore(entries: readonly FeedbackEntry[]): FeedbackScore {
+  if (entries.length === 0) {
+    return { score: 0, npsNormalized: 0, csat: 0, sentiment: 0, loyalty: 0 };
+  }
   const nps = computeNps(entries);
   const csat = computeSatisfaction(entries).csat;
   const sentiment = aggregateSentiment(entries).score;

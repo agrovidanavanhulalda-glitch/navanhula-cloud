@@ -68,10 +68,10 @@ describe('customer-feedback engines', () => {
       mk({ id: 'd', rating: 999 }),
     ];
     const r = computeNps(entries);
-    // NaN→0 (detractor), Infinity→10 (promoter), -50→0 (detractor), 999→10 (promoter)
-    expect(r.promoters).toBe(2);
-    expect(r.detractors).toBe(2);
-    expect(r.nps).toBe(0);
+    // NaN→0, Infinity→0, -50→0 (all detractors); 999→10 (promoter)
+    expect(r.promoters).toBe(1);
+    expect(r.detractors).toBe(3);
+    expect(r.nps).toBe(-50);
   });
 
   it('min and max scores', () => {
