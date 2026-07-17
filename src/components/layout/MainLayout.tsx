@@ -184,6 +184,7 @@ const MainLayout: React.FC = () => {
           <UpsellBanner />
           <main className="flex-1 overflow-y-auto overflow-x-hidden bg-background p-6">
             <div className="max-w-7xl mx-auto space-y-6">
+              <AppBreadcrumb />
               <SmartOnboarding />
               <Outlet />
             </div>
