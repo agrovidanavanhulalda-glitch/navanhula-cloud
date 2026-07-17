@@ -304,20 +304,17 @@ const LocalInventoryPage: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Package className="w-6 h-6" />
-            Estoque
-          </h1>
-          <p className="text-muted-foreground">
-            {products.length} produtos | {lowStockCount} baixo | {outOfStockCount} esgotados
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => loadProducts(true)} size="sm">
-          <RefreshCw className="w-4 h-4 mr-1" /> Atualizar
-        </Button>
-      </div>
+      <PremiumPageHeader
+        eyebrow="Inventário"
+        title="Estoque"
+        subtitle={`${products.length} produtos | ${lowStockCount} baixo | ${outOfStockCount} esgotados`}
+        icon={Package}
+        actions={
+          <Button variant="outline" onClick={() => loadProducts(true)} size="sm">
+            <RefreshCw className="w-4 h-4 mr-1" /> Atualizar
+          </Button>
+        }
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
