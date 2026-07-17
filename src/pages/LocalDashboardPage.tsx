@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonKPI, SkeletonChart, SkeletonList } from '@/components/ui/skeleton-card';
+import { PremiumPageHeader } from '@/components/ui/premium-page-header';
 import {
   ShoppingCart, Package, DollarSign, TrendingUp,
   Plus, AlertTriangle, BarChart3,
