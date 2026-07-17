@@ -32,6 +32,7 @@ import SmartOnboarding from '@/components/onboarding/SmartOnboarding';
 import WhatsAppFloat from '../public/landing/WhatsAppFloat';
 import FounderBadge from '@/components/founder/FounderBadge';
 import SimulationBanner from '@/components/founder/SimulationBanner';
+import WorkspaceSearchButton from '@/components/workspace/WorkspaceSearchButton';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
@@ -114,6 +115,7 @@ const MainLayout: React.FC = () => {
 
             {/* User Profile + Logout - Right */}
             <div className="flex items-center gap-2">
+              <WorkspaceSearchButton />
               <div className="flex items-center gap-0.5 mr-1">
                 <LanguageSelector />
                 <NotificationBell />
@@ -182,6 +184,7 @@ const MainLayout: React.FC = () => {
           <UpsellBanner />
           <main className="flex-1 overflow-y-auto overflow-x-hidden bg-background p-6">
             <div className="max-w-7xl mx-auto space-y-6">
+              <AppBreadcrumb />
               <SmartOnboarding />
               <Outlet />
             </div>
