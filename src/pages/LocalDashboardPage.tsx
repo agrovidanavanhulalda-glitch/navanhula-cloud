@@ -35,6 +35,7 @@ import {
   ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 /* ─── Animation ─── */
 const fadeIn = {
