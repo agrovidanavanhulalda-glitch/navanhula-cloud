@@ -350,7 +350,7 @@ const LocalProductsPage: React.FC = () => {
   return (
     <PageTransition>
       <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+        
         <PremiumPageHeader
           className="mb-6"
           eyebrow="Catálogo"
