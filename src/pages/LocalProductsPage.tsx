@@ -47,6 +47,7 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { SkeletonTable } from '@/components/ui/skeleton-card';
 import PageTransition from '@/components/layout/PageTransition';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { PremiumPageHeader } from '@/components/ui/premium-page-header';
 
 const LocalProductsPage: React.FC = () => {
   const { company } = useAuth();
