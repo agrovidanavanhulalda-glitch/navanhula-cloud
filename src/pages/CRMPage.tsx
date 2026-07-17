@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Crown, Search, Plus, TrendingUp, ShoppingCart, Phone, Mail, RefreshCw } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
+import { PremiumPageHeader } from '@/components/ui/premium-page-header';
 
 interface Customer {
   id: string;
