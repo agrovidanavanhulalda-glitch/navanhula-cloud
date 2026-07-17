@@ -1,28 +1,80 @@
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Inbox, type LucideIcon } from "lucide-react";
 
-interface EmptyStateProps {
-  icon: LucideIcon;
+export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
+  icon?: LucideIcon;
   title: string;
-  description: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
+  description?: string;
+  primaryAction?: { label: string; onClick: () => void; icon?: LucideIcon };
+  secondaryAction?: { label: string; onClick: () => void };
+  /** @deprecated use primaryAction */
+  action?: { label: string; onClick: () => void; icon?: LucideIcon };
+  helpText?: string;
+  variant?: "default" | "glass" | "premium";
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ icon: Icon, title, description, action }) => (
-  <div className="flex flex-col items-center justify-center py-16 px-4 text-center animate-fade-in">
-    <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-5">
-      <Icon className="w-8 h-8 text-muted-foreground/60" />
+export const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
+  (
+    {
+      className,
+      icon: Icon = Inbox,
+      title,
+      description,
+      primaryAction,
+      secondaryAction,
+      action,
+      helpText,
+      variant = "default",
+      ...props
+    },
+    ref,
+  ) => {
+    const primary = primaryAction ?? action;
+    return (
+    <div
+      ref={ref}
+      role="status"
+      className={cn(
+        "flex flex-col items-center justify-center text-center px-6 py-12 rounded-xl",
+        variant === "glass" &&
+          "bg-background/40 backdrop-blur-xl border border-white/10",
+        variant === "premium" &&
+          "relative overflow-hidden bg-gradient-to-br from-card via-card to-card/80 border border-border/60 before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-[linear-gradient(90deg,transparent_0%,hsl(var(--primary)/0.4)_20%,hsl(var(--gold)/0.6)_50%,hsl(var(--primary)/0.4)_80%,transparent_100%)]",
+        className,
+      )}
+      {...props}
+    >
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent ring-1 ring-[hsl(var(--gold)/0.25)]">
+        <Icon className="h-8 w-8 text-primary" aria-hidden="true" />
+      </div>
+      <h3 className="text-lg font-semibold tracking-tight text-foreground">{title}</h3>
+      {description && (
+        <p className="mt-1.5 max-w-md text-sm text-muted-foreground">{description}</p>
+      )}
+      {(primary || secondaryAction) && (
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          {primary && (
+            <Button onClick={primary.onClick} variant="premium">
+              {primary.icon && <primary.icon className="mr-2 h-4 w-4" />}
+              {primary.label}
+            </Button>
+          )}
+          {secondaryAction && (
+            <Button variant="outline" onClick={secondaryAction.onClick}>
+              {secondaryAction.label}
+            </Button>
+          )}
+        </div>
+      )}
+      {helpText && (
+        <p className="mt-4 text-xs text-muted-foreground/80">{helpText}</p>
+      )}
     </div>
-    <h3 className="text-lg font-semibold text-foreground mb-1.5">{title}</h3>
-    <p className="text-sm text-muted-foreground max-w-sm mb-6">{description}</p>
-    {action && (
-      <Button onClick={action.onClick} size="sm" className="gap-2">
-        {action.label}
-      </Button>
-    )}
-  </div>
+    );
+  },
 );
+EmptyState.displayName = "EmptyState";
+
+export default EmptyState;
