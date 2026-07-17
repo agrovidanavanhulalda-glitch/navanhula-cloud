@@ -529,7 +529,7 @@ const LocalProductsPage: React.FC = () => {
               </div>
             </div>
           )}
-          </Card>
+          </VirtualizedTableShell>
         )}
 
         <Dialog open={showForm} onOpenChange={setShowForm}>
