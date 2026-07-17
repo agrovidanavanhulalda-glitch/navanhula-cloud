@@ -51,14 +51,19 @@ const KPICard: React.FC<{
   index?: number;
 }> = ({ label, value, trend, trendUp, icon: Icon, index = 0 }) => (
   <motion.div custom={index} variants={fadeIn} initial="hidden" animate="visible">
-    <Card className="p-5 hover:shadow-lg transition-shadow duration-200">
+    <Card className="relative overflow-hidden p-5 border-border/60 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[2px] opacity-70"
+        style={{ background: 'linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--gold)) 100%)' }}
+      />
       <div className="flex items-center justify-between mb-4">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
-        <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center">
+        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.14em]">{label}</span>
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-[hsl(var(--gold))]/15 ring-1 ring-border/60 flex items-center justify-center group-hover:scale-110 transition-transform">
           <Icon className="w-4 h-4 text-primary" />
         </div>
       </div>
-      <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">{value}</p>
+      <p className="text-3xl font-extrabold tracking-tight text-foreground tabular-nums">{value}</p>
       {trend && (
         <p className={`text-xs mt-2 flex items-center gap-1 font-medium ${trendUp === true ? 'text-success' : trendUp === false ? 'text-destructive' : 'text-muted-foreground'}`}>
           {trendUp === true && <ArrowUpRight className="w-3.5 h-3.5" />}
