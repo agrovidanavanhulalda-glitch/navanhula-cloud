@@ -24,12 +24,15 @@ export const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       description,
       primaryAction,
       secondaryAction,
+      action,
       helpText,
       variant = "default",
       ...props
     },
     ref,
-  ) => (
+  ) => {
+    const primary = primaryAction ?? action;
+    return (
     <div
       ref={ref}
       role="status"
