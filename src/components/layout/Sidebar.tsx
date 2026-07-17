@@ -330,18 +330,25 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
     });
 
   return (
-    <ShadcnSidebar collapsible={forceExpanded ? "none" : "icon"} className="border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+    <ShadcnSidebar
+      collapsible={forceExpanded ? "none" : "icon"}
+      className="border-r border-sidebar-border/60 bg-sidebar/95 backdrop-blur-xl supports-[backdrop-filter]:bg-sidebar/80"
+    >
+      <SidebarHeader className="relative border-b border-sidebar-border/60 p-4">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--gold))]/60 to-transparent"
+        />
         <div className={cn('flex items-center gap-3', collapsed ? 'justify-center px-0' : 'px-1')}>
-          <BrandLogo 
-            width={collapsed ? 36 : 140} 
+          <BrandLogo
+            width={collapsed ? 36 : 140}
             height={collapsed ? 36 : undefined}
             className="transition-all duration-300"
           />
           {!collapsed && (
             <div className="min-w-0">
               <h1 className="font-bold text-[11px] text-sidebar-primary-foreground tracking-tight leading-none uppercase">Menu Principal</h1>
-              <p className="text-[9px] font-medium tracking-widest text-sidebar-foreground/50 uppercase">Navanhula Cloud</p>
+              <p className="text-[9px] font-medium tracking-[0.14em] text-sidebar-foreground/50 uppercase mt-0.5">Navanhula Cloud</p>
             </div>
           )}
         </div>
