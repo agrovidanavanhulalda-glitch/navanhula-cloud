@@ -115,6 +115,7 @@ const MainLayout: React.FC = () => {
 
             {/* User Profile + Logout - Right */}
             <div className="flex items-center gap-2">
+              <WorkspaceSearchButton />
               <div className="flex items-center gap-0.5 mr-1">
                 <LanguageSelector />
                 <NotificationBell />
