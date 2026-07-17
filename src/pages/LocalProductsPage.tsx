@@ -48,6 +48,15 @@ import { SkeletonTable } from '@/components/ui/skeleton-card';
 import PageTransition from '@/components/layout/PageTransition';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { PremiumPageHeader } from '@/components/ui/premium-page-header';
+import {
+  VirtualizedTableShell,
+  VirtualizedTableScroll,
+  VirtualizedTableRoot,
+  VirtualizedTableHeader,
+  VirtualizedTableBody,
+  VirtualizedTableRow,
+  VirtualizedTableHead,
+} from '@/components/ui/virtualized-table';
 
 const LocalProductsPage: React.FC = () => {
   const { company } = useAuth();
@@ -401,36 +410,30 @@ const LocalProductsPage: React.FC = () => {
         {productsLoading ? (
           <SkeletonTable rows={pageSize} cols={6} />
         ) : (
-          <Card className="overflow-hidden">
-            <div 
-              ref={parentRef}
-              className="overflow-x-auto max-h-[600px] overflow-y-auto"
-            >
-              <table className="w-full relative border-collapse">
-                <thead className="bg-muted/50 sticky top-0 z-10">
-                  <tr>
-                    <th className="text-left p-4 font-medium w-16 bg-muted/50">Img</th>
-                    <th className="text-left p-4 font-medium w-32 bg-muted/50">SKU</th>
-                    <th className="text-left p-4 font-medium bg-muted/50">Nome</th>
-                    <th className="text-right p-4 font-medium w-32 bg-muted/50">Estoque</th>
-                    <th className="text-right p-4 font-medium w-32 bg-muted/50">Compra</th>
-                    <th className="text-right p-4 font-medium w-32 bg-muted/50">Venda</th>
-                    <th className="text-left p-4 font-medium w-32 bg-muted/50">Categoria</th>
-                    <th className="text-center p-4 font-medium w-28 bg-muted/50">Status</th>
-                    <th className="text-center p-4 font-medium w-28 bg-muted/50">Ações</th>
-                  </tr>
-                </thead>
-                <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+          <VirtualizedTableShell variant="enterprise">
+            <VirtualizedTableScroll ref={parentRef} maxHeight={600}>
+              <VirtualizedTableRoot>
+                <VirtualizedTableHeader sticky>
+                  <VirtualizedTableRow header>
+                    <VirtualizedTableHead className="w-16">Img</VirtualizedTableHead>
+                    <VirtualizedTableHead className="w-32">SKU</VirtualizedTableHead>
+                    <VirtualizedTableHead>Nome</VirtualizedTableHead>
+                    <VirtualizedTableHead className="w-32 text-right">Estoque</VirtualizedTableHead>
+                    <VirtualizedTableHead className="w-32 text-right">Compra</VirtualizedTableHead>
+                    <VirtualizedTableHead className="w-32 text-right">Venda</VirtualizedTableHead>
+                    <VirtualizedTableHead className="w-32">Categoria</VirtualizedTableHead>
+                    <VirtualizedTableHead className="w-28 text-center">Status</VirtualizedTableHead>
+                    <VirtualizedTableHead className="w-28 text-center">Ações</VirtualizedTableHead>
+                  </VirtualizedTableRow>
+                </VirtualizedTableHeader>
+                <VirtualizedTableBody totalSize={rowVirtualizer.getTotalSize()}>
                   {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                     const product = mappedProducts[virtualRow.index];
                     return (
-                      <tr 
-                        key={product.id} 
-                        className="hover:bg-muted/30 absolute left-0 w-full flex items-center divide-x border-b"
-                        style={{ 
-                          height: `${virtualRow.size}px`, 
-                          transform: `translateY(${virtualRow.start}px)` 
-                        }}
+                      <VirtualizedTableRow
+                        key={product.id}
+                        virtual={{ size: virtualRow.size, start: virtualRow.start }}
+                        zebra={virtualRow.index % 2 === 1}
                       >
                         <td className="p-4 w-16">
                           {product.imageUrl ? (
@@ -471,12 +474,12 @@ const LocalProductsPage: React.FC = () => {
                             )}
                           </div>
                         </td>
-                      </tr>
+                      </VirtualizedTableRow>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
+                </VirtualizedTableBody>
+              </VirtualizedTableRoot>
+            </VirtualizedTableScroll>
 
             {totalCount === 0 && !productsLoading ? (
               <div className="text-center py-16 px-4 space-y-4">
@@ -526,7 +529,7 @@ const LocalProductsPage: React.FC = () => {
               </div>
             </div>
           )}
-          </Card>
+          </VirtualizedTableShell>
         )}
 
         <Dialog open={showForm} onOpenChange={setShowForm}>
