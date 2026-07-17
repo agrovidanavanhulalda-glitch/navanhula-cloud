@@ -9,17 +9,32 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        default:
+          "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.5)]",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-[0_8px_24px_-8px_hsl(var(--destructive)/0.5)]",
+        outline:
+          "border border-input bg-background/60 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground hover:border-[hsl(var(--gold)/0.4)]",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        success:
+          "bg-success text-success-foreground hover:bg-success/90 hover:shadow-[0_8px_24px_-8px_hsl(var(--success)/0.5)]",
+        warning:
+          "bg-warning text-warning-foreground hover:bg-warning/90 hover:shadow-[0_8px_24px_-8px_hsl(var(--warning)/0.5)]",
+        premium:
+          "text-primary-foreground bg-[linear-gradient(135deg,hsl(var(--primary))_0%,hsl(var(--primary-glow))_50%,hsl(var(--primary))_100%)] hover:brightness-110 hover:shadow-[0_10px_30px_-8px_hsl(var(--primary)/0.55),0_0_0_1px_hsl(var(--gold)/0.25)] ring-1 ring-[hsl(var(--gold)/0.25)]",
+        gold:
+          "text-[hsl(var(--gold-foreground))] bg-[linear-gradient(135deg,hsl(var(--gold))_0%,hsl(45_95%_65%)_50%,hsl(var(--gold))_100%)] hover:brightness-110 hover:shadow-[0_10px_30px_-8px_hsl(var(--gold)/0.6)]",
+        glass:
+          "bg-background/40 backdrop-blur-xl border border-border/60 text-foreground hover:bg-background/60 hover:border-[hsl(var(--gold)/0.4)]",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-lg px-3",
         lg: "h-11 rounded-lg px-8",
+        xl: "h-14 rounded-xl px-10 text-base font-semibold tracking-wide",
         icon: "h-10 w-10",
       },
     },
