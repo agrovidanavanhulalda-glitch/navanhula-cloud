@@ -25,6 +25,15 @@ import StockMovementHistory from '@/components/inventory/StockMovementHistory';
 import StockAlertsPanel from '@/components/inventory/StockAlertsPanel';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { PremiumPageHeader } from '@/components/ui/premium-page-header';
+import {
+  VirtualizedTableShell,
+  VirtualizedTableScroll,
+  VirtualizedTableRoot,
+  VirtualizedTableHeader,
+  VirtualizedTableBody,
+  VirtualizedTableRow,
+  VirtualizedTableHead,
+} from '@/components/ui/virtualized-table';
 
 interface InventoryProduct {
   id: string;
