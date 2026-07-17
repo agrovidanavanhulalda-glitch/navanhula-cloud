@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import { SkeletonList } from '@/components/ui/skeleton-card';
 import PageTransition from '@/components/layout/PageTransition';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { PremiumPageHeader } from '@/components/ui/premium-page-header';
 
 /**
  * Sales History Page with Admin Cancellation
@@ -213,17 +214,13 @@ const LocalSalesHistoryPage: React.FC = () => {
       <div className="p-6">
         {/* Header - Conditional: Only show if NOT in the main application layout to avoid duplication */}
         {!isAdmin && (
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <ShoppingCart className="w-6 h-6" />
-                Histórico de Vendas
-              </h1>
-              <p className="text-muted-foreground">
-                {filteredSales.length} vendas encontradas
-              </p>
-            </div>
-          </div>
+          <PremiumPageHeader
+            className="mb-6"
+            eyebrow="Operações"
+            title="Histórico de Vendas"
+            subtitle={`${filteredSales.length} vendas encontradas`}
+            icon={ShoppingCart}
+          />
         )}
 
         {/* Filters */}

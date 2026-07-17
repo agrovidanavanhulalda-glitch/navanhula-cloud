@@ -47,6 +47,7 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { SkeletonTable } from '@/components/ui/skeleton-card';
 import PageTransition from '@/components/layout/PageTransition';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { PremiumPageHeader } from '@/components/ui/premium-page-header';
 
 const LocalProductsPage: React.FC = () => {
   const { company } = useAuth();
@@ -349,30 +350,32 @@ const LocalProductsPage: React.FC = () => {
   return (
     <PageTransition>
       <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Package className="w-6 h-6" />
-              Produtos
-            </h1>
-            <p className="text-muted-foreground">{totalCount} produtos cadastrados</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleExcelImport} />
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-              {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
-              Importar Excel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteZeroStock} disabled={deleteZeroStockLoading}>
-              {deleteZeroStockLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash className="w-4 h-4 mr-2" />}
-              Eliminar Estoque Zero
-            </Button>
-            <Button onClick={handleNewProduct}>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Produto
-            </Button>
-          </div>
-        </div>
+        
+        <PremiumPageHeader
+          className="mb-6"
+          eyebrow="Catálogo"
+          title="Produtos"
+          subtitle={`${totalCount} produtos cadastrados`}
+          icon={Package}
+          actions={
+            <>
+              <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleExcelImport} />
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+                {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
+                Importar Excel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteZeroStock} disabled={deleteZeroStockLoading}>
+                {deleteZeroStockLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash className="w-4 h-4 mr-2" />}
+                Eliminar Estoque Zero
+              </Button>
+              <Button onClick={handleNewProduct}>
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Produto
+              </Button>
+            </>
+          }
+        />
+
 
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
