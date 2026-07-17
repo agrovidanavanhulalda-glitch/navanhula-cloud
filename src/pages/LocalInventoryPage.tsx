@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import StockMovementHistory from '@/components/inventory/StockMovementHistory';
 import StockAlertsPanel from '@/components/inventory/StockAlertsPanel';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { PremiumPageHeader } from '@/components/ui/premium-page-header';
 
 interface InventoryProduct {
   id: string;
