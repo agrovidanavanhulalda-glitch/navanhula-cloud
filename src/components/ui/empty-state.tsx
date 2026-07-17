@@ -9,6 +9,8 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   description?: string;
   primaryAction?: { label: string; onClick: () => void; icon?: LucideIcon };
   secondaryAction?: { label: string; onClick: () => void };
+  /** @deprecated use primaryAction */
+  action?: { label: string; onClick: () => void; icon?: LucideIcon };
   helpText?: string;
   variant?: "default" | "glass" | "premium";
 }
