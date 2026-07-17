@@ -48,6 +48,15 @@ import { SkeletonTable } from '@/components/ui/skeleton-card';
 import PageTransition from '@/components/layout/PageTransition';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { PremiumPageHeader } from '@/components/ui/premium-page-header';
+import {
+  VirtualizedTableShell,
+  VirtualizedTableScroll,
+  VirtualizedTableRoot,
+  VirtualizedTableHeader,
+  VirtualizedTableBody,
+  VirtualizedTableRow,
+  VirtualizedTableHead,
+} from '@/components/ui/virtualized-table';
 
 const LocalProductsPage: React.FC = () => {
   const { company } = useAuth();
