@@ -359,31 +359,30 @@ const LocalDashboardPage: React.FC = () => {
       <AppContextWidget />
 
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="relative pl-4">
-          <span aria-hidden className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full" style={{ background: 'linear-gradient(180deg, hsl(var(--primary)), hsl(var(--gold)))' }} />
-          <h1 className="text-xl lg:text-2xl font-extrabold tracking-tight text-foreground">
-            O que aconteceu hoje
-          </h1>
-          <p className="text-sm text-muted-foreground">{store.name} — {new Date().toLocaleDateString('pt-MZ', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge
-            variant={cashRegisterOpen ? 'default' : 'destructive'}
-            className="text-xs py-1 px-3 rounded-full"
-          >
-            <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 ${cashRegisterOpen ? 'bg-success animate-pulse' : 'bg-destructive/60'}`} />
-            Caixa {cashRegisterOpen ? 'Aberto' : 'Fechado'}
-          </Badge>
-          <Button size="sm" variant="outline" onClick={handleSync} disabled={syncing} className="gap-1.5 rounded-lg" title="Sincronizar dados">
-            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} /> Sincronizar
-          </Button>
-          <Button size="sm" onClick={handleNewSale} className="gap-1.5 rounded-lg font-medium">
-            <Plus className="w-4 h-4" /> Nova Venda
-          </Button>
-        </div>
-      </div>
+      {/* Header — Enterprise Premium (Sprint 10.0) */}
+      <PremiumPageHeader
+        eyebrow="Painel Executivo"
+        title="O que aconteceu hoje"
+        subtitle={`${store.name} — ${new Date().toLocaleDateString('pt-MZ', { weekday: 'long', day: 'numeric', month: 'long' })}`}
+        icon={Activity}
+        actions={
+          <>
+            <Badge
+              variant={cashRegisterOpen ? 'default' : 'destructive'}
+              className="text-xs py-1 px-3 rounded-full"
+            >
+              <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 ${cashRegisterOpen ? 'bg-success animate-pulse' : 'bg-destructive/60'}`} />
+              Caixa {cashRegisterOpen ? 'Aberto' : 'Fechado'}
+            </Badge>
+            <Button size="sm" variant="outline" onClick={handleSync} disabled={syncing} className="gap-1.5 rounded-lg" title="Sincronizar dados">
+              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} /> Sincronizar
+            </Button>
+            <Button size="sm" onClick={handleNewSale} className="gap-1.5 rounded-lg font-medium">
+              <Plus className="w-4 h-4" /> Nova Venda
+            </Button>
+          </>
+        }
+      />
 
       {/* Quick Actions (contextual shortcuts) */}
       <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
