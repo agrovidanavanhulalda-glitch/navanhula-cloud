@@ -53,12 +53,12 @@ export const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       {description && (
         <p className="mt-1.5 max-w-md text-sm text-muted-foreground">{description}</p>
       )}
-      {(primaryAction || secondaryAction) && (
+      {(primary || secondaryAction) && (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-          {primaryAction && (
-            <Button onClick={primaryAction.onClick} variant="premium">
-              {primaryAction.icon && <primaryAction.icon className="mr-2 h-4 w-4" />}
-              {primaryAction.label}
+          {primary && (
+            <Button onClick={primary.onClick} variant="premium">
+              {primary.icon && <primary.icon className="mr-2 h-4 w-4" />}
+              {primary.label}
             </Button>
           )}
           {secondaryAction && (
@@ -72,7 +72,8 @@ export const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
         <p className="mt-4 text-xs text-muted-foreground/80">{helpText}</p>
       )}
     </div>
-  ),
+    );
+  },
 );
 EmptyState.displayName = "EmptyState";
 
