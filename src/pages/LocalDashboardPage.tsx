@@ -17,6 +17,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyDashboard } from '@/components/ui/empty-variants';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { StatsCard } from '@/components/ui/stats-card';
 import { SkeletonKPI, SkeletonChart, SkeletonList } from '@/components/ui/skeleton-card';
 import { PremiumPageHeader } from '@/components/ui/premium-page-header';
 import {
