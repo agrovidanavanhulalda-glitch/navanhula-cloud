@@ -390,10 +390,29 @@ const LocalPOSPage: React.FC = () => {
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                  <Search className="w-10 h-10 mb-3 opacity-30" strokeWidth={1.5} />
-                  <p className="text-sm font-medium">Nenhum produto encontrado para "{searchTerm}"</p>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex flex-col items-center justify-center h-72 text-center px-6"
+                >
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 border border-slate-200/70 flex items-center justify-center mb-4 shadow-[0_1px_3px_rgba(15,31,58,0.04)]">
+                    <Search className="w-9 h-9 text-slate-300" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-[15px] font-semibold text-[#0B1F3A] tracking-tight">Nenhum produto encontrado</h3>
+                  <p className="text-[13px] text-slate-500 mt-1 max-w-xs">
+                    Tente outro nome, código ou SKU{searchTerm ? <> para <span className="font-medium text-slate-700">"{searchTerm}"</span></> : null}.
+                  </p>
+                  {searchTerm && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 h-9 rounded-lg text-[12px] font-semibold border-slate-200/80 hover:border-[#0B1F3A]/30 hover:text-[#0B1F3A]"
+                      onClick={() => setSearchTerm('')}
+                    >
+                      Limpar pesquisa
+                    </Button>
+                  )}
+                </motion.div>
               )}
             </div>
           </div>
