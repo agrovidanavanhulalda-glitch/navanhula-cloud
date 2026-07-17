@@ -17,6 +17,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyDashboard } from '@/components/ui/empty-variants';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { StatsCard } from '@/components/ui/stats-card';
 import { SkeletonKPI, SkeletonChart, SkeletonList } from '@/components/ui/skeleton-card';
 import { PremiumPageHeader } from '@/components/ui/premium-page-header';
 import {
@@ -32,6 +35,7 @@ import {
   ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 /* ─── Animation ─── */
 const fadeIn = {
@@ -42,7 +46,7 @@ const fadeIn = {
   }),
 };
 
-/* ─── KPI Card ─── */
+/* ─── KPI Card (Enterprise Design System — Sprint 10.0 Phase 2) ─── */
 const KPICard: React.FC<{
   label: string;
   value: string | number;
@@ -50,31 +54,22 @@ const KPICard: React.FC<{
   trendUp?: boolean | null;
   icon: React.ElementType;
   index?: number;
-}> = ({ label, value, trend, trendUp, icon: Icon, index = 0 }) => (
-  <motion.div custom={index} variants={fadeIn} initial="hidden" animate="visible">
-    <Card className="relative overflow-hidden p-5 border-border/60 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group">
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[2px] opacity-70"
-        style={{ background: 'linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--gold)) 100%)' }}
+}> = ({ label, value, trend, trendUp, icon: Icon, index = 0 }) => {
+  const hintColor =
+    trendUp === true ? 'text-success' : trendUp === false ? 'text-destructive' : 'text-muted-foreground';
+  return (
+    <motion.div custom={index} variants={fadeIn} initial="hidden" animate="visible">
+      <StatsCard
+        variant="premium"
+        icon={Icon as any}
+        label={label}
+        value={value}
+        hint={trend}
+        className={cn(trend && hintColor)}
       />
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.14em]">{label}</span>
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-[hsl(var(--gold))]/15 ring-1 ring-border/60 flex items-center justify-center group-hover:scale-110 transition-transform">
-          <Icon className="w-4 h-4 text-primary" />
-        </div>
-      </div>
-      <p className="text-3xl font-extrabold tracking-tight text-foreground tabular-nums">{value}</p>
-      {trend && (
-        <p className={`text-xs mt-2 flex items-center gap-1 font-medium ${trendUp === true ? 'text-success' : trendUp === false ? 'text-destructive' : 'text-muted-foreground'}`}>
-          {trendUp === true && <ArrowUpRight className="w-3.5 h-3.5" />}
-          {trendUp === false && <ArrowDownRight className="w-3.5 h-3.5" />}
-          {trend}
-        </p>
-      )}
-    </Card>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 /* ─── Actionable Insight Item ─── */
 const InsightItem: React.FC<{
