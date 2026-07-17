@@ -115,22 +115,24 @@ const CRMPage: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">CRM — Gestão de Clientes</h1>
-          <p className="text-muted-foreground">Histórico, fidelização e classificação VIP</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={loadCustomers} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Atualizar
-          </Button>
-          {isAdmin && (
-            <Button onClick={() => { setSelectedCustomer(null); setFormData({ full_name: '', phone: '', email: '', address: '', notes: '' }); setShowForm(true); }}>
-              <Plus className="w-4 h-4 mr-2" /> Novo Cliente
+      <PremiumPageHeader
+        eyebrow="Relacionamento"
+        title="CRM — Gestão de Clientes"
+        subtitle="Histórico, fidelização e classificação VIP"
+        icon={Users}
+        actions={
+          <>
+            <Button variant="outline" onClick={loadCustomers} disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Atualizar
             </Button>
-          )}
-        </div>
-      </div>
+            {isAdmin && (
+              <Button onClick={() => { setSelectedCustomer(null); setFormData({ full_name: '', phone: '', email: '', address: '', notes: '' }); setShowForm(true); }}>
+                <Plus className="w-4 h-4 mr-2" /> Novo Cliente
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
