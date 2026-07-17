@@ -51,14 +51,19 @@ const KPICard: React.FC<{
   index?: number;
 }> = ({ label, value, trend, trendUp, icon: Icon, index = 0 }) => (
   <motion.div custom={index} variants={fadeIn} initial="hidden" animate="visible">
-    <Card className="p-5 hover:shadow-lg transition-shadow duration-200">
+    <Card className="relative overflow-hidden p-5 border-border/60 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[2px] opacity-70"
+        style={{ background: 'linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--gold)) 100%)' }}
+      />
       <div className="flex items-center justify-between mb-4">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
-        <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center">
+        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.14em]">{label}</span>
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-[hsl(var(--gold))]/15 ring-1 ring-border/60 flex items-center justify-center group-hover:scale-110 transition-transform">
           <Icon className="w-4 h-4 text-primary" />
         </div>
       </div>
-      <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">{value}</p>
+      <p className="text-3xl font-extrabold tracking-tight text-foreground tabular-nums">{value}</p>
       {trend && (
         <p className={`text-xs mt-2 flex items-center gap-1 font-medium ${trendUp === true ? 'text-success' : trendUp === false ? 'text-destructive' : 'text-muted-foreground'}`}>
           {trendUp === true && <ArrowUpRight className="w-3.5 h-3.5" />}
@@ -356,8 +361,9 @@ const LocalDashboardPage: React.FC = () => {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl lg:text-2xl font-bold tracking-tight text-foreground">
+        <div className="relative pl-4">
+          <span aria-hidden className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full" style={{ background: 'linear-gradient(180deg, hsl(var(--primary)), hsl(var(--gold)))' }} />
+          <h1 className="text-xl lg:text-2xl font-extrabold tracking-tight text-foreground">
             O que aconteceu hoje
           </h1>
           <p className="text-sm text-muted-foreground">{store.name} — {new Date().toLocaleDateString('pt-MZ', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
@@ -482,18 +488,23 @@ const LocalDashboardPage: React.FC = () => {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(217, 91%, 53%)" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="hsl(217, 91%, 53%)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.28} />
+                    <stop offset="60%" stopColor="hsl(var(--gold))" stopOpacity={0.10} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="strokeRevenue" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" />
+                    <stop offset="100%" stopColor="hsl(var(--gold))" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(214 32% 91%)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: 'hsl(215 16% 47%)' }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                 <Tooltip
                   formatter={(value: number) => [formatCurrency(value), 'Receita']}
-                  contentStyle={{ backgroundColor: 'hsl(0 0% 100%)', border: '1px solid hsl(214 32% 91%)', borderRadius: '10px', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                  contentStyle={{ backgroundColor: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: '12px', boxShadow: '0 8px 24px hsl(var(--foreground) / 0.08)', color: 'hsl(var(--popover-foreground))' }}
                 />
-                <Area type="monotone" dataKey="receita" stroke="hsl(217, 91%, 53%)" strokeWidth={2} fill="url(#gradRevenue)" dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: 'hsl(217, 91%, 53%)' }} />
+                <Area type="monotone" dataKey="receita" stroke="url(#strokeRevenue)" strokeWidth={2.5} fill="url(#gradRevenue)" dot={false} activeDot={{ r: 5, strokeWidth: 0, fill: 'hsl(var(--gold))' }} />
               </AreaChart>
             </ResponsiveContainer>
           )}
