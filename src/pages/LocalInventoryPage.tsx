@@ -399,33 +399,27 @@ const LocalInventoryPage: React.FC = () => {
       </div>
 
       {/* Products Table */}
-      <Card className="overflow-hidden">
-        <div 
-          ref={parentRef}
-          className="overflow-x-auto max-h-[600px] overflow-y-auto"
-        >
-          <table className="w-full relative border-collapse">
-            <thead className="bg-muted/50 sticky top-0 z-10">
-              <tr>
-                <th className="text-left p-4 font-medium bg-muted/50">Produto</th>
-                <th className="text-right p-4 font-medium bg-muted/50">Estoque</th>
-                <th className="text-right p-4 font-medium bg-muted/50">Custo Médio</th>
-                <th className="text-right p-4 font-medium bg-muted/50">Valor Estoque</th>
-                <th className="text-center p-4 font-medium bg-muted/50">Status</th>
-                <th className="text-center p-4 font-medium bg-muted/50">Ações</th>
-              </tr>
-            </thead>
-            <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+      <VirtualizedTableShell variant="enterprise">
+        <VirtualizedTableScroll ref={parentRef} maxHeight={600}>
+          <VirtualizedTableRoot>
+            <VirtualizedTableHeader sticky>
+              <VirtualizedTableRow header>
+                <VirtualizedTableHead>Produto</VirtualizedTableHead>
+                <VirtualizedTableHead className="text-right">Estoque</VirtualizedTableHead>
+                <VirtualizedTableHead className="text-right">Custo Médio</VirtualizedTableHead>
+                <VirtualizedTableHead className="text-right">Valor Estoque</VirtualizedTableHead>
+                <VirtualizedTableHead className="text-center">Status</VirtualizedTableHead>
+                <VirtualizedTableHead className="text-center">Ações</VirtualizedTableHead>
+              </VirtualizedTableRow>
+            </VirtualizedTableHeader>
+            <VirtualizedTableBody totalSize={rowVirtualizer.getTotalSize()}>
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const product = filteredProducts[virtualRow.index];
                 return (
-                  <tr 
-                    key={product.id} 
-                    className="hover:bg-muted/30 absolute left-0 w-full flex items-center divide-x border-b"
-                    style={{ 
-                      height: `${virtualRow.size}px`, 
-                      transform: `translateY(${virtualRow.start}px)` 
-                    }}
+                  <VirtualizedTableRow
+                    key={product.id}
+                    virtual={{ size: virtualRow.size, start: virtualRow.start }}
+                    zebra={virtualRow.index % 2 === 1}
                   >
                     <td className="p-4 flex-1 min-w-0">
                       <div className="font-medium truncate">{product.name}</div>
@@ -454,12 +448,12 @@ const LocalInventoryPage: React.FC = () => {
                         </Button>
                       </div>
                     </td>
-                  </tr>
+                  </VirtualizedTableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </VirtualizedTableBody>
+          </VirtualizedTableRoot>
+        </VirtualizedTableScroll>
 
         {products.length === 0 && !loading && (
           <div className="text-center py-12 px-4 space-y-4">
@@ -482,7 +476,7 @@ const LocalInventoryPage: React.FC = () => {
             <p>Nenhum produto corresponde à sua busca</p>
           </div>
         )}
-      </Card>
+      </VirtualizedTableShell>
 
       {/* Adjust Stock Dialog */}
       <Dialog open={showAdjustDialog} onOpenChange={setShowAdjustDialog}>
