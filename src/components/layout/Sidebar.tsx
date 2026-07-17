@@ -401,28 +401,57 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-3 gap-2">
+      <SidebarFooter className="relative border-t border-sidebar-border/60 p-3 gap-2">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--gold))]/60 to-transparent"
+        />
         {!collapsed && (
           <div className="flex flex-col gap-2">
-            <div className="p-2.5 rounded-lg bg-sidebar-accent/10 border border-sidebar-border/50">
+            <div className="relative overflow-hidden rounded-xl border border-sidebar-border/60 bg-gradient-to-br from-sidebar-accent/20 via-sidebar-accent/5 to-transparent p-3 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[9px] text-sidebar-foreground/60 uppercase font-bold tracking-[0.14em]">Sistema</p>
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-success ring-1 ring-success/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                  Online
+                </span>
+              </div>
+
               <div className="flex flex-col gap-1.5">
-                <p className="text-[10px] text-sidebar-foreground/50 uppercase font-bold tracking-wider">Segurança & Estado</p>
                 <NetworkIndicator />
-                <div className="flex items-center gap-2 px-1 text-[10px] text-sidebar-foreground/70">
-                  <Database className="w-3 h-3 text-success" />
-                  <span className="font-medium">Backup em tempo real</span>
+                <div className="flex items-center gap-2 px-0.5 text-[10px] text-sidebar-foreground/75">
+                  <Database className="w-3 h-3 text-success shrink-0" />
+                  <span className="font-medium truncate">Backup em tempo real</span>
                 </div>
-                <div className="flex items-center gap-2 px-1 text-[10px] text-sidebar-foreground/70">
-                  <ShieldCheck className="w-3 h-3 text-primary" />
-                  <span className="font-medium">Proteção SSL Ativa</span>
+                <div className="flex items-center gap-2 px-0.5 text-[10px] text-sidebar-foreground/75">
+                  <ShieldCheck className="w-3 h-3 text-[hsl(var(--gold))] shrink-0" />
+                  <span className="font-medium truncate">Proteção SSL ativa</span>
+                </div>
+                <div className="flex items-center gap-2 px-0.5 text-[10px] text-sidebar-foreground/75">
+                  <Cloud className="w-3 h-3 text-primary shrink-0" />
+                  <span className="font-medium truncate">Sincronização automática</span>
                 </div>
               </div>
+
+              <div className="mt-2.5 pt-2 border-t border-sidebar-border/40 flex items-center justify-between text-[9px] uppercase tracking-wider">
+                <span className="font-bold text-sidebar-foreground/60">v1.0</span>
+                <span className="inline-flex items-center gap-1 rounded-md bg-[hsl(var(--gold))]/15 px-1.5 py-0.5 font-bold text-[hsl(var(--gold))] ring-1 ring-[hsl(var(--gold))]/30">
+                  Produção
+                </span>
+              </div>
             </div>
-            
+
+            {!!currentOperator && (
+              <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-sidebar-accent/10 border border-sidebar-border/40">
+                <User className="w-3.5 h-3.5 text-sidebar-foreground/60 shrink-0" />
+                <span className="text-[10px] font-semibold text-sidebar-foreground/80 truncate">{currentOperator}</span>
+              </div>
+            )}
+
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+              className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors rounded-lg"
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
@@ -431,9 +460,19 @@ const Sidebar: React.FC<{ forceExpanded?: boolean }> = ({ forceExpanded }) => {
           </div>
         )}
         {collapsed && (
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-            <ShieldCheck className="w-4 h-4 text-primary/50" />
+          <div className="flex flex-col items-center gap-2.5 py-1">
+            <span className="w-2 h-2 rounded-full bg-success animate-pulse ring-2 ring-success/20" aria-label="Online" />
+            <ShieldCheck className="w-4 h-4 text-[hsl(var(--gold))]/70" />
+            <Database className="w-4 h-4 text-success/60" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-lg text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10"
+              onClick={handleLogout}
+              aria-label={t('auth.logout')}
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         )}
       </SidebarFooter>
