@@ -32,6 +32,7 @@ import SmartOnboarding from '@/components/onboarding/SmartOnboarding';
 import WhatsAppFloat from '../public/landing/WhatsAppFloat';
 import FounderBadge from '@/components/founder/FounderBadge';
 import SimulationBanner from '@/components/founder/SimulationBanner';
+import WorkspaceSearchButton from '@/components/workspace/WorkspaceSearchButton';
 
 const MainLayout: React.FC = () => {
   const isMobile = useIsMobile();
