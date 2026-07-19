@@ -44,7 +44,12 @@ export const WorkspaceShell: React.FC<WorkspaceShellProps> = ({
     showFavorites: showFavorites ?? profile.showFavorites,
   };
 
-  const quickSpan = cfg.showFavorites ? `lg:col-span-${profile.quickActionsSpan}` : 'lg:col-span-3';
+  const spanMap: Record<1 | 2 | 3, string> = {
+    1: 'lg:col-span-1',
+    2: 'lg:col-span-2',
+    3: 'lg:col-span-3',
+  };
+  const quickSpan = cfg.showFavorites ? spanMap[profile.quickActionsSpan] : 'lg:col-span-3';
   const favSpan = cfg.showQuickActions ? '' : 'lg:col-span-3';
 
   const nodes: Record<'continue' | 'quick' | 'favorites', React.ReactNode> = {
