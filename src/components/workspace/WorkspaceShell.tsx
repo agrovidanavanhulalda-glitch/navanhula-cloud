@@ -10,7 +10,7 @@ interface WorkspaceShellProps {
   showQuickActions?: boolean;
   showFavorites?: boolean;
   className?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 /**
