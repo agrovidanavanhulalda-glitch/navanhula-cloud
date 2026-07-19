@@ -95,6 +95,7 @@ const ManagerDashboardPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+        </WorkspaceShell>
       </div>
     </PermissionGate>
   );
