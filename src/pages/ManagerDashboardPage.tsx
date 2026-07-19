@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Target, TrendingUp, Clock, CheckCircle2 } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
+import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 
 const ManagerDashboardPage: React.FC = () => {
   const { user, company } = useAuth();
