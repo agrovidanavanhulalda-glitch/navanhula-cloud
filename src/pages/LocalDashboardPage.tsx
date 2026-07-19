@@ -381,8 +381,8 @@ const LocalDashboardPage: React.FC = () => {
         }
       />
 
-      {/* Smart Workspace — Sprint 10.1.2 (WorkspaceShell) */}
-      <WorkspaceShell />
+      {/* Smart Workspace — Sprint 10.1.3 (Configurable WorkspaceShell) */}
+      <WorkspaceShell workspaceType="LOCAL" />
 
       {/* Quick Actions (contextual shortcuts) */}
       <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
