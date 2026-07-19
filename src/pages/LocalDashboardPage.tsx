@@ -36,9 +36,7 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import ContinueWorkingCard from '@/components/workspace/ContinueWorkingCard';
-import WorkspaceQuickActions from '@/components/workspace/QuickActions';
-import FavoritesPanel from '@/components/workspace/FavoritesPanel';
+import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 
 /* ─── Animation ─── */
 const fadeIn = {
