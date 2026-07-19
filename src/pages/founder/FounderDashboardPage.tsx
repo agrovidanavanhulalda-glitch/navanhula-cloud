@@ -11,6 +11,7 @@ import {
   Database, Table as TableIcon, Eye, FunctionSquare as FunctionIcon, Shield, Zap, HardDrive,
   Activity, Wifi, TrendingUp, AlertTriangle, Timer, Package,
 } from 'lucide-react';
+import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 
 type Stats = Record<string, number | string>;
 
