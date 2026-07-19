@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, Users, TrendingUp, FileCheck, Building2, ShoppingCart } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
+import { WorkspaceShell } from '@/components/workspace/WorkspaceShell';
 
 const DirectorDashboardPage: React.FC = () => {
   const { user, company } = useAuth();
@@ -16,7 +17,7 @@ const DirectorDashboardPage: React.FC = () => {
 
   return (
     <PermissionGate module="dashboard" action="view">
-      <div className="p-6 space-y-6">
+      <WorkspaceShell workspaceType="DIRECTOR" className="p-6 space-y-6"><div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Painel do Diretor</h1>
           <p className="text-muted-foreground text-sm">
@@ -96,7 +97,7 @@ const DirectorDashboardPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </div></WorkspaceShell>
     </PermissionGate>
   );
 };

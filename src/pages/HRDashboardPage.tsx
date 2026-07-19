@@ -16,6 +16,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
 } from 'recharts';
+import { WorkspaceShell } from '@/components/workspace/WorkspaceShell';
 
 interface Employee {
   id: string;
@@ -188,7 +189,7 @@ const HRDashboardPage: React.FC = () => {
   const insightColor = { success: 'text-green-600 bg-green-50 border-green-200', warning: 'text-amber-600 bg-amber-50 border-amber-200', info: 'text-blue-600 bg-blue-50 border-blue-200' };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
+    <WorkspaceShell workspaceType="HR" className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto"><div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Recursos Humanos</h1>
@@ -357,7 +358,7 @@ const HRDashboardPage: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </div></WorkspaceShell>
   );
 };
 
