@@ -21,6 +21,7 @@ import {
   LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, Legend,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
+import { WorkspaceShell } from '@/components/workspace/WorkspaceShell';
 
 const COLORS = ['hsl(217,91%,53%)', 'hsl(160,84%,39%)', 'hsl(38,92%,50%)', 'hsl(199,89%,48%)', 'hsl(280,67%,55%)', 'hsl(0,84%,60%)'];
 
@@ -517,7 +518,7 @@ const BIDashboardPage: React.FC = () => {
   const vipColors: Record<string, string> = { platinum: 'bg-primary/15 text-primary', gold: 'bg-warning/15 text-warning', silver: 'bg-muted text-muted-foreground', regular: 'bg-muted/50 text-muted-foreground' };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 animate-fade-in">
+    <WorkspaceShell workspaceType="BI" className="p-4 md:p-6 space-y-6 animate-fade-in"><div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -949,7 +950,7 @@ const BIDashboardPage: React.FC = () => {
           </Tabs>
         </>
       )}
-    </div>
+    </div></WorkspaceShell>
   );
 };
 

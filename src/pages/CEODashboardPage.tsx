@@ -20,6 +20,7 @@ import BranchListTable from '@/components/ceo/BranchListTable';
 import GlobalUserList from '@/components/ceo/GlobalUserList';
 import AuditLogList from '@/components/ceo/AuditLogList';
 import AlertsList from '@/components/ceo/AlertsList';
+import { WorkspaceShell } from '@/components/workspace/WorkspaceShell';
 
 interface PlatformStats {
   total_companies: number;
@@ -183,7 +184,7 @@ const CEODashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-8 bg-[#F5F7FA] min-h-screen animate-in fade-in duration-500">
+    <WorkspaceShell workspaceType="CEO" className="p-4 md:p-8 space-y-8 bg-[#F5F7FA] min-h-screen animate-in fade-in duration-500"><div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -361,7 +362,7 @@ const CEODashboardPage: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </div></WorkspaceShell>
   );
 };
 

@@ -12,6 +12,7 @@ import {
 import GlobalFiltersBar from '@/components/filters/GlobalFiltersBar';
 import { useGlobalFilters } from '@/contexts/GlobalFiltersContext';
 import ExportMenu from '@/components/exports/ExportMenu';
+import { WorkspaceShell } from '@/components/workspace/WorkspaceShell';
 
 const fmtMoney = (n: unknown) =>
   `${Number(n ?? 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MT`;
@@ -80,7 +81,7 @@ export default function CommercialDashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <WorkspaceShell workspaceType="COMMERCIAL"><div className="space-y-6">
       <header className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-black">Dashboard Comercial</h1>
@@ -158,6 +159,6 @@ export default function CommercialDashboardPage() {
           )}
         </Card>
       </section>
-    </div>
+    </div></WorkspaceShell>
   );
 }
