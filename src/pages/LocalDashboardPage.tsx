@@ -36,9 +36,7 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import ContinueWorkingCard from '@/components/workspace/ContinueWorkingCard';
-import WorkspaceQuickActions from '@/components/workspace/QuickActions';
-import FavoritesPanel from '@/components/workspace/FavoritesPanel';
+import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 
 /* ─── Animation ─── */
 const fadeIn = {
@@ -383,14 +381,8 @@ const LocalDashboardPage: React.FC = () => {
         }
       />
 
-      {/* Smart Workspace — Sprint 10.1.1 (UI-only) */}
-      <ContinueWorkingCard />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <WorkspaceQuickActions />
-        </div>
-        <FavoritesPanel />
-      </div>
+      {/* Smart Workspace — Sprint 10.1.2 (WorkspaceShell) */}
+      <WorkspaceShell />
 
       {/* Quick Actions (contextual shortcuts) */}
       <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">

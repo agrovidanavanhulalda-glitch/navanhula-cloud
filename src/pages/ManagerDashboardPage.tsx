@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Target, TrendingUp, Clock, CheckCircle2 } from 'lucide-react';
 import { PermissionGate } from '@/components/auth/PermissionGate';
+import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 
 const ManagerDashboardPage: React.FC = () => {
   const { user, company } = useAuth();
@@ -16,13 +17,17 @@ const ManagerDashboardPage: React.FC = () => {
 
   return (
     <PermissionGate module="dashboard" action="view">
-      <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Painel do Gestor</h1>
-          <p className="text-muted-foreground text-sm">
-            Performance da equipa e metas — {company?.name}
-          </p>
-        </div>
+      <div className="p-6">
+        <WorkspaceShell
+          header={
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Painel do Gestor</h1>
+              <p className="text-muted-foreground text-sm">
+                Performance da equipa e metas — {company?.name}
+              </p>
+            </div>
+          }
+        >
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {kpis.map((kpi) => (
@@ -90,6 +95,7 @@ const ManagerDashboardPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+        </WorkspaceShell>
       </div>
     </PermissionGate>
   );
