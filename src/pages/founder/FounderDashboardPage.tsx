@@ -197,18 +197,20 @@ const MonitoringTab: React.FC = () => {
 // -------- Page --------
 export const FounderDashboardPage: React.FC = () => {
   return (
-    <Tabs defaultValue="platform" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-flex">
-        <TabsTrigger value="platform">Plataforma</TabsTrigger>
-        <TabsTrigger value="infra">Infraestrutura</TabsTrigger>
-        <TabsTrigger value="system">Sistema</TabsTrigger>
-        <TabsTrigger value="monitoring">Monitorização</TabsTrigger>
-      </TabsList>
-      <TabsContent value="platform"><PlatformTab /></TabsContent>
-      <TabsContent value="infra"><InfraTab /></TabsContent>
-      <TabsContent value="system"><SystemTab /></TabsContent>
-      <TabsContent value="monitoring"><MonitoringTab /></TabsContent>
-    </Tabs>
+    <WorkspaceShell>
+      <Tabs defaultValue="platform" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-flex">
+          <TabsTrigger value="platform">Plataforma</TabsTrigger>
+          <TabsTrigger value="infra">Infraestrutura</TabsTrigger>
+          <TabsTrigger value="system">Sistema</TabsTrigger>
+          <TabsTrigger value="monitoring">Monitorização</TabsTrigger>
+        </TabsList>
+        <TabsContent value="platform"><PlatformTab /></TabsContent>
+        <TabsContent value="infra"><InfraTab /></TabsContent>
+        <TabsContent value="system"><SystemTab /></TabsContent>
+        <TabsContent value="monitoring"><MonitoringTab /></TabsContent>
+      </Tabs>
+    </WorkspaceShell>
   );
 };
 
