@@ -19,6 +19,7 @@ const ManagerDashboardPage: React.FC = () => {
     <PermissionGate module="dashboard" action="view">
       <div className="p-6">
         <WorkspaceShell
+          workspaceType="MANAGER"
           header={
             <div>
               <h1 className="text-2xl font-bold text-foreground">Painel do Gestor</h1>

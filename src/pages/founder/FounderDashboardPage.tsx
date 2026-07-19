@@ -197,7 +197,7 @@ const MonitoringTab: React.FC = () => {
 // -------- Page --------
 export const FounderDashboardPage: React.FC = () => {
   return (
-    <WorkspaceShell>
+    <WorkspaceShell workspaceType="FOUNDER">
       <Tabs defaultValue="platform" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-flex">
           <TabsTrigger value="platform">Plataforma</TabsTrigger>
