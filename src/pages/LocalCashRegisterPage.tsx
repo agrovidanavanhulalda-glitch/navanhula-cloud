@@ -122,10 +122,20 @@ const LocalCashRegisterPage: React.FC = () => {
       }
     }
 
+    // P1 FIX: close dialog BEFORE the async op so Radix Overlay/backdrop-blur
+    // unmount cleanly and body pointer-events/overflow are restored before the
+    // parent re-renders (which happens when currentCashRegister becomes null).
+    setShowCloseDialog(false);
+    setClosingAmount('');
+
     try {
       await closeCashRegister(amount);
-      setShowCloseDialog(false);
-      setClosingAmount('');
+      // Defensive cleanup — guarantees no lingering scroll-lock/pointer-events
+      // from Radix Dialog if the parent re-renders mid-close animation.
+      requestAnimationFrame(() => {
+        document.body.style.removeProperty('pointer-events');
+        document.body.style.removeProperty('overflow');
+      });
     } catch (error) {
       console.error('[CashRegisterPage] Erro ao fechar caixa:', error);
       toast.error('Falha ao fechar caixa');
