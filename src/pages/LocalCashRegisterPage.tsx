@@ -59,6 +59,19 @@ const LocalCashRegisterPage: React.FC = () => {
   const [closingAmount, setClosingAmount] = useState('');
   const [selectedSellerId, setSelectedSellerId] = useState('');
 
+  // P1 — Backdrop / pointer-events hardening. Radix Dialog occasionally leaves
+  // `pointer-events: none` on <body> if the parent re-renders while the overlay
+  // is animating out (e.g. currentCashRegister becoming null right after close).
+  // We call this on every close path AND on unmount to guarantee a clean state.
+  const releaseBodyLocks = React.useCallback(() => {
+    const body = document.body;
+    body.style.removeProperty('pointer-events');
+    body.style.removeProperty('overflow');
+    body.removeAttribute('data-scroll-locked');
+  }, []);
+
+  useEffect(() => releaseBodyLocks, [releaseBodyLocks]);
+
   // Safe-by-default: cash register must never crash if company/branch/operator are missing.
   const storeId = currentStore?.id ?? null;
 
