@@ -372,7 +372,7 @@ const LocalCashRegisterPage: React.FC = () => {
       </Card>
 
       {/* Open Register Dialog */}
-      <Dialog open={showOpenDialog} onOpenChange={setShowOpenDialog}>
+      <Dialog open={showOpenDialog} onOpenChange={(o) => { setShowOpenDialog(o); if (!o) requestAnimationFrame(releaseBodyLocks); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl">Abrir Caixa</DialogTitle>
