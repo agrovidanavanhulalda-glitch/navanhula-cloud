@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalPOS, LocalCashRegister } from '@/contexts/LocalPOSContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,6 +58,19 @@ const LocalCashRegisterPage: React.FC = () => {
   const [openingAmount, setOpeningAmount] = useState('');
   const [closingAmount, setClosingAmount] = useState('');
   const [selectedSellerId, setSelectedSellerId] = useState('');
+
+  // P1 — Backdrop / pointer-events hardening. Radix Dialog occasionally leaves
+  // `pointer-events: none` on <body> if the parent re-renders while the overlay
+  // is animating out (e.g. currentCashRegister becoming null right after close).
+  // We call this on every close path AND on unmount to guarantee a clean state.
+  const releaseBodyLocks = React.useCallback(() => {
+    const body = document.body;
+    body.style.removeProperty('pointer-events');
+    body.style.removeProperty('overflow');
+    body.removeAttribute('data-scroll-locked');
+  }, []);
+
+  useEffect(() => releaseBodyLocks, [releaseBodyLocks]);
 
   // Safe-by-default: cash register must never crash if company/branch/operator are missing.
   const storeId = currentStore?.id ?? null;
@@ -127,18 +140,20 @@ const LocalCashRegisterPage: React.FC = () => {
     // parent re-renders (which happens when currentCashRegister becomes null).
     setShowCloseDialog(false);
     setClosingAmount('');
+    releaseBodyLocks();
 
     try {
       await closeCashRegister(amount);
-      // Defensive cleanup — guarantees no lingering scroll-lock/pointer-events
-      // from Radix Dialog if the parent re-renders mid-close animation.
+      // Belt-and-braces: run cleanup again on the next two frames to cover
+      // any Radix animation that finishes after the parent has re-rendered.
       requestAnimationFrame(() => {
-        document.body.style.removeProperty('pointer-events');
-        document.body.style.removeProperty('overflow');
+        releaseBodyLocks();
+        requestAnimationFrame(releaseBodyLocks);
       });
     } catch (error) {
       console.error('[CashRegisterPage] Erro ao fechar caixa:', error);
       toast.error('Falha ao fechar caixa');
+      releaseBodyLocks();
     }
   };
 
@@ -357,7 +372,7 @@ const LocalCashRegisterPage: React.FC = () => {
       </Card>
 
       {/* Open Register Dialog */}
-      <Dialog open={showOpenDialog} onOpenChange={setShowOpenDialog}>
+      <Dialog open={showOpenDialog} onOpenChange={(o) => { setShowOpenDialog(o); if (!o) requestAnimationFrame(releaseBodyLocks); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl">Abrir Caixa</DialogTitle>
@@ -430,7 +445,7 @@ const LocalCashRegisterPage: React.FC = () => {
       </Dialog>
 
       {/* Close Register Dialog */}
-      <Dialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
+      <Dialog open={showCloseDialog} onOpenChange={(o) => { setShowCloseDialog(o); if (!o) requestAnimationFrame(releaseBodyLocks); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl">Fechar Caixa</DialogTitle>
