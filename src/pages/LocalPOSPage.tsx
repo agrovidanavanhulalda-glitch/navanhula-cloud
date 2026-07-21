@@ -476,23 +476,24 @@ const LocalPOSPage: React.FC = () => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     >
-                      <div className="px-4 py-3.5 rounded-xl border border-slate-200/60 bg-white hover:border-[#0B1F3A]/20 hover:shadow-[0_4px_14px_-6px_rgba(11,31,58,0.15)] transition-all group">
-                        <div className="flex items-start gap-3.5">
-                          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-slate-50 to-slate-100/70 border border-slate-200/60 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                      <div className="px-4 py-4 rounded-xl border border-slate-200/60 bg-white hover:border-[#0B1F3A]/20 hover:shadow-[0_4px_14px_-6px_rgba(11,31,58,0.15)] transition-all group">
+                        {/* Row 1 — Product identity + remove */}
+                        <div className="flex items-start gap-4">
+                          <div className="w-[72px] h-[72px] rounded-xl bg-gradient-to-br from-slate-50 to-slate-100/70 border border-slate-200/60 overflow-hidden flex-shrink-0 flex items-center justify-center">
                             {p.imageUrl ? (
                               <img src={p.imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
                             ) : (
-                              <ShoppingCart className="w-6 h-6 text-slate-300" strokeWidth={1.5} />
+                              <ShoppingCart className="w-7 h-7 text-slate-300" strokeWidth={1.5} />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-[15px] text-[#0B1F3A] truncate tracking-tight leading-snug">{item.product.name}</h4>
-                            <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500">
-                              {sku && <span className="font-mono tracking-tight">{sku}</span>}
+                            <h4 className="font-semibold text-[15px] text-[#0B1F3A] tracking-tight leading-snug line-clamp-2">{item.product.name}</h4>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1.5 text-[11px] text-slate-500">
+                              {sku && <span className="font-mono tracking-tight">SKU: {sku}</span>}
                               {sku && category && <span className="text-slate-300">•</span>}
                               {category && <span className="truncate">{category}</span>}
                             </div>
-                            <p className="text-[12px] text-slate-500 mt-1 tabular-nums">
+                            <p className="text-[12px] text-slate-500 mt-1.5 tabular-nums">
                               {formatCurrency(item.product.salePrice)} <span className="text-slate-300">/ un</span>
                             </p>
                           </div>
@@ -506,58 +507,30 @@ const LocalPOSPage: React.FC = () => {
                           </button>
                         </div>
 
-                        <div className="flex items-center justify-between mt-3.5 gap-3">
-                          <div
-                            className="inline-flex items-center gap-0.5 bg-slate-100/80 rounded-xl p-1 min-w-[112px] h-12"
-                            role="group"
-                            aria-label={`Quantidade de ${item.product.name}`}
-                          >
-                            <button
-                              type="button"
-                              aria-label="Diminuir quantidade"
-                              className="h-11 w-11 rounded-lg flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-sm hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1F3A]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                              onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                              disabled={item.quantity <= 1}
-                            >
-                              <Minus className="w-4 h-4" strokeWidth={2.5} />
-                            </button>
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              min={1}
-                              value={item.quantity}
-                              onChange={(e) => {
-                                const v = parseInt(e.target.value, 10);
-                                if (!isNaN(v) && v > 0) updateQuantity(item.product.id, v);
-                              }}
-                              aria-label={`Quantidade de ${item.product.name}`}
-                              className="w-12 h-11 bg-transparent text-center font-bold text-[16px] tabular-nums text-[#0B1F3A] border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1F3A]/30 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                            <button
-                              type="button"
-                              aria-label="Aumentar quantidade"
-                              className="h-11 w-11 rounded-lg flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-sm hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1F3A]/30 transition-all"
-                              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                            >
-                              <Plus className="w-4 h-4" strokeWidth={2.5} />
-                            </button>
-                          </div>
+                        {/* Row 2 — Quantity + subtotal */}
+                        <div className="flex items-center justify-between mt-4 gap-3 flex-wrap">
+                          <QuantityEditor
+                            value={item.quantity}
+                            onChange={(v) => updateQuantity(item.product.id, v)}
+                            ariaLabel={`Quantidade de ${item.product.name}`}
+                          />
                           <div className="flex flex-col items-end min-w-0">
                             <span className="text-[10px] uppercase tracking-[0.15em] font-semibold text-slate-400">Subtotal</span>
-                            <span className="font-bold text-[16px] text-[#0B1F3A] tabular-nums tracking-tight leading-tight">
+                            <span className="font-bold text-[18px] text-[#0B1F3A] tabular-nums tracking-tight leading-tight">
                               {formatCurrency(item.total)}
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-dashed border-slate-200/70">
+                        {/* Row 3 — Discount */}
+                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-dashed border-slate-200/70">
                           <span className="text-[11px] text-slate-500 font-medium">Desconto</span>
                           <Input
                             type="number"
                             value={item.discount || ''}
                             onChange={(e) => updateDiscount(item.product.id, parseFloat(e.target.value) || 0)}
                             placeholder="0,00"
-                            className="h-8 text-[12px] w-24 px-2 border-slate-200/70 focus-visible:ring-1 focus-visible:ring-[#0B1F3A]/20 rounded-md tabular-nums"
+                            className="h-9 text-[12px] w-24 px-2 border-slate-200/70 focus-visible:ring-1 focus-visible:ring-[#0B1F3A]/20 rounded-md tabular-nums"
                             aria-label={`Desconto para ${item.product.name}`}
                           />
                           <span className="text-[11px] text-slate-400">MT</span>
