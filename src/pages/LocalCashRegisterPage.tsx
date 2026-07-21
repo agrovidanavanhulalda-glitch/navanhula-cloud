@@ -127,18 +127,20 @@ const LocalCashRegisterPage: React.FC = () => {
     // parent re-renders (which happens when currentCashRegister becomes null).
     setShowCloseDialog(false);
     setClosingAmount('');
+    releaseBodyLocks();
 
     try {
       await closeCashRegister(amount);
-      // Defensive cleanup — guarantees no lingering scroll-lock/pointer-events
-      // from Radix Dialog if the parent re-renders mid-close animation.
+      // Belt-and-braces: run cleanup again on the next two frames to cover
+      // any Radix animation that finishes after the parent has re-rendered.
       requestAnimationFrame(() => {
-        document.body.style.removeProperty('pointer-events');
-        document.body.style.removeProperty('overflow');
+        releaseBodyLocks();
+        requestAnimationFrame(releaseBodyLocks);
       });
     } catch (error) {
       console.error('[CashRegisterPage] Erro ao fechar caixa:', error);
       toast.error('Falha ao fechar caixa');
+      releaseBodyLocks();
     }
   };
 
