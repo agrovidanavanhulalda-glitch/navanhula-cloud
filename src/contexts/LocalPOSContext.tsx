@@ -299,11 +299,17 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     loadData();
     if (!company?.id) return;
     const stockChannel = supabase.channel(`stock-${company.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'product_stock', filter: `company_id=eq.${company.id}` }, (payload) => {
+      // P0-005 — Realtime Stock Protection
+      // If there are pending sync tasks, we ignore realtime updates to avoid overwriting optimistic stock.
+      const hasPendingSync = syncManager.getTasksByType('SALE').length > 0;
+      if (hasPendingSync) return;
+
       const data = payload.new as any;
       if (data?.store_id === state.currentStore?.id) {
         setState(prev => ({ ...prev, products: prev.products.map(p => p.id === data.product_id ? { ...p, stock: data.quantity } : p) }));
       }
     }).subscribe();
+
     return () => { supabase.removeChannel(stockChannel); };
   }, [loadData, company?.id, state.currentStore?.id]);
 
@@ -410,11 +416,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     if (!navigator.onLine) {
-      // Offline: enqueue the exact same RPC payload — syncManager will replay it verbatim.
-      await syncManager.addTask('SALE', { rpcPayload });
-
-      toast.success('Venda registada offline — será sincronizada assim que a conexão for restabelecida');
-
+      // P0-004/005 — Atomic offline transaction
       const localSale: LocalSale = {
         id: clientSaleId,
         company_id: company?.id,
@@ -436,6 +438,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         synced: false,
       } as any;
 
+      // Atomic update of cart, products and sales
       setState(prev => ({
         ...prev,
         cart: [],
@@ -449,8 +452,13 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         sales: [localSale, ...prev.sales]
       }));
 
+      // Queue for background synchronization
+      await syncManager.addTask('SALE', { rpcPayload });
+      toast.success('Venda registada offline — será sincronizada assim que a conexão for restabelecida');
+
       return localSale;
     }
+
 
     try {
       // ✅ RPC atômica única — persistência transacional (venda + itens + stock + financeiro + caixa + auditoria + voucher + carteira)
@@ -516,9 +524,41 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const closeCashRegister = async (amt: number) => {
     if (!state.currentCashRegister) return;
-    await supabase.from('cash_registers').update({ closing_amount: amt, status: 'closed', closed_at: new Date().toISOString() }).eq('id', state.currentCashRegister.id);
-    setState(prev => ({ ...prev, currentCashRegister: null }));
+
+    // P0-006 — Offline Cash Register Closure
+    if (!navigator.onLine) {
+      const closingTask = {
+        id: state.currentCashRegister.id,
+        closing_amount: amt,
+        closed_at: new Date().toISOString()
+      };
+
+      await syncManager.addTask('CASH_REGISTER_CLOSE', closingTask);
+      
+      setState(prev => ({ ...prev, currentCashRegister: null }));
+      toast.success('Fecho de caixa registado offline — será sincronizado em breve');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('cash_registers')
+        .update({ 
+          closing_amount: amt, 
+          status: 'closed', 
+          closed_at: new Date().toISOString() 
+        })
+        .eq('id', state.currentCashRegister.id);
+
+      if (error) throw error;
+      
+      setState(prev => ({ ...prev, currentCashRegister: null }));
+    } catch (error) {
+      console.error('Error closing cash register:', error);
+      throw error;
+    }
   };
+
 
   const addProduct = async (p: any) => {
     const { stock, costPrice, salePrice, isActive, imageUrl, categoryId, galleryUrls, ...rest } = p;
