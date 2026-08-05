@@ -190,8 +190,13 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         id: s.id, name: s.name, address: s.address || '', phone: s.phone || '', isActive: s.is_active, 
         city: (s as any).city, business_type: (s as any).business_type, fiscal_regime: (s as any).fiscal_regime 
       }));
-      const storeId = authStore?.id || user?.store_id;
-      const currentStore = stores.find(s => s.id === storeId) || stores[0] || null;
+      // P0-007 — Secure store selection. 
+      // 1. Prefer store set in auth context (explicit selection).
+      // 2. Fallback to user's assigned store_id.
+      // 3. If neither valid, leave currentStore as null to force selection (no automatic first-store fallback).
+      const authStoreId = authStore?.id || user?.store_id;
+      const currentStore = stores.find(s => s.id === authStoreId) || null;
+
 
       const { data: stockData } = await supabase.from('product_stock').select('product_id, quantity').eq('store_id', currentStore?.id);
       const stockMap = new Map((stockData || []).map(s => [s.product_id, s.quantity]));
