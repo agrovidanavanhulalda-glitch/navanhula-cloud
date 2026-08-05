@@ -1,65 +1,76 @@
-# 🛡️ SPRINT 11.3 — IMPLEMENTAÇÃO DOS P0 (ZERO REGRESSION)
+# 🛡️ SPRINT 11.3.A — VALIDAÇÃO DOS P0 (FUNCTIONAL VERIFICATION)
 
-## MISSÃO
+MODO OBRIGATÓRIO
 
-Implementar SOMENTE as correções dos P0 confirmados na Sprint 11.2.
+Não implementar novas funcionalidades.
 
-É PROIBIDO:
+Não refatorar.
 
-❌ Criar novos recursos
-❌ Alterar UI sem necessidade
-❌ Refatorar módulos não auditados
-❌ Alterar Billing
-❌ Alterar Fiscal
-❌ Alterar CRM
-❌ Alterar Auth
-❌ Alterar RLS
-❌ Alterar RPCs não relacionadas
-❌ Alterar Edge Functions não relacionadas
-❌ Alterar documentação
+Não alterar UI.
 
-Objetivo:
+Não alterar arquitetura.
 
-Eliminar exclusivamente as causas raiz confirmadas.
+O objetivo desta Sprint é apenas validar que os P0 corrigidos realmente desapareceram.
 
---------------------------------------------------
+====================================================
 
-# P0-001 + P0-002
+TESTES OBRIGATÓRIOS
 
-## Fecho de Caixa
+P0-001 / P0-002
 
-Eliminar definitivamente o problema de:
+Fecho de Caixa
 
-• Overlay preso
+Executar pelo menos 30 ciclos:
 
-• Body Lock
+Abrir Caixa
 
-• Pointer Events
+↓
 
-• Scroll Lock
+Venda
 
-Substituir o hack baseado em requestAnimationFrame por um fluxo determinístico.
+↓
 
-Criar uma única rotina reutilizável responsável por:
+Receber Pagamento
 
-- remover pointer-events
-- remover overflow
-- remover data-scroll-locked
-- remover locks residuais
+↓
 
-Essa rotina deve ser executada exatamente uma vez no encerramento do diálogo.
+Fechar Caixa
 
-Não utilizar timers desnecessários.
+↓
 
---------------------------------------------------
+Abrir novamente
 
-# P0-003
+Verificar:
 
-## Permissões do Caixa
+✓ Overlay desaparece
 
-Auditar o fluxo de permissões.
+✓ Pointer-events não permanece no body
 
-Garantir consistência entre:
+✓ data-scroll-locked removido
+
+✓ overflow restaurado
+
+✓ Scroll normal
+
+✓ Sem fundo desfocado
+
+✓ Sem Dialog preso
+
+====================================================
+
+P0-003
+
+Permissões
+
+Testar:
+
+Operador
+
+Supervisor
+
+Administrador
+
+Validar:
 
 cash.open
 
@@ -67,183 +78,178 @@ cash.close
 
 cash.close_any
 
-Administrador
+Nenhum perfil autorizado deve ficar impedido de fechar o próprio caixa.
 
-O operador que abriu um caixa deve conseguir fechá-lo conforme a política definida pelo sistema.
+====================================================
 
-Eliminar inconsistências.
+P0-004
 
---------------------------------------------------
+Venda Offline
 
-# P0-004
+Desligar internet.
 
-## Atomicidade do fluxo de venda
+Realizar:
 
-Revisar completeSale().
+20 vendas.
 
-Garantir que:
+Fechar aplicação.
 
-cart
+Abrir novamente.
 
-stock
+Restabelecer internet.
 
-sales
+Validar:
 
-queue
+✓ Todas as vendas sincronizadas
 
-permaneçam consistentes.
+✓ Nenhuma duplicada
 
-Nenhum estado parcial pode permanecer caso ocorra erro.
+✓ Nenhuma perdida
 
-Utilizar fluxo transacional no estado local.
+====================================================
 
---------------------------------------------------
+P0-005
 
-# P0-005
-
-## Sincronização de Stock
-
-Enquanto existir sincronização pendente:
-
-Realtime NÃO pode sobrescrever o stock otimista.
-
-Criar mecanismo de proteção.
-
-Objetivo:
-
-offline stock
-
-↓
-
-sync queue
-
-↓
-
-confirmação
-
-↓
-
-Realtime
-
-Nunca o contrário.
-
---------------------------------------------------
-
-# P0-006
-
-## Fecho de Caixa Offline
-
-Implementar estratégia equivalente ao syncManager utilizado nas vendas.
-
-Caso Supabase esteja indisponível:
-
-registrar fechamento
-
-↓
-
-enfileirar
-
-↓
-
-sincronizar posteriormente
-
-Nunca perder o fechamento.
-
---------------------------------------------------
-
-# P0-007
-
-## Identidade da Loja
-
-Eliminar fallback inseguro.
-
-Nunca selecionar automaticamente a primeira loja.
-
-Caso store_id seja inválido:
-
-mostrar erro
-
-ou
-
-solicitar seleção.
-
-Jamais assumir outra filial.
-
---------------------------------------------------
-
-# REQUISITOS
-
-Todas as alterações devem:
-
-✅ manter TypeScript strict
-
-✅ manter performance O(n)
-
-✅ manter compatibilidade
-
-✅ manter hooks existentes
-
-✅ manter queries existentes
-
-✅ manter componentes existentes
-
-✅ manter UX atual
-
---------------------------------------------------
-
-# TESTES OBRIGATÓRIOS
+Stock
 
 Executar:
 
-✓ abrir caixa
-✓ fechar caixa
-✓ venda online
-✓ venda offline
-✓ sincronização
-✓ atualização de stock
-✓ realtime
-✓ perda de internet
-✓ retorno da internet
-✓ troca de loja
-✓ múltiplos fechamentos
-✓ múltiplas vendas
+Venda POS
 
---------------------------------------------------
+Venda Loja Online
 
-# QUALITY GATE
+Venda Offline
 
-Entregar:
+Sincronização
 
-📊 Relatório de Execução
+Realtime
+
+Confirmar:
+
+✓ Stock permanece consistente
+
+✓ Nenhuma sobrescrita
+
+✓ Nenhum valor antigo substitui o otimista
+
+====================================================
+
+P0-006
+
+Fecho Offline
+
+Abrir caixa.
+
+Desligar internet.
+
+Fechar caixa.
+
+Ligar internet.
+
+Confirmar:
+
+✓ SyncManager envia o fecho
+
+✓ Caixa permanece consistente
+
+✓ Sem duplicação
+
+====================================================
+
+P0-007
+
+Multi-loja
+
+Testar:
+
+Store válida
+
+Store inválida
+
+Store removida
+
+Store sem permissão
+
+Confirmar:
+
+✓ Nunca selecionar automaticamente outra loja
+
+✓ Exibir erro apropriado quando necessário
+
+====================================================
+
+TESTES DE REGRESSÃO
+
+Executar:
+
+✓ Venda normal
+
+✓ Devolução
+
+✓ Cancelamento
+
+✓ Fiscal
+
+✓ Inventário
+
+✓ Dashboard
+
+✓ CRM
+
+✓ Produtos
+
+✓ Clientes
+
+✓ Impressão
+
+✓ Recibo
+
+====================================================
+
+QUALITY GATE
+
+Somente considerar um P0 encerrado quando:
+
+✔ Correção implementada
+
+✔ Teste aprovado
+
+✔ Sem regressão
+
+====================================================
+
+ENTREGA
+
+📊 Relatório de Validação
 
 Para cada P0 informar:
 
-Status:
+Status
 
-✅ Corrigido
+✅ Validado
 
 ou
 
-❌ Não corrigido
-
-Arquivo(s) modificados
-
-Resumo técnico
-
-Risco residual
+❌ Falhou
 
 Testes executados
 
-Regressões encontradas
+Resultado
+
+Regressões
+
+Arquivos envolvidos
+
+Risco residual
 
 Ao final informar:
 
-Production Readiness (%)
+Production Ready (%)
 
-Commercial Readiness (%)
+Commercial Ready (%)
 
-Operational Readiness (%)
+Operational Ready (%)
 
-Enterprise Readiness (%)
+Enterprise Ready (%)
 
-Somente considerar a Sprint aprovada se TODOS os P0 confirmados estiverem corregidos, testados e sem regressões.
+Se existir qualquer falha em qualquer P0, interromper a Sprint e reportar imediatamente.
