@@ -1,174 +1,157 @@
-# SPRINT 11.1.F — CONSOLIDAÇÃO DAS EVIDÊNCIAS TÉCNICAS (ROOT CAUSE REPORT)
+# SPRINT 11.1 — RELATÓRIO FINAL DA AUDITORIA (EXECUÇÃO OBRIGATÓRIA)
 
-## MISSÃO
+MISSÃO
 
-Executar a inspeção completa do código-fonte do módulo POS e produzir o Relatório Final de Evidências.
+Esta Sprint NÃO deve atualizar documentação.
 
-ATENÇÃO:
+Esta Sprint NÃO deve alterar código.
 
-Esta Sprint NÃO deve modificar nenhum arquivo de produção.
+Esta Sprint NÃO deve criar novos protocolos.
 
-É proibido:
+Esta Sprint NÃO deve gerar novos documentos.
 
-- alterar lógica;
-- criar componentes;
-- modificar hooks;
-- alterar RPCs;
-- alterar Supabase;
-- alterar RLS;
-- alterar SQL;
-- alterar Edge Functions;
-- alterar contexto;
-- alterar estado;
-- alterar UI.
+A missão é executar integralmente a auditoria técnica definida nas etapas anteriores e produzir o Relatório Final baseado exclusivamente em evidências encontradas no código.
 
 Modo obrigatório:
 
-🛡️ READ ONLY
+🛡 READ ONLY
+🛡 EVIDENCE FIRST
+🛡 ROOT CAUSE FIRST
+🛡 ZERO REGRESSION
 
-🛡️ EVIDENCE FIRST
+==================================================
 
-🛡️ ROOT CAUSE FIRST
+AUDITAR COMPLETAMENTE
 
-🛡️ ZERO REGRESSION
+✓ LocalPOSPage
 
-----------------------------------------------------
+✓ LocalCashRegisterPage
 
-AUDITAR
+✓ CashRegisterContext
 
-✔ LocalPOSPage
+✓ LocalPOSContext
 
-✔ LocalCashRegisterPage
+✓ PaymentModal
 
-✔ CashRegisterContext
+✓ ThermalReceipt
 
-✔ LocalPOSContext
+✓ Inventory
 
-✔ PaymentModal
+✓ Dashboard
 
-✔ ThermalReceipt
+✓ Loja Online
 
-✔ Inventory
+✓ Fiscal Pipeline
 
-✔ Dashboard
+✓ Billing
 
-✔ Loja Online
+✓ Sale Pipeline
 
-✔ Fiscal Pipeline
+✓ Sync Queue
 
-✔ Sale Pipeline
+✓ RPCs
 
-✔ Sync Queue
+✓ React Context
 
-✔ RPCs
+✓ Hooks
 
-✔ Hooks
+✓ useEffect
 
-✔ React Context
+✓ Overlay
 
-✔ Body Locks
+✓ Dialog
 
-✔ Dialogs
+✓ Body Lock
 
-✔ Overlay
+✓ Scroll Lock
 
-✔ Scroll Lock
+✓ Pointer Events
 
-✔ QuantityEditor
+✓ QuantityEditor
 
-----------------------------------------------------
+==================================================
 
-PARA CADA FLUXO INFORMAR
+OBRIGATÓRIO
 
-• Fluxograma
+Responder para cada fluxo:
 
-• Arquivos
+• O fluxo está correto?
 
-• Componentes
+• Existe bug?
 
-• Hooks
+• Existe race condition?
 
-• Contextos
+• Existe stale state?
 
-• RPCs
+• Existe update duplicado?
 
-• Eventos
+• Existe perda de sincronização?
 
-• Atualizações
+• Existe rollback incompleto?
 
-• Dependências
+• Existe renderização desnecessária?
 
-• Estados
+• Existe bloqueio visual?
 
-----------------------------------------------------
+• Existe inconsistência entre POS e Loja Online?
 
-RESPONDER COM EVIDÊNCIA
+• Existe inconsistência entre POS e Inventário?
 
-Existe:
+• Existe inconsistência entre Caixa e Venda?
 
-□ race condition
+Sempre indicar:
 
-□ stale state
+Arquivo
 
-□ duplicate render
+Função
 
-□ duplicate request
+Linha aproximada
 
-□ duplicate sale
+Evidência encontrada
 
-□ duplicate stock update
+Causa raiz
 
-□ rollback incompleto
+Impacto
 
-□ optimistic update
+Prioridade
 
-□ cache inconsistente
+==================================================
 
-□ overlay preso
+GERAR
 
-□ dialog preso
+1. Executive Summary
 
-□ pointer-events residual
+2. Fluxograma POS
 
-□ scroll lock
+3. Fluxograma Caixa
 
-□ stock divergente
+4. Fluxograma Estoque
 
-□ venda sem sincronização
+5. Fluxograma Loja Online
 
-□ dashboard desatualizado
+6. Fluxograma Fiscal
 
-□ erro silencioso
+7. Fluxograma Dashboard
 
-□ await interrompido
+8. Lista dos problemas confirmados
 
-□ memory leak
+9. Lista das causas raiz
 
-□ loop
+10. Matriz de risco
 
-□ re-render desnecessário
+11. Ordem de correção
 
-□ inconsistência entre POS e Loja Online
+12. Dependências
 
-Para cada item encontrado informar:
+13. Complexidade
 
-• Arquivo
+14. Tempo estimado para correção
 
-• Função
+15. Parecer Executivo
 
-• Linha aproximada
+==================================================
 
-• Evidência
-
-• Causa raiz
-
-• Impacto
-
-• Prioridade
-
-----------------------------------------------------
-
-CLASSIFICAÇÃO
+CLASSIFICAR
 
 🔴 P0
 
@@ -178,50 +161,26 @@ CLASSIFICAÇÃO
 
 🔵 P3
 
-----------------------------------------------------
+==================================================
 
-ENTREGAR
-
-1. Executive Summary
-
-2. Fluxo do POS
-
-3. Fluxo do Caixa
-
-4. Fluxo do Stock
-
-5. Fluxo Loja Online
-
-6. Fluxo Fiscal
-
-7. Fluxo Dashboard
-
-8. Lista completa dos problemas confirmados
-
-9. Lista das causas raiz
-
-10. Matriz de risco
-
-11. Ordem recomendada de correção
-
-12. Esforço estimado
-
-13. Dependências
-
-14. Parecer Executivo
-
-Responder obrigatoriamente:
+FINALIZAR COM
 
 🟢 PRODUCTION READY
 
+ou
+
 🟡 CONDITIONAL GO
+
+ou
 
 🔴 NOT READY
 
 Caso NÃO esteja pronto:
 
-listar TODOS os bloqueadores P0 que deverão ser corrigidos na Sprint 11.2.
+Listar TODOS os bloqueadores P0.
 
 IMPORTANTE:
 
-A Sprint 11.2 somente poderá iniciar após este relatório estar concluído e baseado em evidências reais do código.
+Após este relatório, nenhuma nova Sprint de documentação deverá ser criada.
+
+A Sprint 11.2 será exclusivamente destinada à implementação das correções aprovadas.
