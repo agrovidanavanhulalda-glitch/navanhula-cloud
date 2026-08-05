@@ -515,12 +515,63 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const openCashRegister = async (sid: string, sn: string, amt: number) => {
-    const { data, error } = await supabase.from('cash_registers').insert({ store_id: state.currentStore?.id, user_id: sid, opening_amount: amt, status: 'open', company_id: company?.id }).select().single();
-    if (error) throw error;
-    const cr: LocalCashRegister = { id: data.id, storeId: data.store_id, sellerId: data.user_id, sellerName: sn, openingAmount: data.opening_amount, status: 'open', openedAt: new Date(data.opened_at) };
-    setState(prev => ({ ...prev, currentCashRegister: cr }));
-    return cr;
+    // P0-006 — Offline Cash Register Opening
+    const registerId = crypto.randomUUID();
+    const payload = { 
+      id: registerId,
+      store_id: state.currentStore?.id, 
+      user_id: sid, 
+      opening_amount: amt, 
+      status: 'open', 
+      company_id: company?.id,
+      opened_at: new Date().toISOString()
+    };
+
+    if (!navigator.onLine) {
+      await syncManager.addTask('CASH_REGISTER_OPEN', payload);
+      
+      const cr: LocalCashRegister = { 
+        id: registerId, 
+        storeId: payload.store_id!, 
+        sellerId: sid, 
+        sellerName: sn, 
+        openingAmount: amt, 
+        status: 'open', 
+        openedAt: new Date() 
+      };
+      
+      setState(prev => ({ ...prev, currentCashRegister: cr }));
+      toast.success('Caixa aberto offline — será sincronizado em breve');
+      return cr;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('cash_registers')
+        .insert(payload)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      const cr: LocalCashRegister = { 
+        id: data.id, 
+        storeId: data.store_id, 
+        sellerId: data.user_id, 
+        sellerName: sn, 
+        openingAmount: data.opening_amount, 
+        status: 'open', 
+        openedAt: new Date(data.opened_at) 
+      };
+      
+      setState(prev => ({ ...prev, currentCashRegister: cr }));
+      return cr;
+    } catch (error) {
+      console.error('Error opening cash register:', error);
+      throw error;
+    }
   };
+
 
   const closeCashRegister = async (amt: number) => {
     if (!state.currentCashRegister) return;
