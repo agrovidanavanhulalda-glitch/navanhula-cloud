@@ -1,22 +1,26 @@
-# SPRINT 11.1.D — RELATÓRIO FINAL DE EVIDÊNCIAS (POS PRODUCTION AUDIT)
+# SPRINT 11.1.E — EXECUÇÃO REAL DA AUDITORIA TÉCNICA DO POS
 
 ## MISSÃO
 
-Concluir definitivamente a auditoria técnica do POS iniciada nas Sprints 11.1, 11.1.A, 11.1.B e 11.1.C.
+Executar integralmente a auditoria técnica do código-fonte do módulo POS utilizando o protocolo definido nas Sprints 11.1 até 11.1.D.
 
-Esta Sprint NÃO deve alterar código.
+Nesta Sprint não criar documentação adicional.
 
-Esta Sprint NÃO deve criar novas funcionalidades.
+Nesta Sprint não implementar correções.
 
-Esta Sprint deve consolidar todas as evidências encontradas em um único relatório técnico.
+Nesta Sprint não refatorar código.
 
-O relatório servirá como contrato para a Sprint 11.2.
+O objetivo é produzir evidências reais diretamente do código.
 
-Nenhuma correção poderá ser implementada sem estar documentada neste relatório.
+Todas as conclusões devem ser comprovadas.
+
+Nenhuma hipótese é permitida.
+
+Nenhuma dedução sem evidência é permitida.
 
 ---
 
-# PADRÃO
+PADRÃO
 
 🛡️ READ ONLY
 
@@ -30,89 +34,125 @@ Nenhuma correção poderá ser implementada sem estar documentada neste relatór
 
 ---
 
-# CONSOLIDAR EVIDÊNCIAS
+AUDITAR COMPLETAMENTE
 
-Para cada problema encontrado registrar obrigatoriamente:
+1. LocalCashRegisterPage
 
-• ID (P0-001, P0-002...)
+2. CashRegisterContext
 
-• Título
+3. LocalPOSPage
 
-• Severidade
+4. PaymentModal
 
-• Arquivo
+5. ThermalReceipt
 
-• Função
+6. Sale Context
 
-• Fluxo
+7. Inventory Flow
 
-• Causa raiz
+8. Dashboard Updates
 
-• Evidência técnica
+9. Loja Online
 
-• Impacto operacional
+10. Fiscal Pipeline
 
-• Risco
+11. RPCs utilizados
 
-• Dependências
+12. Hooks envolvidos
 
-• Complexidade da correção
+13. Estados React
 
-• Prioridade
+14. Fluxo de sincronização
 
----
-
-# ÁREAS OBRIGATÓRIAS
-
-## Fecho de Caixa
-
-Mapear completamente o fluxo.
-
-## Venda
-
-Mapear completamente o fluxo.
-
-## Stock
-
-Mapear POS → Inventário → Loja Online.
-
-## Fiscal
-
-Verificar emissão.
-
-## Dashboard
-
-Verificar atualização.
-
-## Relatórios
-
-Verificar consistência.
-
-## Carrinho
-
-Verificar QuantityEditor, subtotal, descontos e renderização.
-
-## PaymentModal
-
-Verificar ciclo completo.
-
-## ThermalReceipt
-
-Verificar emissão.
-
-## Performance
-
-Verificar re-renderizações.
-
-## UX
-
-Verificar layout, centralização, responsividade e acessibilidade.
+15. Fluxo de stock
 
 ---
 
-# CLASSIFICAÇÃO
+PARA CADA MÓDULO INFORMAR
 
-Todos os problemas devem ser classificados:
+• Fluxograma de execução
+
+• Arquivos envolvidos
+
+• Funções chamadas
+
+• Estados alterados
+
+• Hooks utilizados
+
+• Contextos utilizados
+
+• RPCs utilizados
+
+• Eventos disparados
+
+• Atualizações de stock
+
+• Atualizações financeiras
+
+• Atualizações fiscais
+
+---
+
+RESPONDER COM EVIDÊNCIAS
+
+Existe:
+
+□ race condition
+
+□ stale state
+
+□ duplicate render
+
+□ duplicate update
+
+□ lost update
+
+□ optimistic update
+
+□ rollback incompleto
+
+□ body lock residual
+
+□ overlay residual
+
+□ dialog preso
+
+□ pointer-events residual
+
+□ scroll lock
+
+□ stock inconsistente
+
+□ venda sem atualização
+
+□ venda duplicada
+
+□ atualização parcial
+
+□ erro silencioso
+
+□ await interrompido
+
+□ dependência circular
+
+Para cada resposta indicar:
+
+Arquivo
+
+Função
+
+Linha aproximada
+
+Causa
+
+Impacto
+
+Gravidade
+
+---
+
+CLASSIFICAR
 
 🔴 P0
 
@@ -124,64 +164,48 @@ Todos os problemas devem ser classificados:
 
 ---
 
-# ENTREGÁVEIS
+ENTREGÁVEL
+
+Produzir exclusivamente o Relatório Final de Evidências contendo:
 
 1. Executive Summary
 
-2. Fluxograma do POS
+2. Arquitetura do fluxo POS
 
-3. Fluxograma do Caixa
+3. Fluxo completo do Caixa
 
-4. Fluxograma do Stock
+4. Fluxo completo do Stock
 
-5. Fluxograma da Loja Online
+5. Fluxo completo da Loja Online
 
-6. Lista completa dos problemas
+6. Lista dos problemas confirmados
 
-7. Lista completa das evidências
+7. Causa raiz de cada problema
 
-8. Lista completa das causas raiz
+8. Evidências técnicas
 
 9. Ordem recomendada de correção
 
-10. Estimativa de esforço
+10. Complexidade
 
-11. Matriz de riscos
+11. Dependências
 
-12. Checklist Production Ready
+12. Riscos
 
-13. Parecer Executivo
+13. Parecer Final
 
 Responder obrigatoriamente:
 
-🟢 Production Ready
+🟢 PRODUCTION READY
 
-🟡 Conditional Go
+🟡 CONDITIONAL GO
 
-🔴 Not Ready
+🔴 NOT READY
 
-Caso NÃO esteja pronto, listar exatamente quais P0 impedem a certificação.
-
----
-
-# SUBAGENTES
-
-🎨 UI Architect
-
-🗄️ Supabase Engineer
-
-🔍 Code Auditor
-
-🧪 Testing Agent
-
-🚀 Performance Engineer
-
-🔌 POS Integration Engineer
-
-Todos devem trabalhar em modo Read-Only.
+Se NÃO estiver pronto, listar exatamente os bloqueadores P0 que deverão ser corrigidos na Sprint 11.2.
 
 IMPORTANTE:
 
-Após a conclusão desta Sprint, encerrar definitivamente a fase de auditoria.
+É proibido implementar qualquer correção nesta Sprint.
 
-A Sprint 11.2 deverá conter exclusivamente correções dos P0 confirmados neste relatório, sem adicionar funcionalidades, melhorias visuais ou refatorações paralelas.
+A Sprint 11.2 será exclusivamente destinada à correção dos problemas confirmados por esta auditoria.
