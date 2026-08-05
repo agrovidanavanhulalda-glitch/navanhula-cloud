@@ -1,218 +1,334 @@
-🛑 SPRINT 11.2.B — EXECUÇÃO DA AUDITORIA REAL (SEM DOCUMENTAÇÃO)
+# 🛡️ SPRINT 11.2.C — AUDITORIA REAL DO CÓDIGO (EVIDENCE FIRST)
 
-ATENÇÃO
+## MODO
+READ-ONLY ABSOLUTO.
 
-A partir desta Sprint fica PROIBIDO editar:
+É EXPRESSAMENTE PROIBIDO:
 
-- docs/SPRINT_11.md
-- README
-- CHANGELOG
-- qualquer documentação
+- criar documentação;
+- editar documentação;
+- criar Markdown;
+- alterar código;
+- criar migrações;
+- alterar RPCs;
+- alterar RLS;
+- alterar Hooks;
+- alterar Contexts;
+- alterar componentes.
 
-A documentação está encerrada.
+Nesta Sprint você NÃO É um programador.
 
-====================================================
+Você é um AUDITOR TÉCNICO.
 
-OBJETIVO
+Seu único trabalho é INVESTIGAR.
 
-Executar a auditoria REAL do código.
+--------------------------------------------------
 
-Não escrever protocolo.
+## OBJETIVO
 
-Não escrever plano.
+Abrir o código-fonte REAL.
 
-Não escrever documentação.
+Ler linha por linha.
 
-Abrir os arquivos e inspecionar o código.
+Seguir o fluxo completo.
 
-====================================================
+Encontrar a causa raiz.
 
-MODO
+Produzir evidências.
 
-READ ONLY
+NÃO produzir hipóteses.
 
-É proibido:
+NÃO produzir opiniões.
 
-❌ alterar código
+Somente fatos encontrados no código.
 
-❌ criar componentes
+--------------------------------------------------
 
-❌ corrigir bugs
+## P0 #1
 
-❌ otimizar UI
-
-❌ mover arquivos
-
-❌ criar migrations
-
-❌ alterar RPC
-
-❌ alterar Supabase
-
-❌ alterar Contexts
-
-❌ alterar Hooks
-
-====================================================
-
-AUDITAR NESTA ORDEM
-
-1.
+AUDITAR COMPLETAMENTE
 
 src/pages/LocalCashRegisterPage.tsx
 
-Abrir o arquivo.
-
-Ler todo o código.
-
-Responder com evidências.
-
-----------------------------------------------------
-
-2.
+e
 
 src/contexts/CashRegisterContext.tsx
 
-Abrir o arquivo.
+Responder com evidências:
 
-Ler todo o código.
+1.
+Quem abre o Dialog?
 
-Mapear o fluxo completo.
-
-----------------------------------------------------
+2.
+Quem fecha?
 
 3.
-
-src/contexts/LocalPOSContext.tsx
-
-Abrir o arquivo.
-
-Ler todo o código.
-
-Mapear:
-
-• venda
-
-• stock
-
-• caixa
-
-• financeiro
-
-• fiscal
-
-• sincronização
-
-----------------------------------------------------
+Existe mais de um estado controlando o Dialog?
 
 4.
-
-PaymentModal
-
-Verificar:
-
-• overlays
-
-• body lock
-
-• scroll lock
-
-• cleanup
-
-• finally
-
-• desmontagem
-
-----------------------------------------------------
+Existe mais de um useEffect relacionado?
 
 5.
-
-Loja Online
-
-Encontrar exatamente onde o stock é reduzido.
-
-Comparar com o POS.
-
-Responder:
-
-• usam o mesmo pipeline?
-
-• usam RPC diferente?
-
-• algum fluxo está incompleto?
-
-----------------------------------------------------
+Existe renderização dupla?
 
 6.
+Existe race condition?
 
-QuantityEditor
+7.
+Existe await antes do fechamento?
 
-Verificar:
+8.
+Existe navigate durante fechamento?
 
-• renderizações
+9.
+Existe unmount durante animação?
 
-• foco
+10.
+Existe cleanup do body?
 
-• edição manual
+11.
+Existe cleanup do pointer-events?
 
-• callbacks
+12.
+Existe cleanup do overflow?
 
-• stale state
+13.
+Existe cleanup do data-scroll-locked?
 
-====================================================
+14.
+Quem adiciona esses atributos?
 
-PARA CADA PROBLEMA ENCONTRADO
+15.
+Quem remove?
 
-Informar:
+16.
+Pode existir caminho onde nunca são removidos?
 
-• arquivo
+17.
+Existe Radix Dialog conflitante?
 
-• função
+18.
+Existe mais de um Overlay?
 
-• linha aproximada
+19.
+Existe estado stale?
 
-• evidência encontrada
+20.
+Existe re-render desnecessário?
 
-• causa raiz
+Para CADA resposta mostrar:
 
-• impacto
+Arquivo
 
-• risco
+Linha
 
-Não propor correção.
+Trecho
 
-====================================================
+Motivo
 
-ENTREGA OBRIGATÓRIA
+Impacto
 
-Ao terminar devolver SOMENTE:
+--------------------------------------------------
 
-📊 RELATÓRIO DA AUDITORIA REAL
+## P0 #2
 
-Arquivos auditados
+Auditar completamente
 
-Fluxos encontrados
+LocalPOSContext.tsx
 
-P0 confirmados
+LocalPOSPage.tsx
 
-P1 confirmados
+Inventory
 
-P2 confirmados
+Sale
 
-Problemas descartados
+RPC
 
-Mapa completo do pipeline POS
+Encontrar exatamente:
 
-Mapa completo do pipeline Caixa
+Quando uma venda é concluída.
 
-Mapa completo do pipeline Stock
+Qual função dispara.
 
-Production Ready (%)
+Quem baixa stock.
 
-Nenhuma alteração de código.
+Quem sincroniza stock.
 
-Nenhuma documentação.
+Quem atualiza Loja Online.
 
-Nenhuma implementação.
+Quem atualiza Inventário.
 
-Somente evidências reais extraídas do código.
+Quem atualiza POS.
+
+Existe algum fluxo separado?
+
+Existe fluxo duplicado?
+
+Existe caminho onde a Loja Online NÃO baixa stock?
+
+Existe caminho onde POS baixa e Loja Online não baixa?
+
+Existe trigger?
+
+Existe RPC?
+
+Existe Edge Function?
+
+Existe chamada perdida?
+
+Mostrar:
+
+Arquivo
+
+Linha
+
+Fluxograma completo
+
+--------------------------------------------------
+
+## P0 #3
+
+Auditar QuantityEditor
+
+Encontrar:
+
+renderizações
+
+memo
+
+callbacks
+
+loops
+
+stale state
+
+prop drilling
+
+controlled/uncontrolled
+
+re-render desnecessário
+
+--------------------------------------------------
+
+## P0 #4
+
+Auditar Layout do POS
+
+Encontrar:
+
+containers
+
+overflow
+
+flex
+
+grid
+
+larguras fixas
+
+min-width
+
+max-width
+
+scroll horizontal
+
+centralização
+
+padding
+
+gaps
+
+porque o carrinho continua apertado
+
+porque o conteúdo não ocupa corretamente o espaço disponível
+
+--------------------------------------------------
+
+## P0 #5
+
+Auditar todos os Dialogs do POS
+
+Payment
+
+Receipt
+
+Cash Register
+
+Confirmações
+
+Encontrar:
+
+Dialog aninhado
+
+Overlay duplicado
+
+Portal duplicado
+
+Focus Trap
+
+Scroll Lock
+
+Body Lock
+
+Pointer Events
+
+--------------------------------------------------
+
+## IMPORTANTE
+
+NÃO CORRIGIR.
+
+NÃO ALTERAR.
+
+NÃO IMPLEMENTAR.
+
+NÃO OTIMIZAR.
+
+NÃO ESCREVER DOCUMENTAÇÃO.
+
+Somente investigar.
+
+--------------------------------------------------
+
+## ENTREGA
+
+Ao terminar entregar SOMENTE:
+
+📊 Relatório de Auditoria Técnica
+
+Problema P0
+
+Status:
+✅ Encontrado
+ou
+❌ Não encontrado
+
+Arquivo
+
+Linha
+
+Trecho
+
+Fluxo completo
+
+Causa raiz
+
+Impacto
+
+Probabilidade
+
+Severidade
+
+Risco para Produção
+
+Ao final emitir:
+
+Production Ready:
+
+SIM
+
+ou
+
+NÃO
+
+com justificativa baseada EXCLUSIVAMENTE nas evidências encontradas no código.
