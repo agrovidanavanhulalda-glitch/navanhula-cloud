@@ -37,6 +37,8 @@ import {
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { releaseBodyLocks, withCleanup } from '@/lib/dom-utils';
+
 
 // HYBRID: Local POS data + Alto Contraste para uso em loja
 
