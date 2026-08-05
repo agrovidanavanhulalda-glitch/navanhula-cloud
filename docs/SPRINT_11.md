@@ -1,124 +1,56 @@
-# SPRINT 11 — POS PRODUCTION READY (PRIORIDADE MÁXIMA)
+# SPRINT 11.1 — POS STABILITY & CASH REGISTER AUDIT (PRIORIDADE CRÍTICA)
 
 ## MISSÃO
 
-A partir deste Sprint está PROIBIDO criar novos módulos, páginas ou funcionalidades.
+Nesta Sprint está PROIBIDO desenvolver novas funcionalidades ou alterar o design visual do sistema.
 
-Todo o esforço da equipa deverá ser dedicado EXCLUSIVAMENTE ao módulo POS (Point of Sale) até atingir nível Enterprise Production Ready, comparável aos melhores sistemas do mercado (Square POS, Shopify POS, Lightspeed POS e Toast POS).
+O objetivo é realizar uma auditoria técnica completa do módulo POS e eliminar definitivamente todos os problemas operacionais relacionados ao Caixa (Cash Register), sincronização e fluxo de venda.
 
-O objetivo deste Sprint NÃO é adicionar funcionalidades novas, mas sim eliminar todos os problemas de UX, UI, estabilidade, integração e regras de negócio.
-
----
-
-# REGRAS OBRIGATÓRIAS
-
-- NÃO alterar regras fiscais.
-- NÃO alterar lógica de negócio sem necessidade.
-- NÃO criar novos módulos.
-- NÃO quebrar funcionalidades existentes.
-- ZERO regressões.
-- Preservar Supabase.
-- Preservar RPCs.
-- Preservar RLS.
-- Preservar Billing.
-- Preservar CRM.
-- Preservar Inventário.
-- Preservar Performance.
-- Utilizar exclusivamente Design Tokens semânticos.
-- Nenhum valor hardcoded.
-- WCAG AA obrigatório.
-- Dark Mode obrigatório.
+Toda correção deverá ser baseada em evidências reais, identificando e resolvendo a causa raiz de cada problema.
 
 ---
 
-# FASE 1 — CORREÇÃO DOS PROBLEMAS CRÍTICOS (P0)
+# PADRÃO OBRIGATÓRIO
 
-## 1. Corrigir definitivamente o Fecho de Caixa
+🛡️ ROOT CAUSE FIRST
 
-Hoje o módulo ainda apresenta problemas.
+🛡️ EVIDENCE FIRST
 
-Investigar profundamente toda a cadeia do processo:
+🛡️ ZERO REGRESSION
+
+🛡️ PRODUCTION SAFE
+
+🛡️ ENTERPRISE GRADE
+
+---
+
+# ESCOPO
+
+Auditar completamente os seguintes módulos:
+
+- LocalCashRegisterPage
+- LocalPOSPage
+- PaymentModal
+- ThermalReceipt
+- CashRegisterContext
+- POS Context
+- Inventory Integration
+- Sales Pipeline
+- Fiscal Pipeline
+- Dashboard Updates
+- Online Store Integration
+
+---
+
+# P0 — AUDITORIA COMPLETA DO CAIXA
+
+Realizar um mapeamento completo do fluxo:
 
 Abrir Caixa
 
 ↓
 
-Venda
-
-↓
-
-Pagamento
-
-↓
-
-Emissão de Documento
-
-↓
-
-Fechar Caixa
-
-Eliminar definitivamente qualquer conflito envolvendo:
-
-- Radix Dialog
-- Overlay
-- Body Lock
-- Pointer Events
-- Overflow
-- Focus Trap
-- Re-render
-- Estado React
-- Scroll Lock
-
-Após fechar o caixa:
-
-- nenhum blur poderá permanecer;
-- nenhum overlay poderá existir;
-- nenhuma tela poderá ficar bloqueada;
-- nenhuma área poderá perder clique.
-
-O sistema deve voltar imediatamente ao estado normal.
-
----
-
-## 2. Corrigir sincronização do Stock
-
-Existe um problema onde vendas realizadas pela Loja Online não descontam corretamente no stock geral.
-
-Realizar auditoria completa.
-
-Implementar uma ÚNICA fonte de verdade para o stock.
-
-Toda movimentação deverá atualizar automaticamente:
-
-- POS
-- Loja Online
-- Inventário
-- Dashboard
-- CRM
-- Relatórios
-- Indicadores
-
-Não poderá existir divergência entre módulos.
-
----
-
-## 3. Auditoria completa do fluxo de venda
-
-Validar ponta a ponta:
-
-Abrir Caixa
-
-↓
-
-Selecionar Produto
-
-↓
-
-Editar Quantidade
-
-↓
-
-Aplicar Desconto
+Registrar Venda
 
 ↓
 
@@ -126,7 +58,7 @@ Receber Pagamento
 
 ↓
 
-Emitir Documento
+Emitir Documento Fiscal
 
 ↓
 
@@ -146,194 +78,221 @@ Fechar Caixa
 
 ↓
 
+Persistir Estado
+
+↓
+
 Atualizar Relatórios
 
-Toda inconsistência encontrada deverá ser corrigida.
+Para cada etapa identificar:
+
+- estado React;
+- hooks utilizados;
+- chamadas RPC;
+- queries Supabase;
+- transações;
+- locks;
+- overlays;
+- dialogs;
+- sincronizações;
+- possíveis condições de corrida (race conditions).
 
 ---
 
-# FASE 2 — REDESENHO COMPLETO DA EXPERIÊNCIA DO POS
+# CORRIGIR DEFINITIVAMENTE
 
-A aparência geral já está bonita, porém ainda NÃO transmite conforto operacional.
+Investigar qualquer situação onde:
 
-O painel direito (Carrinho) continua apertado.
+- o caixa permanece aberto;
+- o fechamento não conclui;
+- existe overlay residual;
+- existe bloqueio de scroll;
+- existe perda de foco;
+- existe estado inconsistente.
 
-Reprojetar toda a experiência inspirando-se em:
+Eliminar definitivamente:
 
-- Square POS
-- Shopify POS
-- Lightspeed POS
-- Toast POS
+- race conditions;
+- estados órfãos;
+- dialogs presos;
+- overlays persistentes;
+- pointer-events residuais;
+- overflow bloqueado;
+- inconsistências de renderização.
 
-Objetivos:
+Não aplicar soluções paliativas.
 
-- aumentar espaço útil;
-- melhorar respiro visual;
-- melhorar alinhamentos;
-- melhorar hierarquia visual;
-- reduzir sensação de aperto;
-- tornar a operação extremamente confortável.
-
----
-
-## Item do Carrinho
-
-Cada item deverá conter:
-
-- imagem maior;
-- nome do produto;
-- SKU;
-- categoria;
-- preço unitário;
-- editor de quantidade;
-- subtotal;
-- remover item.
-
-Tudo perfeitamente alinhado.
+Corrigir apenas a causa raiz.
 
 ---
 
-## Quantity Editor Enterprise
+# AUDITORIA DE STOCK
 
-O número da quantidade deverá funcionar exatamente igual ao módulo de Cotações.
+Validar completamente a arquitetura do stock.
 
-Obrigatório:
+Responder através de evidências:
 
-✔ clicar diretamente no número;
+Existe apenas uma fonte de verdade?
 
-✔ escrever manualmente;
+OU
 
-✔ auto selecionar valor;
+Existem fluxos independentes?
 
-✔ Enter confirma;
+Auditar:
 
-✔ Esc cancela;
+POS
 
-✔ Blur confirma;
+↓
 
-✔ aceitar teclado numérico;
+Loja Online
 
-✔ aceitar ↑ ↓;
+↓
 
-✔ aceitar grandes quantidades;
+Inventário
 
-✔ excelente experiência em touch.
+↓
 
-O campo NÃO poderá ficar pequeno.
+Dashboard
 
----
+↓
 
-## Checkout Premium
+CRM
 
-Melhorar completamente:
+↓
 
-- cartões de pagamento;
-- dinheiro;
-- M-Pesa;
-- e-Mola;
-- cartão;
-- valor entregue;
-- troco;
-- teclado numérico;
-- espaçamento;
-- alinhamentos;
-- centralização.
+Relatórios
 
-Toda experiência deverá parecer um sistema Enterprise moderno.
+↓
 
----
+Histórico
 
-# FASE 3 — DOCUMENTOS FISCAIS
+Toda venda realizada em qualquer canal deverá refletir imediatamente no stock geral.
 
-Revisar completamente:
+Caso existam divergências:
 
-- Fatura;
-- Fatura-Recibo;
-- Recibo;
-- Impressão Térmica;
-- PDF.
+identificar exatamente:
 
-Melhorar:
-
-- alinhamentos;
-- tipografia;
-- margens;
-- logótipo;
-- totais;
-- QR Fiscal;
-- assinatura digital;
-- identificação do operador;
-- identificação da loja.
-
-Os documentos devem possuir aparência comercial profissional.
+- arquivo;
+- função;
+- hook;
+- query;
+- RPC;
+- evento responsável.
 
 ---
 
-# FASE 4 — RESPONSIVIDADE
+# AUDITORIA DA VENDA
 
-Revisar TODAS as telas do POS.
+Executar testes completos para:
 
-Garantir funcionamento perfeito em:
+Venda simples
 
-1366×768
+Venda múltipla
 
-1440×900
+Grande quantidade
 
-1600×900
+Desconto
 
-1920×1080
+Cancelamento
 
-Nenhuma página poderá apresentar:
+Pagamento Dinheiro
 
-- elementos apertados;
-- componentes desalinhados;
-- cartões cortados;
-- grids quebrados;
-- overflow;
-- scrolls desnecessários;
-- conteúdo descentralizado.
+Pagamento M-Pesa
 
-Todo o layout deverá permanecer elegante em qualquer resolução.
+Pagamento e-Mola
+
+Pagamento Cartão
+
+Impressão
+
+PDF
+
+Recibo
+
+Stock
+
+Dashboard
+
+Caixa
+
+Caso algum fluxo falhe:
+
+identificar a causa.
+
+Não mascarar sintomas.
 
 ---
 
-# FASE 5 — QUALITY ASSURANCE
+# VALIDAÇÃO DE DADOS
 
-Executar auditoria completa do POS.
+Verificar:
 
-Validar:
+Duplicação de vendas
 
-✅ Abrir Caixa
+Duplicação de pagamentos
 
-✅ Fechar Caixa
+Duplicação de stock
 
-✅ Venda
+Duplicação de documentos
 
-✅ Cancelamento
+Perda de sincronização
 
-✅ Devolução (se existir)
+Falha offline
 
-✅ Desconto
+Falha online
 
-✅ Pagamento
+Reconciliação
 
-✅ Impressão
+Integridade transacional
 
-✅ PDF
+---
 
-✅ Atualização do Stock
+# PERFORMANCE
 
-✅ Dashboard
+Auditar:
 
-✅ Fiscal
+Renderizações
 
-✅ Performance
+Re-renderizações
 
-✅ Responsividade
+Loops
 
-✅ Dark Mode
+useEffect
 
-✅ Acessibilidade
+useMemo
+
+useCallback
+
+Context Providers
+
+Suspense
+
+Lazy Loading
+
+Virtualização
+
+Objetivo:
+
+Zero renderizações desnecessárias.
+
+---
+
+# MÓDULOS PROTEGIDOS
+
+É PROIBIDO introduzir regressões em:
+
+- POS Engine
+- Fiscal
+- Billing
+- CRM
+- Auth
+- RLS
+- Supabase
+- Edge Functions
+- Workers
+- RPCs
+- Inventário
+- Dashboard
 
 ---
 
@@ -345,59 +304,97 @@ Validar:
 
 🔍 Code Auditor
 
-🧪 QA/Test Engineer
+🧪 Testing Agent
 
 🚀 Performance Engineer
 
 🔌 POS Integration Engineer
 
-Todos deverão validar o código antes da conclusão.
+Todos deverão produzir evidências.
 
 ---
 
-# RELATÓRIO FINAL OBRIGATÓRIO
+# QUALITY GATE
 
-Ao terminar o Sprint apresentar:
+Antes de concluir executar:
 
-- Arquivos modificados;
-- Problemas encontrados;
-- Problemas corrigidos;
-- Testes executados;
-- Regressões encontradas;
-- Performance antes/depois;
-- Pontuação Enterprise;
-- Pontuação UX;
-- Pontuação WCAG;
-- Pontuação Responsividade;
-- Prontidão Comercial;
-- Prontidão Produção.
+✅ Typecheck
+
+✅ Vitest
+
+✅ Testes POS
+
+✅ Testes Caixa
+
+✅ Testes Stock
+
+✅ Testes Dashboard
+
+✅ Testes Fiscal
+
+✅ Testes Billing
+
+✅ Testes Integração
+
+Zero regressão permitida.
 
 ---
 
-# CRITÉRIO DE ACEITAÇÃO
+# RELATÓRIO OBRIGATÓRIO
 
-Este Sprint SOMENTE poderá ser encerrado quando:
+Apresentar:
 
-✔ O fecho de caixa funcionar em 100% dos cenários.
+## Problemas encontrados
 
-✔ O stock permanecer sincronizado entre POS, Loja Online, Inventário e Dashboard.
+Classificados por:
 
-✔ O carrinho proporcionar uma experiência confortável e moderna.
+P0
 
-✔ O Quantity Editor permitir edição direta pelo teclado, exatamente como no módulo de Cotações.
+P1
 
-✔ Todas as telas estiverem perfeitamente alinhadas e centralizadas.
+P2
 
-✔ O checkout possuir aparência Enterprise.
+## Evidências
 
-✔ Os documentos fiscais tiverem qualidade comercial.
+Para cada problema informar:
 
-✔ Todos os testes passarem.
+- arquivo;
+- função;
+- causa raiz;
+- impacto.
 
-✔ Zero regressões.
+## Correções aplicadas
 
-✔ Nenhum bug conhecido permanecer aberto.
+Explicar exatamente:
 
-## OBJETIVO FINAL
+- o que foi alterado;
+- por que foi alterado;
+- qual problema resolveu.
 
-Transformar o módulo POS da NAVANHULA CLOUD numa solução Enterprise robusta, elegante, estável e pronta para utilização em ambiente real de produção. Nenhum novo módulo deverá ser desenvolvido antes da conclusão e homologação completa deste Sprint.
+## Testes
+
+Quantidade executada.
+
+Quantidade aprovada.
+
+Quantidade reprovada.
+
+Cobertura.
+
+## Performance
+
+Antes
+
+Depois
+
+## Resultado Final
+
+Production Ready:
+
+SIM ou NÃO.
+
+Caso NÃO:
+
+listar exatamente o que ainda impede o módulo POS de ser considerado pronto para produção.
+
+Nenhum problema poderá ser ocultado. O relatório deve refletir fielmente o estado atual do sistema.
