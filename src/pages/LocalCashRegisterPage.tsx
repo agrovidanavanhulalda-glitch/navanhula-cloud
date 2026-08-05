@@ -435,7 +435,7 @@ const LocalCashRegisterPage: React.FC = () => {
       </Dialog>
 
       {/* Close Register Dialog */}
-      <Dialog open={showCloseDialog} onOpenChange={(o) => { setShowCloseDialog(o); if (!o) requestAnimationFrame(releaseBodyLocks); }}>
+      <Dialog open={showCloseDialog} onOpenChange={(o) => { setShowCloseDialog(o); if (!o) releaseBodyLocks(); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl">Fechar Caixa</DialogTitle>
