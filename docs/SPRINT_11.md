@@ -1,334 +1,249 @@
-# 🛡️ SPRINT 11.2.C — AUDITORIA REAL DO CÓDIGO (EVIDENCE FIRST)
+# 🛡️ SPRINT 11.3 — IMPLEMENTAÇÃO DOS P0 (ZERO REGRESSION)
 
-## MODO
-READ-ONLY ABSOLUTO.
+## MISSÃO
 
-É EXPRESSAMENTE PROIBIDO:
+Implementar SOMENTE as correções dos P0 confirmados na Sprint 11.2.
 
-- criar documentação;
-- editar documentação;
-- criar Markdown;
-- alterar código;
-- criar migrações;
-- alterar RPCs;
-- alterar RLS;
-- alterar Hooks;
-- alterar Contexts;
-- alterar componentes.
+É PROIBIDO:
 
-Nesta Sprint você NÃO É um programador.
+❌ Criar novos recursos
+❌ Alterar UI sem necessidade
+❌ Refatorar módulos não auditados
+❌ Alterar Billing
+❌ Alterar Fiscal
+❌ Alterar CRM
+❌ Alterar Auth
+❌ Alterar RLS
+❌ Alterar RPCs não relacionadas
+❌ Alterar Edge Functions não relacionadas
+❌ Alterar documentação
 
-Você é um AUDITOR TÉCNICO.
+Objetivo:
 
-Seu único trabalho é INVESTIGAR.
-
---------------------------------------------------
-
-## OBJETIVO
-
-Abrir o código-fonte REAL.
-
-Ler linha por linha.
-
-Seguir o fluxo completo.
-
-Encontrar a causa raiz.
-
-Produzir evidências.
-
-NÃO produzir hipóteses.
-
-NÃO produzir opiniões.
-
-Somente fatos encontrados no código.
+Eliminar exclusivamente as causas raiz confirmadas.
 
 --------------------------------------------------
 
-## P0 #1
+# P0-001 + P0-002
 
-AUDITAR COMPLETAMENTE
+## Fecho de Caixa
 
-src/pages/LocalCashRegisterPage.tsx
+Eliminar definitivamente o problema de:
 
-e
+• Overlay preso
 
-src/contexts/CashRegisterContext.tsx
+• Body Lock
 
-Responder com evidências:
+• Pointer Events
 
-1.
-Quem abre o Dialog?
+• Scroll Lock
 
-2.
-Quem fecha?
+Substituir o hack baseado em requestAnimationFrame por um fluxo determinístico.
 
-3.
-Existe mais de um estado controlando o Dialog?
+Criar uma única rotina reutilizável responsável por:
 
-4.
-Existe mais de um useEffect relacionado?
+- remover pointer-events
+- remover overflow
+- remover data-scroll-locked
+- remover locks residuais
 
-5.
-Existe renderização dupla?
+Essa rotina deve ser executada exatamente uma vez no encerramento do diálogo.
 
-6.
-Existe race condition?
-
-7.
-Existe await antes do fechamento?
-
-8.
-Existe navigate durante fechamento?
-
-9.
-Existe unmount durante animação?
-
-10.
-Existe cleanup do body?
-
-11.
-Existe cleanup do pointer-events?
-
-12.
-Existe cleanup do overflow?
-
-13.
-Existe cleanup do data-scroll-locked?
-
-14.
-Quem adiciona esses atributos?
-
-15.
-Quem remove?
-
-16.
-Pode existir caminho onde nunca são removidos?
-
-17.
-Existe Radix Dialog conflitante?
-
-18.
-Existe mais de um Overlay?
-
-19.
-Existe estado stale?
-
-20.
-Existe re-render desnecessário?
-
-Para CADA resposta mostrar:
-
-Arquivo
-
-Linha
-
-Trecho
-
-Motivo
-
-Impacto
+Não utilizar timers desnecessários.
 
 --------------------------------------------------
 
-## P0 #2
+# P0-003
 
-Auditar completamente
+## Permissões do Caixa
 
-LocalPOSContext.tsx
+Auditar o fluxo de permissões.
 
-LocalPOSPage.tsx
+Garantir consistência entre:
 
-Inventory
+cash.open
 
-Sale
+cash.close
 
-RPC
+cash.close_any
 
-Encontrar exatamente:
+Administrador
 
-Quando uma venda é concluída.
+O operador que abriu um caixa deve conseguir fechá-lo conforme a política definida pelo sistema.
 
-Qual função dispara.
-
-Quem baixa stock.
-
-Quem sincroniza stock.
-
-Quem atualiza Loja Online.
-
-Quem atualiza Inventário.
-
-Quem atualiza POS.
-
-Existe algum fluxo separado?
-
-Existe fluxo duplicado?
-
-Existe caminho onde a Loja Online NÃO baixa stock?
-
-Existe caminho onde POS baixa e Loja Online não baixa?
-
-Existe trigger?
-
-Existe RPC?
-
-Existe Edge Function?
-
-Existe chamada perdida?
-
-Mostrar:
-
-Arquivo
-
-Linha
-
-Fluxograma completo
+Eliminar inconsistências.
 
 --------------------------------------------------
 
-## P0 #3
+# P0-004
 
-Auditar QuantityEditor
+## Atomicidade do fluxo de venda
 
-Encontrar:
+Revisar completeSale().
 
-renderizações
+Garantir que:
 
-memo
+cart
 
-callbacks
+stock
 
-loops
+sales
 
-stale state
+queue
 
-prop drilling
+permaneçam consistentes.
 
-controlled/uncontrolled
+Nenhum estado parcial pode permanecer caso ocorra erro.
 
-re-render desnecessário
-
---------------------------------------------------
-
-## P0 #4
-
-Auditar Layout do POS
-
-Encontrar:
-
-containers
-
-overflow
-
-flex
-
-grid
-
-larguras fixas
-
-min-width
-
-max-width
-
-scroll horizontal
-
-centralização
-
-padding
-
-gaps
-
-porque o carrinho continua apertado
-
-porque o conteúdo não ocupa corretamente o espaço disponível
+Utilizar fluxo transacional no estado local.
 
 --------------------------------------------------
 
-## P0 #5
+# P0-005
 
-Auditar todos os Dialogs do POS
+## Sincronização de Stock
 
-Payment
+Enquanto existir sincronização pendente:
 
-Receipt
+Realtime NÃO pode sobrescrever o stock otimista.
 
-Cash Register
+Criar mecanismo de proteção.
 
-Confirmações
+Objetivo:
 
-Encontrar:
+offline stock
 
-Dialog aninhado
+↓
 
-Overlay duplicado
+sync queue
 
-Portal duplicado
+↓
 
-Focus Trap
+confirmação
 
-Scroll Lock
+↓
 
-Body Lock
+Realtime
 
-Pointer Events
-
---------------------------------------------------
-
-## IMPORTANTE
-
-NÃO CORRIGIR.
-
-NÃO ALTERAR.
-
-NÃO IMPLEMENTAR.
-
-NÃO OTIMIZAR.
-
-NÃO ESCREVER DOCUMENTAÇÃO.
-
-Somente investigar.
+Nunca o contrário.
 
 --------------------------------------------------
 
-## ENTREGA
+# P0-006
 
-Ao terminar entregar SOMENTE:
+## Fecho de Caixa Offline
 
-📊 Relatório de Auditoria Técnica
+Implementar estratégia equivalente ao syncManager utilizado nas vendas.
 
-Problema P0
+Caso Supabase esteja indisponível:
+
+registrar fechamento
+
+↓
+
+enfileirar
+
+↓
+
+sincronizar posteriormente
+
+Nunca perder o fechamento.
+
+--------------------------------------------------
+
+# P0-007
+
+## Identidade da Loja
+
+Eliminar fallback inseguro.
+
+Nunca selecionar automaticamente a primeira loja.
+
+Caso store_id seja inválido:
+
+mostrar erro
+
+ou
+
+solicitar seleção.
+
+Jamais assumir outra filial.
+
+--------------------------------------------------
+
+# REQUISITOS
+
+Todas as alterações devem:
+
+✅ manter TypeScript strict
+
+✅ manter performance O(n)
+
+✅ manter compatibilidade
+
+✅ manter hooks existentes
+
+✅ manter queries existentes
+
+✅ manter componentes existentes
+
+✅ manter UX atual
+
+--------------------------------------------------
+
+# TESTES OBRIGATÓRIOS
+
+Executar:
+
+✓ abrir caixa
+✓ fechar caixa
+✓ venda online
+✓ venda offline
+✓ sincronização
+✓ atualização de stock
+✓ realtime
+✓ perda de internet
+✓ retorno da internet
+✓ troca de loja
+✓ múltiplos fechamentos
+✓ múltiplas vendas
+
+--------------------------------------------------
+
+# QUALITY GATE
+
+Entregar:
+
+📊 Relatório de Execução
+
+Para cada P0 informar:
 
 Status:
-✅ Encontrado
-ou
-❌ Não encontrado
 
-Arquivo
-
-Linha
-
-Trecho
-
-Fluxo completo
-
-Causa raiz
-
-Impacto
-
-Probabilidade
-
-Severidade
-
-Risco para Produção
-
-Ao final emitir:
-
-Production Ready:
-
-SIM
+✅ Corrigido
 
 ou
 
-NÃO
+❌ Não corrigido
 
-com justificativa baseada EXCLUSIVAMENTE nas evidências encontradas no código.
+Arquivo(s) modificados
+
+Resumo técnico
+
+Risco residual
+
+Testes executados
+
+Regressões encontradas
+
+Ao final informar:
+
+Production Readiness (%)
+
+Commercial Readiness (%)
+
+Operational Readiness (%)
+
+Enterprise Readiness (%)
+
+Somente considerar a Sprint aprovada se TODOS os P0 confirmados estiverem corregidos, testados e sem regressões.
