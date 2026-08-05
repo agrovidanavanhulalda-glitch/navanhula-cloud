@@ -1,342 +1,231 @@
-# SPRINT 11.2 — EXECUÇÃO REAL DA AUDITORIA TÉCNICA (SEM DOCUMENTAÇÃO)
-
-MISSÃO
-
-A partir desta Sprint é TERMINANTEMENTE PROIBIDO:
-
-❌ Criar documentação.
-❌ Atualizar docs/SPRINT_11.md.
-❌ Criar novos protocolos.
-❌ Gerar relatórios genéricos.
-❌ Responder apenas com "documentação consolidada".
-
-Toda a documentação necessária já existe.
-
-Esta Sprint é exclusivamente para INSPECIONAR O CÓDIGO REAL.
-
-==================================================
+🛡️ SPRINT 11.2.A — EXECUÇÃO REAL DA AUDITORIA (EVIDENCE FIRST)
 
 MODO OBRIGATÓRIO
 
-🛡 READ ONLY
+Esta Sprint NÃO é para corrigir absolutamente nada.
 
-🛡 EVIDENCE FIRST
+É proibido:
 
-🛡 ROOT CAUSE FIRST
+- alterar código
+- criar componentes
+- otimizar UI
+- refatorar
+- mover arquivos
+- alterar RPC
+- alterar Supabase
+- alterar RLS
+- alterar migrations
+- alterar hooks
+- alterar contextos
 
-🛡 ZERO REGRESSION
+Esta Sprint é exclusivamente uma inspeção técnica do código existente.
 
-🛡 NÃO MODIFICAR CÓDIGO
-
-==================================================
+====================================================
 
 OBJETIVO
 
-Abrir os arquivos reais do projeto.
+Abrir cada arquivo crítico do POS e auditá-lo linha por linha.
 
-Ler todo o fluxo.
+Nenhuma conclusão pode ser baseada em hipótese.
 
-Produzir um relatório técnico baseado exclusivamente em evidências encontradas no código.
+Toda conclusão deve conter evidência real encontrada no código.
 
-Não assumir.
+====================================================
 
-Não inferir.
+ORDEM DA AUDITORIA
 
-Não inventar.
-
-Somente fatos encontrados.
-
-==================================================
-
-AUDITAR COMPLETAMENTE
+P0
 
 1.
-src/pages/LocalCashRegisterPage.tsx
+LocalCashRegisterPage.tsx
+
+Responder:
+
+• como inicia o fecho
+• quem chama closeCashRegister()
+• quais estados são alterados
+• quais dialogs permanecem montados
+• existe race condition?
+• existe stale state?
+• existe body lock?
+• existe overlay preso?
+• existe scroll lock?
+• existe cleanup?
+• existe try/finally?
+• existe await incorreto?
+
+Mostrar evidências.
+
+----------------------------------------------------
 
 2.
-src/contexts/CashRegisterContext.tsx
+
+CashRegisterContext.tsx
+
+Responder:
+
+• fluxo completo do fecho
+• estados alterados
+• RPC utilizada
+• rollback
+• tratamento de erro
+• concorrência
+• possíveis estados inválidos
+
+Mostrar evidências.
+
+----------------------------------------------------
 
 3.
-src/pages/LocalPOSPage.tsx
+
+LocalPOSContext.tsx
+
+Responder:
+
+Fluxo completo da venda.
+
+Após finalizar uma venda:
+
+quem baixa stock?
+
+quem atualiza inventário?
+
+quem sincroniza loja online?
+
+quem atualiza dashboard?
+
+quem atualiza caixa?
+
+quem atualiza financeiro?
+
+quem atualiza fiscal?
+
+Existe algum fluxo quebrado?
+
+Mostrar evidências.
+
+----------------------------------------------------
 
 4.
-src/contexts/LocalPOSContext.tsx
 
-5.
-src/components/pos/PaymentModal.tsx
-
-6.
-src/components/reports/ThermalReceipt.tsx
-
-7.
-Pipeline de Venda
-
-8.
 Pipeline Fiscal
 
-9.
-Pipeline de Stock
+Encontrar:
 
-10.
-Pipeline Loja Online
+• emissão fiscal
 
-11.
-Pipeline Dashboard
+• movimento financeiro
 
-12.
-RPCs relacionadas
+• stock
 
-13.
-Hooks
+• histórico
 
-14.
-Contexts
+• recibo
 
-15.
-Dialogs
+Confirmar ordem de execução.
 
-16.
-Overlays
-
-17.
-Body Lock
-
-18.
-Scroll Lock
-
-19.
-Pointer Events
-
-20.
-QuantityEditor
-
-==================================================
-
-PARA CADA ARQUIVO RESPONDER
-
-Arquivo:
-
-Função:
-
-Linha aproximada:
-
-Responsabilidade:
-
-Fluxo executado:
-
-Dependências:
-
-Quem chama:
-
-Quem consome:
-
-Possíveis efeitos colaterais:
-
-==================================================
-
-PROCURAR
-
-✓ Race Conditions
-
-✓ Stale State
-
-✓ Renderizações duplicadas
-
-✓ Loops
-
-✓ Deadlocks
-
-✓ Body Lock
-
-✓ Overlay preso
-
-✓ Scroll Lock
-
-✓ Pointer Events presos
-
-✓ RPC duplicada
-
-✓ Atualizações perdidas
-
-✓ Transações incompletas
-
-✓ Rollback incompleto
-
-✓ Stock inconsistente
-
-✓ Venda inconsistente
-
-✓ Caixa inconsistente
-
-✓ Dashboard inconsistente
-
-✓ Loja Online inconsistente
-
-==================================================
-
-PARA CADA PROBLEMA ENCONTRADO
-
-Gerar exatamente neste formato:
-
---------------------------------------------------
-
-ID:
-
-P0-001
-
-Arquivo:
-
-Função:
-
-Linha aproximada:
-
-Problema encontrado:
-
-Evidência:
-
-Causa raiz:
-
-Impacto:
-
-Risco:
-
-Prioridade:
-
-Sugestão técnica:
-
-Tempo estimado:
-
---------------------------------------------------
-
-Não agrupar problemas.
-
-Cada problema deve possuir seu próprio bloco.
-
-==================================================
-
-NO FINAL GERAR
-
-1.
-Mapa completo do fluxo POS
-
-↓
-
-2.
-Mapa do fluxo Caixa
-
-↓
-
-3.
-Mapa do fluxo Fiscal
-
-↓
-
-4.
-Mapa do fluxo Estoque
-
-↓
+----------------------------------------------------
 
 5.
-Mapa Loja Online
 
-↓
+Loja Online
+
+Responder:
+
+Quando uma venda é feita na Loja Online,
+
+qual função baixa o stock?
+
+usa o mesmo pipeline do POS?
+
+usa outra RPC?
+
+há duplicação?
+
+há ausência de sincronização?
+
+Mostrar evidências.
+
+----------------------------------------------------
 
 6.
-Mapa Dashboard
 
-↓
+PaymentModal
+
+Responder:
+
+Existe body lock?
+
+Existe overlay preso?
+
+Existe cleanup?
+
+Existe removeEventListener?
+
+Existe finally?
+
+Existe desmontagem correta?
+
+----------------------------------------------------
 
 7.
-Mapa RPC
 
-↓
+QuantityEditor
 
-8.
-Mapa Contextos
+Responder:
 
-↓
+Há renders desnecessários?
 
-9.
-Lista completa dos problemas encontrados
+Há re-render em cascata?
 
-↓
+Há perda de foco?
 
-10.
-Matriz de risco
+Há stale props?
 
-↓
+====================================================
 
-11.
-Dependências
+ENTREGAR
 
-↓
+Não corrigir nada.
 
-12.
-Ordem correta de correção
+Gerar apenas um relatório contendo:
 
-==================================================
+P0 encontrados
 
-CLASSIFICAR
+P1 encontrados
 
-🔴 P0
+P2 encontrados
 
-🟠 P1
+arquivo
 
-🟡 P2
+função
 
-🔵 P3
+linha aproximada
 
-==================================================
+causa raiz
 
-PROIBIDO
+impacto
 
-❌ Alterar qualquer arquivo
+risco
 
-❌ Criar migrations
+evidência
 
-❌ Alterar RPC
+====================================================
 
-❌ Alterar RLS
+Ao final apresentar apenas:
 
-❌ Alterar Hooks
+📊 Relatório de Auditoria
 
-❌ Alterar Contexts
+Arquivos auditados
 
-❌ Alterar POS
+Problemas encontrados
 
-❌ Alterar Billing
+Problemas NÃO encontrados
 
-❌ Alterar Fiscal
+Mapa completo dos fluxos
 
-❌ Alterar CRM
+Production Ready (%)
 
-❌ Alterar Inventário
+NÃO IMPLEMENTAR CORREÇÕES.
 
-❌ Alterar Loja Online
-
-❌ Alterar Dashboard
-
-==================================================
-
-RESULTADO ESPERADO
-
-Não quero documentação.
-
-Não quero protocolo.
-
-Não quero planejamento.
-
-Quero apenas evidências reais encontradas no código.
-
-A Sprint somente será considerada concluída quando existir uma lista completa de todos os problemas P0, P1, P2 e P3 encontrados, cada um contendo:
-
-• Arquivo
-• Função
-• Linha aproximada
-• Evidência
-• Causa raiz
-• Impacto
-• Prioridade
-• Sugestão técnica
-
-Somente após essa auditoria completa será autorizada a Sprint 11.3 para implementação das correções.
+A próxima Sprint (11.3) será exclusivamente para corrigir os P0 confirmados.
