@@ -1,12 +1,14 @@
-# SPRINT 11.1 — POS STABILITY & CASH REGISTER AUDIT (PRIORIDADE CRÍTICA)
+# SPRINT 11.1.A — AUDITORIA TÉCNICA P0 DO POS (ROOT CAUSE ANALYSIS)
 
 ## MISSÃO
 
-Nesta Sprint está PROIBIDO desenvolver novas funcionalidades ou alterar o design visual do sistema.
+NÃO implementar correções nesta Sprint.
 
-O objetivo é realizar uma auditoria técnica completa do módulo POS e eliminar definitivamente todos os problemas operacionais relacionados ao Caixa (Cash Register), sincronização e fluxo de venda.
+O objetivo desta fase é exclusivamente identificar, documentar e comprovar a causa raiz dos problemas críticos do módulo POS antes de qualquer alteração de código.
 
-Toda correção deverá ser baseada em evidências reais, identificando e resolvendo a causa raiz de cada problema.
+Toda conclusão deverá ser baseada em evidências reais do código.
+
+É proibido assumir causas sem comprovação.
 
 ---
 
@@ -16,135 +18,90 @@ Toda correção deverá ser baseada em evidências reais, identificando e resolv
 
 🛡️ EVIDENCE FIRST
 
+🛡️ READ ONLY
+
+🛡️ ZERO CODE CHANGES
+
 🛡️ ZERO REGRESSION
 
-🛡️ PRODUCTION SAFE
-
-🛡️ ENTERPRISE GRADE
-
 ---
 
-# ESCOPO
+# ESCOPO DA AUDITORIA
 
-Auditar completamente os seguintes módulos:
+Auditar completamente:
 
-- LocalCashRegisterPage
-- LocalPOSPage
-- PaymentModal
-- ThermalReceipt
+- LocalCashRegisterPage.tsx
+- LocalPOSPage.tsx
 - CashRegisterContext
 - POS Context
-- Inventory Integration
-- Sales Pipeline
-- Fiscal Pipeline
-- Dashboard Updates
-- Online Store Integration
+- Sales Context
+- Inventory Context
+- PaymentModal
+- ThermalReceipt
+- Dashboard
+- Loja Online
+- Fluxo de Inventário
 
 ---
 
-# P0 — AUDITORIA COMPLETA DO CAIXA
+# PROBLEMA P0 — FECHO DE CAIXA
 
-Realizar um mapeamento completo do fluxo:
+Responder com evidências:
 
-Abrir Caixa
+1. Qual função inicia o fecho do caixa?
 
-↓
+2. Qual função confirma o fecho?
 
-Registrar Venda
+3. Existe transação?
 
-↓
+4. Existe rollback?
 
-Receber Pagamento
+5. Existe await pendente?
 
-↓
+6. Existe race condition?
 
-Emitir Documento Fiscal
+7. Existe dupla atualização de estado?
 
-↓
+8. Existe estado órfão?
 
-Atualizar Stock
+9. Existe overlay que permanece ativo?
 
-↓
+10. Existe Dialog que não desmonta?
 
-Atualizar Dashboard
+11. Existe bloqueio de scroll?
 
-↓
+12. Existe pointer-events residual?
 
-Atualizar Caixa
+13. Existe problema de renderização?
 
-↓
+Para cada resposta informar:
 
-Fechar Caixa
-
-↓
-
-Persistir Estado
-
-↓
-
-Atualizar Relatórios
-
-Para cada etapa identificar:
-
-- estado React;
-- hooks utilizados;
-- chamadas RPC;
-- queries Supabase;
-- transações;
-- locks;
-- overlays;
-- dialogs;
-- sincronizações;
-- possíveis condições de corrida (race conditions).
+- arquivo;
+- função;
+- linha;
+- evidência.
 
 ---
 
-# CORRIGIR DEFINITIVAMENTE
+# PROBLEMA P0 — STOCK
 
-Investigar qualquer situação onde:
+Mapear completamente o fluxo.
 
-- o caixa permanece aberto;
-- o fechamento não conclui;
-- existe overlay residual;
-- existe bloqueio de scroll;
-- existe perda de foco;
-- existe estado inconsistente.
+Responder:
 
-Eliminar definitivamente:
+Quando ocorre uma venda:
 
-- race conditions;
-- estados órfãos;
-- dialogs presos;
-- overlays persistentes;
-- pointer-events residuais;
-- overflow bloqueado;
-- inconsistências de renderização.
+Quem reduz o stock?
 
-Não aplicar soluções paliativas.
+Como reduz?
 
-Corrigir apenas a causa raiz.
+Em que arquivo?
 
----
+Em qual função?
 
-# AUDITORIA DE STOCK
-
-Validar completamente a arquitetura do stock.
-
-Responder através de evidências:
-
-Existe apenas uma fonte de verdade?
-
-OU
-
-Existem fluxos independentes?
-
-Auditar:
+Quem sincroniza:
 
 POS
-
-↓
-
-Loja Online
 
 ↓
 
@@ -152,11 +109,11 @@ Inventário
 
 ↓
 
-Dashboard
+Loja Online
 
 ↓
 
-CRM
+Dashboard
 
 ↓
 
@@ -164,139 +121,147 @@ Relatórios
 
 ↓
 
-Histórico
+CRM
 
-Toda venda realizada em qualquer canal deverá refletir imediatamente no stock geral.
+Existe uma única fonte de verdade?
 
-Caso existam divergências:
+Ou existem múltiplos fluxos?
 
-identificar exatamente:
+Caso exista divergência:
 
-- arquivo;
-- função;
-- hook;
-- query;
-- RPC;
-- evento responsável.
+mostrar exatamente onde.
 
 ---
 
-# AUDITORIA DA VENDA
-
-Executar testes completos para:
-
-Venda simples
-
-Venda múltipla
-
-Grande quantidade
-
-Desconto
-
-Cancelamento
-
-Pagamento Dinheiro
-
-Pagamento M-Pesa
-
-Pagamento e-Mola
-
-Pagamento Cartão
-
-Impressão
-
-PDF
-
-Recibo
-
-Stock
-
-Dashboard
-
-Caixa
-
-Caso algum fluxo falhe:
-
-identificar a causa.
-
-Não mascarar sintomas.
-
----
-
-# VALIDAÇÃO DE DADOS
-
-Verificar:
-
-Duplicação de vendas
-
-Duplicação de pagamentos
-
-Duplicação de stock
-
-Duplicação de documentos
-
-Perda de sincronização
-
-Falha offline
-
-Falha online
-
-Reconciliação
-
-Integridade transacional
-
----
-
-# PERFORMANCE
+# PROBLEMA P0 — VENDA
 
 Auditar:
 
-Renderizações
+Venda
 
-Re-renderizações
+↓
 
-Loops
+Pagamento
 
-useEffect
+↓
 
-useMemo
+Documento
 
-useCallback
+↓
 
-Context Providers
+Stock
 
-Suspense
+↓
 
-Lazy Loading
+Dashboard
 
-Virtualização
+↓
 
-Objetivo:
+Caixa
 
-Zero renderizações desnecessárias.
+↓
 
----
+Histórico
 
-# MÓDULOS PROTEGIDOS
+Identificar:
 
-É PROIBIDO introduzir regressões em:
-
-- POS Engine
-- Fiscal
-- Billing
-- CRM
-- Auth
-- RLS
-- Supabase
-- Edge Functions
-- Workers
-- RPCs
-- Inventário
-- Dashboard
+- possíveis duplicações;
+- falhas de sincronização;
+- inconsistências;
+- estados intermediários.
 
 ---
 
-# SUBAGENTES OBRIGATÓRIOS
+# AUDITORIA DE COMPONENTES
+
+Verificar:
+
+PaymentModal
+
+ThermalReceipt
+
+Dialogs
+
+Drawers
+
+Sheets
+
+Dropdowns
+
+Tooltips
+
+Popover
+
+Radix
+
+Confirmar:
+
+- montagem;
+- desmontagem;
+- gerenciamento de foco;
+- limpeza de estados.
+
+---
+
+# AUDITORIA DE PERFORMANCE
+
+Analisar:
+
+- useEffect
+- useMemo
+- useCallback
+- Context Providers
+- Re-renderizações
+- Loops
+- Dependências
+
+Informar:
+
+quais renderizações podem causar comportamento inesperado.
+
+---
+
+# AUDITORIA DE DADOS
+
+Verificar:
+
+- integridade das vendas;
+- integridade do caixa;
+- integridade do stock;
+- integridade dos documentos;
+- integridade financeira.
+
+---
+
+# CLASSIFICAÇÃO
+
+Todos os problemas encontrados deverão ser classificados:
+
+🔴 P0
+
+🟠 P1
+
+🟡 P2
+
+🔵 P3
+
+---
+
+# É PROIBIDO
+
+- alterar código;
+- alterar layout;
+- alterar Supabase;
+- alterar RPC;
+- alterar RLS;
+- alterar Edge Functions;
+- alterar lógica de negócio.
+
+Esta Sprint é exclusivamente investigativa.
+
+---
+
+# SUBAGENTES
 
 🎨 UI Architect
 
@@ -310,91 +275,57 @@ Zero renderizações desnecessárias.
 
 🔌 POS Integration Engineer
 
-Todos deverão produzir evidências.
+Todos devem produzir evidências.
 
 ---
 
-# QUALITY GATE
+# RELATÓRIO FINAL
 
-Antes de concluir executar:
+Apresentar obrigatoriamente:
 
-✅ Typecheck
+## 1. Resumo Executivo
 
-✅ Vitest
+Estado atual do POS.
 
-✅ Testes POS
+## 2. Problemas Encontrados
 
-✅ Testes Caixa
+Lista completa.
 
-✅ Testes Stock
+## 3. Evidências
 
-✅ Testes Dashboard
+Arquivo
 
-✅ Testes Fiscal
+Função
 
-✅ Testes Billing
+Linha
 
-✅ Testes Integração
+Descrição
 
-Zero regressão permitida.
+Impacto
 
----
+## 4. Causa Raiz
 
-# RELATÓRIO OBRIGATÓRIO
+Explicar claramente a origem de cada problema.
 
-Apresentar:
-
-## Problemas encontrados
-
-Classificados por:
-
-P0
-
-P1
-
-P2
-
-## Evidências
+## 5. Plano de Correção
 
 Para cada problema informar:
 
-- arquivo;
-- função;
-- causa raiz;
-- impacto.
+- prioridade;
+- risco;
+- esforço estimado;
+- impacto esperado.
 
-## Correções aplicadas
+## 6. Veredito
 
-Explicar exatamente:
+O módulo POS está apto para produção?
 
-- o que foi alterado;
-- por que foi alterado;
-- qual problema resolveu.
+Responder apenas:
 
-## Testes
+✅ SIM
 
-Quantidade executada.
+ou
 
-Quantidade aprovada.
+❌ NÃO
 
-Quantidade reprovada.
-
-Cobertura.
-
-## Performance
-
-Antes
-
-Depois
-
-## Resultado Final
-
-Production Ready:
-
-SIM ou NÃO.
-
-Caso NÃO:
-
-listar exatamente o que ainda impede o módulo POS de ser considerado pronto para produção.
-
-Nenhum problema poderá ser ocultado. O relatório deve refletir fielmente o estado atual do sistema.
+Caso a resposta seja NÃO, listar exatamente os bloqueadores restantes.
