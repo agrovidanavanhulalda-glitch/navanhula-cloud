@@ -37,6 +37,8 @@ import {
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from 'sonner';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { releaseBodyLocks, withCleanup } from '@/lib/dom-utils';
+
 
 // HYBRID: Local POS data + Alto Contraste para uso em loja
 
@@ -59,18 +61,13 @@ const LocalCashRegisterPage: React.FC = () => {
   const [closingAmount, setClosingAmount] = useState('');
   const [selectedSellerId, setSelectedSellerId] = useState('');
 
-  // P1 — Backdrop / pointer-events hardening. Radix Dialog occasionally leaves
-  // `pointer-events: none` on <body> if the parent re-renders while the overlay
-  // is animating out (e.g. currentCashRegister becoming null right after close).
-  // We call this on every close path AND on unmount to guarantee a clean state.
-  const releaseBodyLocks = React.useCallback(() => {
-    const body = document.body;
-    body.style.removeProperty('pointer-events');
-    body.style.removeProperty('overflow');
-    body.removeAttribute('data-scroll-locked');
+  // P1 — Body lock and pointer-events hardening. 
+  // We use the central utility to guarantee a clean state.
+  useEffect(() => {
+    releaseBodyLocks();
+    return releaseBodyLocks;
   }, []);
 
-  useEffect(() => releaseBodyLocks, [releaseBodyLocks]);
 
   // Safe-by-default: cash register must never crash if company/branch/operator are missing.
   const storeId = currentStore?.id ?? null;
@@ -135,26 +132,19 @@ const LocalCashRegisterPage: React.FC = () => {
       }
     }
 
-    // P1 FIX: close dialog BEFORE the async op so Radix Overlay/backdrop-blur
-    // unmount cleanly and body pointer-events/overflow are restored before the
-    // parent re-renders (which happens when currentCashRegister becomes null).
+    // P1 FIX: close dialog and clean up body locks in a deterministic way.
     setShowCloseDialog(false);
     setClosingAmount('');
-    releaseBodyLocks();
 
-    try {
-      await closeCashRegister(amount);
-      // Belt-and-braces: run cleanup again on the next two frames to cover
-      // any Radix animation that finishes after the parent has re-rendered.
-      requestAnimationFrame(() => {
-        releaseBodyLocks();
-        requestAnimationFrame(releaseBodyLocks);
-      });
-    } catch (error) {
-      console.error('[CashRegisterPage] Erro ao fechar caixa:', error);
-      toast.error('Falha ao fechar caixa');
-      releaseBodyLocks();
-    }
+    await withCleanup(async () => {
+      try {
+        await closeCashRegister(amount);
+      } catch (error) {
+        console.error('[CashRegisterPage] Erro ao fechar caixa:', error);
+        toast.error('Falha ao fechar caixa');
+      }
+    });
+
   };
 
   // Format date - human readable
@@ -372,7 +362,7 @@ const LocalCashRegisterPage: React.FC = () => {
       </Card>
 
       {/* Open Register Dialog */}
-      <Dialog open={showOpenDialog} onOpenChange={(o) => { setShowOpenDialog(o); if (!o) requestAnimationFrame(releaseBodyLocks); }}>
+      <Dialog open={showOpenDialog} onOpenChange={(o) => { setShowOpenDialog(o); if (!o) releaseBodyLocks(); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl">Abrir Caixa</DialogTitle>
@@ -445,7 +435,7 @@ const LocalCashRegisterPage: React.FC = () => {
       </Dialog>
 
       {/* Close Register Dialog */}
-      <Dialog open={showCloseDialog} onOpenChange={(o) => { setShowCloseDialog(o); if (!o) requestAnimationFrame(releaseBodyLocks); }}>
+      <Dialog open={showCloseDialog} onOpenChange={(o) => { setShowCloseDialog(o); if (!o) releaseBodyLocks(); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl">Fechar Caixa</DialogTitle>

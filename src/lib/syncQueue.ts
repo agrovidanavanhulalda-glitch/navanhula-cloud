@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 export interface SyncTask {
   id: string;
-  type: 'SALE' | 'STOCK_ADJUSTMENT' | 'STORE_UPDATE' | 'PRODUCT_UPDATE' | 'ONBOARDING' | 'EXPORT_HISTORY';
+  type: 'SALE' | 'STOCK_ADJUSTMENT' | 'STORE_UPDATE' | 'PRODUCT_UPDATE' | 'ONBOARDING' | 'EXPORT_HISTORY' | 'CASH_REGISTER_OPEN' | 'CASH_REGISTER_CLOSE';
   payload: any;
   retryCount: number;
   lastAttempt?: number;
@@ -200,9 +200,16 @@ class SyncManager {
         case 'EXPORT_HISTORY':
           await this.syncExportHistory(task.payload);
           break;
+        case 'CASH_REGISTER_OPEN':
+          await this.syncCashRegisterOpen(task.payload);
+          break;
+        case 'CASH_REGISTER_CLOSE':
+          await this.syncCashRegisterClose(task.payload);
+          break;
         default:
           throw new Error(`Unknown task type: ${task.type}`);
       }
+
       
       // Log successful attempt for export history
       if (task.type === 'EXPORT_HISTORY' && task.payload?.id) {
@@ -297,7 +304,19 @@ class SyncManager {
     }
   }
 
+  private async syncCashRegisterOpen(payload: any) {
+    const { error } = await supabase.from('cash_registers').insert(payload);
+    if (error) throw error;
+  }
+
+  private async syncCashRegisterClose(payload: any) {
+    const { id, ...update } = payload;
+    const { error } = await supabase.from('cash_registers').update(update).eq('id', id);
+    if (error) throw error;
+  }
+
   private async syncStoreUpdate(payload: any) {
+
     const { id, store, action } = payload;
     if (action === 'CREATE') {
       const { error } = await supabase.from('stores').insert(store);
