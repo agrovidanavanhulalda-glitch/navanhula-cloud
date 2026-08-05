@@ -1,231 +1,227 @@
-🛡️ SPRINT 11.2.A — EXECUÇÃO REAL DA AUDITORIA (EVIDENCE FIRST)
+# SPRINT 11.1.F — CONSOLIDAÇÃO DAS EVIDÊNCIAS TÉCNICAS (ROOT CAUSE REPORT)
 
-MODO OBRIGATÓRIO
+## MISSÃO
 
-Esta Sprint NÃO é para corrigir absolutamente nada.
+Executar a inspeção completa do código-fonte do módulo POS e produzir o Relatório Final de Evidências.
+
+ATENÇÃO:
+
+Esta Sprint NÃO deve modificar nenhum arquivo de produção.
 
 É proibido:
 
-- alterar código
-- criar componentes
-- otimizar UI
-- refatorar
-- mover arquivos
-- alterar RPC
-- alterar Supabase
-- alterar RLS
-- alterar migrations
-- alterar hooks
-- alterar contextos
+- alterar lógica;
+- criar componentes;
+- modificar hooks;
+- alterar RPCs;
+- alterar Supabase;
+- alterar RLS;
+- alterar SQL;
+- alterar Edge Functions;
+- alterar contexto;
+- alterar estado;
+- alterar UI.
 
-Esta Sprint é exclusivamente uma inspeção técnica do código existente.
+Modo obrigatório:
 
-====================================================
+🛡️ READ ONLY
 
-OBJETIVO
+🛡️ EVIDENCE FIRST
 
-Abrir cada arquivo crítico do POS e auditá-lo linha por linha.
+🛡️ ROOT CAUSE FIRST
 
-Nenhuma conclusão pode ser baseada em hipótese.
-
-Toda conclusão deve conter evidência real encontrada no código.
-
-====================================================
-
-ORDEM DA AUDITORIA
-
-P0
-
-1.
-LocalCashRegisterPage.tsx
-
-Responder:
-
-• como inicia o fecho
-• quem chama closeCashRegister()
-• quais estados são alterados
-• quais dialogs permanecem montados
-• existe race condition?
-• existe stale state?
-• existe body lock?
-• existe overlay preso?
-• existe scroll lock?
-• existe cleanup?
-• existe try/finally?
-• existe await incorreto?
-
-Mostrar evidências.
+🛡️ ZERO REGRESSION
 
 ----------------------------------------------------
 
-2.
+AUDITAR
 
-CashRegisterContext.tsx
+✔ LocalPOSPage
 
-Responder:
+✔ LocalCashRegisterPage
 
-• fluxo completo do fecho
-• estados alterados
-• RPC utilizada
-• rollback
-• tratamento de erro
-• concorrência
-• possíveis estados inválidos
+✔ CashRegisterContext
 
-Mostrar evidências.
+✔ LocalPOSContext
 
-----------------------------------------------------
+✔ PaymentModal
 
-3.
+✔ ThermalReceipt
 
-LocalPOSContext.tsx
+✔ Inventory
 
-Responder:
+✔ Dashboard
 
-Fluxo completo da venda.
+✔ Loja Online
 
-Após finalizar uma venda:
+✔ Fiscal Pipeline
 
-quem baixa stock?
+✔ Sale Pipeline
 
-quem atualiza inventário?
+✔ Sync Queue
 
-quem sincroniza loja online?
+✔ RPCs
 
-quem atualiza dashboard?
+✔ Hooks
 
-quem atualiza caixa?
+✔ React Context
 
-quem atualiza financeiro?
+✔ Body Locks
 
-quem atualiza fiscal?
+✔ Dialogs
 
-Existe algum fluxo quebrado?
+✔ Overlay
 
-Mostrar evidências.
+✔ Scroll Lock
+
+✔ QuantityEditor
 
 ----------------------------------------------------
 
-4.
+PARA CADA FLUXO INFORMAR
 
-Pipeline Fiscal
+• Fluxograma
 
-Encontrar:
+• Arquivos
 
-• emissão fiscal
+• Componentes
 
-• movimento financeiro
+• Hooks
 
-• stock
+• Contextos
 
-• histórico
+• RPCs
 
-• recibo
+• Eventos
 
-Confirmar ordem de execução.
+• Atualizações
 
-----------------------------------------------------
+• Dependências
 
-5.
-
-Loja Online
-
-Responder:
-
-Quando uma venda é feita na Loja Online,
-
-qual função baixa o stock?
-
-usa o mesmo pipeline do POS?
-
-usa outra RPC?
-
-há duplicação?
-
-há ausência de sincronização?
-
-Mostrar evidências.
+• Estados
 
 ----------------------------------------------------
 
-6.
+RESPONDER COM EVIDÊNCIA
 
-PaymentModal
+Existe:
 
-Responder:
+□ race condition
 
-Existe body lock?
+□ stale state
 
-Existe overlay preso?
+□ duplicate render
 
-Existe cleanup?
+□ duplicate request
 
-Existe removeEventListener?
+□ duplicate sale
 
-Existe finally?
+□ duplicate stock update
 
-Existe desmontagem correta?
+□ rollback incompleto
+
+□ optimistic update
+
+□ cache inconsistente
+
+□ overlay preso
+
+□ dialog preso
+
+□ pointer-events residual
+
+□ scroll lock
+
+□ stock divergente
+
+□ venda sem sincronização
+
+□ dashboard desatualizado
+
+□ erro silencioso
+
+□ await interrompido
+
+□ memory leak
+
+□ loop
+
+□ re-render desnecessário
+
+□ inconsistência entre POS e Loja Online
+
+Para cada item encontrado informar:
+
+• Arquivo
+
+• Função
+
+• Linha aproximada
+
+• Evidência
+
+• Causa raiz
+
+• Impacto
+
+• Prioridade
 
 ----------------------------------------------------
 
-7.
+CLASSIFICAÇÃO
 
-QuantityEditor
+🔴 P0
 
-Responder:
+🟠 P1
 
-Há renders desnecessários?
+🟡 P2
 
-Há re-render em cascata?
+🔵 P3
 
-Há perda de foco?
-
-Há stale props?
-
-====================================================
+----------------------------------------------------
 
 ENTREGAR
 
-Não corrigir nada.
+1. Executive Summary
 
-Gerar apenas um relatório contendo:
+2. Fluxo do POS
 
-P0 encontrados
+3. Fluxo do Caixa
 
-P1 encontrados
+4. Fluxo do Stock
 
-P2 encontrados
+5. Fluxo Loja Online
 
-arquivo
+6. Fluxo Fiscal
 
-função
+7. Fluxo Dashboard
 
-linha aproximada
+8. Lista completa dos problemas confirmados
 
-causa raiz
+9. Lista das causas raiz
 
-impacto
+10. Matriz de risco
 
-risco
+11. Ordem recomendada de correção
 
-evidência
+12. Esforço estimado
 
-====================================================
+13. Dependências
 
-Ao final apresentar apenas:
+14. Parecer Executivo
 
-📊 Relatório de Auditoria
+Responder obrigatoriamente:
 
-Arquivos auditados
+🟢 PRODUCTION READY
 
-Problemas encontrados
+🟡 CONDITIONAL GO
 
-Problemas NÃO encontrados
+🔴 NOT READY
 
-Mapa completo dos fluxos
+Caso NÃO esteja pronto:
 
-Production Ready (%)
+listar TODOS os bloqueadores P0 que deverão ser corrigidos na Sprint 11.2.
 
-NÃO IMPLEMENTAR CORREÇÕES.
+IMPORTANTE:
 
-A próxima Sprint (11.3) será exclusivamente para corrigir os P0 confirmados.
+A Sprint 11.2 somente poderá iniciar após este relatório estar concluído e baseado em evidências reais do código.
