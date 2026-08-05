@@ -304,7 +304,19 @@ class SyncManager {
     }
   }
 
+  private async syncCashRegisterOpen(payload: any) {
+    const { error } = await supabase.from('cash_registers').insert(payload);
+    if (error) throw error;
+  }
+
+  private async syncCashRegisterClose(payload: any) {
+    const { id, ...update } = payload;
+    const { error } = await supabase.from('cash_registers').update(update).eq('id', id);
+    if (error) throw error;
+  }
+
   private async syncStoreUpdate(payload: any) {
+
     const { id, store, action } = payload;
     if (action === 'CREATE') {
       const { error } = await supabase.from('stores').insert(store);
