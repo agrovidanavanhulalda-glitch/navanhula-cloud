@@ -519,10 +519,10 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const registerId = crypto.randomUUID();
     const payload = { 
       id: registerId,
-      store_id: state.currentStore?.id, 
+      store_id: state.currentStore?.id!, 
       user_id: sid, 
       opening_amount: amt, 
-      status: 'open', 
+      status: 'open' as const, 
       company_id: company?.id,
       opened_at: new Date().toISOString()
     };
@@ -532,7 +532,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       const cr: LocalCashRegister = { 
         id: registerId, 
-        storeId: payload.store_id!, 
+        storeId: payload.store_id, 
         sellerId: sid, 
         sellerName: sn, 
         openingAmount: amt, 
@@ -548,7 +548,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const { data, error } = await supabase
         .from('cash_registers')
-        .insert(payload)
+        .insert([payload])
         .select()
         .single();
         
@@ -571,6 +571,7 @@ export const LocalPOSProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       throw error;
     }
   };
+
 
 
   const closeCashRegister = async (amt: number) => {
