@@ -1,24 +1,22 @@
-# SPRINT 11.1.A — AUDITORIA TÉCNICA P0 DO POS (ROOT CAUSE ANALYSIS)
+# SPRINT 11.1.B — EXECUÇÃO DA AUDITORIA TÉCNICA P0 (EVIDENCE COLLECTION)
 
 ## MISSÃO
 
-NÃO implementar correções nesta Sprint.
+Executar a auditoria definida na Sprint 11.1.A e produzir evidências concretas do estado atual do módulo POS.
 
-O objetivo desta fase é exclusivamente identificar, documentar e comprovar a causa raiz dos problemas críticos do módulo POS antes de qualquer alteração de código.
+Nesta Sprint, o objetivo NÃO é corrigir problemas. O objetivo é responder tecnicamente, com base no código existente, onde estão as causas raiz dos problemas identificados.
 
-Toda conclusão deverá ser baseada em evidências reais do código.
-
-É proibido assumir causas sem comprovação.
+Todo apontamento deve citar o arquivo, função e fluxo correspondente.
 
 ---
 
 # PADRÃO OBRIGATÓRIO
 
+🛡️ READ ONLY
+
 🛡️ ROOT CAUSE FIRST
 
 🛡️ EVIDENCE FIRST
-
-🛡️ READ ONLY
 
 🛡️ ZERO CODE CHANGES
 
@@ -26,90 +24,86 @@ Toda conclusão deverá ser baseada em evidências reais do código.
 
 ---
 
-# ESCOPO DA AUDITORIA
+# AUDITORIA P0 — FECHO DE CAIXA
 
-Auditar completamente:
+Responder às seguintes questões utilizando apenas evidências do código:
 
-- LocalCashRegisterPage.tsx
-- LocalPOSPage.tsx
-- CashRegisterContext
-- POS Context
-- Sales Context
-- Inventory Context
-- PaymentModal
-- ThermalReceipt
-- Dashboard
-- Loja Online
-- Fluxo de Inventário
-
----
-
-# PROBLEMA P0 — FECHO DE CAIXA
-
-Responder com evidências:
-
-1. Qual função inicia o fecho do caixa?
-
-2. Qual função confirma o fecho?
-
-3. Existe transação?
-
-4. Existe rollback?
-
-5. Existe await pendente?
-
-6. Existe race condition?
-
-7. Existe dupla atualização de estado?
-
-8. Existe estado órfão?
-
-9. Existe overlay que permanece ativo?
-
-10. Existe Dialog que não desmonta?
-
-11. Existe bloqueio de scroll?
-
-12. Existe pointer-events residual?
-
-13. Existe problema de renderização?
+1. Qual componente inicia o processo de fecho do caixa?
+2. Qual função executa efetivamente o encerramento?
+3. Existe transação única envolvendo o encerramento?
+4. Existem chamadas assíncronas que podem deixar o estado inconsistente?
+5. Há possibilidade de race condition?
+6. Existe dupla atualização de estado?
+7. O diálogo é desmontado corretamente?
+8. O overlay é removido corretamente?
+9. O body volta ao estado original após o encerramento?
+10. Existe algum bloqueio residual de scroll?
+11. Existe pointer-events residual?
+12. Existe fluxo que pode interromper o encerramento antes da conclusão?
+13. O Dashboard recebe atualização consistente após o fecho?
 
 Para cada resposta informar:
 
-- arquivo;
-- função;
-- linha;
-- evidência.
+- Arquivo
+- Função
+- Fluxo
+- Evidência
+- Impacto
 
 ---
 
-# PROBLEMA P0 — STOCK
+# AUDITORIA P0 — STOCK
 
-Mapear completamente o fluxo.
+Mapear toda a cadeia de atualização do stock.
 
 Responder:
 
-Quando ocorre uma venda:
+- Quem reduz o stock?
+- Onde isso ocorre?
+- Em qual função?
+- Em qual contexto?
+- Em qual RPC?
+- Em qual query?
+- Em qual transação?
 
-Quem reduz o stock?
+Verificar sincronização entre:
 
-Como reduz?
+- POS
+- Loja Online
+- Inventário
+- Dashboard
+- Relatórios
+- CRM
 
-Em que arquivo?
+Confirmar se existe uma única fonte de verdade ou múltiplos fluxos concorrentes.
 
-Em qual função?
+---
 
-Quem sincroniza:
+# AUDITORIA P0 — VENDA
 
-POS
+Mapear o ciclo completo:
+
+Produto
 
 ↓
 
-Inventário
+Carrinho
 
 ↓
 
-Loja Online
+Pagamento
+
+↓
+
+Documento Fiscal
+
+↓
+
+Stock
+
+↓
+
+Caixa
 
 ↓
 
@@ -119,145 +113,47 @@ Dashboard
 
 Relatórios
 
-↓
-
-CRM
-
-Existe uma única fonte de verdade?
-
-Ou existem múltiplos fluxos?
-
-Caso exista divergência:
-
-mostrar exatamente onde.
-
----
-
-# PROBLEMA P0 — VENDA
-
-Auditar:
-
-Venda
-
-↓
-
-Pagamento
-
-↓
-
-Documento
-
-↓
-
-Stock
-
-↓
-
-Dashboard
-
-↓
-
-Caixa
-
-↓
-
-Histórico
-
-Identificar:
-
-- possíveis duplicações;
-- falhas de sincronização;
-- inconsistências;
-- estados intermediários.
-
----
-
-# AUDITORIA DE COMPONENTES
-
-Verificar:
-
-PaymentModal
-
-ThermalReceipt
-
-Dialogs
-
-Drawers
-
-Sheets
-
-Dropdowns
-
-Tooltips
-
-Popover
-
-Radix
-
-Confirmar:
-
-- montagem;
-- desmontagem;
-- gerenciamento de foco;
-- limpeza de estados.
+Identificar qualquer ponto onde a operação possa falhar ou ficar inconsistente.
 
 ---
 
 # AUDITORIA DE PERFORMANCE
 
-Analisar:
+Identificar:
 
-- useEffect
-- useMemo
-- useCallback
-- Context Providers
-- Re-renderizações
-- Loops
-- Dependências
+- useEffect com dependências críticas
+- re-renderizações desnecessárias
+- estados duplicados
+- providers redundantes
+- loops de renderização
 
-Informar:
-
-quais renderizações podem causar comportamento inesperado.
+Informar apenas evidências comprovadas.
 
 ---
 
-# AUDITORIA DE DADOS
+# AUDITORIA DE INTEGRIDADE
 
 Verificar:
 
-- integridade das vendas;
-- integridade do caixa;
-- integridade do stock;
-- integridade dos documentos;
-- integridade financeira.
+- duplicação de vendas
+- duplicação de documentos
+- duplicação de movimentos de stock
+- inconsistência entre caixa e vendas
+- inconsistência entre POS e Loja Online
 
 ---
 
 # CLASSIFICAÇÃO
 
-Todos os problemas encontrados deverão ser classificados:
+Todos os problemas encontrados devem ser classificados como:
 
-🔴 P0
+🔴 P0 — Bloqueador de Produção
 
-🟠 P1
+🟠 P1 — Alto impacto
 
-🟡 P2
+🟡 P2 — Médio impacto
 
-🔵 P3
-
----
-
-# É PROIBIDO
-
-- alterar código;
-- alterar layout;
-- alterar Supabase;
-- alterar RPC;
-- alterar RLS;
-- alterar Edge Functions;
-- alterar lógica de negócio.
-
-Esta Sprint é exclusivamente investigativa.
+🔵 P3 — Baixo impacto
 
 ---
 
@@ -275,7 +171,7 @@ Esta Sprint é exclusivamente investigativa.
 
 🔌 POS Integration Engineer
 
-Todos devem produzir evidências.
+Todos devem produzir evidências objetivas.
 
 ---
 
@@ -283,49 +179,27 @@ Todos devem produzir evidências.
 
 Apresentar obrigatoriamente:
 
-## 1. Resumo Executivo
+1. Resumo Executivo
 
-Estado atual do POS.
+2. Fluxo completo do Fecho de Caixa
 
-## 2. Problemas Encontrados
+3. Fluxo completo da Venda
 
-Lista completa.
+4. Fluxo completo da atualização de Stock
 
-## 3. Evidências
+5. Lista de problemas encontrados
 
-Arquivo
+6. Evidências (arquivo, função e impacto)
 
-Função
+7. Causa raiz de cada problema
 
-Linha
+8. Riscos para produção
 
-Descrição
+9. Ordem recomendada de correção (P0 → P3)
 
-Impacto
+10. Veredito final:
 
-## 4. Causa Raiz
+- POS apto para produção? (SIM ou NÃO)
+- Se NÃO, listar exatamente os bloqueadores restantes.
 
-Explicar claramente a origem de cada problema.
-
-## 5. Plano de Correção
-
-Para cada problema informar:
-
-- prioridade;
-- risco;
-- esforço estimado;
-- impacto esperado.
-
-## 6. Veredito
-
-O módulo POS está apto para produção?
-
-Responder apenas:
-
-✅ SIM
-
-ou
-
-❌ NÃO
-
-Caso a resposta seja NÃO, listar exatamente os bloqueadores restantes.
+IMPORTANTE: Nenhuma correção deve ser implementada nesta Sprint. O objetivo é concluir um diagnóstico técnico completo que servirá de base para a Sprint 11.2 (Correções P0).
