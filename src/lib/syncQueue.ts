@@ -200,9 +200,16 @@ class SyncManager {
         case 'EXPORT_HISTORY':
           await this.syncExportHistory(task.payload);
           break;
+        case 'CASH_REGISTER_OPEN':
+          await this.syncCashRegisterOpen(task.payload);
+          break;
+        case 'CASH_REGISTER_CLOSE':
+          await this.syncCashRegisterClose(task.payload);
+          break;
         default:
           throw new Error(`Unknown task type: ${task.type}`);
       }
+
       
       // Log successful attempt for export history
       if (task.type === 'EXPORT_HISTORY' && task.payload?.id) {
