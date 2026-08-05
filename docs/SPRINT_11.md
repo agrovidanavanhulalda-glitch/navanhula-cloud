@@ -1,227 +1,218 @@
-# SPRINT 11.1.F — CONSOLIDAÇÃO DAS EVIDÊNCIAS TÉCNICAS (ROOT CAUSE REPORT)
+🛑 SPRINT 11.2.B — EXECUÇÃO DA AUDITORIA REAL (SEM DOCUMENTAÇÃO)
 
-## MISSÃO
+ATENÇÃO
 
-Executar a inspeção completa do código-fonte do módulo POS e produzir o Relatório Final de Evidências.
+A partir desta Sprint fica PROIBIDO editar:
 
-ATENÇÃO:
+- docs/SPRINT_11.md
+- README
+- CHANGELOG
+- qualquer documentação
 
-Esta Sprint NÃO deve modificar nenhum arquivo de produção.
+A documentação está encerrada.
+
+====================================================
+
+OBJETIVO
+
+Executar a auditoria REAL do código.
+
+Não escrever protocolo.
+
+Não escrever plano.
+
+Não escrever documentação.
+
+Abrir os arquivos e inspecionar o código.
+
+====================================================
+
+MODO
+
+READ ONLY
 
 É proibido:
 
-- alterar lógica;
-- criar componentes;
-- modificar hooks;
-- alterar RPCs;
-- alterar Supabase;
-- alterar RLS;
-- alterar SQL;
-- alterar Edge Functions;
-- alterar contexto;
-- alterar estado;
-- alterar UI.
+❌ alterar código
 
-Modo obrigatório:
+❌ criar componentes
 
-🛡️ READ ONLY
+❌ corrigir bugs
 
-🛡️ EVIDENCE FIRST
+❌ otimizar UI
 
-🛡️ ROOT CAUSE FIRST
+❌ mover arquivos
 
-🛡️ ZERO REGRESSION
+❌ criar migrations
 
-----------------------------------------------------
+❌ alterar RPC
 
-AUDITAR
+❌ alterar Supabase
 
-✔ LocalPOSPage
+❌ alterar Contexts
 
-✔ LocalCashRegisterPage
+❌ alterar Hooks
 
-✔ CashRegisterContext
+====================================================
 
-✔ LocalPOSContext
+AUDITAR NESTA ORDEM
 
-✔ PaymentModal
+1.
 
-✔ ThermalReceipt
+src/pages/LocalCashRegisterPage.tsx
 
-✔ Inventory
+Abrir o arquivo.
 
-✔ Dashboard
+Ler todo o código.
 
-✔ Loja Online
-
-✔ Fiscal Pipeline
-
-✔ Sale Pipeline
-
-✔ Sync Queue
-
-✔ RPCs
-
-✔ Hooks
-
-✔ React Context
-
-✔ Body Locks
-
-✔ Dialogs
-
-✔ Overlay
-
-✔ Scroll Lock
-
-✔ QuantityEditor
+Responder com evidências.
 
 ----------------------------------------------------
 
-PARA CADA FLUXO INFORMAR
+2.
 
-• Fluxograma
+src/contexts/CashRegisterContext.tsx
 
-• Arquivos
+Abrir o arquivo.
 
-• Componentes
+Ler todo o código.
 
-• Hooks
-
-• Contextos
-
-• RPCs
-
-• Eventos
-
-• Atualizações
-
-• Dependências
-
-• Estados
+Mapear o fluxo completo.
 
 ----------------------------------------------------
 
-RESPONDER COM EVIDÊNCIA
+3.
 
-Existe:
+src/contexts/LocalPOSContext.tsx
 
-□ race condition
+Abrir o arquivo.
 
-□ stale state
+Ler todo o código.
 
-□ duplicate render
+Mapear:
 
-□ duplicate request
+• venda
 
-□ duplicate sale
+• stock
 
-□ duplicate stock update
+• caixa
 
-□ rollback incompleto
+• financeiro
 
-□ optimistic update
+• fiscal
 
-□ cache inconsistente
-
-□ overlay preso
-
-□ dialog preso
-
-□ pointer-events residual
-
-□ scroll lock
-
-□ stock divergente
-
-□ venda sem sincronização
-
-□ dashboard desatualizado
-
-□ erro silencioso
-
-□ await interrompido
-
-□ memory leak
-
-□ loop
-
-□ re-render desnecessário
-
-□ inconsistência entre POS e Loja Online
-
-Para cada item encontrado informar:
-
-• Arquivo
-
-• Função
-
-• Linha aproximada
-
-• Evidência
-
-• Causa raiz
-
-• Impacto
-
-• Prioridade
+• sincronização
 
 ----------------------------------------------------
 
-CLASSIFICAÇÃO
+4.
 
-🔴 P0
+PaymentModal
 
-🟠 P1
+Verificar:
 
-🟡 P2
+• overlays
 
-🔵 P3
+• body lock
+
+• scroll lock
+
+• cleanup
+
+• finally
+
+• desmontagem
 
 ----------------------------------------------------
 
-ENTREGAR
+5.
 
-1. Executive Summary
+Loja Online
 
-2. Fluxo do POS
+Encontrar exatamente onde o stock é reduzido.
 
-3. Fluxo do Caixa
+Comparar com o POS.
 
-4. Fluxo do Stock
+Responder:
 
-5. Fluxo Loja Online
+• usam o mesmo pipeline?
 
-6. Fluxo Fiscal
+• usam RPC diferente?
 
-7. Fluxo Dashboard
+• algum fluxo está incompleto?
 
-8. Lista completa dos problemas confirmados
+----------------------------------------------------
 
-9. Lista das causas raiz
+6.
 
-10. Matriz de risco
+QuantityEditor
 
-11. Ordem recomendada de correção
+Verificar:
 
-12. Esforço estimado
+• renderizações
 
-13. Dependências
+• foco
 
-14. Parecer Executivo
+• edição manual
 
-Responder obrigatoriamente:
+• callbacks
 
-🟢 PRODUCTION READY
+• stale state
 
-🟡 CONDITIONAL GO
+====================================================
 
-🔴 NOT READY
+PARA CADA PROBLEMA ENCONTRADO
 
-Caso NÃO esteja pronto:
+Informar:
 
-listar TODOS os bloqueadores P0 que deverão ser corrigidos na Sprint 11.2.
+• arquivo
 
-IMPORTANTE:
+• função
 
-A Sprint 11.2 somente poderá iniciar após este relatório estar concluído e baseado em evidências reais do código.
+• linha aproximada
+
+• evidência encontrada
+
+• causa raiz
+
+• impacto
+
+• risco
+
+Não propor correção.
+
+====================================================
+
+ENTREGA OBRIGATÓRIA
+
+Ao terminar devolver SOMENTE:
+
+📊 RELATÓRIO DA AUDITORIA REAL
+
+Arquivos auditados
+
+Fluxos encontrados
+
+P0 confirmados
+
+P1 confirmados
+
+P2 confirmados
+
+Problemas descartados
+
+Mapa completo do pipeline POS
+
+Mapa completo do pipeline Caixa
+
+Mapa completo do pipeline Stock
+
+Production Ready (%)
+
+Nenhuma alteração de código.
+
+Nenhuma documentação.
+
+Nenhuma implementação.
+
+Somente evidências reais extraídas do código.
