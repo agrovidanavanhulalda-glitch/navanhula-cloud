@@ -1,153 +1,278 @@
-# SPRINT 11.1 — RELATÓRIO FINAL DA AUDITORIA (EXECUÇÃO OBRIGATÓRIA)
+# SPRINT 11.2 — EXECUÇÃO REAL DA AUDITORIA TÉCNICA (SEM DOCUMENTAÇÃO)
 
 MISSÃO
 
-Esta Sprint NÃO deve atualizar documentação.
+A partir desta Sprint é TERMINANTEMENTE PROIBIDO:
 
-Esta Sprint NÃO deve alterar código.
+❌ Criar documentação.
+❌ Atualizar docs/SPRINT_11.md.
+❌ Criar novos protocolos.
+❌ Gerar relatórios genéricos.
+❌ Responder apenas com "documentação consolidada".
 
-Esta Sprint NÃO deve criar novos protocolos.
+Toda a documentação necessária já existe.
 
-Esta Sprint NÃO deve gerar novos documentos.
+Esta Sprint é exclusivamente para INSPECIONAR O CÓDIGO REAL.
 
-A missão é executar integralmente a auditoria técnica definida nas etapas anteriores e produzir o Relatório Final baseado exclusivamente em evidências encontradas no código.
+==================================================
 
-Modo obrigatório:
+MODO OBRIGATÓRIO
 
 🛡 READ ONLY
+
 🛡 EVIDENCE FIRST
+
 🛡 ROOT CAUSE FIRST
+
 🛡 ZERO REGRESSION
+
+🛡 NÃO MODIFICAR CÓDIGO
+
+==================================================
+
+OBJETIVO
+
+Abrir os arquivos reais do projeto.
+
+Ler todo o fluxo.
+
+Produzir um relatório técnico baseado exclusivamente em evidências encontradas no código.
+
+Não assumir.
+
+Não inferir.
+
+Não inventar.
+
+Somente fatos encontrados.
 
 ==================================================
 
 AUDITAR COMPLETAMENTE
 
-✓ LocalPOSPage
+1.
+src/pages/LocalCashRegisterPage.tsx
 
-✓ LocalCashRegisterPage
+2.
+src/contexts/CashRegisterContext.tsx
 
-✓ CashRegisterContext
+3.
+src/pages/LocalPOSPage.tsx
 
-✓ LocalPOSContext
+4.
+src/contexts/LocalPOSContext.tsx
 
-✓ PaymentModal
+5.
+src/components/pos/PaymentModal.tsx
 
-✓ ThermalReceipt
+6.
+src/components/reports/ThermalReceipt.tsx
 
-✓ Inventory
+7.
+Pipeline de Venda
 
-✓ Dashboard
+8.
+Pipeline Fiscal
 
-✓ Loja Online
+9.
+Pipeline de Stock
 
-✓ Fiscal Pipeline
+10.
+Pipeline Loja Online
 
-✓ Billing
+11.
+Pipeline Dashboard
 
-✓ Sale Pipeline
+12.
+RPCs relacionadas
 
-✓ Sync Queue
+13.
+Hooks
 
-✓ RPCs
+14.
+Contexts
 
-✓ React Context
+15.
+Dialogs
 
-✓ Hooks
+16.
+Overlays
 
-✓ useEffect
+17.
+Body Lock
 
-✓ Overlay
+18.
+Scroll Lock
 
-✓ Dialog
+19.
+Pointer Events
+
+20.
+QuantityEditor
+
+==================================================
+
+PARA CADA ARQUIVO RESPONDER
+
+Arquivo:
+
+Função:
+
+Linha aproximada:
+
+Responsabilidade:
+
+Fluxo executado:
+
+Dependências:
+
+Quem chama:
+
+Quem consome:
+
+Possíveis efeitos colaterais:
+
+==================================================
+
+PROCURAR
+
+✓ Race Conditions
+
+✓ Stale State
+
+✓ Renderizações duplicadas
+
+✓ Loops
+
+✓ Deadlocks
 
 ✓ Body Lock
 
+✓ Overlay preso
+
 ✓ Scroll Lock
 
-✓ Pointer Events
+✓ Pointer Events presos
 
-✓ QuantityEditor
+✓ RPC duplicada
 
-==================================================
+✓ Atualizações perdidas
 
-OBRIGATÓRIO
+✓ Transações incompletas
 
-Responder para cada fluxo:
+✓ Rollback incompleto
 
-• O fluxo está correto?
+✓ Stock inconsistente
 
-• Existe bug?
+✓ Venda inconsistente
 
-• Existe race condition?
+✓ Caixa inconsistente
 
-• Existe stale state?
+✓ Dashboard inconsistente
 
-• Existe update duplicado?
-
-• Existe perda de sincronização?
-
-• Existe rollback incompleto?
-
-• Existe renderização desnecessária?
-
-• Existe bloqueio visual?
-
-• Existe inconsistência entre POS e Loja Online?
-
-• Existe inconsistência entre POS e Inventário?
-
-• Existe inconsistência entre Caixa e Venda?
-
-Sempre indicar:
-
-Arquivo
-
-Função
-
-Linha aproximada
-
-Evidência encontrada
-
-Causa raiz
-
-Impacto
-
-Prioridade
+✓ Loja Online inconsistente
 
 ==================================================
 
-GERAR
+PARA CADA PROBLEMA ENCONTRADO
 
-1. Executive Summary
+Gerar exatamente neste formato:
 
-2. Fluxograma POS
+--------------------------------------------------
 
-3. Fluxograma Caixa
+ID:
 
-4. Fluxograma Estoque
+P0-001
 
-5. Fluxograma Loja Online
+Arquivo:
 
-6. Fluxograma Fiscal
+Função:
 
-7. Fluxograma Dashboard
+Linha aproximada:
 
-8. Lista dos problemas confirmados
+Problema encontrado:
 
-9. Lista das causas raiz
+Evidência:
 
-10. Matriz de risco
+Causa raiz:
 
-11. Ordem de correção
+Impacto:
 
-12. Dependências
+Risco:
 
-13. Complexidade
+Prioridade:
 
-14. Tempo estimado para correção
+Sugestão técnica:
 
-15. Parecer Executivo
+Tempo estimado:
+
+--------------------------------------------------
+
+Não agrupar problemas.
+
+Cada problema deve possuir seu próprio bloco.
+
+==================================================
+
+NO FINAL GERAR
+
+1.
+Mapa completo do fluxo POS
+
+↓
+
+2.
+Mapa do fluxo Caixa
+
+↓
+
+3.
+Mapa do fluxo Fiscal
+
+↓
+
+4.
+Mapa do fluxo Estoque
+
+↓
+
+5.
+Mapa Loja Online
+
+↓
+
+6.
+Mapa Dashboard
+
+↓
+
+7.
+Mapa RPC
+
+↓
+
+8.
+Mapa Contextos
+
+↓
+
+9.
+Lista completa dos problemas encontrados
+
+↓
+
+10.
+Matriz de risco
+
+↓
+
+11.
+Dependências
+
+↓
+
+12.
+Ordem correta de correção
 
 ==================================================
 
@@ -163,24 +288,55 @@ CLASSIFICAR
 
 ==================================================
 
-FINALIZAR COM
+PROIBIDO
 
-🟢 PRODUCTION READY
+❌ Alterar qualquer arquivo
 
-ou
+❌ Criar migrations
 
-🟡 CONDITIONAL GO
+❌ Alterar RPC
 
-ou
+❌ Alterar RLS
 
-🔴 NOT READY
+❌ Alterar Hooks
 
-Caso NÃO esteja pronto:
+❌ Alterar Contexts
 
-Listar TODOS os bloqueadores P0.
+❌ Alterar POS
 
-IMPORTANTE:
+❌ Alterar Billing
 
-Após este relatório, nenhuma nova Sprint de documentação deverá ser criada.
+❌ Alterar Fiscal
 
-A Sprint 11.2 será exclusivamente destinada à implementação das correções aprovadas.
+❌ Alterar CRM
+
+❌ Alterar Inventário
+
+❌ Alterar Loja Online
+
+❌ Alterar Dashboard
+
+==================================================
+
+RESULTADO ESPERADO
+
+Não quero documentação.
+
+Não quero protocolo.
+
+Não quero planejamento.
+
+Quero apenas evidências reais encontradas no código.
+
+A Sprint somente será considerada concluída quando existir uma lista completa de todos os problemas P0, P1, P2 e P3 encontrados, cada um contendo:
+
+• Arquivo
+• Função
+• Linha aproximada
+• Evidência
+• Causa raiz
+• Impacto
+• Prioridade
+• Sugestão técnica
+
+Somente após essa auditoria completa será autorizada a Sprint 11.3 para implementação das correções.
