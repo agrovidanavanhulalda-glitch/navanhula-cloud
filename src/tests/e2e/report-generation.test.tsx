@@ -11,6 +11,22 @@ import { syncManager } from '@/lib/syncQueue';
 import * as PDFReportExports from '@/components/reports/PDFReport';
 import { supabase } from '@/integrations/supabase/client';
 
+
+// Chainable Supabase query mock: every builder method returns the same
+// thenable, which resolves to an empty, error-free result set.
+function makeSupabaseQueryMock(result: any = { data: [], error: null }) {
+  const promise = Promise.resolve(result);
+  const proxy: any = new Proxy({}, {
+    get(_t, prop) {
+      if (prop === 'then') return promise.then.bind(promise);
+      if (prop === 'catch') return promise.catch.bind(promise);
+      if (prop === 'finally') return promise.finally.bind(promise);
+      return () => proxy;
+    },
+  });
+  return proxy;
+}
+
 // Test IDs
 const TEST_USER_ID = 'user-1';
 const TEST_COMPANY_ID = 'company-1';
@@ -90,13 +106,8 @@ describe('E2E Test Execution Report with Evidence', () => {
       set(v) { onLine = v; }
     });
 
-    // Mock insert for Supabase
-    (supabase.from as any).mockImplementation(() => ({
-        insert: vi.fn().mockResolvedValue({ error: null }),
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({ data: {}, error: null })
-    }));
+    // Full chainable Supabase mock (select/order/eq/limit/insert/...)
+    (supabase.from as any).mockImplementation(() => makeSupabaseQueryMock());
   });
 
   afterAll(() => {
@@ -188,6 +199,15 @@ describe('E2E Test Execution Report with Evidence', () => {
         loading: false,
         getCancelledSales: () => [],
         getCancellationHistory: () => [],
+        cart: [],
+        cashRegisterOpen: true,
+        addToCart: vi.fn().mockReturnValue(true),
+        completeSale: vi.fn(),
+        getSubtotal: () => 0,
+        getTotal: () => 0,
+        getTotalDiscount: () => 0,
+        getLastSale: () => null,
+        refreshData: vi.fn(),
     } as any);
 
     const excelSpy = vi.spyOn(PDFReportExports, 'exportExcelReport').mockImplementation(async () => {

@@ -85,7 +85,8 @@ describe('Sprint 5.6 · Release Engine (pure)', () => {
   });
 
   it('multiple sprints reduce to same output for identical input', () => {
-    const input = { score: { architecture: 80 }, gate: { typecheckClean: true } };
+    // `now` must be pinned: release notes embed a generatedAt timestamp.
+    const input = { score: { architecture: 80 }, gate: { typecheckClean: true }, now: 0 };
     expect(computeRelease(input)).toEqual(computeRelease(input));
   });
 });
